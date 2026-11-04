@@ -14,15 +14,53 @@ pub struct Key {
 impl Key {
     /// Unmodified key.
     pub fn plain(key: &str) -> Self {
-        Self { key: key.to_owned(), ctrl: false, alt: false }
+        Self {
+            key: key.to_owned(),
+            ctrl: false,
+            alt: false,
+        }
     }
     /// Ctrl + key.
     pub fn ctrl(key: &str) -> Self {
-        Self { key: key.to_owned(), ctrl: true, alt: false }
+        Self {
+            key: key.to_owned(),
+            ctrl: true,
+            alt: false,
+        }
     }
     /// Vim notation (`"<C-f>"`, `"a"`, `"<Esc>"`).
     pub fn notation(&self) -> String {
-        todo!()
+        let base = match self.key.as_str() {
+            "escape" | "esc" => "Esc",
+            "enter" | "return" => "CR",
+            "backspace" => "BS",
+            "tab" => "Tab",
+            "space" | " " => "Space",
+            "delete" => "Del",
+            "left" => "Left",
+            "right" => "Right",
+            "up" => "Up",
+            "down" => "Down",
+            "home" => "Home",
+            "end" => "End",
+            "pageup" => "PageUp",
+            "pagedown" => "PageDown",
+            other => other,
+        };
+        let single = base.chars().count() == 1;
+        if !self.ctrl && !self.alt && single && base != " " {
+            return base.to_owned();
+        }
+        let mut out = String::from("<");
+        if self.ctrl {
+            out.push_str("C-");
+        }
+        if self.alt {
+            out.push_str("A-");
+        }
+        out.push_str(base);
+        out.push('>');
+        out
     }
 }
 
@@ -35,10 +73,16 @@ pub const PASSTHROUGH: [&str; 7] = ["f", "n", "p", "e", "b", "i", "v"];
 /// (`configureVimKeys`): `["<C-f>", "<C-n>", "<C-p>", "<C-e>", "<C-b>", "<C-i>", "<C-v>"]` on
 /// Linux/Windows, empty on macOS (app shortcuts use Cmd there, vim keeps its whole keymap).
 pub fn app_owned_keys(macos: bool) -> Vec<String> {
-    todo!()
+    if macos {
+        return Vec::new();
+    }
+    PASSTHROUGH
+        .iter()
+        .map(|k| Key::ctrl(k).notation())
+        .collect()
 }
 
 /// Whether `key` must be handed back to the app instead of vim on this platform.
 pub fn is_app_owned(key: &Key, macos: bool) -> bool {
-    todo!()
+    !macos && key.ctrl && !key.alt && PASSTHROUGH.contains(&key.key.as_str())
 }

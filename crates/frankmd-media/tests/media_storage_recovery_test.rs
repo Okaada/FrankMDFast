@@ -47,7 +47,9 @@ impl Fixture {
     async fn new() -> Self {
         let notes = TempTree::empty();
         let server_dir = notes.path().join("server");
-        write(&server_dir, "photo.png", b"image bytes");
+        // security: real media bytes throughout (placeholder text is rejected
+        // by content sniffing before any provider is contacted).
+        write(&server_dir, "photo.png", &PNG_1X1);
         let mock = MockServer::start().await;
         let mut c = MediaConfig::new(notes.path());
         c.images_path = Some(server_dir.clone());
@@ -76,10 +78,10 @@ impl Fixture {
     async fn post(&self, ep: Endpoint) -> Result<String, ApiError> {
         let nil = Param::Nil;
         match ep {
-            Endpoint::ImagesUpload => self.api.upload(Some(Upload::new("photo.png", "image bytes")), &nil, &nil, None).await,
+            Endpoint::ImagesUpload => self.api.upload(Some(Upload::new("photo.png", PNG_1X1)), &nil, &nil, None).await,
             Endpoint::ImagesUploadBase64 => {
                 let req = Base64Upload {
-                    data: b64(b"image bytes"),
+                    data: b64(&PNG_1X1),
                     mime_type: "image/png".into(),
                     filename: "photo.png".into(),
                     ..Default::default()
@@ -89,7 +91,7 @@ impl Fixture {
             Endpoint::ImagesImport => {
                 self.api.import(&ImportRequest { path: Param::str("photo.png"), ..Default::default() }).await
             }
-            Endpoint::MediaUpload => self.api.media_upload(Some(Upload::new("clip.mp4", "video bytes")), &nil, None).await,
+            Endpoint::MediaUpload => self.api.media_upload(Some(Upload::new("clip.mp4", sample_media(".mp4"))), &nil, None).await,
         }
     }
 }

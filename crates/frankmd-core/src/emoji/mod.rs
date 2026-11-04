@@ -24,7 +24,24 @@ pub fn localized_names_json(lang: &str) -> Option<&'static str> {
     })
 }
 
+use serde::Deserialize;
 use std::collections::HashMap;
+use std::sync::OnceLock;
+
+/// Envelope shared by the embedded tables: `{..., "data": [row, ...]}`.
+#[derive(Deserialize)]
+struct Table<Row> {
+    data: Vec<Row>,
+}
+
+/// Parse an embedded table. The assets are compiled in and covered by the
+/// golden tests, so a parse failure cannot happen at runtime; should it ever,
+/// the table is treated as empty instead of panicking.
+fn parse_rows<Row: for<'de> Deserialize<'de>>(json: &str) -> Vec<Row> {
+    serde_json::from_str::<Table<Row>>(json)
+        .map(|t| t.data)
+        .unwrap_or_default()
+}
 
 /// One emoji row of `EMOJI_DATA` (`[shortcode, emoji, keywords]`).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -51,22 +68,48 @@ pub struct Emoticon {
 /// The shortcode table in source order (**[COMPAT]** `EMOJI_DATA`, 675 rows).
 /// Parsed once from [`SHORTCODES_JSON`] and cached for the process lifetime.
 pub fn shortcodes() -> &'static [Emoji] {
-    todo!("parse SHORTCODES_JSON once (OnceLock); needs serde_json as a normal dependency")
+    static ROWS: OnceLock<Vec<Emoji>> = OnceLock::new();
+    ROWS.get_or_init(|| {
+        parse_rows::<(String, String, String)>(SHORTCODES_JSON)
+            .into_iter()
+            .map(|(shortcode, emoji, keywords)| Emoji {
+                shortcode,
+                emoji,
+                keywords,
+            })
+            .collect()
+    })
 }
 
 /// The emoticon table in source order, parsed once from [`EMOTICONS_JSON`].
 pub fn emoticons() -> &'static [Emoticon] {
-    todo!("parse EMOTICONS_JSON once")
+    static ROWS: OnceLock<Vec<Emoticon>> = OnceLock::new();
+    ROWS.get_or_init(|| {
+        parse_rows::<(String, String, String)>(EMOTICONS_JSON)
+            .into_iter()
+            .map(|(name, text, keywords)| Emoticon {
+                name,
+                text,
+                keywords,
+            })
+            .collect()
+    })
 }
 
 /// `shortcode -> emoji` (**[COMPAT]** `getEmojiMap()`): for duplicate
 /// shortcodes the LAST row wins. Built once; every call returns the same map.
 pub fn emoji_map() -> &'static HashMap<&'static str, &'static str> {
-    todo!()
+    static MAP: OnceLock<HashMap<&'static str, &'static str>> = OnceLock::new();
+    MAP.get_or_init(|| {
+        shortcodes()
+            .iter()
+            .map(|e| (e.shortcode.as_str(), e.emoji.as_str()))
+            .collect()
+    })
 }
 
 /// Resolve `:shortcode:` → emoji (**[COMPAT]** preview behaviour). Same
 /// semantics as [`emoji_map`]`.get(shortcode)`; `shortcode` has no colons.
 pub fn lookup(shortcode: &str) -> Option<&'static str> {
-    todo!()
+    emoji_map().get(shortcode).copied()
 }

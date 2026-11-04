@@ -7,6 +7,10 @@
 
 use std::io;
 
+/// **[COMPAT]** the message of the `ArgumentError` `BacklinksService` raised
+/// for a target containing `..`.
+pub const BACKLINKS_INVALID_PATH: &str = "Invalid path";
+
 /// Errors from vault operations.
 #[derive(Debug, thiserror::Error)]
 pub enum FsError {
@@ -46,12 +50,96 @@ impl FsError {
     /// `"Errno::EACCES"`, …). Backlinks' invalid path is `"ArgumentError"` and is
     /// produced as [`FsError::InvalidPath`] with message `"Invalid path"`.
     pub fn compat_class(&self) -> &'static str {
-        todo!()
+        match self {
+            Self::AlreadyExists(_) => "NotesService::AlreadyExistsError",
+            Self::NotFound(_) => "NotesService::NotFoundError",
+            Self::RevisionConflict(_) => "NotesService::RevisionConflictError",
+            Self::NotEmpty(_) => "NotesService::InvalidPathError",
+            Self::InvalidPath(message) if message == BACKLINKS_INVALID_PATH => "ArgumentError",
+            Self::InvalidPath(_) => "NotesService::InvalidPathError",
+            Self::PermissionDenied(_) => "Errno::EACCES",
+            Self::Io(err) => errno_class(err),
+        }
+    }
+
+    /// The `errno` behind this error, when it is an OS error.
+    pub fn raw_os_error(&self) -> Option<i32> {
+        match self {
+            Self::Io(err) => err.raw_os_error(),
+            _ => None,
+        }
+    }
+
+    /// EACCES / EPERM (Rails `rescue Errno::EACCES, Errno::EPERM`).
+    pub fn is_permission_denied(&self) -> bool {
+        matches!(self, Self::PermissionDenied(_))
+            || matches!(
+                self.raw_os_error(),
+                Some(libc_errno::EACCES | libc_errno::EPERM)
+            )
+    }
+
+    /// ENOENT (Rails `rescue Errno::ENOENT`).
+    pub fn is_enoent(&self) -> bool {
+        self.raw_os_error() == Some(libc_errno::ENOENT)
     }
 
     /// `true` for AlreadyExists, NotEmpty and InvalidPath (Rails
     /// `rescue NotesService::InvalidPathError` catches all three → 422).
     pub fn is_invalid_path(&self) -> bool {
-        matches!(self, Self::AlreadyExists(_) | Self::NotEmpty(_) | Self::InvalidPath(_))
+        matches!(
+            self,
+            Self::AlreadyExists(_) | Self::NotEmpty(_) | Self::InvalidPath(_)
+        )
+    }
+}
+
+/// The Linux errno values the compat layer distinguishes.
+pub(crate) mod libc_errno {
+    pub(crate) const EPERM: i32 = 1;
+    pub(crate) const ENOENT: i32 = 2;
+    pub(crate) const EIO: i32 = 5;
+    pub(crate) const EACCES: i32 = 13;
+    pub(crate) const EBUSY: i32 = 16;
+    pub(crate) const EEXIST: i32 = 17;
+    pub(crate) const EXDEV: i32 = 18;
+    pub(crate) const ENOTDIR: i32 = 20;
+    pub(crate) const EISDIR: i32 = 21;
+    pub(crate) const EINVAL: i32 = 22;
+    pub(crate) const ENOSPC: i32 = 28;
+    pub(crate) const EROFS: i32 = 30;
+    pub(crate) const EMLINK: i32 = 31;
+    pub(crate) const ENAMETOOLONG: i32 = 36;
+    pub(crate) const ENOSYS: i32 = 38;
+    pub(crate) const ENOTEMPTY: i32 = 39;
+    pub(crate) const ELOOP: i32 = 40;
+    pub(crate) const EOPNOTSUPP: i32 = 95;
+}
+
+/// Ruby's `Errno::*` class name for an OS error.
+fn errno_class(err: &io::Error) -> &'static str {
+    use libc_errno::*;
+    match err.raw_os_error() {
+        Some(EPERM) => "Errno::EPERM",
+        Some(ENOENT) => "Errno::ENOENT",
+        Some(EIO) => "Errno::EIO",
+        Some(EACCES) => "Errno::EACCES",
+        Some(EBUSY) => "Errno::EBUSY",
+        Some(EEXIST) => "Errno::EEXIST",
+        Some(EXDEV) => "Errno::EXDEV",
+        Some(ENOTDIR) => "Errno::ENOTDIR",
+        Some(EISDIR) => "Errno::EISDIR",
+        Some(EINVAL) => "Errno::EINVAL",
+        Some(ENOSPC) => "Errno::ENOSPC",
+        Some(EROFS) => "Errno::EROFS",
+        Some(EMLINK) => "Errno::EMLINK",
+        Some(ENAMETOOLONG) => "Errno::ENAMETOOLONG",
+        Some(ENOSYS) => "Errno::ENOSYS",
+        Some(ENOTEMPTY) => "Errno::ENOTEMPTY",
+        Some(ELOOP) => "Errno::ELOOP",
+        Some(EOPNOTSUPP) => "Errno::EOPNOTSUPP",
+        Some(_) => "SystemCallError",
+        None if err.kind() == io::ErrorKind::InvalidData => "ArgumentError",
+        None => "IOError",
     }
 }

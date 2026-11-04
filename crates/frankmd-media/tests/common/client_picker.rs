@@ -29,7 +29,10 @@ impl FakeTransport {
         } else {
             let ok = r.get("ok").and_then(Value::as_bool).unwrap_or(true);
             let status = r.get("status").and_then(Value::as_u64).map_or(if ok { 200 } else { 500 }, |s| s as u16);
-            self.replies.push_back(PickerResponse::Reply { ok, status, json: r.get("json").cloned().unwrap_or(Value::Null) });
+            // Harness fix: canned bodies are fixture-encoded (`{"$number":"NaN"}`); the JS
+            // under test received the decoded values, so decode them like `expected`.
+            let json = r.get("json").map(frankmd_testkit::decode_js).unwrap_or(Value::Null);
+            self.replies.push_back(PickerResponse::Reply { ok, status, json });
         }
     }
 

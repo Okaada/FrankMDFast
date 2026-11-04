@@ -23,7 +23,10 @@ fn config(root: &std::path::Path) -> MediaConfig {
 }
 
 fn uploaded(name: &str) -> Option<Upload> {
-    Some(Upload::new(name, "fake video bytes"))
+    // security: a real container of the claimed type (placeholder text is
+    // rejected by content sniffing); disallowed names keep the placeholder.
+    let bytes = if name.contains('.') && !name.ends_with(".txt") { sample_for(name) } else { b"fake video bytes".to_vec() };
+    Some(Upload::new(name, bytes))
 }
 
 async fn save(root: &std::path::Path, name: &str) -> Result<String, MediaError> {

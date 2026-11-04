@@ -2,7 +2,12 @@
 //! `frankmd_fs::model` + `frankmd_core::note`).
 //!
 //! Skipped: `folder.to_param` (Rails routing).
-#![allow(clippy::disallowed_methods, clippy::unwrap_used, missing_docs, unreachable_pub)]
+#![allow(
+    clippy::disallowed_methods,
+    clippy::unwrap_used,
+    missing_docs,
+    unreachable_pub
+)]
 
 mod common;
 
@@ -24,7 +29,10 @@ fn chmod(p: &std::path::Path, mode: u32) {
 }
 
 fn base_errors(errs: &[ModelError]) -> Vec<String> {
-    errs.iter().filter(|e| e.field == ErrorField::Base).map(|e| e.full_message(&en)).collect()
+    errs.iter()
+        .filter(|e| e.field == ErrorField::Base)
+        .map(|e| e.full_message(&en))
+        .collect()
 }
 
 /// `Folder.find(path)`: raises NotFound unless a directory is there.
@@ -76,7 +84,9 @@ fn find_works_with_nested_paths() {
 fn create_makes_directory() {
     let sb = Sandbox::empty();
     let vault = sb.vault();
-    model::folder_create(&NotesService::new(&vault), "new_folder").unwrap().unwrap();
+    model::folder_create(&NotesService::new(&vault), "new_folder")
+        .unwrap()
+        .unwrap();
     assert!(is_dir(&sb, "new_folder"));
 }
 
@@ -85,7 +95,9 @@ fn create_makes_directory() {
 fn create_makes_nested_directories() {
     let sb = Sandbox::empty();
     let vault = sb.vault();
-    model::folder_create(&NotesService::new(&vault), "deep/nested/new_folder").unwrap().unwrap();
+    model::folder_create(&NotesService::new(&vault), "deep/nested/new_folder")
+        .unwrap()
+        .unwrap();
     assert!(is_dir(&sb, "deep/nested/new_folder"));
 }
 
@@ -95,17 +107,24 @@ fn create_returns_false_if_folder_exists() {
     let sb = Sandbox::empty();
     sb.mkdir("existing_folder");
     let vault = sb.vault();
-    let errs = model::folder_create(&NotesService::new(&vault), "existing_folder").unwrap().unwrap_err();
+    let errs = model::folder_create(&NotesService::new(&vault), "existing_folder")
+        .unwrap()
+        .unwrap_err();
     assert!(!base_errors(&errs).is_empty(), "{errs:?}");
 }
 
 // port: test/models/folder_test.rb:61 "folder.create validates path format"
 #[test]
 fn create_validates_path_format() {
-    assert_eq!(validate_folder_path("../escape"), vec![ValidationError::Traversal]);
+    assert_eq!(
+        validate_folder_path("../escape"),
+        vec![ValidationError::Traversal]
+    );
     let sb = Sandbox::empty();
     let vault = sb.vault();
-    let errs = model::folder_create(&NotesService::new(&vault), "../escape").unwrap().unwrap_err();
+    let errs = model::folder_create(&NotesService::new(&vault), "../escape")
+        .unwrap()
+        .unwrap_err();
     assert!(errs.iter().any(|e| e.field == ErrorField::Path), "{errs:?}");
 }
 
@@ -115,7 +134,9 @@ fn create_validates_presence_of_path() {
     assert!(validate_folder_path("").contains(&ValidationError::Blank));
     let sb = Sandbox::empty();
     let vault = sb.vault();
-    let errs = model::folder_create(&NotesService::new(&vault), "").unwrap().unwrap_err();
+    let errs = model::folder_create(&NotesService::new(&vault), "")
+        .unwrap()
+        .unwrap_err();
     assert!(errs.iter().any(|e| e.field == ErrorField::Path), "{errs:?}");
 }
 
@@ -125,7 +146,9 @@ fn destroy_removes_empty_directory() {
     let sb = Sandbox::empty();
     sb.mkdir("empty_folder");
     let vault = sb.vault();
-    model::folder_destroy(&NotesService::new(&vault), "empty_folder").unwrap().unwrap();
+    model::folder_destroy(&NotesService::new(&vault), "empty_folder")
+        .unwrap()
+        .unwrap();
     assert!(!sb.exists("empty_folder"));
 }
 
@@ -136,7 +159,9 @@ fn destroy_fails_for_non_empty_directory() {
     sb.mkdir("folder_with_content");
     sb.write("folder_with_content/note.md", DEFAULT_CONTENT);
     let vault = sb.vault();
-    let errs = model::folder_destroy(&NotesService::new(&vault), "folder_with_content").unwrap().unwrap_err();
+    let errs = model::folder_destroy(&NotesService::new(&vault), "folder_with_content")
+        .unwrap()
+        .unwrap_err();
     assert!(!base_errors(&errs).is_empty(), "{errs:?}");
     assert!(sb.exists("folder_with_content"));
 }
@@ -146,7 +171,9 @@ fn destroy_fails_for_non_empty_directory() {
 fn destroy_returns_false_for_missing_folder() {
     let sb = Sandbox::empty();
     let vault = sb.vault();
-    let errs = model::folder_destroy(&NotesService::new(&vault), "nonexistent").unwrap().unwrap_err();
+    let errs = model::folder_destroy(&NotesService::new(&vault), "nonexistent")
+        .unwrap()
+        .unwrap_err();
     assert!(!base_errors(&errs).is_empty(), "{errs:?}");
 }
 
@@ -156,7 +183,9 @@ fn rename_moves_folder() {
     let sb = Sandbox::empty();
     sb.mkdir("old_folder");
     let vault = sb.vault();
-    let path = model::folder_rename(&NotesService::new(&vault), "old_folder", "new_folder").unwrap().unwrap();
+    let path = model::folder_rename(&NotesService::new(&vault), "old_folder", "new_folder")
+        .unwrap()
+        .unwrap();
     assert_eq!(path, "new_folder");
     assert!(!sb.exists("old_folder"));
     assert!(sb.exists("new_folder"));
@@ -169,7 +198,9 @@ fn rename_moves_folder_with_contents() {
     sb.mkdir("old_folder");
     sb.write("old_folder/note.md", "content");
     let vault = sb.vault();
-    model::folder_rename(&NotesService::new(&vault), "old_folder", "new_folder").unwrap().unwrap();
+    model::folder_rename(&NotesService::new(&vault), "old_folder", "new_folder")
+        .unwrap()
+        .unwrap();
     assert!(!sb.exists("old_folder"));
     assert!(sb.exists("new_folder"));
     assert!(sb.exists("new_folder/note.md"));
@@ -183,7 +214,9 @@ fn rename_updates_hugo_frontmatter_slug() {
     let hugo = "---\ntitle: \"My Blog Post\"\nslug: \"old-slug\"\ndate: 2026-02-01T10:00:00-03:00\ndraft: true\ntags:\n-\n---\n\nContent here\n";
     sb.write("old-slug/index.md", hugo);
     let vault = sb.vault();
-    model::folder_rename(&NotesService::new(&vault), "old-slug", "new-slug").unwrap().unwrap();
+    model::folder_rename(&NotesService::new(&vault), "old-slug", "new-slug")
+        .unwrap()
+        .unwrap();
     let updated = sb.read("new-slug/index.md");
     assert!(updated.contains("slug: \"new-slug\""), "{updated}");
     assert!(!updated.contains("slug: \"old-slug\""), "{updated}");
@@ -196,9 +229,14 @@ fn rename_updates_hugo_frontmatter_slug() {
 fn rename_updates_slug_with_accented_folder_name() {
     let sb = Sandbox::empty();
     sb.mkdir("old-post");
-    sb.write("old-post/index.md", "---\ntitle: \"Test\"\nslug: \"old-post\"\n---\n\nBody\n");
+    sb.write(
+        "old-post/index.md",
+        "---\ntitle: \"Test\"\nslug: \"old-post\"\n---\n\nBody\n",
+    );
     let vault = sb.vault();
-    model::folder_rename(&NotesService::new(&vault), "old-post", "café-açaí").unwrap().unwrap();
+    model::folder_rename(&NotesService::new(&vault), "old-post", "café-açaí")
+        .unwrap()
+        .unwrap();
     let updated = sb.read("café-açaí/index.md");
     assert!(updated.contains("slug: \"cafe-acai\""), "{updated}");
 }
@@ -211,7 +249,13 @@ fn rename_does_not_modify_non_hugo_index() {
     let regular = "# Just a regular note\n\nNo frontmatter here";
     sb.write("regular-folder/index.md", regular);
     let vault = sb.vault();
-    model::folder_rename(&NotesService::new(&vault), "regular-folder", "renamed-folder").unwrap().unwrap();
+    model::folder_rename(
+        &NotesService::new(&vault),
+        "regular-folder",
+        "renamed-folder",
+    )
+    .unwrap()
+    .unwrap();
     assert_eq!(sb.read("renamed-folder/index.md"), regular);
 }
 
@@ -223,7 +267,13 @@ fn rename_does_not_modify_frontmatter_without_slug() {
     let fm = "---\ntitle: \"No Slug\"\ndate: 2026-02-01\n---\n\nContent\n";
     sb.write("no-slug-folder/index.md", fm);
     let vault = sb.vault();
-    model::folder_rename(&NotesService::new(&vault), "no-slug-folder", "renamed-no-slug").unwrap().unwrap();
+    model::folder_rename(
+        &NotesService::new(&vault),
+        "no-slug-folder",
+        "renamed-no-slug",
+    )
+    .unwrap()
+    .unwrap();
     assert_eq!(sb.read("renamed-no-slug/index.md"), fm);
 }
 
@@ -268,7 +318,10 @@ fn name_returns_last_component() {
 // port: test/models/folder_test.rb:229 "folder.parent_path returns parent directory"
 #[test]
 fn parent_path_returns_parent_directory() {
-    assert_eq!(folder_parent_path("parent/child").as_deref(), Some("parent"));
+    assert_eq!(
+        folder_parent_path("parent/child").as_deref(),
+        Some("parent")
+    );
 }
 
 // port: test/models/folder_test.rb:234 "folder.parent_path returns nil for root folders"
@@ -303,7 +356,13 @@ fn children_returns_children_items() {
     sb.write("parent/child2.md", DEFAULT_CONTENT);
     sb.mkdir("parent/subfolder");
     let vault = sb.vault();
-    assert_eq!(NotesService::new(&vault).folder_children("parent").unwrap().len(), 3);
+    assert_eq!(
+        NotesService::new(&vault)
+            .folder_children("parent")
+            .unwrap()
+            .len(),
+        3
+    );
 }
 
 // port: test/models/folder_test.rb:270 "folder.children returns empty array for empty folder"
@@ -312,7 +371,12 @@ fn children_empty_for_empty_folder() {
     let sb = Sandbox::empty();
     sb.mkdir("empty");
     let vault = sb.vault();
-    assert!(NotesService::new(&vault).folder_children("empty").unwrap().is_empty());
+    assert!(
+        NotesService::new(&vault)
+            .folder_children("empty")
+            .unwrap()
+            .is_empty()
+    );
 }
 
 // port: test/models/folder_test.rb:277 "folder.children returns empty array for nonexistent folder"
@@ -320,7 +384,12 @@ fn children_empty_for_empty_folder() {
 fn children_empty_for_nonexistent_folder() {
     let sb = Sandbox::empty();
     let vault = sb.vault();
-    assert!(NotesService::new(&vault).folder_children("nonexistent").unwrap().is_empty());
+    assert!(
+        NotesService::new(&vault)
+            .folder_children("nonexistent")
+            .unwrap()
+            .is_empty()
+    );
 }
 
 // port: test/models/folder_test.rb:284 "folder.destroy handles folder that disappeared"
@@ -330,9 +399,14 @@ fn destroy_handles_folder_that_disappeared() {
     sb.mkdir("disappearing");
     let vault = sb.vault();
     std::fs::remove_dir_all(sb.abs("disappearing")).unwrap();
-    let errs = model::folder_destroy(&NotesService::new(&vault), "disappearing").unwrap().unwrap_err();
+    let errs = model::folder_destroy(&NotesService::new(&vault), "disappearing")
+        .unwrap()
+        .unwrap_err();
     let base = base_errors(&errs);
-    assert!(base.first().is_some_and(|m| m.contains("not found")), "{base:?}");
+    assert!(
+        base.first().is_some_and(|m| m.contains("not found")),
+        "{base:?}"
+    );
 }
 
 // port: test/models/folder_test.rb:296 "folder.rename handles source folder that disappeared"
@@ -342,9 +416,13 @@ fn rename_handles_source_folder_that_disappeared() {
     sb.mkdir("source_folder");
     let vault = sb.vault();
     std::fs::remove_dir_all(sb.abs("source_folder")).unwrap();
-    let errs = model::folder_rename(&NotesService::new(&vault), "source_folder", "destination_folder")
-        .unwrap()
-        .unwrap_err();
+    let errs = model::folder_rename(
+        &NotesService::new(&vault),
+        "source_folder",
+        "destination_folder",
+    )
+    .unwrap()
+    .unwrap_err();
     assert!(!base_errors(&errs).is_empty(), "{errs:?}");
 }
 
@@ -362,7 +440,11 @@ fn create_handles_permission_denied() {
     chmod(&sb.root, 0o755);
     let errs = result.unwrap().unwrap_err();
     let base = base_errors(&errs);
-    assert!(base.first().is_some_and(|m| m.contains("Permission denied")), "{base:?}");
+    assert!(
+        base.first()
+            .is_some_and(|m| m.contains("Permission denied")),
+        "{base:?}"
+    );
 }
 
 // port: test/models/folder_test.rb:324 "folder.destroy handles permission denied"
@@ -380,5 +462,9 @@ fn destroy_handles_permission_denied() {
     chmod(&sb.root, 0o755);
     let errs = result.unwrap().unwrap_err();
     let base = base_errors(&errs);
-    assert!(base.first().is_some_and(|m| m.contains("Permission denied")), "{base:?}");
+    assert!(
+        base.first()
+            .is_some_and(|m| m.contains("Permission denied")),
+        "{base:?}"
+    );
 }

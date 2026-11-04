@@ -74,7 +74,11 @@ fn slugify_does_not_know_about_extensions() {
 // port: test/javascript/lib/new_note_utils.test.js:44 "previews flat Hugo posts within their explicit parent"
 #[test]
 fn previews_flat_hugo_posts_within_their_explicit_parent() {
-    let r = PreviewRequest { parent: "blog", style: HugoPathStyle::Flat, ..req("My Post", NoteTemplate::Hugo) };
+    let r = PreviewRequest {
+        parent: "blog",
+        style: HugoPathStyle::Flat,
+        ..req("My Post", NoteTemplate::Hugo)
+    };
     assert_eq!(preview_note_path(&r).path, "blog/my-post.md");
 }
 
@@ -92,7 +96,11 @@ fn hugo_date_path_formats_with_zero_padding() {
 fn hugo_date_path_of_today_matches_shape() {
     let p = hugo_date_path(jiff::Zoned::now().date());
     let parts: Vec<&str> = p.split('/').collect();
-    assert_eq!(parts.iter().map(|s| s.len()).collect::<Vec<_>>(), vec![4, 2, 2], "{p}");
+    assert_eq!(
+        parts.iter().map(|s| s.len()).collect::<Vec<_>>(),
+        vec![4, 2, 2],
+        "{p}"
+    );
     assert!(p.chars().all(|c| c.is_ascii_digit() || c == '/'), "{p}");
 }
 
@@ -161,19 +169,32 @@ fn can_create_note_allows_hugo_names_that_slugify() {
 #[test]
 fn preview_empty_document_note_at_root() {
     let r = preview_note_path(&req("my-note", NoteTemplate::Empty));
-    assert_eq!(r, NotePreview { valid: true, empty: false, path: "root/my-note.md".into() });
+    assert_eq!(
+        r,
+        NotePreview {
+            valid: true,
+            empty: false,
+            path: "root/my-note.md".into()
+        }
+    );
 }
 
 // port: test/javascript/lib/new_note_utils.test.js:108 "appends .md only once"
 #[test]
 fn preview_appends_md_only_once() {
-    assert_eq!(preview_note_path(&req("note.md", NoteTemplate::Empty)).path, "root/note.md");
+    assert_eq!(
+        preview_note_path(&req("note.md", NoteTemplate::Empty)).path,
+        "root/note.md"
+    );
 }
 
 // port: test/javascript/lib/new_note_utils.test.js:113 "shows the parent folder when one is set"
 #[test]
 fn preview_shows_the_parent_folder() {
-    let r = PreviewRequest { parent: "docs/guides", ..req("my-note", NoteTemplate::Empty) };
+    let r = PreviewRequest {
+        parent: "docs/guides",
+        ..req("my-note", NoteTemplate::Empty)
+    };
     assert_eq!(preview_note_path(&r).path, "docs/guides/my-note.md");
 }
 
@@ -188,28 +209,50 @@ fn preview_dated_hugo_page_bundle() {
 // port: test/javascript/lib/new_note_utils.test.js:124 "slugifies and strips .md for hugo previews"
 #[test]
 fn preview_slugifies_and_strips_md_for_hugo() {
-    assert_eq!(preview_note_path(&req("Olá Mundo.md", NoteTemplate::Hugo)).path, "root/2026/08/18/ola-mundo/index.md");
+    assert_eq!(
+        preview_note_path(&req("Olá Mundo.md", NoteTemplate::Hugo)).path,
+        "root/2026/08/18/ola-mundo/index.md"
+    );
 }
 
 // port: test/javascript/lib/new_note_utils.test.js:129 "previews hugo posts inside a parent folder"
 #[test]
 fn preview_hugo_posts_inside_a_parent_folder() {
-    let r = PreviewRequest { parent: "blog", ..req("My Post", NoteTemplate::Hugo) };
-    assert_eq!(preview_note_path(&r).path, "blog/2026/08/18/my-post/index.md");
+    let r = PreviewRequest {
+        parent: "blog",
+        ..req("My Post", NoteTemplate::Hugo)
+    };
+    assert_eq!(
+        preview_note_path(&r).path,
+        "blog/2026/08/18/my-post/index.md"
+    );
 }
 
 // port: test/javascript/lib/new_note_utils.test.js:134 "uses the localized root segment"
 #[test]
 fn preview_uses_the_localized_root_segment() {
-    let r = PreviewRequest { root_segment: "raiz", ..req("x", NoteTemplate::Empty) };
+    let r = PreviewRequest {
+        root_segment: "raiz",
+        ..req("x", NoteTemplate::Empty)
+    };
     assert_eq!(preview_note_path(&r).path, "raiz/x.md");
 }
 
 // port: test/javascript/lib/new_note_utils.test.js:139 "shows the placeholder slot and flags empty while the name is blank"
 #[test]
 fn preview_placeholder_slot_while_name_is_blank() {
-    let r = PreviewRequest { name_placeholder: "nome-da-nota", ..req("", NoteTemplate::Empty) };
-    assert_eq!(preview_note_path(&r), NotePreview { valid: false, empty: true, path: "root/nome-da-nota.md".into() });
+    let r = PreviewRequest {
+        name_placeholder: "nome-da-nota",
+        ..req("", NoteTemplate::Empty)
+    };
+    assert_eq!(
+        preview_note_path(&r),
+        NotePreview {
+            valid: false,
+            empty: true,
+            path: "root/nome-da-nota.md".into()
+        }
+    );
 }
 
 // port: test/javascript/lib/new_note_utils.test.js:144 "flags slash-containing names as invalid but still shows the typed path"
@@ -233,7 +276,10 @@ fn preview_flags_hugo_names_with_empty_slugs_invalid() {
 // port: test/javascript/lib/new_note_utils.test.js:158 "uses the placeholder slot for a blank hugo name"
 #[test]
 fn preview_placeholder_slot_for_blank_hugo_name() {
-    let r = PreviewRequest { name_placeholder: "note-name", ..req("  ", NoteTemplate::Hugo) };
+    let r = PreviewRequest {
+        name_placeholder: "note-name",
+        ..req("  ", NoteTemplate::Hugo)
+    };
     let r = preview_note_path(&r);
     assert!(r.empty);
     assert_eq!(r.path, "root/2026/08/18/note-name/index.md");
@@ -242,5 +288,8 @@ fn preview_placeholder_slot_for_blank_hugo_name() {
 // port: test/javascript/lib/new_note_utils.test.js:164 "trims whitespace from the name"
 #[test]
 fn preview_trims_whitespace_from_the_name() {
-    assert_eq!(preview_note_path(&req("  my-note  ", NoteTemplate::Empty)).path, "root/my-note.md");
+    assert_eq!(
+        preview_note_path(&req("  my-note  ", NoteTemplate::Empty)).path,
+        "root/my-note.md"
+    );
 }

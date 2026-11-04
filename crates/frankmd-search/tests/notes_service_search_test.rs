@@ -195,3 +195,23 @@ fn search_content_handles_invalid_regex_by_escaping() {
     assert_eq!(search(&sb, "[brackets").hits.len(), 1);
     assert!(SearchRegex::compile("[brackets", SEARCH_REGEX_TIMEOUT).unwrap().is_literal_fallback());
 }
+
+// security: symlinks escaping the vault (to a folder, to a file, dangling) never
+// leak outside content into results.
+#[test]
+fn search_never_returns_content_outside_the_vault() {
+    let sb = Sandbox::new();
+    std::fs::write(sb.outside.join("secret.md"), "findme outside").unwrap();
+    std::fs::create_dir_all(sb.outside.join("deep")).unwrap();
+    std::fs::write(sb.outside.join("deep/more.md"), "findme deep").unwrap();
+    sb.note("inside.md", "findme inside", M);
+    std::os::unix::fs::symlink(&sb.outside, sb.root.join("outdir")).unwrap();
+    std::os::unix::fs::symlink(sb.outside.join("secret.md"), sb.root.join("secret.md")).unwrap();
+    std::os::unix::fs::symlink(sb.outside.join("missing.md"), sb.root.join("dangling.md")).unwrap();
+    std::fs::create_dir_all(sb.root.join("sub")).unwrap();
+    std::os::unix::fs::symlink("../../outside", sb.root.join("sub/rel")).unwrap();
+
+    let r = search(&sb, "findme");
+    assert_eq!(paths(&r.hits), vec!["inside.md"]);
+    assert!(r.hits.iter().all(|h| !h.match_text.contains("outside") && !h.match_text.contains("deep")));
+}

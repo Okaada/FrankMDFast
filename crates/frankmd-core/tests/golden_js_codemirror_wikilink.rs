@@ -33,35 +33,45 @@ fn byte_to_utf16(s: &str, byte: usize) -> usize {
 #[test]
 fn golden_wikilink_completions() {
     let g = golden("js_codemirror_wikilink");
-    assert_cases("js_codemirror_wikilink", g.cases_for("wikilinkCompletions"), |c| {
-        let input = decode_js(&c.input);
-        let doc = input["doc"].as_str().unwrap();
-        let pos = utf16_to_byte(doc, input["pos"].as_u64().unwrap() as usize);
-        let files: Vec<WikiFile> = match &input["files"] {
-            Value::Array(_) => serde_json::from_value(input["files"].clone()).map_err(|e| e.to_string())?,
-            _ => vec![], // null or "<null provider>"
-        };
-        let got = complete(doc, pos, &files).map(|r| {
-            let from = byte_to_utf16(doc, r.from);
-            let to = byte_to_utf16(doc, r.to);
-            json!({
-                "from": from,
-                "filter": false,
-                "options": r.options.iter().map(|o| json!({
-                    "label": o.label,
-                    "detail": o.detail,
-                    "boost": o.boost,
-                    "apply": {
-                        "changes": {"from": from, "to": to, "insert": o.insert},
-                        "selection": {"anchor": from + o.insert.encode_utf16().count()},
-                    },
-                })).collect::<Vec<_>>(),
-            })
-        });
-        let got = got.unwrap_or(Value::Null);
-        let want = decode_js(&c.expected);
-        if got == want { Ok(()) } else { Err(format!("\n    expected {want}\n    got      {got}")) }
-    });
+    assert_cases(
+        "js_codemirror_wikilink",
+        g.cases_for("wikilinkCompletions"),
+        |c| {
+            let input = decode_js(&c.input);
+            let doc = input["doc"].as_str().unwrap();
+            let pos = utf16_to_byte(doc, input["pos"].as_u64().unwrap() as usize);
+            let files: Vec<WikiFile> = match &input["files"] {
+                Value::Array(_) => {
+                    serde_json::from_value(input["files"].clone()).map_err(|e| e.to_string())?
+                }
+                _ => vec![], // null or "<null provider>"
+            };
+            let got = complete(doc, pos, &files).map(|r| {
+                let from = byte_to_utf16(doc, r.from);
+                let to = byte_to_utf16(doc, r.to);
+                json!({
+                    "from": from,
+                    "filter": false,
+                    "options": r.options.iter().map(|o| json!({
+                        "label": o.label,
+                        "detail": o.detail,
+                        "boost": o.boost,
+                        "apply": {
+                            "changes": {"from": from, "to": to, "insert": o.insert},
+                            "selection": {"anchor": from + o.insert.encode_utf16().count()},
+                        },
+                    })).collect::<Vec<_>>(),
+                })
+            });
+            let got = got.unwrap_or(Value::Null);
+            let want = decode_js(&c.expected);
+            if got == want {
+                Ok(())
+            } else {
+                Err(format!("\n    expected {want}\n    got      {got}"))
+            }
+        },
+    );
 }
 
 #[test]

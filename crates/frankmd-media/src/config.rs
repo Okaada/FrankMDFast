@@ -75,6 +75,64 @@ impl MediaConfig {
 
     /// Read from the resolved config (`.fed > ENV > default`).
     pub fn from_resolved(config: &frankmd_config::ResolvedConfig, notes_root: impl Into<PathBuf>) -> Self {
-        todo!()
+        use frankmd_config::Key;
+        let string = |key: Key| present_string(config.value(key));
+        let home = config.env().raw("HOME").map(PathBuf::from);
+        Self {
+            notes_root: notes_root.into(),
+            images_path: string(Key::ImagesPath).map(|p| expand_path(&p, home.as_deref())),
+            // The provider is validated (not blank-filtered) by `upload_storage::provider`.
+            media_storage_provider: match config.value(Key::MediaStorageProvider) {
+                Some(frankmd_config::Value::Str(s)) => Some(s),
+                _ => None,
+            },
+            image_upload_extensions: config.upload_extensions(Key::ImageUploadExtensions),
+            video_upload_extensions: config.upload_extensions(Key::VideoUploadExtensions),
+            s3: S3Settings {
+                access_key_id: string(Key::AwsAccessKeyId),
+                secret_access_key: string(Key::AwsSecretAccessKey),
+                bucket: string(Key::AwsS3Bucket),
+                region: string(Key::AwsRegion),
+                endpoint: string(Key::AwsS3Endpoint),
+                force_path_style: matches!(config.value(Key::AwsS3ForcePathStyle), Some(frankmd_config::Value::Bool(true))),
+            },
+            youtube_api_key: string(Key::YoutubeApiKey),
+            google_api_key: string(Key::GoogleApiKey),
+            google_cse_id: string(Key::GoogleCseId),
+        }
     }
+}
+
+/// A present (non-blank) string value.
+fn present_string(value: Option<frankmd_config::Value>) -> Option<String> {
+    match value {
+        Some(frankmd_config::Value::Str(s)) if !s.trim().is_empty() => Some(s),
+        _ => None,
+    }
+}
+
+/// Ruby `Pathname#expand_path`: `~` / `~/x` from `HOME`, relative paths
+/// against the process working directory, then lexically cleaned.
+fn expand_path(raw: &str, home: Option<&std::path::Path>) -> PathBuf {
+    let path = match (raw.strip_prefix('~'), home) {
+        (Some(""), Some(home)) => home.to_path_buf(),
+        (Some(rest), Some(home)) if rest.starts_with('/') => home.join(rest.trim_start_matches('/')),
+        _ => PathBuf::from(raw),
+    };
+    let absolute = if path.is_absolute() {
+        path
+    } else {
+        std::env::current_dir().map_or(path.clone(), |cwd| cwd.join(&path))
+    };
+    let mut clean = PathBuf::new();
+    for part in absolute.components() {
+        match part {
+            std::path::Component::CurDir => {}
+            std::path::Component::ParentDir => {
+                clean.pop();
+            }
+            other => clean.push(other),
+        }
+    }
+    clean
 }

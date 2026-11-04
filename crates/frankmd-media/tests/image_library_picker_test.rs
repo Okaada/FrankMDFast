@@ -135,3 +135,19 @@ fn filesystem_failures_are_reported_without_paths() {
     assert!(matches!(err, LibraryError::LoadFailed), "{err:?}");
     assert!(!err.to_string().contains(&n.root().display().to_string()));
 }
+
+// security: the server folder listing never follows symlinks (files or
+// directories) that resolve outside `images_path`.
+#[test]
+fn server_collection_skips_symlinks_escaping_the_folder() {
+    let (n, cfg) = setup();
+    n.write("server/inside.png", "server");
+    let outside_file = n.write_outside("outside.png", "outside");
+    n.write_outside("dir/deep.png", "outside");
+    n.symlink("server/escaped.png", &outside_file);
+    n.symlink("server/escaped_dir", &n.outside.path().join("dir"));
+    let page = picker(&n, &cfg, PickerQuery { collection: Param::str("server"), ..Default::default() }).expect("page");
+    let names: Vec<&str> = page.images.iter().map(|i| i.name.as_str()).collect();
+    assert_eq!(names, vec!["inside.png"]);
+    assert_eq!(page.total, 1);
+}

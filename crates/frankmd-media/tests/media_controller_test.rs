@@ -18,7 +18,10 @@ fn api(t: &TempTree) -> MediaApi {
 }
 
 fn video_file(name: &str) -> Option<Upload> {
-    Some(Upload::new(name, "fake video bytes"))
+    // security: a real container of the claimed type (placeholder text is
+    // rejected by content sniffing); disallowed names keep the placeholder.
+    let bytes = if name.contains('.') && !name.ends_with(".txt") { sample_for(name) } else { b"fake video bytes".to_vec() };
+    Some(Upload::new(name, bytes))
 }
 
 // port: test/controllers/media_controller_test.rb:10 "upload returns error when no file provided"

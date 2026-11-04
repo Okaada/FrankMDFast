@@ -39,14 +39,23 @@ pub struct ClipboardItem {
 /// First `file` item whose MIME starts with `image/` and that yields a file,
 /// normalized with [`normalize_image_file`]; `None` for no data / no image.
 pub fn image_file_from_clipboard(items: Option<&[ClipboardItem]>) -> Option<PastedFile> {
-    todo!()
+    items?
+        .iter()
+        .filter(|item| item.kind == ClipboardItemKind::File && item.mime.starts_with("image/"))
+        .find_map(|item| item.file.clone())
+        .map(normalize_image_file)
 }
 
 /// Keep a file whose name already ends in `.<alnum>+` (case-insensitive)
 /// untouched; otherwise rename to `pasted-image-<lastModified|clip><ext>`
 /// with [`extension_for_mime`].
 pub fn normalize_image_file(file: PastedFile) -> PastedFile {
-    todo!()
+    if has_extension(&file.name) {
+        return file;
+    }
+    let stamp = file.last_modified.filter(|&ms| ms != 0).map_or_else(|| "clip".to_owned(), |ms| ms.to_string());
+    let name = format!("pasted-image-{stamp}{}", extension_for_mime(&file.mime));
+    PastedFile { name, ..file }
 }
 
 /// **[COMPAT]** `image/png→.png, jpeg→.jpg, gif→.gif, webp→.webp, bmp→.bmp`;
@@ -54,5 +63,25 @@ pub fn normalize_image_file(file: PastedFile) -> PastedFile {
 /// lowercased (`image/svg+xml → .svg`, `image/tiff → .tiff`); `.bin` when
 /// nothing remains.
 pub fn extension_for_mime(mime: &str) -> String {
-    todo!()
+    let known = match mime {
+        "image/png" => Some(".png"),
+        "image/jpeg" => Some(".jpg"),
+        "image/gif" => Some(".gif"),
+        "image/webp" => Some(".webp"),
+        "image/bmp" => Some(".bmp"),
+        _ => None,
+    };
+    if let Some(ext) = known {
+        return ext.to_owned();
+    }
+    let subtype = mime.split('/').nth(1).unwrap_or("");
+    let subtype = subtype.split_once('+').map_or(subtype, |(head, _)| head);
+    let cleaned: String = subtype.chars().filter(char::is_ascii_alphanumeric).collect();
+    if cleaned.is_empty() { ".bin".to_owned() } else { format!(".{}", cleaned.to_ascii_lowercase()) }
+}
+
+/// `/\.[a-z0-9]+$/i`.
+fn has_extension(name: &str) -> bool {
+    name.rsplit_once('.')
+        .is_some_and(|(_, ext)| !ext.is_empty() && ext.bytes().all(|b| b.is_ascii_alphanumeric()))
 }

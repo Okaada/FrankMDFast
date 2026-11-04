@@ -6,7 +6,12 @@
 //! integer mtime for files, equal lowercased name for folders) are not ordered
 //! deterministically by the original, so each such run is sorted by path on
 //! both sides before comparing; everything else must match in order.
-#![allow(clippy::disallowed_methods, clippy::unwrap_used, missing_docs, unreachable_pub)]
+#![allow(
+    clippy::disallowed_methods,
+    clippy::unwrap_used,
+    missing_docs,
+    unreachable_pub
+)]
 
 mod common;
 
@@ -52,7 +57,8 @@ fn set_mtime_f64(path: &Path, secs: f64) {
         UNIX_EPOCH - Duration::from_secs_f64(-secs)
     };
     let f = std::fs::OpenOptions::new().write(true).open(path).unwrap();
-    f.set_times(std::fs::FileTimes::new().set_accessed(t).set_modified(t)).unwrap();
+    f.set_times(std::fs::FileTimes::new().set_accessed(t).set_modified(t))
+        .unwrap();
 }
 
 fn sort_key(node: &Value) -> (u8, String) {
@@ -65,7 +71,9 @@ fn sort_key(node: &Value) -> (u8, String) {
 
 /// Sort each run of consecutive siblings sharing a sort key by path (recursively).
 fn canon_ties(v: &Value) -> Value {
-    let Some(items) = v.as_array() else { return v.clone() };
+    let Some(items) = v.as_array() else {
+        return v.clone();
+    };
     let mut items: Vec<Value> = items
         .iter()
         .map(|n| {
@@ -95,7 +103,10 @@ fn expected_after(v: &Value) -> BTreeMap<String, Value> {
     expected_tree(v)
         .into_iter()
         .map(|(k, v)| match v.get("base64").and_then(Value::as_str) {
-            Some(b) => (k, Value::String(String::from_utf8_lossy(&common::base64_decode(b)).into_owned())),
+            Some(b) => (
+                k,
+                Value::String(String::from_utf8_lossy(&common::base64_decode(b)).into_owned()),
+            ),
             None => (k, v),
         })
         .collect()
@@ -105,33 +116,53 @@ fn expected_after(v: &Value) -> BTreeMap<String, Value> {
 fn golden_list_tree() {
     let g = golden(FIXTURE);
     let orders = spec_orders(FIXTURE);
-    assert_cases("notes_tree list_tree", g.cases_for("NotesService#list_tree"), |case| {
-        let sb = build(case, &orders);
-        let vault = sb.vault();
-        let tree = NotesService::new(&vault).list_tree().map_err(|e| format!("list_tree failed: {e}"))?;
-        check_eq("tree", &canon_ties(&tree_json(&tree)), &canon_ties(&case.expected["tree"]))?;
-        let after = sb.snapshot();
-        let want = expected_after(&case.expected["tree_after"]);
-        if after != want {
-            return Err(format!("tree_after:\n    expected: {want:?}\n    actual:   {after:?}"));
-        }
-        Ok(())
-    });
+    assert_cases(
+        "notes_tree list_tree",
+        g.cases_for("NotesService#list_tree"),
+        |case| {
+            let sb = build(case, &orders);
+            let vault = sb.vault();
+            let tree = NotesService::new(&vault)
+                .list_tree()
+                .map_err(|e| format!("list_tree failed: {e}"))?;
+            check_eq(
+                "tree",
+                &canon_ties(&tree_json(&tree)),
+                &canon_ties(&case.expected["tree"]),
+            )?;
+            let after = sb.snapshot();
+            let want = expected_after(&case.expected["tree_after"]);
+            if after != want {
+                return Err(format!(
+                    "tree_after:\n    expected: {want:?}\n    actual:   {after:?}"
+                ));
+            }
+            Ok(())
+        },
+    );
 }
 
 #[test]
 fn golden_folder_children() {
     let g = golden(FIXTURE);
     let orders = spec_orders(FIXTURE);
-    assert_cases("notes_tree Folder#children", g.cases_for("Folder#children"), |case| {
-        let sb = build(case, &orders);
-        let vault = sb.vault();
-        let path = case.input["path"].as_str().unwrap_or("");
-        let children = NotesService::new(&vault)
-            .folder_children(path)
-            .map_err(|e| format!("folder_children failed: {e}"))?;
-        check_eq("children", &canon_ties(&tree_json(&children)), &canon_ties(&case.expected))
-    });
+    assert_cases(
+        "notes_tree Folder#children",
+        g.cases_for("Folder#children"),
+        |case| {
+            let sb = build(case, &orders);
+            let vault = sb.vault();
+            let path = case.input["path"].as_str().unwrap_or("");
+            let children = NotesService::new(&vault)
+                .folder_children(path)
+                .map_err(|e| format!("folder_children failed: {e}"))?;
+            check_eq(
+                "children",
+                &canon_ties(&tree_json(&children)),
+                &canon_ties(&case.expected),
+            )
+        },
+    );
 }
 
 #[test]
@@ -141,8 +172,14 @@ fn golden_note_all() {
     assert_cases("notes_tree Note.all", g.cases_for("Note.all"), |case| {
         let sb = build(case, &orders);
         let vault = sb.vault();
-        let tree = NotesService::new(&vault).list_tree().map_err(|e| format!("list_tree failed: {e}"))?;
-        check_eq("Note.all", &canon_ties(&tree_json(&tree)), &canon_ties(&case.expected))
+        let tree = NotesService::new(&vault)
+            .list_tree()
+            .map_err(|e| format!("list_tree failed: {e}"))?;
+        check_eq(
+            "Note.all",
+            &canon_ties(&tree_json(&tree)),
+            &canon_ties(&case.expected),
+        )
     });
 }
 
@@ -164,12 +201,16 @@ fn folder_find(svc: &NotesService<'_>, path: &str) -> Result<Value, FsError> {
 fn golden_folder_find() {
     let g = golden(FIXTURE);
     let orders = spec_orders(FIXTURE);
-    assert_cases("notes_tree Folder.find", g.cases_for("Folder.find"), |case| {
-        let sb = build(case, &orders);
-        let vault = sb.vault();
-        let svc = NotesService::new(&vault);
-        let path = case.input["path"].as_str().unwrap_or("");
-        let actual = folder_find(&svc, path).unwrap_or_else(|e| fs_error_json(&e));
-        check_eq("Folder.find", &actual, &case.expected)
-    });
+    assert_cases(
+        "notes_tree Folder.find",
+        g.cases_for("Folder.find"),
+        |case| {
+            let sb = build(case, &orders);
+            let vault = sb.vault();
+            let svc = NotesService::new(&vault);
+            let path = case.input["path"].as_str().unwrap_or("");
+            let actual = folder_find(&svc, path).unwrap_or_else(|e| fs_error_json(&e));
+            check_eq("Folder.find", &actual, &case.expected)
+        },
+    );
 }

@@ -89,17 +89,44 @@ pub enum EntryKind {
 /// `.md` files, root-level `images`/`videos` hidden unless they contain notes.
 /// `has_markdown_below` is supplied by the caller for the root special case.
 pub fn is_visible(entry: &DirEntryInfo, at_root: bool, has_markdown_below: bool) -> bool {
-    todo!("backend.md §2.2")
+    if entry.name.starts_with('.') {
+        return false;
+    }
+    match entry.kind {
+        EntryKind::Symlink => false,
+        EntryKind::File => entry.name.ends_with(crate::path::NOTE_EXT),
+        EntryKind::Dir => !(at_root && is_media_folder(&entry.name)) || has_markdown_below,
+    }
+}
+
+/// **[COMPAT]** root-level folders managed by the media Library
+/// (hidden from the Explorer unless they hold notes).
+pub fn is_media_folder(name: &str) -> bool {
+    matches!(name, "images" | "videos")
 }
 
 /// **[COMPAT]** ordering: dirs first by lowercase name (Unicode lowercase,
 /// then bytewise), files by mtime desc.
 pub fn sort_entries(entries: &mut [DirEntryInfo]) {
-    todo!("backend.md §2.2")
+    entries.sort_by_cached_key(|entry| match entry.kind {
+        EntryKind::Dir => (0, entry.name.to_lowercase(), 0),
+        EntryKind::File | EntryKind::Symlink => (1, String::new(), -entry.mtime),
+    });
 }
 
 /// **[COMPAT]** `tree_utils.js#flattenTree`: depth-first list of every file
 /// node (folders contribute only their descendants). Feeds the file finder.
 pub fn flatten_files(nodes: &[TreeNode]) -> Vec<&TreeNode> {
-    todo!("frontend.md tree_utils")
+    let mut files = Vec::new();
+    collect_files(nodes, &mut files);
+    files
+}
+
+fn collect_files<'a>(nodes: &'a [TreeNode], out: &mut Vec<&'a TreeNode>) {
+    for node in nodes {
+        match node {
+            TreeNode::File { .. } => out.push(node),
+            TreeNode::Folder { children, .. } => collect_files(children, out),
+        }
+    }
 }

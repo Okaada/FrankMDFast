@@ -1,13 +1,16 @@
 //! Port of `test/javascript/lib/clipboard_image.test.js` (6 tests).
 
-use frankmd_media::clipboard::{ClipboardItem, PastedFile, image_file_from_clipboard, normalize_image_file};
+// Mechanical API adjustment: the types are the canonical frankmd-core ones
+// (`kind` is an enum, `last_modified` is unsigned ms).
+use frankmd_media::clipboard::{ClipboardItem, ClipboardItemKind, PastedFile, image_file_from_clipboard, normalize_image_file};
 
 fn file(name: &str, mime: &str) -> PastedFile {
     PastedFile { name: name.into(), mime: mime.into(), last_modified: None, bytes: b"x".to_vec() }
 }
 
 fn item(kind: &str, mime: &str, f: Option<PastedFile>) -> ClipboardItem {
-    ClipboardItem { kind: kind.into(), mime: mime.into(), file: f }
+    let kind = if kind == "file" { ClipboardItemKind::File } else { ClipboardItemKind::String };
+    ClipboardItem { kind, mime: mime.into(), file: f }
 }
 
 // port: test/javascript/lib/clipboard_image.test.js:12 "returns the image File when the clipboard carries one"

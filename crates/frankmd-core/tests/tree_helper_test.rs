@@ -31,7 +31,9 @@ fn rows(view: TreeView) -> Vec<TreeRow> {
 }
 
 fn row<'a>(rows: &'a [TreeRow], path: &str) -> &'a TreeRow {
-    rows.iter().find(|r| r.path == path).unwrap_or_else(|| panic!("no row {path}"))
+    rows.iter()
+        .find(|r| r.path == path)
+        .unwrap_or_else(|| panic!("no row {path}"))
 }
 
 // port: test/helpers/tree_helper_test.rb:8 "renders empty state when no items"
@@ -39,14 +41,18 @@ fn row<'a>(rows: &'a [TreeRow], path: &str) -> &'a TreeRow {
 fn renders_empty_state_when_no_items() {
     assert_eq!(tree_rows(&[], &set(&[]), ""), TreeView::Empty);
     // The empty state shows the localized sidebar.no_notes_yet text.
-    let text = Catalog::load(Locale::En).unwrap().t("sidebar.no_notes_yet", &[]);
+    let text = Catalog::load(Locale::En)
+        .unwrap()
+        .t("sidebar.no_notes_yet", &[]);
     assert_eq!(text, "No notes yet");
 }
 
 // port: test/helpers/tree_helper_test.rb:14 "renders file item with correct attributes"
 #[test]
 fn renders_file_item_with_correct_attributes() {
-    let items = nodes(json!([{"name": "test", "path": "test.md", "type": "file", "file_type": "markdown"}]));
+    let items = nodes(
+        json!([{"name": "test", "path": "test.md", "type": "file", "file_type": "markdown"}]),
+    );
     let r = rows(tree_rows(&items, &set(&[]), ""));
     assert_eq!(r.len(), 1);
     assert_eq!(r[0].path, "test.md");
@@ -59,7 +65,9 @@ fn renders_file_item_with_correct_attributes() {
 // port: test/helpers/tree_helper_test.rb:25 "renders selected file with selected class"
 #[test]
 fn renders_selected_file_with_selected_class() {
-    let items = nodes(json!([{"name": "test", "path": "test.md", "type": "file", "file_type": "markdown"}]));
+    let items = nodes(
+        json!([{"name": "test", "path": "test.md", "type": "file", "file_type": "markdown"}]),
+    );
     assert!(rows(tree_rows(&items, &set(&[]), "test.md"))[0].selected);
     assert!(!rows(tree_rows(&items, &set(&[]), ""))[0].selected);
 }
@@ -68,7 +76,8 @@ fn renders_selected_file_with_selected_class() {
 // Focus / keyboard delete+rename are frankmd-app behaviors; the data part is a Folder row.
 #[test]
 fn renders_folders_as_focusable_explorer_items() {
-    let items = nodes(json!([{"name": "folder1", "path": "folder1", "type": "folder", "children": []}]));
+    let items =
+        nodes(json!([{"name": "folder1", "path": "folder1", "type": "folder", "children": []}]));
     let r = rows(tree_rows(&items, &set(&[]), ""));
     assert_eq!(r.len(), 1);
     assert_eq!(r[0].kind, RowKind::Folder);
@@ -78,8 +87,10 @@ fn renders_folders_as_focusable_explorer_items() {
 // port: test/helpers/tree_helper_test.rb:42 "renders folder with children"
 #[test]
 fn renders_folder_with_children() {
-    let items = nodes(json!([{"name": "folder1", "path": "folder1", "type": "folder",
-        "children": [{"name": "note", "path": "folder1/note.md", "type": "file", "file_type": "markdown"}]}]));
+    let items = nodes(
+        json!([{"name": "folder1", "path": "folder1", "type": "folder",
+        "children": [{"name": "note", "path": "folder1/note.md", "type": "file", "file_type": "markdown"}]}]),
+    );
     let r = rows(tree_rows(&items, &set(&[]), ""));
     assert_eq!(r.len(), 2);
     assert_eq!(r[0].kind, RowKind::Folder);
@@ -92,8 +103,10 @@ fn renders_folder_with_children() {
 // port: test/helpers/tree_helper_test.rb:56 "renders expanded folder without hidden class"
 #[test]
 fn renders_expanded_folder_without_hidden_class() {
-    let items = nodes(json!([{"name": "folder1", "path": "folder1", "type": "folder",
-        "children": [{"name": "note", "path": "folder1/note.md", "type": "file", "file_type": "markdown"}]}]));
+    let items = nodes(
+        json!([{"name": "folder1", "path": "folder1", "type": "folder",
+        "children": [{"name": "note", "path": "folder1/note.md", "type": "file", "file_type": "markdown"}]}]),
+    );
     let r = rows(tree_rows(&items, &set(&["folder1"]), ""));
     assert!(row(&r, "folder1").expanded);
     assert!(row(&r, "folder1/note.md").visible);
@@ -102,7 +115,8 @@ fn renders_expanded_folder_without_hidden_class() {
 // port: test/helpers/tree_helper_test.rb:68 "renders config file without drag attributes"
 #[test]
 fn renders_config_file_without_drag_attributes() {
-    let items = nodes(json!([{"name": ".fed", "path": ".fed", "type": "file", "file_type": "config"}]));
+    let items =
+        nodes(json!([{"name": ".fed", "path": ".fed", "type": "file", "file_type": "config"}]));
     let r = rows(tree_rows(&items, &set(&[]), ""));
     assert_eq!(r[0].kind, RowKind::Config);
     assert!(!r[0].draggable);
@@ -114,7 +128,9 @@ fn renders_config_file_without_drag_attributes() {
 // port: test/helpers/tree_helper_test.rb:83 "renders regular files with drag and context menu"
 #[test]
 fn renders_regular_files_with_drag_and_context_menu() {
-    let items = nodes(json!([{"name": "test", "path": "test.md", "type": "file", "file_type": "markdown"}]));
+    let items = nodes(
+        json!([{"name": "test", "path": "test.md", "type": "file", "file_type": "markdown"}]),
+    );
     let r = rows(tree_rows(&items, &set(&[]), ""));
     assert!(r[0].draggable);
     assert!(r[0].context_menu);
@@ -124,7 +140,8 @@ fn renders_regular_files_with_drag_and_context_menu() {
 // Drop-target wiring is UI; the data part: folders are draggable with a context menu.
 #[test]
 fn renders_folders_with_drag_drop_actions() {
-    let items = nodes(json!([{"name": "folder1", "path": "folder1", "type": "folder", "children": []}]));
+    let items =
+        nodes(json!([{"name": "folder1", "path": "folder1", "type": "folder", "children": []}]));
     let r = rows(tree_rows(&items, &set(&[]), ""));
     assert!(r[0].draggable);
     assert!(r[0].context_menu);
@@ -134,7 +151,9 @@ fn renders_folders_with_drag_drop_actions() {
 // Ruby symbol vs string keys has no Rust analogue; the JSON item shape deserializes into TreeNode.
 #[test]
 fn handles_string_keys_in_items() {
-    let items = nodes(json!([{"name": "test", "path": "test.md", "type": "file", "file_type": "markdown"}]));
+    let items = nodes(
+        json!([{"name": "test", "path": "test.md", "type": "file", "file_type": "markdown"}]),
+    );
     let r = rows(tree_rows(&items, &set(&[]), ""));
     assert_eq!(r[0].path, "test.md");
     assert_eq!(r[0].name, "test");
@@ -143,7 +162,8 @@ fn handles_string_keys_in_items() {
 // port: test/helpers/tree_helper_test.rb:111 "returns empty string for empty children at non-root depth"
 #[test]
 fn returns_empty_string_for_empty_children_at_non_root_depth() {
-    let items = nodes(json!([{"name": "empty", "path": "empty", "type": "folder", "children": []}]));
+    let items =
+        nodes(json!([{"name": "empty", "path": "empty", "type": "folder", "children": []}]));
     let r = rows(tree_rows(&items, &set(&[]), ""));
     // Only the folder row: no "no notes yet" placeholder for the empty nested list.
     assert_eq!(r.len(), 1);

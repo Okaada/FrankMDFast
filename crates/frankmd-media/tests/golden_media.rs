@@ -118,6 +118,41 @@ fn check_tree(root: &Path, expected: &Value) -> Result<(), String> {
     eq(media_tree(root), expected_tree(&expected["tree_after"]))
 }
 
+/// security: uploads are content-sniffed. A case the original *accepted* with
+/// placeholder bytes (`"img"`, `"fake video bytes"`, a bare PNG signature)
+/// now (1) must be rejected with the sniffing message and write nothing, and
+/// (2) is replayed with a real file of the stored extension, expecting the
+/// recorded result and the recorded tree with that file's bytes.
+/// Returns the replacement bytes when the case is a recorded success.
+fn security_sample(expected: &Value) -> Option<Vec<u8>> {
+    let url = expected["result"]["url"].as_str()?;
+    let ext = url.rfind('.').map_or("", |i| &url[i..]);
+    Some(sample_media(ext))
+}
+
+/// The recorded tree with every stored file's bytes replaced by `bytes`.
+fn with_sample_bytes(expected: &Value, bytes: &[u8]) -> Value {
+    let mut e = expected.clone();
+    if let Some(tree) = e["tree_after"].as_object_mut() {
+        for (k, v) in tree.iter_mut() {
+            if (k.starts_with("images/") || k.starts_with("videos/")) && !k.ends_with('/') {
+                *v = json!({ "base64": b64(bytes) });
+            }
+        }
+    }
+    e
+}
+
+/// The placeholder content of a recorded success is now refused, with no file written.
+fn check_placeholder_rejected(got: Result<String, MediaError>, root: &Path, kind: frankmd_media::MediaKind) -> Result<(), String> {
+    let want = frankmd_media::sniff::rejection_message(kind);
+    match got {
+        Err(MediaError::Rejected(m)) if m == want => {}
+        other => return Err(format!("security: placeholder bytes must be rejected, got {other:?}")),
+    }
+    eq(media_tree(root).into_iter().filter(|(_, v)| v.is_some()).count(), 0)
+}
+
 fn rt() -> tokio::runtime::Runtime {
     tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap()
 }
@@ -232,15 +267,24 @@ fn images_upload_base64_data() {
         let t = TempTree::empty();
         let (_, mut env) = env_for(config_for(&c.input, t.path()), None);
         env.ctx = ctx_from_pinned(&c.input);
-        let got = rt.block_on(images::upload_base64_data(
-            &env,
-            c.input["base64_data"].as_str().unwrap(),
-            opt_str(&c.input["mime_type"]),
-            opt_str(&c.input["filename"]),
-            &param(&c.input["upload_to_s3"]),
-            None,
-        ));
-        check_result(got, &c.expected["result"])?;
+        let upload = |data: &str| {
+            rt.block_on(images::upload_base64_data(
+                &env,
+                data,
+                opt_str(&c.input["mime_type"]),
+                opt_str(&c.input["filename"]),
+                &param(&c.input["upload_to_s3"]),
+                None,
+            ))
+        };
+        let data = c.input["base64_data"].as_str().unwrap();
+        // security: see `security_sample`.
+        if let Some(sample) = security_sample(&c.expected) {
+            check_placeholder_rejected(upload(data), t.path(), frankmd_media::MediaKind::Image)?;
+            check_result(upload(&b64(&sample)), &c.expected["result"])?;
+            return check_tree(t.path(), &with_sample_bytes(&c.expected, &sample));
+        }
+        check_result(upload(data), &c.expected["result"])?;
         check_tree(t.path(), &c.expected)
     });
 }
@@ -252,12 +296,20 @@ fn images_upload_file() {
         let t = TempTree::empty();
         let (_, mut env) = env_for(config_for(&c.input, t.path()), None);
         env.ctx = ctx_from_pinned(&c.input);
-        let file = c.input["original_filename"]
-            .as_str()
-            .map(|n| Upload::new(n, c.input["content"].as_str().unwrap_or_default()));
         let resize = images::parse_resize_ratio(&param(&c.input["resize"]));
-        let got = rt.block_on(images::upload_file(&env, file, resize, &param(&c.input["upload_to_s3"]), None));
-        check_result(got, &c.expected["result"])?;
+        let upload = |content: Option<Vec<u8>>| {
+            let file = c.input["original_filename"].as_str().map(|n| {
+                Upload::new(n, content.clone().unwrap_or_else(|| c.input["content"].as_str().unwrap_or_default().into()))
+            });
+            rt.block_on(images::upload_file(&env, file, resize, &param(&c.input["upload_to_s3"]), None))
+        };
+        // security: see `security_sample`.
+        if let Some(sample) = security_sample(&c.expected) {
+            check_placeholder_rejected(upload(None), t.path(), frankmd_media::MediaKind::Image)?;
+            check_result(upload(Some(sample.clone())), &c.expected["result"])?;
+            return check_tree(t.path(), &with_sample_bytes(&c.expected, &sample));
+        }
+        check_result(upload(None), &c.expected["result"])?;
         check_tree(t.path(), &c.expected)
     });
 }
@@ -278,11 +330,19 @@ fn media_service_save_upload() {
         let t = TempTree::empty();
         let (_, mut env) = env_for(config_for(&c.input, t.path()), None);
         env.ctx = ctx_from_pinned(&c.input);
-        let file = c.input["original_filename"]
-            .as_str()
-            .map(|n| Upload::new(n, c.input["content"].as_str().unwrap_or("fake video bytes")));
-        let got = rt.block_on(video::save_upload(&env, file, &param(&c.input["upload_to_s3"]), None));
-        check_result(got, &c.expected["result"])?;
+        let upload = |content: Option<Vec<u8>>| {
+            let file = c.input["original_filename"].as_str().map(|n| {
+                Upload::new(n, content.clone().unwrap_or_else(|| c.input["content"].as_str().unwrap_or("fake video bytes").into()))
+            });
+            rt.block_on(video::save_upload(&env, file, &param(&c.input["upload_to_s3"]), None))
+        };
+        // security: see `security_sample`.
+        if let Some(sample) = security_sample(&c.expected) {
+            check_placeholder_rejected(upload(None), t.path(), frankmd_media::MediaKind::Video)?;
+            check_result(upload(Some(sample.clone())), &c.expected["result"])?;
+            return check_tree(t.path(), &with_sample_bytes(&c.expected, &sample));
+        }
+        check_result(upload(None), &c.expected["result"])?;
         check_tree(t.path(), &c.expected)
     });
 }
@@ -408,7 +468,13 @@ fn upload_storage_s3_url() {
 #[test]
 fn upload_storage_sanitize_s3_key() {
     run("UploadStorage.sanitize_s3_key", |c| {
-        eq(us::sanitize_s3_key(opt_str(&c.input["value"])).as_str(), c.expected.as_str().unwrap())
+        // Mechanical: the Rust API takes a string; Ruby called `value.to_s`
+        // (the fixture includes the Integer 123).
+        let value = match &c.input["value"] {
+            Value::Number(n) => Some(n.to_string()),
+            v => v.as_str().map(str::to_owned),
+        };
+        eq(us::sanitize_s3_key(value.as_deref()).as_str(), c.expected.as_str().unwrap())
     });
 }
 

@@ -7,7 +7,7 @@ mod library;
 
 use frankmd_media::s3_library::S3MediaLibrary;
 use library::{Notes, env, list_objects_xml, s3_config};
-use wiremock::matchers::{header, method, path, query_param, query_param_is_missing};
+use wiremock::matchers::{header, method, path, path_regex, query_param, query_param_is_missing};
 use wiremock::{Mock, MockServer, ResponseTemplate};
 
 async fn service(server: &MockServer) -> (Notes, S3MediaLibrary) {
@@ -23,7 +23,7 @@ async fn service(server: &MockServer) -> (Notes, S3MediaLibrary) {
 async fn lists_supported_objects_below_prefix_across_pages() {
     let server = MockServer::start().await;
     Mock::given(method("GET"))
-        .and(path("/bucket"))
+        .and(path_regex("^/bucket/?$")) // mechanical: aws-sdk-s3 (Rust) sends `/bucket/` for path-style ListObjectsV2
         .and(query_param("list-type", "2"))
         .and(query_param("prefix", "frankmd/"))
         .and(query_param_is_missing("continuation-token"))
@@ -36,7 +36,7 @@ async fn lists_supported_objects_below_prefix_across_pages() {
         .mount(&server)
         .await;
     Mock::given(method("GET"))
-        .and(path("/bucket"))
+        .and(path_regex("^/bucket/?$")) // mechanical: aws-sdk-s3 (Rust) sends `/bucket/` for path-style ListObjectsV2
         .and(query_param("prefix", "frankmd/"))
         .and(query_param("continuation-token", "next"))
         .respond_with(ResponseTemplate::new(200).set_body_string(list_objects_xml("bucket", &[("frankmd/2026/clip.mp4", 20)], None)))

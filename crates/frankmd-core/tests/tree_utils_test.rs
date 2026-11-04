@@ -101,7 +101,9 @@ fn preserves_file_metadata() {
     ]));
     let r = flatten_files(&t);
     match r[0] {
-        TreeNode::File { file_type, mtime, .. } => {
+        TreeNode::File {
+            file_type, mtime, ..
+        } => {
             assert_eq!(*file_type, FileType::Markdown);
             assert_eq!(*mtime, 1024);
         }

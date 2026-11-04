@@ -6,7 +6,13 @@
 //! expansion, `{content, mtime, mode, base64}` values and mtime pinning
 //! (`1700000000 - 100*i` in **spec order** of files, which is why the raw key
 //! order of each fixture's trees is recovered with [`spec_orders`]).
-#![allow(dead_code, unreachable_pub, clippy::disallowed_methods, clippy::unwrap_used, clippy::missing_panics_doc)]
+#![allow(
+    dead_code,
+    unreachable_pub,
+    clippy::disallowed_methods,
+    clippy::unwrap_used,
+    clippy::missing_panics_doc
+)]
 
 pub mod http;
 
@@ -32,7 +38,10 @@ pub fn fed_template() -> String {
 /// SHA-256 hex (Rails `Digest::SHA256.hexdigest`).
 pub fn sha256_hex(bytes: &[u8]) -> String {
     use sha2::{Digest, Sha256};
-    Sha256::digest(bytes).iter().map(|b| format!("{b:02x}")).collect()
+    Sha256::digest(bytes)
+        .iter()
+        .map(|b| format!("{b:02x}"))
+        .collect()
 }
 
 /// English translation of an i18n key (for model error full messages).
@@ -148,7 +157,8 @@ pub fn spec_orders(fixture: &str) -> HashMap<String, SpecOrder> {
         cases: Vec<RawCase>,
     }
 
-    let text = fs::read_to_string(frankmd_testkit::golden_path(&format!("{fixture}.json"))).unwrap();
+    let text =
+        fs::read_to_string(frankmd_testkit::golden_path(&format!("{fixture}.json"))).unwrap();
     let raw: RawFile = serde_json::from_str(&text).unwrap();
     raw.cases
         .into_iter()
@@ -184,7 +194,13 @@ impl Sandbox {
         fs::create_dir_all(&root).unwrap();
         fs::create_dir_all(&outside).unwrap();
         fs::create_dir_all(&state).unwrap();
-        Self { tmp, tmp_path, root, outside, state }
+        Self {
+            tmp,
+            tmp_path,
+            root,
+            outside,
+            state,
+        }
     }
 
     /// Build from `input.tree` / `input.outside` (outside first, as Ruby does),
@@ -235,7 +251,11 @@ impl Sandbox {
             } else {
                 let content = match val {
                     Value::String(s) => s.clone(),
-                    Value::Object(o) => o.get("content").and_then(Value::as_str).unwrap_or("").to_owned(),
+                    Value::Object(o) => o
+                        .get("content")
+                        .and_then(Value::as_str)
+                        .unwrap_or("")
+                        .to_owned(),
                     Value::Null => String::new(),
                     other => other.to_string(),
                 };
@@ -246,7 +266,10 @@ impl Sandbox {
                 use std::os::unix::fs::PermissionsExt;
                 fs::set_permissions(&path, fs::Permissions::from_mode(mode as u32)).unwrap();
             }
-            let mtime = val.get("mtime").and_then(Value::as_i64).unwrap_or(BASE_MTIME - i * 100);
+            let mtime = val
+                .get("mtime")
+                .and_then(Value::as_i64)
+                .unwrap_or(BASE_MTIME - i * 100);
             set_mtime(&path, mtime);
             i += 1;
         }
@@ -289,7 +312,14 @@ impl Sandbox {
     /// `mode & 0o7777` of `rel` as octal text (`"600"`).
     pub fn stat_mode(&self, rel: &str) -> String {
         use std::os::unix::fs::PermissionsExt;
-        format!("{:o}", fs::symlink_metadata(self.abs(rel)).unwrap().permissions().mode() & 0o7777)
+        format!(
+            "{:o}",
+            fs::symlink_metadata(self.abs(rel))
+                .unwrap()
+                .permissions()
+                .mode()
+                & 0o7777
+        )
     }
 
     /// `chmod` under the root.
@@ -320,17 +350,27 @@ impl Sandbox {
         entries.sort_by_key(fs::DirEntry::file_name);
         for e in entries {
             let p = e.path();
-            let rel = p.strip_prefix(&self.root).unwrap().to_string_lossy().into_owned();
+            let rel = p
+                .strip_prefix(&self.root)
+                .unwrap()
+                .to_string_lossy()
+                .into_owned();
             let ft = e.file_type().unwrap();
             if ft.is_symlink() {
                 let target = fs::read_link(&p).unwrap();
-                out.insert(rel, json!({"symlink": self.norm(&target.to_string_lossy())}));
+                out.insert(
+                    rel,
+                    json!({"symlink": self.norm(&target.to_string_lossy())}),
+                );
             } else if ft.is_dir() {
                 out.insert(format!("{rel}/"), Value::Null);
                 self.walk(&p, out);
             } else {
                 let bytes = fs::read(&p).unwrap_or_default();
-                out.insert(rel, Value::String(String::from_utf8_lossy(&bytes).into_owned()));
+                out.insert(
+                    rel,
+                    Value::String(String::from_utf8_lossy(&bytes).into_owned()),
+                );
             }
         }
     }
@@ -350,7 +390,11 @@ impl Sandbox {
         match v {
             Value::String(s) => Value::String(self.norm(s)),
             Value::Array(a) => Value::Array(a.iter().map(|x| self.norm_value(x)).collect()),
-            Value::Object(o) => Value::Object(o.iter().map(|(k, x)| (self.norm(k), self.norm_value(x))).collect()),
+            Value::Object(o) => Value::Object(
+                o.iter()
+                    .map(|(k, x)| (self.norm(k), self.norm_value(x)))
+                    .collect(),
+            ),
             other => other.clone(),
         }
     }
@@ -372,9 +416,14 @@ pub fn expand_fed(content: &str) -> String {
 /// Set both atime and mtime (`File.utime`).
 pub fn set_mtime(path: &Path, secs: i64) {
     let d = std::time::Duration::from_secs(secs.unsigned_abs());
-    let t = if secs >= 0 { std::time::UNIX_EPOCH + d } else { std::time::UNIX_EPOCH - d };
+    let t = if secs >= 0 {
+        std::time::UNIX_EPOCH + d
+    } else {
+        std::time::UNIX_EPOCH - d
+    };
     let f = fs::OpenOptions::new().write(true).open(path).unwrap();
-    f.set_times(fs::FileTimes::new().set_accessed(t).set_modified(t)).unwrap();
+    f.set_times(fs::FileTimes::new().set_accessed(t).set_modified(t))
+        .unwrap();
 }
 
 /// Minimal standard base64 decoder (fixtures use `pack("m0")`).
@@ -407,7 +456,9 @@ pub fn without_config_side_effects(mut tree: BTreeMap<String, Value>) -> BTreeMa
 
 /// Expected `tree_after` (a JSON object) as a sorted map.
 pub fn expected_tree(v: &Value) -> BTreeMap<String, Value> {
-    v.as_object().map(|o| o.iter().map(|(k, v)| (k.clone(), v.clone())).collect()).unwrap_or_default()
+    v.as_object()
+        .map(|o| o.iter().map(|(k, v)| (k.clone(), v.clone())).collect())
+        .unwrap_or_default()
 }
 
 /// Fixture error shape `{error: <Rails class>, message}`.
@@ -445,7 +496,9 @@ pub fn check_eq(what: &str, actual: &Value, expected: &Value) -> Result<(), Stri
     if actual == expected {
         Ok(())
     } else {
-        Err(format!("{what}:\n    expected: {expected}\n    actual:   {actual}"))
+        Err(format!(
+            "{what}:\n    expected: {expected}\n    actual:   {actual}"
+        ))
     }
 }
 
@@ -469,7 +522,10 @@ pub struct FedRecentStore {
 impl FedRecentStore {
     /// Store for a sandbox root.
     pub fn new(root: &Path) -> Self {
-        Self { fed: root.join(".fed"), lock: root.join(".frankmd-config.lock") }
+        Self {
+            fed: root.join(".fed"),
+            lock: root.join(".frankmd-config.lock"),
+        }
     }
 
     fn line_re() -> regex::Regex {
@@ -489,8 +545,14 @@ impl RecentStore for FedRecentStore {
         re.captures(&text).map(|c| c[1].trim().to_owned())
     }
 
-    fn modify(&self, f: &mut dyn FnMut(Option<String>) -> Result<String, FsError>) -> Result<bool, FsError> {
-        fs::OpenOptions::new().create(true).append(true).open(&self.lock)?;
+    fn modify(
+        &self,
+        f: &mut dyn FnMut(Option<String>) -> Result<String, FsError>,
+    ) -> Result<bool, FsError> {
+        fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(&self.lock)?;
         let text = fs::read_to_string(&self.fed).unwrap_or_else(|_| fed_template());
         let new_json = f(self.load())?;
         let line = format!("recent_files = {new_json}");

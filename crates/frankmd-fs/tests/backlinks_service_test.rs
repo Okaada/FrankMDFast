@@ -123,7 +123,10 @@ fn finds_multiple_backlinks_within_same_file() {
 fn returns_context_lines_around_matches() {
     let sb = Sandbox::empty();
     sb.write("target.md", "# Target");
-    sb.write("source.md", "Line 1\nLine 2\nLink to [[target]] here\nLine 4\nLine 5");
+    sb.write(
+        "source.md",
+        "Line 1\nLine 2\nLink to [[target]] here\nLine 4\nLine 5",
+    );
     let r = backlinks(&sb, "target.md", 1);
     assert_eq!(r.len(), 1);
     let ctx = &r[0].context;
@@ -157,5 +160,36 @@ fn rejects_path_traversal_attempts() {
     for t in ["../etc/passwd", "folder/../../secret.md"] {
         let e = svc.backlinks(t, 3).unwrap_err();
         assert_eq!(e.compat_class(), "ArgumentError", "{t}");
+    }
+}
+
+// security: symlink escaping the vault is not followed (original leaked outside files)
+#[test]
+#[allow(clippy::disallowed_methods)] // test setup outside the vault
+fn never_follows_symlinks_that_escape_the_vault() {
+    let sb = Sandbox::empty();
+    std::fs::write(sb.outside.join("external.md"), "OUTSIDE SECRET [[target]]").unwrap();
+    std::os::unix::fs::symlink(&sb.outside, sb.abs("ext")).unwrap();
+    std::os::unix::fs::symlink(sb.outside.join("external.md"), sb.abs("leak.md")).unwrap();
+    sb.write("inside.md", "[[target]]");
+    sb.mkdir("real");
+    sb.write("real/deep.md", "see [[target]]");
+    std::os::unix::fs::symlink(sb.abs("real"), sb.abs("alias")).unwrap();
+    std::os::unix::fs::symlink(sb.abs("real"), sb.abs("real/loop")).unwrap();
+
+    let hits = backlinks(&sb, "target.md", 3);
+    let mut paths: Vec<&str> = hits.iter().map(|h| h.path.as_str()).collect();
+    paths.sort_unstable();
+    // In-vault symlinks are followed (each folder walked once); outside ones are skipped.
+    assert_eq!(paths.len(), 2, "{paths:?}");
+    assert!(paths.contains(&"inside.md"), "{paths:?}");
+    assert!(paths.iter().any(|p| p.ends_with("deep.md")), "{paths:?}");
+    for hit in &hits {
+        assert!(!hit.match_text.contains("OUTSIDE SECRET"));
+        assert!(
+            hit.context
+                .iter()
+                .all(|c| !c.content.contains("OUTSIDE SECRET"))
+        );
     }
 }

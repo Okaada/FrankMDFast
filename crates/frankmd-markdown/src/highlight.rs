@@ -4,6 +4,8 @@
 //! fence-alias table, the `data-code-language` labels and the per-render
 //! budgets. Golden: `js_code_block_highlighter.json`.
 
+mod builtin;
+
 use crate::ir::HighlightedLine;
 
 /// A highlighter backend (tree-sitter via gpui-kit's registry in the app, or
@@ -26,8 +28,123 @@ pub struct Language {
 /// `class="language-<x>"`) through FrankMD's `LANGUAGE_PARSERS` table,
 /// case-insensitively. Unknown → `None` (block left untouched, no label).
 pub fn language_for_fence(info: &str) -> Option<Language> {
-    todo!()
+    let key = info.to_lowercase();
+    LANGUAGE_PARSERS.iter().find(|(alias, _)| *alias == key).map(|(_, lang)| *lang)
 }
+
+const fn lang(id: &'static str, label: &'static str) -> Language {
+    Language { id, label }
+}
+
+const JAVASCRIPT: Language = lang("javascript", "JavaScript");
+const JSX: Language = lang("jsx", "JSX");
+const TYPESCRIPT: Language = lang("typescript", "TypeScript");
+const TSX: Language = lang("tsx", "TSX");
+const HTML: Language = lang("html", "HTML");
+const SVG: Language = lang("svg", "SVG");
+const CSS: Language = lang("css", "CSS");
+const JSON: Language = lang("json", "JSON");
+const JSONC: Language = lang("jsonc", "JSONC");
+const YAML: Language = lang("yaml", "YAML");
+const PHP: Language = lang("php", "PHP");
+const RUBY: Language = lang("ruby", "Ruby");
+const DOTENV: Language = lang("dotenv", "Dotenv");
+const SHELL: Language = lang("shell", "Shell");
+const SQL: Language = lang("sql", "SQL");
+const POSTGRES: Language = lang("postgresql", "PostgreSQL");
+const MYSQL: Language = lang("mysql", "MySQL");
+const MARIADB: Language = lang("mariadb", "MariaDB");
+const SQLITE: Language = lang("sqlite", "SQLite");
+const TOML: Language = lang("toml", "TOML");
+const DOCKERFILE: Language = lang("dockerfile", "Dockerfile");
+const TERRAFORM: Language = lang("terraform", "Terraform");
+const HCL: Language = lang("hcl", "HCL");
+const RUST: Language = lang("rust", "Rust");
+const GO: Language = lang("go", "Go");
+const PYTHON: Language = lang("python", "Python");
+const JAVA: Language = lang("java", "Java");
+const C: Language = lang("c", "C");
+const CPP: Language = lang("cpp", "C++");
+const CSHARP: Language = lang("csharp", "C#");
+const KOTLIN: Language = lang("kotlin", "Kotlin");
+
+/// FrankMD's explicit `LANGUAGE_PARSERS` map (fence alias → language). Fence
+/// names are untrusted note content, so only these are ever selected.
+const LANGUAGE_PARSERS: &[(&str, Language)] = &[
+    ("js", JAVASCRIPT),
+    ("javascript", JAVASCRIPT),
+    ("mjs", JAVASCRIPT),
+    ("cjs", JAVASCRIPT),
+    ("jsx", JSX),
+    ("ts", TYPESCRIPT),
+    ("typescript", TYPESCRIPT),
+    ("tsx", TSX),
+    ("html", HTML),
+    ("htm", HTML),
+    ("svg", SVG),
+    ("css", CSS),
+    ("json", JSON),
+    ("jsonc", JSONC),
+    ("yaml", YAML),
+    ("yml", YAML),
+    (".yaml", YAML),
+    (".yml", YAML),
+    ("php", PHP),
+    ("phtml", PHP),
+    ("ruby", RUBY),
+    ("rb", RUBY),
+    (".rb", RUBY),
+    ("rake", RUBY),
+    ("env", DOTENV),
+    (".env", DOTENV),
+    ("dotenv", DOTENV),
+    ("shell", SHELL),
+    ("bash", SHELL),
+    ("sh", SHELL),
+    ("zsh", SHELL),
+    ("sql", SQL),
+    ("postgres", POSTGRES),
+    ("postgresql", POSTGRES),
+    ("pgsql", POSTGRES),
+    ("mysql", MYSQL),
+    ("mariadb", MARIADB),
+    ("sqlite", SQLITE),
+    ("toml", TOML),
+    ("tml", TOML),
+    ("dockerfile", DOCKERFILE),
+    ("docker", DOCKERFILE),
+    ("tf", TERRAFORM),
+    (".tf", TERRAFORM),
+    ("tfvars", TERRAFORM),
+    (".tfvars", TERRAFORM),
+    ("terraform", TERRAFORM),
+    ("hcl", HCL),
+    (".hcl", HCL),
+    ("rs", RUST),
+    ("rust", RUST),
+    ("go", GO),
+    ("golang", GO),
+    ("py", PYTHON),
+    ("python", PYTHON),
+    ("python3", PYTHON),
+    ("java", JAVA),
+    ("c", C),
+    ("h", C),
+    ("ino", C),
+    ("cc", CPP),
+    ("cpp", CPP),
+    ("c++", CPP),
+    ("cxx", CPP),
+    ("hpp", CPP),
+    ("hh", CPP),
+    ("hxx", CPP),
+    ("cs", CSHARP),
+    ("csharp", CSHARP),
+    ("c#", CSHARP),
+    ("kotlin", KOTLIN),
+    ("kt", KOTLIN),
+    ("kts", KOTLIN),
+];
 
 /// Per-render highlighting limits. Lengths are **UTF-16 code units** (JS
 /// `string.length`), as in FrankMD.
@@ -68,7 +185,39 @@ pub struct BlockPlan {
 /// total is skipped without consuming the total; once the total reaches 0
 /// nothing else is highlighted (labels are still assigned).
 pub fn plan(blocks: &[(&str, usize)], budget: &HighlightBudget) -> Vec<BlockPlan> {
-    todo!()
+    let skipped = BlockPlan { language: None, highlight: false };
+    let mut remaining = budget.max_total_len;
+    let mut out = Vec::with_capacity(blocks.len());
+    for (ix, &(token, len)) in blocks.iter().enumerate() {
+        if ix >= budget.max_blocks {
+            // The original `break`s: later blocks are never even labelled.
+            out.push(skipped);
+            continue;
+        }
+        let Some(language) = language_for_fence(token) else {
+            out.push(skipped);
+            continue;
+        };
+        let fits = remaining > 0 && len <= budget.max_block_len && len <= remaining;
+        if fits {
+            remaining -= len;
+        }
+        out.push(BlockPlan { language: Some(language), highlight: fits });
+    }
+    out
+}
+
+/// Unhighlighted lines for `code` as marked emits it: one line per `\n`
+/// separated segment, a single trailing newline not starting a new line.
+/// Use this for blocks the [`plan`] does not highlight so the text matches
+/// what [`BuiltinHighlighter`] would have produced.
+pub fn plain_lines(code: &str) -> Vec<HighlightedLine> {
+    split_code_lines(code).map(|text| HighlightedLine { text: text.to_owned(), runs: Vec::new() }).collect()
+}
+
+/// Split code into lines without their newlines (see [`plain_lines`]).
+fn split_code_lines(code: &str) -> std::str::Split<'_, char> {
+    code.strip_suffix('\n').unwrap_or(code).split('\n')
 }
 
 /// Headless highlighter covering every language in the FrankMD table
@@ -78,52 +227,15 @@ pub struct BuiltinHighlighter;
 
 impl CodeHighlighter for BuiltinHighlighter {
     fn highlight(&self, lang: Language, code: &str) -> Option<Vec<HighlightedLine>> {
-        todo!()
+        let lines: Vec<&str> = split_code_lines(code).collect();
+        match lang.id {
+            "terraform" | "hcl" => Some(builtin::highlight_hcl(&lines)),
+            id => builtin::highlight_syntect(id, &lines),
+        }
     }
 }
 
 /// **[COMPAT]** FrankMD's hand-written Terraform/HCL stream tokenizer
 /// (`terraform_hcl_stream_parser.js`), line-at-a-time like CodeMirror's
 /// `StreamLanguage`. Golden: `js_terraform_hcl_stream_parser.json`.
-pub mod hcl {
-    /// Tokenizer state carried across lines (`startState()`; `copyState` = `Clone`).
-    #[derive(Debug, Clone, Default, PartialEq, Eq)]
-    pub struct HclState {
-        /// Inside `/* ... */`.
-        pub block_comment: bool,
-        /// Inside a `<<EOF` / `<<-EOF` heredoc: the closing marker.
-        pub heredoc_marker: Option<String>,
-        /// The previous token was a `.` (next identifier is a property).
-        pub after_dot: bool,
-    }
-
-    /// StreamLanguage style of a token.
-    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-    #[allow(missing_docs)]
-    pub enum HclStyle {
-        Keyword,
-        String,
-        Comment,
-        /// `true`/`false`/`null`.
-        Atom,
-        Number,
-        /// `variableName.function`: identifier followed by `(`.
-        Function,
-        /// After a `.`, or followed by `=`.
-        Property,
-        Variable,
-        Operator,
-        Punctuation,
-    }
-
-    /// Tokenize one non-empty line: `(token text, style)` in order, covering
-    /// the whole line; whitespace runs are `(text, None)`.
-    pub fn tokenize_line(line: &str, state: &mut HclState) -> Vec<(String, Option<HclStyle>)> {
-        todo!()
-    }
-
-    /// `blankLine(state)`: called for empty lines (resets `after_dot`).
-    pub fn blank_line(state: &mut HclState) {
-        todo!()
-    }
-}
+pub mod hcl;

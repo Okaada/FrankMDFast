@@ -69,7 +69,8 @@ impl Fixture {
     }
 
     async fn external_image(&self) {
-        external(&self.mock, "/image.png", b"image bytes", "image/png").await;
+        // security: real PNG bytes (placeholder text is rejected by content sniffing).
+        external(&self.mock, "/image.png", &PNG_1X1, "image/png").await;
     }
 }
 
@@ -90,7 +91,7 @@ async fn external_url_is_saved_locally_without_requiring_a_server_image_folder()
     c.images_path = None;
     let u = f.api(c).import(&url("http://example.com/image.png")).await.unwrap();
     assert_match(r"\Aimages/", &u);
-    assert_eq!(std::fs::read(f.notes.path().join(&u)).unwrap(), b"image bytes");
+    assert_eq!(std::fs::read(f.notes.path().join(&u)).unwrap(), PNG_1X1);
 }
 
 // port: test/controllers/image_import_test.rb:41 "external and server images are saved to S3 without local media copies"
@@ -99,7 +100,7 @@ async fn external_and_server_images_are_saved_to_s3_without_local_media_copies()
     let f = Fixture::new().await;
     f.external_image().await;
     s3_put_ok(&f.mock, "bucket").await;
-    write(&f.server_dir, "photo.png", b"image bytes");
+    write(&f.server_dir, "photo.png", &PNG_1X1); // security: real PNG bytes
     let api = f.api(f.s3());
     for mut req in [url("http://example.com/image.png"), server_path("photo.png")] {
         req.s3_prefix = Some("chosen".into());
@@ -171,10 +172,10 @@ async fn image_x_ms_bmp_imports_to_s3_with_bmp_extension_and_content_type() {
 #[tokio::test]
 async fn server_images_can_be_copied_locally_without_changing_the_original() {
     let f = Fixture::new().await;
-    write(&f.server_dir, "photo.png", b"original");
+    write(&f.server_dir, "photo.png", &PNG_1X1); // security: real PNG bytes
     let u = f.api(f.config()).import(&server_path("photo.png")).await.unwrap();
-    assert_eq!(std::fs::read(f.notes.path().join(&u)).unwrap(), b"original");
-    assert_eq!(std::fs::read(f.server_dir.join("photo.png")).unwrap(), b"original");
+    assert_eq!(std::fs::read(f.notes.path().join(&u)).unwrap(), PNG_1X1);
+    assert_eq!(std::fs::read(f.server_dir.join("photo.png")).unwrap(), PNG_1X1);
 }
 
 // port: test/controllers/image_import_test.rb:96 "exactly one string source is required"

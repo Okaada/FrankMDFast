@@ -97,10 +97,16 @@ Every skip count is asserted in its test, so a changed fixture fails loudly.
 
 ## Behaviour decisions and quirks
 
-- **Drafts keyed by path vs DocId:** the compat model (`frankmd:draft:<path>`, `draft-conflict`, legacy
-  `backup`, schemaVersion 1, segment-boundary remap with verify-before-delete) is kept as the tested
-  semantics. architecture.md keys drafts by DocId. Mapping documented in `drafts.rs`; **open question**.
-  `updatedAt` must serialize as an integer; unknown record fields must round-trip.
+- **Drafts keyed by DocId (decided).** The compat engine (`draft_storage`: record format, schemaVersion 1,
+  verify-before-delete, conflict copies, legacy backups) is kept and golden-verified, but the autosave
+  session files every record under `drafts::draft_subject(doc)` instead of the note path. A rename only
+  updates the path (`AutosaveSession::paths_changed`); it performs no draft I/O, so remap failures and
+  destination collisions cannot happen. The ported autosave tests were adapted (`// changed: drafts
+  keyed by DocId`): the harness keeps a `DocRegistry`; the remap-failure and collision tests are
+  replaced by tests asserting that a failing store cannot strand a draft during a rename and that
+  renaming onto another note's old path keeps both drafts. The session writes the legacy offline
+  backup itself (no `OfflineBackup` effect). On disk: `<vault state>/drafts.json` (atomic, 0600) and
+  `<vault state>/doc_index.json`. `updatedAt` serializes as an integer; unknown record fields round-trip.
 - **Original bug not replicated:** `formatFileSize` gives "1.0 undefined" for 1 TiB and up. Rust continues to
   TB/PB (test rewrites those expectations).
 - **JS prototype leaks not replicated:** `setEmojiLocale("toString"/"__proto__")` falls back to `en`;

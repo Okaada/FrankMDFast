@@ -1,6 +1,6 @@
 //! Port of `test/javascript/lib/s3_key.test.js` (3 tests).
 
-use frankmd_media::ctx::FixedClock;
+use frankmd_media::ctx::FakeClock; // mechanical: canonical frankmd-core clock
 use frankmd_media::s3_key::{default_s3_key, default_s3_key_now, default_s3_prefix, default_s3_prefix_now};
 use jiff::civil::date;
 
@@ -19,7 +19,7 @@ fn default_key_appends_filename() {
 // port: test/javascript/lib/s3_key.test.js:17 "defaults to the current date when none is given"
 #[test]
 fn defaults_to_current_date() {
-    let clock = FixedClock("2031-11-05T10:00:00+00:00[UTC]".parse().expect("zoned"));
+    let clock = FakeClock::new("2031-11-05T10:00:00+00:00[UTC]".parse().expect("zoned"));
     assert_eq!(default_s3_prefix_now(&clock), "frankmd/2031/11");
     assert_eq!(default_s3_key_now("a.png", &clock), "frankmd/2031/11/a.png");
     let sys = frankmd_media::ctx::SystemClock;

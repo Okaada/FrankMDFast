@@ -16,13 +16,78 @@ use frankmd_testkit::serde_json::Value;
 use wiremock::matchers::{method, path_regex};
 use wiremock::{Mock, MockServer, ResponseTemplate};
 
-/// The 1x1 PNG the original tests used.
-pub const PNG_1X1: [u8; 70] = [
+/// A valid 1x1 RGB PNG. The port's first copy of the original tests' PNG had
+/// a corrupted IDAT chunk (CRC mismatch, so no strict decoder could read it);
+/// these are the same IHDR/IEND chunks with a correct IDAT.
+pub const PNG_1X1: [u8; 69] = [
     0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 0x52, 0x00, 0x00,
     0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x08, 0x02, 0x00, 0x00, 0x00, 0x90, 0x77, 0x53, 0xDE, 0x00, 0x00, 0x00,
-    0x0C, 0x49, 0x44, 0x41, 0x54, 0x08, 0xD7, 0x63, 0xF8, 0xCF, 0xC0, 0x00, 0x00, 0x00, 0x03, 0x00, 0x01, 0x00,
-    0x05, 0xFE, 0xD4, 0xE7, 0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4E, 0x44, 0xAE, 0x42, 0x60, 0x82,
+    0x0C, 0x49, 0x44, 0x41, 0x54, 0x78, 0x9C, 0x63, 0xF8, 0xCF, 0xC0, 0x00, 0x00, 0x03, 0x01, 0x01, 0x00, 0xC9,
+    0xFE, 0x92, 0xEF, 0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4E, 0x44, 0xAE, 0x42, 0x60, 0x82,
 ];
+
+/// security: uploads are content-sniffed, so tests that stored placeholder
+/// text ("img", "fake video bytes") now store a real minimal file of the type
+/// the name claims. `ext` is the (case-insensitive) extension incl. the dot.
+pub fn sample_media(ext: &str) -> Vec<u8> {
+    use image::ImageFormat;
+    let image = |format: ImageFormat| {
+        let mut out = std::io::Cursor::new(Vec::new());
+        image::DynamicImage::new_rgb8(1, 1).write_to(&mut out, format).unwrap();
+        out.into_inner()
+    };
+    match ext.to_ascii_lowercase().as_str() {
+        ".png" => PNG_1X1.to_vec(),
+        ".jpg" | ".jpeg" => image(ImageFormat::Jpeg),
+        ".gif" => image(ImageFormat::Gif),
+        ".webp" => image(ImageFormat::WebP),
+        ".bmp" => unb64(BMP_1X1_B64),
+        ".mp4" => iso_bmff(b"isom"),
+        ".m4v" => iso_bmff(b"M4V "),
+        ".mov" => iso_bmff(b"qt  "),
+        ".webm" => ebml(b"webm"),
+        ".mkv" => ebml(b"matroska"),
+        ".avi" => {
+            let mut v = b"RIFF\x24\x00\x00\x00AVI LIST".to_vec();
+            v.resize(64, 0);
+            v
+        }
+        ".ogv" => {
+            let mut v = b"OggS\x00\x02".to_vec();
+            v.resize(64, 0);
+            v
+        }
+        other => panic!("no sample for {other}"),
+    }
+}
+
+/// `ftyp` box with `brand` followed by an empty `mdat`.
+fn iso_bmff(brand: &[u8; 4]) -> Vec<u8> {
+    let mut v = vec![0, 0, 0, 0x18];
+    v.extend_from_slice(b"ftyp");
+    v.extend_from_slice(brand);
+    v.extend_from_slice(&[0, 0, 2, 0]);
+    v.extend_from_slice(brand);
+    v.extend_from_slice(b"mp41");
+    v.extend_from_slice(&[0, 0, 0, 8]);
+    v.extend_from_slice(b"mdat");
+    v
+}
+
+/// EBML header with the given DocType, padded past infer's 256-byte window.
+fn ebml(doctype: &[u8]) -> Vec<u8> {
+    let mut v = vec![0x1A, 0x45, 0xDF, 0xA3, 0x9F, 0x42, 0x86, 0x81, 0x01, 0x42, 0x82];
+    v.push(0x80 | doctype.len() as u8);
+    v.extend_from_slice(doctype);
+    v.resize(300, 0);
+    v
+}
+
+/// [`sample_media`] for the extension of `name`.
+pub fn sample_for(name: &str) -> Vec<u8> {
+    let ext = name.rfind('.').map_or("", |i| &name[i..]);
+    sample_media(ext)
+}
 
 /// 1x1 24-bit BMP from image_import_test.rb (base64 decoded).
 pub const BMP_1X1_B64: &str = "Qk06AAAAAAAAADYAAAAoAAAAAQAAAAEAAAABABgAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAA////AA==";

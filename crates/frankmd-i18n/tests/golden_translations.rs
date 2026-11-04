@@ -118,7 +118,9 @@ fn translation_failures_cases() {
     let g = golden("translations");
     // serde_json maps are sorted; the Ruby hash order matters for the report, so the
     // locale order is taken from the raw fixture text.
-    let raw = String::from_utf8(golden_bytes("translations.json")).expect("utf8");
+    // Mechanical fix: the fixture is pretty-printed, so whitespace is dropped before
+    // searching for the compact `"<loc>":{"dialogs"` pattern (only positions matter).
+    let raw: String = String::from_utf8(golden_bytes("translations.json")).expect("utf8").chars().filter(|c| !c.is_whitespace()).collect();
     assert_cases("translations translation_failures", g.cases_for("translation_failures"), |c: &Case| {
         let actual = if c.input["english"].is_string() {
             let english = locale_tree(Locale::En).map_err(|e| e.to_string())?;

@@ -51,6 +51,7 @@ fn build_index() {
     let g = golden("media_usage");
     assert_cases("media_usage build_index", g.cases_for("build_index"), |c| {
         let n = Notes::from_golden(&c.input["tree"], c.input.get("outside_tree"));
+        pin_unpinned_mtimes(&n, &c.input["tree"]);
         let index = MediaUsage::new(n.root()).build_index().map_err(|e| format!("error: {e}"))?;
         eq(&json!(*index), &c.expected["index"])?;
         eq(&json!(usage::usage_counts(&index)), &c.expected["usage_counts"])?;
@@ -63,6 +64,19 @@ fn build_index() {
         library_paths.retain(|p| !index.contains_key(p));
         eq(&json!(library_paths), &c.expected["unreferenced_library_paths"])
     });
+}
+
+/// Mechanical: the fixture trees carry no mtimes, so Ruby's listing order
+/// (mtime desc) came from its write order, which a JSON object (sorted keys
+/// here) cannot reproduce. Pinning every plain-content file to one mtime makes
+/// the order deterministic (the `path.downcase` tie-break); every recorded
+/// listing in this fixture is consistent with that order.
+fn pin_unpinned_mtimes(n: &Notes, tree: &Value) {
+    for (rel, v) in tree.as_object().into_iter().flatten() {
+        if v.is_string() && !rel.ends_with('/') {
+            library::set_mtime(&n.root().join(rel), 1_767_268_800);
+        }
+    }
 }
 
 #[test]

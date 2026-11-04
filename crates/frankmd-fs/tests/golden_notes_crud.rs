@@ -20,7 +20,9 @@ use frankmd_testkit::{assert_cases, golden};
 const FIXTURE: &str = "notes_crud";
 
 fn has_http(case: &frankmd_testkit::Case) -> bool {
-    case.input["ops"].as_array().is_some_and(|ops| ops.iter().any(|o| o["op"] == "http"))
+    case.input["ops"]
+        .as_array()
+        .is_some_and(|ops| ops.iter().any(|o| o["op"] == "http"))
 }
 
 fn s<'a>(op: &'a Value, key: &str) -> &'a str {
@@ -31,7 +33,9 @@ fn expected_revision(op: &Value) -> Option<String> {
     if let Some(src) = op.get("expected_revision_of").and_then(Value::as_str) {
         return Some(sha256_hex(src.as_bytes()));
     }
-    op.get("expected_revision").and_then(Value::as_str).map(str::to_owned)
+    op.get("expected_revision")
+        .and_then(Value::as_str)
+        .map(str::to_owned)
 }
 
 fn content_bytes(op: &Value) -> Vec<u8> {
@@ -54,15 +58,25 @@ fn bool_or_err(r: Result<bool, FsError>) -> Value {
 
 fn messages(errors: &[ModelError]) -> Value {
     let t = |k: &str| en(k);
-    Value::Array(errors.iter().map(|e| Value::String(e.full_message(&t))).collect())
+    Value::Array(
+        errors
+            .iter()
+            .map(|e| Value::String(e.full_message(&t)))
+            .collect(),
+    )
 }
 
-/// `NotesFS.model_result(ok, model)` (+ unrescued errors as `{error, message}`).
-fn model_result<T>(r: model::ModelResult<T>, path_after: impl FnOnce(Option<&T>) -> String) -> Value {
+/// `NotesFS.model_result(ok, model)`. An unrescued exception was captured by
+/// the generator as the value of `ok` (`{"ok": {error, message}, "errors": [], …}`).
+/// `path_after` is the model's `path` attribute afterwards (`null` for a nil path).
+fn model_result<T>(
+    r: model::ModelResult<T>,
+    path_after: impl FnOnce(Option<&T>) -> Value,
+) -> Value {
     match r {
         Ok(Ok(v)) => json!({"ok": true, "errors": [], "path": path_after(Some(&v))}),
         Ok(Err(errs)) => json!({"ok": false, "errors": messages(&errs), "path": path_after(None)}),
-        Err(e) => fs_error_json(&e),
+        Err(e) => json!({"ok": fs_error_json(&e), "errors": [], "path": path_after(None)}),
     }
 }
 
@@ -70,7 +84,9 @@ fn note_find(svc: &NotesService<'_>, raw: &str) -> Value {
     let path = normalize_note_path(raw);
     match model::note_exists(svc, &path) {
         Ok(true) => {}
-        Ok(false) => return json!({"error": "NotesService::NotFoundError", "message": format!("Note not found: {raw}")}),
+        Ok(false) => {
+            return json!({"error": "NotesService::NotFoundError", "message": format!("Note not found: {raw}")});
+        }
         Err(e) => return fs_error_json(&e),
     }
     match svc.read(&path) {
@@ -130,29 +146,33 @@ fn run_op(sb: &Sandbox, svc: &NotesService<'_>, op: &Value) -> Value {
             };
             let content = op["content"].as_str().map(str::as_bytes);
             // The model's `path` attribute is not changed by save.
-            model_result(model::note_save(svc, path, content, mode), |_| path.to_owned())
+            model_result(model::note_save(svc, path, content, mode), |_| {
+                op["path"].clone()
+            })
         }
         "Note#destroy" => {
             let r = model::note_destroy(svc, path, expected_revision(op).as_deref());
             let conflict = matches!(&r, Ok(Err(errs)) if errs.iter().any(|e| e.revision_conflict));
-            let mut v = model_result(r, |_| path.to_owned());
+            let mut v = model_result(r, |_| op["path"].clone());
             if let Some(o) = v.as_object_mut().filter(|o| o.contains_key("ok")) {
                 o.insert("revision_conflict".into(), Value::Bool(conflict));
             }
             v
         }
         "Note#rename" => model_result(model::note_rename(svc, path, s(op, "new_path")), |new| {
-            new.cloned().unwrap_or_else(|| path.to_owned())
+            Value::String(new.cloned().unwrap_or_else(|| path.to_owned()))
         }),
         "Note#exists?" => match model::note_exists(svc, path) {
             Ok(b) => json!({"exists": b, "persisted": b}),
             Err(e) => fs_error_json(&e),
         },
-        "Folder#create" => model_result(model::folder_create(svc, path), |_| path.to_owned()),
-        "Folder#destroy" => model_result(model::folder_destroy(svc, path), |_| path.to_owned()),
-        "Folder#rename" => model_result(model::folder_rename(svc, path, s(op, "new_path")), |new| {
-            new.cloned().unwrap_or_else(|| path.to_owned())
-        }),
+        "Folder#create" => model_result(model::folder_create(svc, path), |_| op["path"].clone()),
+        "Folder#destroy" => model_result(model::folder_destroy(svc, path), |_| op["path"].clone()),
+        "Folder#rename" => {
+            model_result(model::folder_rename(svc, path, s(op, "new_path")), |new| {
+                Value::String(new.cloned().unwrap_or_else(|| path.to_owned()))
+            })
+        }
         other => panic!("unknown op {other}"),
     }
 }
@@ -161,16 +181,34 @@ fn run_op(sb: &Sandbox, svc: &NotesService<'_>, op: &Value) -> Value {
 /// reproducible verbatim: compare the class only, and for `ArgumentError`
 /// (NUL byte in a path) accept any error.
 fn compare_result(i: usize, actual: &Value, expected: &Value) -> Result<(), String> {
+    // An unrescued model exception sits under `ok`: compare it like a top-level error.
+    if let (Some(exp_ok), Some(act_ok)) = (
+        expected.get("ok").filter(|v| v.is_object()),
+        actual.get("ok"),
+    ) {
+        compare_result(i, act_ok, exp_ok)?;
+        return check_eq(
+            &format!("op {i} errors/path"),
+            &json!([actual["errors"], actual["path"]]),
+            &json!([expected["errors"], expected["path"]]),
+        );
+    }
     if let Some(class) = expected.get("error").and_then(Value::as_str) {
         if class == "ArgumentError" {
             return if actual.get("error").is_some() {
                 Ok(())
             } else {
-                Err(format!("op {i}: expected an error ({expected}), got {actual}"))
+                Err(format!(
+                    "op {i}: expected an error ({expected}), got {actual}"
+                ))
             };
         }
         if class.starts_with("Errno::") {
-            return check_eq(&format!("op {i} error class"), &actual["error"], &expected["error"]);
+            return check_eq(
+                &format!("op {i} error class"),
+                &actual["error"],
+                &expected["error"],
+            );
         }
     }
     check_eq(&format!("op {i}"), actual, expected)
@@ -181,9 +219,16 @@ fn golden_notes_crud_service_and_model_ops() {
     let g = golden(FIXTURE);
     let orders = spec_orders(FIXTURE);
     assert_cases(FIXTURE, g.cases.iter().filter(|c| !has_http(c)), |case| {
-        let sb = Sandbox::from_specs(&case.input["tree"], &case.input["outside"], orders.get(&case.name));
+        let sb = Sandbox::from_specs(
+            &case.input["tree"],
+            &case.input["outside"],
+            orders.get(&case.name),
+        );
         let vault = sb.vault();
-        let svc = NotesService::new(&vault);
+        // Rails NotesService always updates the `.fed` history (when `.fed` is
+        // a regular file), so couple the recents store like production does.
+        let store = common::FedRecentStore::new(&sb.root);
+        let svc = NotesService::new(&vault).with_recents(&store);
         let ops = case.input["ops"].as_array().unwrap();
         let expected = case.expected["results"].as_array().unwrap();
         let mut errs = Vec::new();
@@ -196,8 +241,14 @@ fn golden_notes_crud_service_and_model_ops() {
         let snap = sb.snapshot();
         let want = expected_tree(&case.expected["tree_after"]);
         if snap != want {
-            errs.push(format!("tree_after:\n    expected: {want:?}\n    actual:   {snap:?}"));
+            errs.push(format!(
+                "tree_after:\n    expected: {want:?}\n    actual:   {snap:?}"
+            ));
         }
-        if errs.is_empty() { Ok(()) } else { Err(errs.join("\n  ")) }
+        if errs.is_empty() {
+            Ok(())
+        } else {
+            Err(errs.join("\n  "))
+        }
     });
 }

@@ -50,11 +50,15 @@ impl MemorySettings {
 
 impl SettingsStore for MemorySettings {
     fn current(&self) -> MediaConfig {
-        todo!()
+        self.config.lock().unwrap_or_else(std::sync::PoisonError::into_inner).clone()
     }
 
     fn set_provider_local(&self) -> bool {
-        todo!()
+        if *self.fail_writes.lock().unwrap_or_else(std::sync::PoisonError::into_inner) {
+            return false;
+        }
+        self.update(|c| c.media_storage_provider = Some("local".to_owned()));
+        true
     }
 }
 
@@ -109,6 +113,10 @@ impl MediaEnv {
 
     /// S3 client for the given snapshot (honours [`MediaEnv::s3_transport`]).
     pub fn s3_client(&self, config: &MediaConfig) -> Result<crate::s3::S3Client, crate::s3::S3Error> {
-        todo!()
+        let client = crate::s3::S3Client::new(&config.s3, &self.http)?;
+        Ok(match &self.s3_transport {
+            Some(base) => client.with_transport_base(base.clone()),
+            None => client,
+        })
     }
 }

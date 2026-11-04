@@ -10,6 +10,8 @@
 //! Lengths are JS `.length`, i.e. **UTF-16 code units** (an emoji counts 2).
 //! Both comparisons are strict: losing exactly 20 % or exactly 50 units is fine.
 
+use crate::text::utf16_len;
+
 /// Outcome of comparing the last saved content with a pending save.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum DeletionVerdict {
@@ -31,7 +33,23 @@ pub const LOST_CHARS_THRESHOLD: usize = 50;
 /// last saved server text; `None` (fresh file, `_lastSavedContent === null`)
 /// never warns.
 pub fn check_deletion(previous: Option<&str>, next: &str) -> DeletionVerdict {
-    todo!("frontend.md B.5")
+    let Some(previous) = previous else {
+        return DeletionVerdict::Ok;
+    };
+    let baseline = utf16_len(previous);
+    if baseline == 0 {
+        return DeletionVerdict::Ok;
+    }
+    let remaining = utf16_len(next);
+    let Some(lost) = baseline.checked_sub(remaining) else {
+        return DeletionVerdict::Ok;
+    };
+    let lost_fraction = lost as f64 / baseline as f64;
+    if lost_fraction > LOST_FRACTION_THRESHOLD && lost > LOST_CHARS_THRESHOLD {
+        DeletionVerdict::LargeDeletion { removed_chars: lost }
+    } else {
+        DeletionVerdict::Ok
+    }
 }
 
 /// Boolean form (`isLargeDeletion`).

@@ -13,16 +13,29 @@
 //!   if stale.
 //! - Time is injected ([`clock::Clock`]) so autosave/debounce logic is tested
 //!   without sleeping (HP-026).
-#![allow(unused_variables, dead_code)] // skeleton
+//! - Drafts, autosave timers and acknowledged revisions are keyed by `DocId`
+//!   ([`drafts`]); a rename never touches draft storage.
+//!
+//! GUI-free view models for the app shell live here too: [`layout`],
+//! [`focus`], [`overlay`], [`commands`] (the one registry the keymap and the
+//! palette come from), [`quick_open`], [`banners`] and [`status`].
 
 pub mod autosave;
+pub mod banners;
 pub mod clock;
 pub mod command;
+pub mod commands;
+pub mod doc_index;
 pub mod draft_storage;
 pub mod drafts;
+pub mod focus;
+pub mod layout;
 pub mod menu_bounds;
+pub mod overlay;
+pub mod quick_open;
 pub mod shortcuts;
 pub mod startup;
+pub mod status;
 pub mod store;
 
 pub use command::{Command, Effect, Event};

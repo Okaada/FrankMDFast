@@ -3,7 +3,12 @@
 //!
 //! Skipped: `Note.search` (owned by frankmd-search, `search.json`),
 //! `note.to_param` (Rails routing).
-#![allow(clippy::disallowed_methods, clippy::unwrap_used, missing_docs, unreachable_pub)]
+#![allow(
+    clippy::disallowed_methods,
+    clippy::unwrap_used,
+    missing_docs,
+    unreachable_pub
+)]
 
 mod common;
 
@@ -35,7 +40,10 @@ fn find(svc: &NotesService<'_>, path: &str) -> Result<(String, String), FsError>
 }
 
 fn base_errors(errs: &[ModelError]) -> Vec<String> {
-    errs.iter().filter(|e| e.field == ErrorField::Base).map(|e| e.full_message(&en)).collect()
+    errs.iter()
+        .filter(|e| e.field == ErrorField::Base)
+        .map(|e| e.full_message(&en))
+        .collect()
 }
 
 // port: test/models/note_test.rb:16 "Note.find returns note with content"
@@ -131,7 +139,10 @@ fn all_returns_tree_structure() {
     let vault = sb.vault();
     let tree = NotesService::new(&vault).list_tree().unwrap();
     assert!(tree.iter().any(|n| n.name() == "note1"));
-    assert!(tree.iter().any(|n| n.name() == "folder" && matches!(n, TreeNode::Folder { .. })));
+    assert!(
+        tree.iter()
+            .any(|n| n.name() == "folder" && matches!(n, TreeNode::Folder { .. }))
+    );
 }
 
 // port: test/models/note_test.rb:103 "note.save creates new file"
@@ -140,7 +151,9 @@ fn save_creates_new_file() {
     let sb = Sandbox::empty();
     let vault = sb.vault();
     let svc = NotesService::new(&vault);
-    model::note_save(&svc, "new.md", Some(b"# New"), SaveMode::Upsert).unwrap().unwrap();
+    model::note_save(&svc, "new.md", Some(b"# New"), SaveMode::Upsert)
+        .unwrap()
+        .unwrap();
     assert!(sb.exists("new.md"));
     assert_eq!(sb.read("new.md"), "# New");
 }
@@ -152,7 +165,9 @@ fn save_updates_existing_file() {
     sb.write("existing.md", "Old content");
     let vault = sb.vault();
     let svc = NotesService::new(&vault);
-    model::note_save(&svc, "existing.md", Some(b"New content"), SaveMode::Upsert).unwrap().unwrap();
+    model::note_save(&svc, "existing.md", Some(b"New content"), SaveMode::Upsert)
+        .unwrap()
+        .unwrap();
     assert_eq!(sb.read("existing.md"), "New content");
 }
 
@@ -162,19 +177,34 @@ fn save_creates_parent_directories() {
     let sb = Sandbox::empty();
     let vault = sb.vault();
     let svc = NotesService::new(&vault);
-    model::note_save(&svc, "deep/nested/new.md", Some(b"# Nested"), SaveMode::Upsert).unwrap().unwrap();
+    model::note_save(
+        &svc,
+        "deep/nested/new.md",
+        Some(b"# Nested"),
+        SaveMode::Upsert,
+    )
+    .unwrap()
+    .unwrap();
     assert!(sb.exists("deep/nested/new.md"));
 }
 
 // port: test/models/note_test.rb:124 "note.save validates path format"
 #[test]
 fn save_validates_path_format() {
-    assert_eq!(validate_note_path("../escape.md"), vec![ValidationError::Traversal]);
+    assert_eq!(
+        validate_note_path("../escape.md"),
+        vec![ValidationError::Traversal]
+    );
     let sb = Sandbox::empty();
     let vault = sb.vault();
-    let errs = model::note_save(&NotesService::new(&vault), "../escape.md", Some(b"bad"), SaveMode::Upsert)
-        .unwrap()
-        .unwrap_err();
+    let errs = model::note_save(
+        &NotesService::new(&vault),
+        "../escape.md",
+        Some(b"bad"),
+        SaveMode::Upsert,
+    )
+    .unwrap()
+    .unwrap_err();
     assert!(errs.iter().any(|e| e.field == ErrorField::Path), "{errs:?}");
 }
 
@@ -184,8 +214,14 @@ fn save_validates_presence_of_path() {
     assert!(validate_note_path("").contains(&ValidationError::Blank));
     let sb = Sandbox::empty();
     let vault = sb.vault();
-    let errs =
-        model::note_save(&NotesService::new(&vault), "", Some(b"content"), SaveMode::Upsert).unwrap().unwrap_err();
+    let errs = model::note_save(
+        &NotesService::new(&vault),
+        "",
+        Some(b"content"),
+        SaveMode::Upsert,
+    )
+    .unwrap()
+    .unwrap_err();
     assert!(errs.iter().any(|e| e.field == ErrorField::Path), "{errs:?}");
 }
 
@@ -195,7 +231,9 @@ fn destroy_removes_file() {
     let sb = Sandbox::empty();
     sb.write("to_delete.md", DEFAULT_CONTENT);
     let vault = sb.vault();
-    model::note_destroy(&NotesService::new(&vault), "to_delete.md", None).unwrap().unwrap();
+    model::note_destroy(&NotesService::new(&vault), "to_delete.md", None)
+        .unwrap()
+        .unwrap();
     assert!(!sb.exists("to_delete.md"));
 }
 
@@ -207,7 +245,9 @@ fn destroy_deletes_when_expected_revision_matches() {
     sb.write("to_delete.md", content);
     let vault = sb.vault();
     let rev = sha256_hex(content.as_bytes());
-    model::note_destroy(&NotesService::new(&vault), "to_delete.md", Some(&rev)).unwrap().unwrap();
+    model::note_destroy(&NotesService::new(&vault), "to_delete.md", Some(&rev))
+        .unwrap()
+        .unwrap();
     assert!(!sb.exists("to_delete.md"));
 }
 
@@ -218,7 +258,9 @@ fn destroy_reports_revision_conflict_and_preserves_file() {
     sb.write("to_delete.md", "updated content");
     let vault = sb.vault();
     let rev = sha256_hex(b"old content");
-    let errs = model::note_destroy(&NotesService::new(&vault), "to_delete.md", Some(&rev)).unwrap().unwrap_err();
+    let errs = model::note_destroy(&NotesService::new(&vault), "to_delete.md", Some(&rev))
+        .unwrap()
+        .unwrap_err();
     assert!(errs.iter().any(|e| e.revision_conflict), "{errs:?}");
     assert_eq!(sb.read("to_delete.md"), "updated content");
 }
@@ -228,7 +270,9 @@ fn destroy_reports_revision_conflict_and_preserves_file() {
 fn destroy_returns_false_for_missing_file() {
     let sb = Sandbox::empty();
     let vault = sb.vault();
-    let errs = model::note_destroy(&NotesService::new(&vault), "nonexistent.md", None).unwrap().unwrap_err();
+    let errs = model::note_destroy(&NotesService::new(&vault), "nonexistent.md", None)
+        .unwrap()
+        .unwrap_err();
     assert!(!base_errors(&errs).is_empty(), "{errs:?}");
 }
 
@@ -238,7 +282,9 @@ fn rename_moves_file() {
     let sb = Sandbox::empty();
     sb.write("old.md", "content");
     let vault = sb.vault();
-    let new_path = model::note_rename(&NotesService::new(&vault), "old.md", "new.md").unwrap().unwrap();
+    let new_path = model::note_rename(&NotesService::new(&vault), "old.md", "new.md")
+        .unwrap()
+        .unwrap();
     assert_eq!(new_path, "new.md");
     assert!(!sb.exists("old.md"));
     assert!(sb.exists("new.md"));
@@ -251,8 +297,9 @@ fn rename_moves_file_to_different_directory() {
     sb.write("root.md", "content");
     sb.mkdir("subfolder");
     let vault = sb.vault();
-    let new_path =
-        model::note_rename(&NotesService::new(&vault), "root.md", "subfolder/moved.md").unwrap().unwrap();
+    let new_path = model::note_rename(&NotesService::new(&vault), "root.md", "subfolder/moved.md")
+        .unwrap()
+        .unwrap();
     assert_eq!(new_path, "subfolder/moved.md");
     assert!(!sb.exists("root.md"));
     assert!(sb.exists("subfolder/moved.md"));
@@ -284,7 +331,10 @@ fn name_returns_filename_without_extension() {
 // port: test/models/note_test.rb:214 "note.directory returns parent directory"
 #[test]
 fn directory_returns_parent_directory() {
-    assert_eq!(note_directory("folder/subfolder/note.md"), "folder/subfolder");
+    assert_eq!(
+        note_directory("folder/subfolder/note.md"),
+        "folder/subfolder"
+    );
 }
 
 // port: test/models/note_test.rb:219 "note.directory returns empty string for root files"
@@ -324,9 +374,14 @@ fn destroy_handles_file_that_disappeared() {
     sb.write("disappearing.md", "content");
     let vault = sb.vault();
     std::fs::remove_file(sb.abs("disappearing.md")).unwrap();
-    let errs = model::note_destroy(&NotesService::new(&vault), "disappearing.md", None).unwrap().unwrap_err();
+    let errs = model::note_destroy(&NotesService::new(&vault), "disappearing.md", None)
+        .unwrap()
+        .unwrap_err();
     let base = base_errors(&errs);
-    assert!(base.first().is_some_and(|m| m.contains("not found")), "{base:?}");
+    assert!(
+        base.first().is_some_and(|m| m.contains("not found")),
+        "{base:?}"
+    );
 }
 
 // port: test/models/note_test.rb:263 "note.rename handles source file that disappeared"
@@ -336,8 +391,9 @@ fn rename_handles_source_file_that_disappeared() {
     sb.write("source.md", "content");
     let vault = sb.vault();
     std::fs::remove_file(sb.abs("source.md")).unwrap();
-    let errs =
-        model::note_rename(&NotesService::new(&vault), "source.md", "destination.md").unwrap().unwrap_err();
+    let errs = model::note_rename(&NotesService::new(&vault), "source.md", "destination.md")
+        .unwrap()
+        .unwrap_err();
     assert!(!base_errors(&errs).is_empty(), "{errs:?}");
 }
 
@@ -352,7 +408,12 @@ fn save_handles_permission_denied_on_create() {
     sb.mkdir("readonly");
     chmod(&sb.abs("readonly"), 0o555);
     let vault = sb.vault();
-    let result = model::note_save(&NotesService::new(&vault), "readonly/cannot_write.md", Some(b"content"), SaveMode::Upsert);
+    let result = model::note_save(
+        &NotesService::new(&vault),
+        "readonly/cannot_write.md",
+        Some(b"content"),
+        SaveMode::Upsert,
+    );
     chmod(&sb.abs("readonly"), 0o755);
     let errs = result.unwrap().unwrap_err();
     assert!(!base_errors(&errs).is_empty(), "{errs:?}");
@@ -373,5 +434,9 @@ fn destroy_handles_permission_denied() {
     chmod(&sb.root, 0o755);
     let errs = result.unwrap().unwrap_err();
     let base = base_errors(&errs);
-    assert!(base.first().is_some_and(|m| m.contains("Permission denied")), "{base:?}");
+    assert!(
+        base.first()
+            .is_some_and(|m| m.contains("Permission denied")),
+        "{base:?}"
+    );
 }

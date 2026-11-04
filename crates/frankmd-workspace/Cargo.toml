@@ -12,7 +12,12 @@ frankmd-core.workspace = true
 frankmd-fs.workspace = true
 frankmd-config.workspace = true
 frankmd-watch.workspace = true
+frankmd-search.workspace = true
 thiserror.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+uuid.workspace = true
+jiff.workspace = true
 
 [lints]
 workspace = true
@@ -20,3 +25,4 @@ workspace = true
 [dev-dependencies]
 frankmd-testkit.workspace = true
 serde_json.workspace = true
+tempfile.workspace = true

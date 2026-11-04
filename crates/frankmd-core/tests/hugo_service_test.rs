@@ -6,20 +6,37 @@
 //! (`HugoPathStyle::from_config`, `NewPost::template`).
 #![allow(clippy::unwrap_used, missing_docs)]
 
-use frankmd_core::hugo::{self, GeneratedPost, HugoPathStyle, NewPost, generate_post, update_frontmatter_slug};
+use frankmd_core::hugo::{
+    self, GeneratedPost, HugoPathStyle, NewPost, generate_post, update_frontmatter_slug,
+};
 use frankmd_core::slug::slugify;
 
 /// A UTC "now" (Rails `Time.current` with the unset → UTC Rails zone).
 fn utc(y: i16, mo: i8, d: i8, h: i8, mi: i8) -> jiff::Zoned {
-    jiff::civil::date(y, mo, d).at(h, mi, 0, 0).in_tz("UTC").unwrap()
+    jiff::civil::date(y, mo, d)
+        .at(h, mi, 0, 0)
+        .in_tz("UTC")
+        .unwrap()
 }
 
 fn now() -> jiff::Zoned {
     utc(2026, 11, 4, 15, 30)
 }
 
-fn post(title: &str, parent: Option<&str>, style: HugoPathStyle, template: Option<&str>, now: jiff::Zoned) -> GeneratedPost {
-    generate_post(&NewPost { title, parent, now, style, template })
+fn post(
+    title: &str,
+    parent: Option<&str>,
+    style: HugoPathStyle,
+    template: Option<&str>,
+    now: jiff::Zoned,
+) -> GeneratedPost {
+    generate_post(&NewPost {
+        title,
+        parent,
+        now,
+        style,
+        template,
+    })
 }
 
 fn default_post(title: &str) -> GeneratedPost {
@@ -28,12 +45,23 @@ fn default_post(title: &str) -> GeneratedPost {
 
 /// `%r{\d{4}/\d{2}/\d{2}/<slug>/index\.md}` (unanchored).
 fn assert_dated(path: &str, prefix: &str, slug: &str) {
-    let rest = path.strip_prefix(prefix).unwrap_or_else(|| panic!("{path} lacks prefix {prefix}"));
+    let rest = path
+        .strip_prefix(prefix)
+        .unwrap_or_else(|| panic!("{path} lacks prefix {prefix}"));
     let parts: Vec<&str> = rest.split('/').collect();
     assert_eq!(parts.len(), 5, "{path}");
-    assert!(parts[0].len() == 4 && parts[0].chars().all(|c| c.is_ascii_digit()), "{path}");
-    assert!(parts[1].len() == 2 && parts[1].chars().all(|c| c.is_ascii_digit()), "{path}");
-    assert!(parts[2].len() == 2 && parts[2].chars().all(|c| c.is_ascii_digit()), "{path}");
+    assert!(
+        parts[0].len() == 4 && parts[0].chars().all(|c| c.is_ascii_digit()),
+        "{path}"
+    );
+    assert!(
+        parts[1].len() == 2 && parts[1].chars().all(|c| c.is_ascii_digit()),
+        "{path}"
+    );
+    assert!(
+        parts[2].len() == 2 && parts[2].chars().all(|c| c.is_ascii_digit()),
+        "{path}"
+    );
     assert_eq!(parts[3], slug, "{path}");
     assert_eq!(parts[4], "index.md", "{path}");
 }
@@ -106,15 +134,31 @@ fn generate_blog_post_returns_content_with_frontmatter() {
 // port: test/services/hugo_service_test.rb:63 "generate_blog_post uses current date"
 #[test]
 fn generate_blog_post_uses_current_date() {
-    let r = post("Test Post", None, HugoPathStyle::Dated, None, utc(2026, 2, 1, 10, 30));
+    let r = post(
+        "Test Post",
+        None,
+        HugoPathStyle::Dated,
+        None,
+        utc(2026, 2, 1, 10, 30),
+    );
     assert!(r.path.starts_with("2026/02/01/"), "{}", r.path);
-    assert!(r.content.contains("date: 2026-02-01T10:30:00"), "{}", r.content);
+    assert!(
+        r.content.contains("date: 2026-02-01T10:30:00"),
+        "{}",
+        r.content
+    );
 }
 
 // port: test/services/hugo_service_test.rb:72 "generate_blog_post prepends parent path when provided"
 #[test]
 fn generate_blog_post_prepends_parent_path_when_provided() {
-    let r = post("My Post", Some("content/posts"), HugoPathStyle::Dated, None, now());
+    let r = post(
+        "My Post",
+        Some("content/posts"),
+        HugoPathStyle::Dated,
+        None,
+        now(),
+    );
     assert!(r.path.starts_with("content/posts/"));
     assert_dated(&r.path, "content/posts/", "my-post");
 }
@@ -122,13 +166,22 @@ fn generate_blog_post_prepends_parent_path_when_provided() {
 // port: test/services/hugo_service_test.rb:79 "generate_blog_post with flat path style returns slug.md"
 #[test]
 fn generate_blog_post_with_flat_path_style_returns_slug_md() {
-    assert_eq!(post("My Blog Post", None, HugoPathStyle::Flat, None, now()).path, "my-blog-post.md");
+    assert_eq!(
+        post("My Blog Post", None, HugoPathStyle::Flat, None, now()).path,
+        "my-blog-post.md"
+    );
 }
 
 // port: test/services/hugo_service_test.rb:85 "generate_blog_post with flat path style prepends parent path"
 #[test]
 fn generate_blog_post_with_flat_path_style_prepends_parent_path() {
-    let r = post("My Post", Some("content/posts"), HugoPathStyle::Flat, None, now());
+    let r = post(
+        "My Post",
+        Some("content/posts"),
+        HugoPathStyle::Flat,
+        None,
+        now(),
+    );
     assert_eq!(r.path, "content/posts/my-post.md");
 }
 
@@ -153,7 +206,10 @@ fn generate_blog_post_with_dated_path_style_returns_date_structure() {
 #[test]
 fn generate_blog_post_reads_path_style_from_config() {
     let style = HugoPathStyle::from_config(Some("flat"));
-    assert_eq!(post("Config Test", None, style, None, now()).path, "config-test.md");
+    assert_eq!(
+        post("Config Test", None, style, None, now()).path,
+        "config-test.md"
+    );
 }
 
 // port: test/services/hugo_service_test.rb:117 "generate_blog_post defaults to dated when config not set"
@@ -161,7 +217,11 @@ fn generate_blog_post_reads_path_style_from_config() {
 fn generate_blog_post_defaults_to_dated_when_config_not_set() {
     let style = HugoPathStyle::from_config(None);
     assert_eq!(style, HugoPathStyle::Dated);
-    assert_dated(&post("Config Test", None, style, None, now()).path, "", "config-test");
+    assert_dated(
+        &post("Config Test", None, style, None, now()).path,
+        "",
+        "config-test",
+    );
 }
 
 // port: test/services/hugo_service_test.rb:128 "generate_blog_post escapes quotes in title"
@@ -181,7 +241,10 @@ fn generate_blog_post_emits_a_valid_empty_tags_list_not_a_bare_hyphen() {
     let lines: Vec<&str> = c.lines().collect();
     for w in lines.windows(2) {
         let bare_tags = w[0].trim_start().starts_with("tags:") && w[0].trim_end().ends_with(':');
-        assert!(!(bare_tags && w[1].trim() == "-"), "bare hyphen list item in {c:?}");
+        assert!(
+            !(bare_tags && w[1].trim() == "-"),
+            "bare hyphen list item in {c:?}"
+        );
     }
 }
 
@@ -192,7 +255,14 @@ fn generate_blog_post_emits_a_valid_empty_tags_list_not_a_bare_hyphen() {
 fn generate_blog_post_uses_hugo_template_md_when_present() {
     assert_eq!(hugo::TEMPLATE_FILE, ".hugo_template.md");
     let tpl = "---\ntitle: \"{{title}}\"\nslug: \"{{slug}}\"\ndate: {{date}}\ndraft: false\nauthor: \"Jane\"\ntags:\n  - uncategorized\n---\n";
-    let c = post("Custom Post", None, HugoPathStyle::Dated, Some(tpl), utc(2026, 2, 1, 10, 30)).content;
+    let c = post(
+        "Custom Post",
+        None,
+        HugoPathStyle::Dated,
+        Some(tpl),
+        utc(2026, 2, 1, 10, 30),
+    )
+    .content;
     assert!(c.contains(r#"title: "Custom Post""#));
     assert!(c.contains(r#"slug: "custom-post""#));
     assert!(c.contains("date: 2026-02-01T10:30:00"));
@@ -204,7 +274,14 @@ fn generate_blog_post_uses_hugo_template_md_when_present() {
 // port: test/services/hugo_service_test.rb:169 "generate_blog_post escapes quotes in title within custom template"
 #[test]
 fn generate_blog_post_escapes_quotes_in_title_within_custom_template() {
-    let c = post(r#"Say "Hi""#, None, HugoPathStyle::Dated, Some("title: \"{{title}}\"\n"), now()).content;
+    let c = post(
+        r#"Say "Hi""#,
+        None,
+        HugoPathStyle::Dated,
+        Some("title: \"{{title}}\"\n"),
+        now(),
+    )
+    .content;
     assert!(c.contains(r#"title: "Say \"Hi\"""#), "{c}");
 }
 
@@ -231,7 +308,10 @@ fn update_frontmatter_slug_updates_slug_in_frontmatter() {
 // port: test/services/hugo_service_test.rb:204 "update_frontmatter_slug returns nil for content without frontmatter"
 #[test]
 fn update_frontmatter_slug_returns_nil_for_content_without_frontmatter() {
-    assert_eq!(update_frontmatter_slug("Just some regular content", "new-slug"), None);
+    assert_eq!(
+        update_frontmatter_slug("Just some regular content", "new-slug"),
+        None
+    );
 }
 
 // port: test/services/hugo_service_test.rb:211 "update_frontmatter_slug returns nil for frontmatter without slug"
@@ -252,12 +332,20 @@ fn update_frontmatter_slug_returns_nil_when_slug_unchanged() {
 #[test]
 fn update_frontmatter_slug_handles_unquoted_slugs() {
     let content = "---\ntitle: \"Test\"\nslug: old-slug\n---\n\nContent\n";
-    assert!(update_frontmatter_slug(content, "new-slug").unwrap().contains(r#"slug: "new-slug""#));
+    assert!(
+        update_frontmatter_slug(content, "new-slug")
+            .unwrap()
+            .contains(r#"slug: "new-slug""#)
+    );
 }
 
 // port: test/services/hugo_service_test.rb:256 "update_frontmatter_slug handles single-quoted slugs"
 #[test]
 fn update_frontmatter_slug_handles_single_quoted_slugs() {
     let content = "---\ntitle: \"Test\"\nslug: 'old-slug'\n---\n\nContent\n";
-    assert!(update_frontmatter_slug(content, "new-slug").unwrap().contains(r#"slug: "new-slug""#));
+    assert!(
+        update_frontmatter_slug(content, "new-slug")
+            .unwrap()
+            .contains(r#"slug: "new-slug""#)
+    );
 }

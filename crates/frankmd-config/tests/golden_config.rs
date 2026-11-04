@@ -413,6 +413,17 @@ fn expected_disk_values(c: &Case, i: usize) -> J {
     }
 }
 
+/// A raw fixture input as the untyped Ruby object `format_value` receives.
+fn uncast(v: &J) -> Option<Value> {
+    match v {
+        J::Null => None,
+        J::String(s) => Some(Value::Str(s.clone())),
+        J::Bool(b) => Some(Value::Bool(*b)),
+        J::Number(n) => Some(n.as_i64().map_or_else(|| Value::Json(v.clone()), |i| Value::Int(i.into()))),
+        other => Some(Value::Json(other.clone())),
+    }
+}
+
 fn run_writeback_case(c: &Case, ops: &[WbOp]) -> Result<(), String> {
     let i = &c.input;
     let v = TestVault::from_spec(&i["tree"]);
@@ -489,8 +500,12 @@ fn run_writeback_case(c: &Case, ops: &[WbOp]) -> Result<(), String> {
                 }
                 "format_value" => {
                     let k = key(op.key.as_deref().unwrap());
-                    let got = coerce(k, &op.value)
-                        .and_then(|val| store.current().format_line(k, val.as_ref()))
+                    // mechanical: the fixture calls the private `format_value` with the
+                    // *uncast* input (config.rb:630, `"#{key} = #{value ? 'true' : 'false'}"`
+                    // makes `"x"` truthy), so pass it through by JSON kind instead of `coerce`.
+                    let got = store
+                        .current()
+                        .format_line(k, uncast(&op.value).as_ref())
                         .map_or_else(|e| json!({"error": "ArgumentError", "message": e.to_string()}), |l| json!(l));
                     eq(&tag, &got, want)?;
                 }

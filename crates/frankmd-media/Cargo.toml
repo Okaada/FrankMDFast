@@ -16,6 +16,18 @@ thiserror.workspace = true
 jiff.workspace = true
 url.workspace = true
 serde_json.workspace = true
+regex.workspace = true
+fancy-regex.workspace = true
+rustix = { workspace = true, features = ["rand"] }
+base64.workspace = true
+image.workspace = true
+infer.workspace = true
+tokio.workspace = true
+reqwest.workspace = true
+aws-sdk-s3.workspace = true
+aws-smithy-runtime-api.workspace = true
+aws-smithy-types.workspace = true
+aws-credential-types.workspace = true
 
 [dev-dependencies]
 frankmd-testkit.workspace = true

@@ -314,7 +314,7 @@ async fn upload_to_s3_returns_error_when_s3_not_configured() {
 #[tokio::test]
 async fn upload_external_to_s3_downloads_image_and_uploads_to_s3() {
     let f = WithS3::new().await;
-    external(&f.mock, "/photo.jpg", b"fake image bytes", "image/jpeg").await;
+    external(&f.mock, "/photo.jpg", &sample_media(".jpg"), "image/jpeg").await; // security: real JPEG bytes
     let url = f.api(f.config()).upload_external_to_s3("http://example.com/photo.jpg", &nil(), None).await.unwrap();
     assert_match(r"^https://test-bucket\.s3\.us-west-2\.amazonaws\.com/frankmd/", &url);
 }

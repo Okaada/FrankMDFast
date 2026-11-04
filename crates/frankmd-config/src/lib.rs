@@ -11,7 +11,6 @@
 //! Drop-in compatibility is a hard requirement: the golden fixtures
 //! `config_parse.json`, `config_env.json`, `config_writeback.json` and
 //! `config_template.json` are the spec.
-#![allow(unused_variables, dead_code)] // skeleton
 
 pub mod dirs;
 pub mod env;
@@ -20,6 +19,7 @@ pub mod fed;
 pub mod resolve;
 pub mod schema;
 pub mod store;
+mod uri;
 pub mod value;
 
 pub use env::EnvSnapshot;

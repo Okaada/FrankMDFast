@@ -47,8 +47,10 @@ fn find<'a>(nodes: &'a [TreeNode], name: &str) -> Option<&'a TreeNode> {
 }
 
 fn root_children(sb: &Sandbox) -> Vec<String> {
-    let mut v: Vec<String> =
-        std::fs::read_dir(&sb.root).unwrap().map(|e| e.unwrap().file_name().to_string_lossy().into_owned()).collect();
+    let mut v: Vec<String> = std::fs::read_dir(&sb.root)
+        .unwrap()
+        .map(|e| e.unwrap().file_name().to_string_lossy().into_owned())
+        .collect();
     v.sort();
     v
 }
@@ -108,9 +110,16 @@ fn list_tree_keeps_root_media_folders_with_markdown() {
     sb.write("videos/clip.mp4", "media");
     let vault = sb.vault();
     let tree = NotesService::new(&vault).list_tree().unwrap();
-    let images = find(&tree, "images").expect("root images/ containing markdown must stay in the tree");
-    let guide = children(images).iter().flat_map(|c| children(c).iter()).find(|n| n.name() == "guide");
-    assert!(guide.is_some(), "nested markdown must be reachable through the tree");
+    let images =
+        find(&tree, "images").expect("root images/ containing markdown must stay in the tree");
+    let guide = children(images)
+        .iter()
+        .flat_map(|c| children(c).iter())
+        .find(|n| n.name() == "guide");
+    assert!(
+        guide.is_some(),
+        "nested markdown must be reachable through the tree"
+    );
     assert!(find(&tree, "videos").is_none());
 }
 
@@ -125,7 +134,11 @@ fn list_tree_hides_only_root_managed_media_folders() {
     note(&sb, "archive/videos/note.md");
     let vault = sb.vault();
     let tree = NotesService::new(&vault).list_tree().unwrap();
-    assert!(!tree.iter().any(|n| n.name() == "images" || n.name() == "videos"));
+    assert!(
+        !tree
+            .iter()
+            .any(|n| n.name() == "images" || n.name() == "videos")
+    );
     let images_old = find(&tree, "images-old").unwrap();
     assert_eq!(children(images_old)[0].name(), "note");
     let archive = find(&tree, "archive").unwrap();
@@ -153,13 +166,20 @@ fn list_tree_keeps_folder_order_stable_regardless_of_mtime() {
     sb.mkdir("alpha");
     sb.mkdir("beta");
     note(&sb, "note.md");
-    let now = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs() as i64;
+    let now = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap()
+        .as_secs() as i64;
     let beta = std::fs::File::open(sb.abs("beta")).unwrap();
     let t = std::time::UNIX_EPOCH + std::time::Duration::from_secs((now + 60) as u64);
     beta.set_modified(t).unwrap();
     let vault = sb.vault();
     let tree = NotesService::new(&vault).list_tree().unwrap();
-    let folders: Vec<_> = tree.iter().filter(|n| is_folder(n)).map(|n| n.name().to_owned()).collect();
+    let folders: Vec<_> = tree
+        .iter()
+        .filter(|n| is_folder(n))
+        .map(|n| n.name().to_owned())
+        .collect();
     assert_eq!(folders, ["alpha", "beta"]);
 }
 
@@ -170,7 +190,10 @@ fn list_tree_skips_broken_symlinks() {
     note(&sb, "real.md");
     std::os::unix::fs::symlink("/nonexistent/target.md", sb.abs("dangling.md")).unwrap();
     let vault = sb.vault();
-    assert_eq!(names(&NotesService::new(&vault).list_tree().unwrap()), ["real"]);
+    assert_eq!(
+        names(&NotesService::new(&vault).list_tree().unwrap()),
+        ["real"]
+    );
 }
 
 // port: test/services/notes_service_test.rb:118 "list_tree and search skip symlinked directories"
@@ -189,7 +212,12 @@ fn list_tree_skips_symlinked_directories() {
 fn tree_tolerates_deletion_during_metadata_enumeration() {
     let sb = Sandbox::empty();
     note(&sb, "vanished.md");
-    let _g = fault::inject(FaultPoint::Lstat("vanished.md".into()), ErrorKind::NotFound, Some(ENOENT), false);
+    let _g = fault::inject(
+        FaultPoint::Lstat("vanished.md".into()),
+        ErrorKind::NotFound,
+        Some(ENOENT),
+        false,
+    );
     let vault = sb.vault();
     assert!(NotesService::new(&vault).list_tree().unwrap().is_empty());
 }
@@ -203,7 +231,11 @@ fn tree_does_not_stat_hidden_configuration_temporary_files() {
     let _g = fault::inject(point.clone(), ErrorKind::Other, None, false);
     let vault = sb.vault();
     assert!(NotesService::new(&vault).list_tree().unwrap().is_empty());
-    assert_eq!(fault::hits(&point), 0, "hidden entries must be skipped before lstat");
+    assert_eq!(
+        fault::hits(&point),
+        0,
+        "hidden entries must be skipped before lstat"
+    );
 }
 
 // port: test/services/notes_service_test.rb:142 "list_tree ignores hidden files"
@@ -248,7 +280,13 @@ fn list_tree_marks_markdown_files_with_file_type() {
     note(&sb, "note.md");
     let vault = sb.vault();
     let tree = NotesService::new(&vault).list_tree().unwrap();
-    assert!(matches!(tree[0], TreeNode::File { file_type: FileType::Markdown, .. }));
+    assert!(matches!(
+        tree[0],
+        TreeNode::File {
+            file_type: FileType::Markdown,
+            ..
+        }
+    ));
     assert_eq!(common::tree_json(&tree)[0]["file_type"], "markdown");
 }
 
@@ -260,7 +298,10 @@ fn read_returns_file_content() {
     let sb = Sandbox::empty();
     sb.write("test.md", "Hello World");
     let vault = sb.vault();
-    assert_eq!(NotesService::new(&vault).read("test.md").unwrap().bytes, b"Hello World");
+    assert_eq!(
+        NotesService::new(&vault).read("test.md").unwrap().bytes,
+        b"Hello World"
+    );
 }
 
 // port: test/services/notes_service_test.rb:190 "read raises NotFoundError for missing file"
@@ -268,7 +309,10 @@ fn read_returns_file_content() {
 fn read_missing_is_not_found() {
     let sb = Sandbox::empty();
     let vault = sb.vault();
-    assert!(matches!(NotesService::new(&vault).read("nonexistent.md"), Err(FsError::NotFound(_))));
+    assert!(matches!(
+        NotesService::new(&vault).read("nonexistent.md"),
+        Err(FsError::NotFound(_))
+    ));
 }
 
 // === write ===
@@ -278,7 +322,9 @@ fn read_missing_is_not_found() {
 fn write_creates_new_file() {
     let sb = Sandbox::empty();
     let vault = sb.vault();
-    NotesService::new(&vault).write("new.md", b"New content").unwrap();
+    NotesService::new(&vault)
+        .write("new.md", b"New content")
+        .unwrap();
     assert_eq!(sb.read("new.md"), "New content");
 }
 
@@ -297,9 +343,16 @@ fn create_refuses_to_replace_existing_note() {
 #[test]
 fn create_falls_back_to_rename_without_hard_links() {
     let sb = Sandbox::empty();
-    let _g = fault::inject(FaultPoint::HardLink, ErrorKind::Unsupported, Some(EOPNOTSUPP), false);
+    let _g = fault::inject(
+        FaultPoint::HardLink,
+        ErrorKind::Unsupported,
+        Some(EOPNOTSUPP),
+        false,
+    );
     let vault = sb.vault();
-    NotesService::new(&vault).create("fallback.md", b"Created without hard links").unwrap();
+    NotesService::new(&vault)
+        .create("fallback.md", b"Created without hard links")
+        .unwrap();
     assert_eq!(sb.read("fallback.md"), "Created without hard links");
     assert!(no_tmp_files(&sb));
 }
@@ -317,7 +370,9 @@ fn concurrent_creates_preserve_one_winner() {
                 s.spawn(move || {
                     let vault = Vault::open(root, state).unwrap();
                     barrier.wait();
-                    match NotesService::new(&vault).create("shared.md", format!("writer {i}").as_bytes()) {
+                    match NotesService::new(&vault)
+                        .create("shared.md", format!("writer {i}").as_bytes())
+                    {
                         Ok(_) => "created",
                         Err(FsError::AlreadyExists(_)) => "conflict",
                         Err(e) => panic!("unexpected {e:?}"),
@@ -330,7 +385,10 @@ fn concurrent_creates_preserve_one_winner() {
     assert_eq!(results.iter().filter(|r| **r == "created").count(), 1);
     assert_eq!(results.iter().filter(|r| **r == "conflict").count(), 1);
     assert!(["writer 0", "writer 1"].contains(&sb.read("shared.md").as_str()));
-    assert_eq!(root_children(&sb), [".frankmd-filesystem.lock", "shared.md"]);
+    assert_eq!(
+        root_children(&sb),
+        [".frankmd-filesystem.lock", "shared.md"]
+    );
 }
 
 // port: test/services/notes_service_test.rb:249 "service instances share a NOTES_PATH lock despite independent app tmp directories"
@@ -343,7 +401,15 @@ fn instances_share_notes_path_lock_despite_independent_state_dirs() {
     let lock_path = first.filesystem_lock_path();
     assert_eq!(lock_path, second.filesystem_lock_path());
     assert_eq!(lock_path, sb.root.join(".frankmd-filesystem.lock"));
-    let open = |p: &std::path::Path| std::fs::OpenOptions::new().read(true).write(true).create(true).truncate(false).open(p).unwrap();
+    let open = |p: &std::path::Path| {
+        std::fs::OpenOptions::new()
+            .read(true)
+            .write(true)
+            .create(true)
+            .truncate(false)
+            .open(p)
+            .unwrap()
+    };
     let a = open(&lock_path);
     let b = open(&second.filesystem_lock_path());
     flock(&a, FlockOperation::NonBlockingLockExclusive).unwrap();
@@ -359,9 +425,17 @@ fn instances_share_notes_path_lock_despite_independent_state_dirs() {
 fn list_tree_falls_back_to_state_lock_when_root_read_only() {
     let sb = Sandbox::empty();
     sb.write("visible.md", "Content");
-    let _g = fault::inject(FaultPoint::LockOpen, ErrorKind::ReadOnlyFilesystem, Some(EROFS), false);
+    let _g = fault::inject(
+        FaultPoint::LockOpen,
+        ErrorKind::ReadOnlyFilesystem,
+        Some(EROFS),
+        false,
+    );
     let vault = sb.vault();
-    assert_eq!(names(&NotesService::new(&vault).list_tree().unwrap()), ["visible"]);
+    assert_eq!(
+        names(&NotesService::new(&vault).list_tree().unwrap()),
+        ["visible"]
+    );
 }
 
 // port: test/services/notes_service_test.rb:283 "write overwrites existing file"
@@ -370,7 +444,9 @@ fn write_overwrites_existing_file() {
     let sb = Sandbox::empty();
     sb.write("existing.md", "Old content");
     let vault = sb.vault();
-    NotesService::new(&vault).write("existing.md", b"New content").unwrap();
+    NotesService::new(&vault)
+        .write("existing.md", b"New content")
+        .unwrap();
     assert_eq!(sb.read("existing.md"), "New content");
 }
 
@@ -380,7 +456,9 @@ fn update_overwrites_existing_file() {
     let sb = Sandbox::empty();
     sb.write("existing.md", "Old content");
     let vault = sb.vault();
-    NotesService::new(&vault).update("existing.md", b"New content").unwrap();
+    NotesService::new(&vault)
+        .update("existing.md", b"New content")
+        .unwrap();
     assert_eq!(sb.read("existing.md"), "New content");
 }
 
@@ -399,7 +477,9 @@ fn update_missing_never_creates() {
 fn write_creates_parent_directories() {
     let sb = Sandbox::empty();
     let vault = sb.vault();
-    NotesService::new(&vault).write("deep/nested/note.md", b"Content").unwrap();
+    NotesService::new(&vault)
+        .write("deep/nested/note.md", b"Content")
+        .unwrap();
     assert!(sb.exists("deep/nested/note.md"));
 }
 
@@ -408,8 +488,13 @@ fn write_creates_parent_directories() {
 fn write_leaves_no_temp_files() {
     let sb = Sandbox::empty();
     let vault = sb.vault();
-    NotesService::new(&vault).write("note.md", b"content").unwrap();
-    assert!(no_tmp_files(&sb), "atomic write should clean up its temp file");
+    NotesService::new(&vault)
+        .write("note.md", b"content")
+        .unwrap();
+    assert!(
+        no_tmp_files(&sb),
+        "atomic write should clean up its temp file"
+    );
 }
 
 // port: test/services/notes_service_test.rb:318 "write preserves the existing note's file mode across the atomic swap"
@@ -419,8 +504,14 @@ fn write_preserves_existing_mode() {
     sb.write("note.md", "original");
     sb.chmod("note.md", 0o600);
     let vault = sb.vault();
-    NotesService::new(&vault).write("note.md", b"updated").unwrap();
-    assert_eq!(sb.stat_mode("note.md"), "600", "atomic write must not reset the note's permission bits");
+    NotesService::new(&vault)
+        .write("note.md", b"updated")
+        .unwrap();
+    assert_eq!(
+        sb.stat_mode("note.md"),
+        "600",
+        "atomic write must not reset the note's permission bits"
+    );
     assert_eq!(sb.read("note.md"), "updated");
 }
 
@@ -433,13 +524,28 @@ fn write_preserves_existing_mode() {
 fn write_temp_file_lives_in_target_directory() {
     let sb = Sandbox::empty();
     sb.mkdir("sub");
-    let _g = fault::inject(FaultPoint::AtomicRename, ErrorKind::StorageFull, Some(ENOSPC), false);
+    let _g = fault::inject(
+        FaultPoint::AtomicRename,
+        ErrorKind::StorageFull,
+        Some(ENOSPC),
+        false,
+    );
     let vault = sb.vault();
-    assert!(NotesService::new(&vault).write("sub/note.md", b"content").is_err());
+    assert!(
+        NotesService::new(&vault)
+            .write("sub/note.md", b"content")
+            .is_err()
+    );
     assert_eq!(fault::hits(&FaultPoint::AtomicRename), 1);
-    assert!(no_tmp_files(&sb), "temp must not be created in the vault root");
+    assert!(
+        no_tmp_files(&sb),
+        "temp must not be created in the vault root"
+    );
     let tmp = frankmd_fs::atomic::temp_name("note.md");
-    assert!(tmp.starts_with(".note.md.") && tmp.ends_with(".tmp"), "{tmp}");
+    assert!(
+        tmp.starts_with(".note.md.") && tmp.ends_with(".tmp"),
+        "{tmp}"
+    );
 }
 
 // port: test/services/notes_service_test.rb:346 "write preserves the original note when the atomic rename fails"
@@ -447,14 +553,22 @@ fn write_temp_file_lives_in_target_directory() {
 fn write_preserves_original_when_rename_fails() {
     let sb = Sandbox::empty();
     sb.write("note.md", "Original content");
-    let _g = fault::inject(FaultPoint::AtomicRename, ErrorKind::StorageFull, Some(ENOSPC), false);
+    let _g = fault::inject(
+        FaultPoint::AtomicRename,
+        ErrorKind::StorageFull,
+        Some(ENOSPC),
+        false,
+    );
     let vault = sb.vault();
     match NotesService::new(&vault).write("note.md", b"New content that fails") {
         Err(FsError::Io(e)) => assert_eq!(e.raw_os_error(), Some(ENOSPC)),
         other => panic!("expected ENOSPC, got {other:?}"),
     }
     assert_eq!(sb.read("note.md"), "Original content");
-    assert!(no_tmp_files(&sb), "failed atomic write should not leave a temp file behind");
+    assert!(
+        no_tmp_files(&sb),
+        "failed atomic write should not leave a temp file behind"
+    );
 }
 
 // port: test/services/notes_service_test.rb:359 "write creates Hugo blog post directory structure"
@@ -464,7 +578,9 @@ fn write_creates_hugo_directory_structure() {
     let hugo_path = "2026/01/30/my-first-post/index.md";
     let content = "---\ntitle: \"My First Post\"\nslug: \"my-first-post\"\ndate: 2026-01-30T14:30:00-0300\ndraft: true\ntags:\n-\n---\n\nPost content goes here.\n";
     let vault = sb.vault();
-    NotesService::new(&vault).write(hugo_path, content.as_bytes()).unwrap();
+    NotesService::new(&vault)
+        .write(hugo_path, content.as_bytes())
+        .unwrap();
     for d in ["2026", "2026/01", "2026/01/30", "2026/01/30/my-first-post"] {
         assert!(sb.abs(d).is_dir(), "{d}");
     }
@@ -480,7 +596,9 @@ fn delete_removes_file() {
     let sb = Sandbox::empty();
     note(&sb, "to_delete.md");
     let vault = sb.vault();
-    NotesService::new(&vault).delete("to_delete.md", None).unwrap();
+    NotesService::new(&vault)
+        .delete("to_delete.md", None)
+        .unwrap();
     assert!(!sb.exists("to_delete.md"));
 }
 
@@ -491,7 +609,9 @@ fn delete_with_matching_revision() {
     sb.write("to_delete.md", "current content");
     let vault = sb.vault();
     let rev = sha256_hex(b"current content");
-    NotesService::new(&vault).delete("to_delete.md", Some(&rev)).unwrap();
+    NotesService::new(&vault)
+        .delete("to_delete.md", Some(&rev))
+        .unwrap();
     assert!(!sb.exists("to_delete.md"));
 }
 
@@ -512,7 +632,10 @@ fn delete_with_stale_revision_conflicts() {
 fn delete_missing_is_not_found() {
     let sb = Sandbox::empty();
     let vault = sb.vault();
-    assert!(matches!(NotesService::new(&vault).delete("nonexistent.md", None), Err(FsError::NotFound(_))));
+    assert!(matches!(
+        NotesService::new(&vault).delete("nonexistent.md", None),
+        Err(FsError::NotFound(_))
+    ));
 }
 
 // === rename ===
@@ -523,7 +646,9 @@ fn rename_moves_file() {
     let sb = Sandbox::empty();
     sb.write("old.md", "Content");
     let vault = sb.vault();
-    NotesService::new(&vault).rename("old.md", "new.md").unwrap();
+    NotesService::new(&vault)
+        .rename("old.md", "new.md")
+        .unwrap();
     assert!(!sb.exists("old.md"));
     assert_eq!(sb.read("new.md"), "Content");
 }
@@ -535,7 +660,9 @@ fn rename_moves_file_to_other_folder() {
     sb.write("root.md", "Content");
     sb.mkdir("subfolder");
     let vault = sb.vault();
-    NotesService::new(&vault).rename("root.md", "subfolder/moved.md").unwrap();
+    NotesService::new(&vault)
+        .rename("root.md", "subfolder/moved.md")
+        .unwrap();
     assert!(!sb.exists("root.md"));
     assert!(sb.exists("subfolder/moved.md"));
 }
@@ -545,9 +672,16 @@ fn rename_moves_file_to_other_folder() {
 fn rename_cross_device_fallback() {
     let sb = Sandbox::empty();
     sb.write("source.md", "Cross-device content");
-    let _g = fault::inject(FaultPoint::Rename, ErrorKind::CrossesDevices, Some(EXDEV), false);
+    let _g = fault::inject(
+        FaultPoint::Rename,
+        ErrorKind::CrossesDevices,
+        Some(EXDEV),
+        false,
+    );
     let vault = sb.vault();
-    NotesService::new(&vault).rename("source.md", "nested/destination.md").unwrap();
+    NotesService::new(&vault)
+        .rename("source.md", "nested/destination.md")
+        .unwrap();
     assert!(!sb.exists("source.md"));
     assert_eq!(sb.read("nested/destination.md"), "Cross-device content");
 }
@@ -594,7 +728,9 @@ fn rename_moves_folder_with_contents() {
     let sb = Sandbox::empty();
     sb.write("old_folder/note.md", "Content");
     let vault = sb.vault();
-    NotesService::new(&vault).rename("old_folder", "new_folder").unwrap();
+    NotesService::new(&vault)
+        .rename("old_folder", "new_folder")
+        .unwrap();
     assert!(!sb.exists("old_folder"));
     assert!(sb.exists("new_folder"));
     assert!(sb.exists("new_folder/note.md"));
@@ -605,7 +741,10 @@ fn rename_moves_folder_with_contents() {
 fn rename_missing_source_is_not_found() {
     let sb = Sandbox::empty();
     let vault = sb.vault();
-    assert!(matches!(NotesService::new(&vault).rename("nonexistent.md", "new.md"), Err(FsError::NotFound(_))));
+    assert!(matches!(
+        NotesService::new(&vault).rename("nonexistent.md", "new.md"),
+        Err(FsError::NotFound(_))
+    ));
 }
 
 // port: test/services/notes_service_test.rb:504 "rename rejects an existing destination without modifying either file"
@@ -615,7 +754,9 @@ fn rename_rejects_existing_destination() {
     sb.write("old.md", "original");
     sb.write("new.md", "destination");
     let vault = sb.vault();
-    let err = NotesService::new(&vault).rename("old.md", "new.md").unwrap_err();
+    let err = NotesService::new(&vault)
+        .rename("old.md", "new.md")
+        .unwrap_err();
     assert!(err.is_invalid_path(), "{err:?}");
     assert!(matches!(err, FsError::AlreadyExists(_)));
     assert_eq!(sb.read("old.md"), "original");
@@ -629,7 +770,9 @@ fn rename_rejects_existing_destination() {
 fn create_folder_creates_directory() {
     let sb = Sandbox::empty();
     let vault = sb.vault();
-    NotesService::new(&vault).create_folder("new_folder").unwrap();
+    NotesService::new(&vault)
+        .create_folder("new_folder")
+        .unwrap();
     assert!(sb.abs("new_folder").is_dir());
 }
 
@@ -638,7 +781,9 @@ fn create_folder_creates_directory() {
 fn create_folder_creates_nested_directories() {
     let sb = Sandbox::empty();
     let vault = sb.vault();
-    NotesService::new(&vault).create_folder("deep/nested/folder").unwrap();
+    NotesService::new(&vault)
+        .create_folder("deep/nested/folder")
+        .unwrap();
     assert!(sb.abs("deep/nested/folder").is_dir());
 }
 
@@ -650,7 +795,9 @@ fn delete_folder_removes_empty_directory() {
     let sb = Sandbox::empty();
     sb.mkdir("empty_folder");
     let vault = sb.vault();
-    NotesService::new(&vault).delete_folder("empty_folder").unwrap();
+    NotesService::new(&vault)
+        .delete_folder("empty_folder")
+        .unwrap();
     assert!(!sb.exists("empty_folder"));
 }
 
@@ -660,7 +807,9 @@ fn delete_folder_non_empty_is_invalid_path() {
     let sb = Sandbox::empty();
     note(&sb, "folder/note.md");
     let vault = sb.vault();
-    let err = NotesService::new(&vault).delete_folder("folder").unwrap_err();
+    let err = NotesService::new(&vault)
+        .delete_folder("folder")
+        .unwrap_err();
     assert!(err.is_invalid_path(), "{err:?}");
     assert_eq!(err.compat_class(), "NotesService::InvalidPathError");
     assert!(sb.exists("folder/note.md"));
@@ -673,7 +822,10 @@ fn delete_folder_non_empty_is_invalid_path() {
 fn prevents_path_traversal() {
     let sb = Sandbox::empty();
     let vault = sb.vault();
-    assert!(matches!(NotesService::new(&vault).read("../../../etc/passwd"), Err(FsError::InvalidPath(_))));
+    assert!(matches!(
+        NotesService::new(&vault).read("../../../etc/passwd"),
+        Err(FsError::InvalidPath(_))
+    ));
 }
 
 // port: test/services/notes_service_test.rb:554 "rejects paths that traverse out of the base directory"

@@ -32,7 +32,7 @@ Two Ruby search tests depended on stubs and are adapted:
 | Fixture | Rust test | Cases wired / total | Not driven |
 |---|---|---:|---|
 | `js_preview_pipeline` | `golden_preview.rs` | 89/89 | — (`previewRender` 71, `stripFrontmatter` 18) |
-| `js_marked_extensions` | `golden_marked_extensions.rs` | 262/281 | 18 `marked.parse` inputs containing `<`: raw output is unsanitized, and the same corpus entries are compared sanitized in `golden_preview`. 1 known divergence (icon renderer, below). |
+| `js_marked_extensions` | `golden_marked_extensions.rs` | 280/281 | 1 known divergence (icon renderer, below). `marked.parse` cases compare `to_html` with `sanitize(fixture)`, since FrankMD's preview is `sanitizeHtml(marked.parse(md))` (implementation-phase test fix). |
 | `js_markdown_line_mapper` | `golden_line_mapper.rs` | 118/126 | 1 negative frontmatter offset (`SourceSpan` is 1-based `u32`). 7 `marked.lexer(types+raw)` informative token dumps (no IR equivalent). |
 | `js_math_renderer` | `golden_math.rs` | 56/57 | `null container` |
 | `js_html_sanitizer` | `golden_sanitizer.rs` | 125/125 | — |
@@ -46,7 +46,7 @@ Two Ruby search tests depended on stubs and are adapted:
 
 ## How the preview is compared (native IR vs marked + DOMPurify HTML)
 
-The preview renders natively: comrak → `RenderDoc` IR → GPUI. Two things keep the original HTML
+The preview renders natively: a port of marked 15.0.6's lexer with FrankMD's extensions (`src/marked/`) → `RenderDoc` IR → GPUI. comrak was dropped in the implementation phase: FrankMD's extensions run before marked's own inline rules at every position (`==**x**==` is a literal mark, `$x_1$ and $x_2$` is two math spans) and the block extension's `start()` clips paragraphs; comrak has no hook for either. Two things keep the original HTML
 fixtures usable:
 - `html::to_html` stays as a **conformance oracle**.
 - The tests also check the IR directly.

@@ -40,16 +40,32 @@ fn golden_flatten_tree() {
             Value::Null => vec![],
             v => serde_json::from_value(known_types(&v)).map_err(|e| e.to_string())?,
         };
-        let got: Vec<Value> = flatten_files(&nodes)
+        // JS `flattenTree(items, result)` appends to the optional accumulator;
+        // the Rust API returns a fresh list, so the test prepends the accumulator.
+        let shape = |e: &Value| json!({"type": e["type"], "name": e["name"], "path": e["path"]});
+        let acc: Vec<Value> = decode_js(&c.input)
+            .get(1)
+            .and_then(Value::as_array)
+            .map(|a| a.iter().map(shape).collect())
+            .unwrap_or_default();
+        let got: Vec<Value> = acc
             .into_iter()
-            .map(|n| json!({"type": "file", "name": n.name(), "path": n.path().as_str()}))
+            .chain(
+                flatten_files(&nodes)
+                    .into_iter()
+                    .map(|n| json!({"type": "file", "name": n.name(), "path": n.path().as_str()})),
+            )
             .collect();
         let want: Vec<Value> = decode_js(&c.expected)
             .as_array()
             .unwrap()
             .iter()
-            .map(|e| json!({"type": e["type"], "name": e["name"], "path": e["path"]}))
+            .map(shape)
             .collect();
-        if got == want { Ok(()) } else { Err(format!("expected {want:?}, got {got:?}")) }
+        if got == want {
+            Ok(())
+        } else {
+            Err(format!("expected {want:?}, got {got:?}"))
+        }
     });
 }

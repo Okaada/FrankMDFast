@@ -6,6 +6,7 @@
 //! `fault-injection` feature (enabled for this crate's own tests through a
 //! self dev-dependency).
 
+use std::cell::RefCell;
 use std::io;
 
 /// Where to fail.
@@ -32,16 +33,77 @@ pub struct FaultGuard {
 }
 
 impl Drop for FaultGuard {
-    fn drop(&mut self) {}
+    fn drop(&mut self) {
+        ARMED.with(|armed| armed.borrow_mut().retain(|fault| fault.point != self.point));
+    }
+}
+
+#[derive(Debug)]
+struct Armed {
+    point: FaultPoint,
+    kind: io::ErrorKind,
+    raw_os_error: Option<i32>,
+    once: bool,
+    spent: bool,
+    hits: usize,
+}
+
+thread_local! {
+    static ARMED: RefCell<Vec<Armed>> = const { RefCell::new(Vec::new()) };
 }
 
 /// Arm `point` to fail with `error` on the current thread until the guard drops.
 /// `once` disarms it after the first hit.
-pub fn inject(point: FaultPoint, error: io::ErrorKind, raw_os_error: Option<i32>, once: bool) -> FaultGuard {
-    todo!()
+pub fn inject(
+    point: FaultPoint,
+    error: io::ErrorKind,
+    raw_os_error: Option<i32>,
+    once: bool,
+) -> FaultGuard {
+    ARMED.with(|armed| {
+        let mut armed = armed.borrow_mut();
+        armed.retain(|fault| fault.point != point);
+        armed.push(Armed {
+            point: point.clone(),
+            kind: error,
+            raw_os_error,
+            once,
+            spent: false,
+            hits: 0,
+        });
+    });
+    FaultGuard { point }
 }
 
 /// Number of times `point` was reached (hit or not) since it was armed.
 pub fn hits(point: &FaultPoint) -> usize {
-    todo!()
+    ARMED.with(|armed| {
+        armed
+            .borrow()
+            .iter()
+            .find(|fault| &fault.point == point)
+            .map_or(0, |fault| fault.hits)
+    })
+}
+
+/// Called by the crate at each fault point: counts the hit and returns the
+/// armed error, if any.
+pub(crate) fn check(point: &FaultPoint) -> io::Result<()> {
+    ARMED.with(|armed| {
+        let mut armed = armed.borrow_mut();
+        let Some(fault) = armed.iter_mut().find(|fault| &fault.point == point) else {
+            return Ok(());
+        };
+        fault.hits += 1;
+        if fault.spent {
+            return Ok(());
+        }
+        if fault.once {
+            fault.spent = true;
+        }
+        Err(match fault.raw_os_error {
+            Some(code) => io::Error::from_raw_os_error(code),
+            None => io::Error::from(fault.kind),
+        })
+    })
 }

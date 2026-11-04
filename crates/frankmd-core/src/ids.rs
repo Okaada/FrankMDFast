@@ -45,7 +45,9 @@ impl Revision {
 /// Monotonic generation counter attached to every async result (tree scans,
 /// renders, searches, saves). A result whose generation is older than the
 /// current one for its subject is discarded (HP-003).
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Default, Serialize, Deserialize)]
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Default, Serialize, Deserialize,
+)]
 pub struct Generation(pub u64);
 
 impl Generation {

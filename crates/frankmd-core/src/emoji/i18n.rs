@@ -8,6 +8,8 @@
 //! Golden: `js_emoji_i18n.json`.
 
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use std::sync::OnceLock;
 
 /// **[COMPAT]** app locale → emojibase locale (`LOCALE_MAP`). Anything not
 /// listed falls back to `"en"` (Hebrew is listed explicitly as `"en"`).
@@ -29,7 +31,9 @@ pub const LOCALE_MAP: [(&str, &str); 7] = [
 /// `"toString"` / `"__proto__"` returned inherited prototype values (a function,
 /// `{}`) instead of a locale. Here they fall back to `"en"` like any unknown code.
 pub fn emojibase_locale(app_locale: Option<&str>) -> &'static str {
-    todo!()
+    app_locale
+        .and_then(|code| LOCALE_MAP.iter().find(|(app, _)| *app == code))
+        .map_or("en", |(_, emojibase)| emojibase)
 }
 
 /// An emojibase `emoticon` field: one string or several.
@@ -77,18 +81,35 @@ pub struct EmojibaseEntry {
     pub skins: Option<Vec<EmojibaseEntry>>,
 }
 
+/// Emojibase locales with embedded data (see [`super::localized_names_json`]).
+const DATASET_LOCALES: [&str; 5] = ["en", "es", "ja", "ko", "pt"];
+
 /// Parsed dataset for an emojibase locale (`en`, `es`, `ja`, `ko`, `pt`),
 /// from [`super::localized_names_json`], cached per locale. `None` for a
 /// locale without data.
 pub fn dataset(emojibase_locale: &str) -> Option<&'static [EmojibaseEntry]> {
-    todo!("parse once per locale; needs serde_json as a normal dependency")
+    static CACHE: [OnceLock<Option<Vec<EmojibaseEntry>>>; DATASET_LOCALES.len()] =
+        [const { OnceLock::new() }; DATASET_LOCALES.len()];
+    let slot = DATASET_LOCALES
+        .iter()
+        .position(|l| *l == emojibase_locale)?;
+    CACHE[slot]
+        .get_or_init(|| {
+            let json = super::localized_names_json(emojibase_locale)?;
+            // Embedded and covered by tests; unparsable data counts as missing
+            // (the JS treated a failed load the same way).
+            serde_json::from_str(json).ok()
+        })
+        .as_deref()
 }
 
 /// **[COMPAT]** `getTranslatedEmojis()` for an app locale: the dataset of
 /// [`emojibase_locale`]`(app_locale)`, falling back to English when that
 /// locale has no data (the JS fallback after a failed fetch).
 pub fn translated_emojis(app_locale: Option<&str>) -> &'static [EmojibaseEntry] {
-    todo!()
+    dataset(emojibase_locale(app_locale))
+        .or_else(|| dataset("en"))
+        .unwrap_or_default()
 }
 
 /// One search-index value (**[COMPAT]** `{label, tags, searchTerms}`).
@@ -109,12 +130,14 @@ pub struct SearchEntry {
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct SearchIndex {
     entries: Vec<(String, SearchEntry)>,
+    /// emoji -> index into `entries`, for O(1) lookups and overwrites.
+    positions: HashMap<String, usize>,
 }
 
 impl SearchIndex {
     /// Entry for an emoji.
     pub fn get(&self, emoji: &str) -> Option<&SearchEntry> {
-        todo!()
+        self.positions.get(emoji).map(|&pos| &self.entries[pos].1)
     }
     /// Number of distinct emoji.
     pub fn len(&self) -> usize {
@@ -134,15 +157,60 @@ impl SearchIndex {
 /// `emoji` when `unicode` is missing/empty (JS truthiness); rows with neither
 /// are skipped.
 pub fn build_search_index(entries: &[EmojibaseEntry]) -> SearchIndex {
-    todo!()
+    let mut index = SearchIndex::default();
+    for entry in entries {
+        let Some(emoji) = non_empty(&entry.unicode).or_else(|| non_empty(&entry.emoji)) else {
+            continue;
+        };
+        let label = entry.label.clone().unwrap_or_default();
+        let tags = entry.tags.clone().unwrap_or_default();
+        let mut terms = Vec::with_capacity(tags.len() + 1);
+        terms.push(label.as_str());
+        terms.extend(tags.iter().map(String::as_str));
+        let search_terms = terms.join(" ").to_lowercase();
+        let value = SearchEntry {
+            label,
+            tags,
+            search_terms,
+        };
+        match index.positions.get(emoji) {
+            Some(&pos) => index.entries[pos].1 = value,
+            None => {
+                index
+                    .positions
+                    .insert(emoji.to_owned(), index.entries.len());
+                index.entries.push((emoji.to_owned(), value));
+            }
+        }
+    }
+    index
+}
+
+/// JS truthiness for an optional string: `Some` only when non-empty.
+fn non_empty(value: &Option<String>) -> Option<&str> {
+    value.as_deref().filter(|s| !s.is_empty())
 }
 
 /// Picker search over the built-in shortcode table (**[COMPAT]**
 /// `emoji_picker_controller#searchEmojisWithI18n`): `query` is split on
 /// whitespace; a row matches if every term is a substring of
 /// `"<shortcode> <keywords>"`, or — when `index` has the row's emoji — every
-/// term is a substring of its `search_terms`. Tests for this live with the
-/// emoji-picker port (UI agent).
+/// term is a substring of its `search_terms`. The query is trimmed and
+/// lowercased first, as the picker's `onInput` did. Tests for this live with
+/// the emoji-picker port (UI agent).
 pub fn search_emojis(query: &str, index: Option<&SearchIndex>) -> Vec<&'static super::Emoji> {
-    todo!()
+    let query = query.trim().to_lowercase();
+    let terms: Vec<&str> = query.split_whitespace().collect();
+    super::shortcodes()
+        .iter()
+        .filter(|row| {
+            let english = format!("{} {}", row.shortcode, row.keywords).to_lowercase();
+            if terms.iter().all(|t| english.contains(t)) {
+                return true;
+            }
+            index
+                .and_then(|idx| idx.get(&row.emoji))
+                .is_some_and(|entry| terms.iter().all(|t| entry.search_terms.contains(t)))
+        })
+        .collect()
 }

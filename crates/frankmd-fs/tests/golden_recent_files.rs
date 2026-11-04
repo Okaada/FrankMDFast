@@ -29,7 +29,11 @@ fn base_now() -> jiff::Timestamp {
 }
 
 fn has_http(case: &Case) -> bool {
-    case.input["ops"].as_array().unwrap().iter().any(|o| o["op"] == "http")
+    case.input["ops"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|o| o["op"] == "http")
 }
 
 fn run_case(case: &Case) -> Result<(), String> {
@@ -44,15 +48,23 @@ fn run_case(case: &Case) -> Result<(), String> {
     let mut errs = Vec::new();
     for (i, (op, exp)) in ops.iter().zip(results).enumerate() {
         let what = format!("op #{i} {}", op["op"]);
-        let at = base_now() + jiff::SignedDuration::from_secs(op["at_offset"].as_i64().unwrap_or(0));
+        let at =
+            base_now() + jiff::SignedDuration::from_secs(op["at_offset"].as_i64().unwrap_or(0));
         let history = RecentFilesService::new(&vault, &store);
         let notes = NotesService::new(&vault).with_recents(&store);
         let r = match op["op"].as_str().unwrap() {
-            "record" => support_d::check_bool(&what, history.record(op["path"].as_str(), at), exp, &sb),
+            "record" => {
+                support_d::check_bool(&what, history.record(op["path"].as_str(), at), exp, &sb)
+            }
             "entries" => common::check_eq(&what, &support_d::entries_json(&history.entries()), exp),
             "clear" => support_d::check_bool(&what, history.clear(), exp, &sb),
             "remove" => support_d::check_bool(&what, history.remove(&s(&op["path"])), exp, &sb),
-            "remap" => support_d::check_bool(&what, history.remap(&s(&op["old_path"]), &s(&op["new_path"])), exp, &sb),
+            "remap" => support_d::check_bool(
+                &what,
+                history.remap(&s(&op["old_path"]), &s(&op["new_path"])),
+                exp,
+                &sb,
+            ),
             "fs_delete" => {
                 std::fs::remove_file(sb.abs(&s(&op["path"]))).unwrap();
                 Ok(())
@@ -65,9 +77,18 @@ fn run_case(case: &Case) -> Result<(), String> {
                 sb.chmod(&s(&op["path"]), op["mode"].as_u64().unwrap() as u32);
                 Ok(())
             }
-            "service_rename" => support_d::check_unit(&what, notes.rename(&s(&op["old_path"]), &s(&op["new_path"])), exp, &sb),
-            "service_delete" => support_d::check_unit(&what, notes.delete(&s(&op["path"]), None), exp, &sb),
-            "service_delete_folder" => support_d::check_unit(&what, notes.delete_folder(&s(&op["path"])), exp, &sb),
+            "service_rename" => support_d::check_unit(
+                &what,
+                notes.rename(&s(&op["old_path"]), &s(&op["new_path"])),
+                exp,
+                &sb,
+            ),
+            "service_delete" => {
+                support_d::check_unit(&what, notes.delete(&s(&op["path"]), None), exp, &sb)
+            }
+            "service_delete_folder" => {
+                support_d::check_unit(&what, notes.delete_folder(&s(&op["path"])), exp, &sb)
+            }
             other => Err(format!("unknown op {other}")),
         };
         if let Err(m) = r {
@@ -75,6 +96,15 @@ fn run_case(case: &Case) -> Result<(), String> {
         }
     }
     support_d::unlock_dirs(&sb.root);
+
+    // The generator read `entries_after` through a fresh Rails `Config.new`,
+    // which creates `.fed` from the template (and its lock file) when missing.
+    // That is a frankmd-config side effect, reproduced here so `tree_after`
+    // compares only what this crate is responsible for.
+    if !sb.exists(".fed") {
+        sb.write(".fed", &common::fed_template());
+        sb.write(".frankmd-config.lock", "");
+    }
 
     let history = RecentFilesService::new(&vault, &store);
     if let Err(m) = common::check_eq(
@@ -85,18 +115,29 @@ fn run_case(case: &Case) -> Result<(), String> {
         errs.push(m);
     }
     let lines = support_d::fed_recent_lines(&sb.root).map_or(Value::Null, |l| json!(l));
-    if let Err(m) = common::check_eq("fed_recent_files_lines", &lines, &case.expected["fed_recent_files_lines"]) {
+    if let Err(m) = common::check_eq(
+        "fed_recent_files_lines",
+        &lines,
+        &case.expected["fed_recent_files_lines"],
+    ) {
         errs.push(m);
     }
     if let Err(m) = support_d::check_tree_after(&sb, &case.expected["tree_after"]) {
         errs.push(m);
     }
-    if errs.is_empty() { Ok(()) } else { Err(errs.join("\n  ")) }
+    if errs.is_empty() {
+        Ok(())
+    } else {
+        Err(errs.join("\n  "))
+    }
 }
 
 #[test]
 fn golden_recent_files() {
     let g = golden("recent_files");
-    let cases: Vec<&Case> = g.cases_for("RecentFilesService").filter(|c| !has_http(c)).collect();
+    let cases: Vec<&Case> = g
+        .cases_for("RecentFilesService")
+        .filter(|c| !has_http(c))
+        .collect();
     assert_cases("recent_files", cases, run_case);
 }

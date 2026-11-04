@@ -20,31 +20,78 @@ pub enum ValidationError {
 
 /// **[COMPAT]** `Note#name`: basename without a trailing `.md`.
 pub fn note_name(path: &str) -> String {
-    todo!("note.rb")
+    ruby_basename(path, Some(".md")).to_owned()
 }
 
 /// **[COMPAT]** `Note#directory`: parent dir, `""` at the root.
 pub fn note_directory(path: &str) -> String {
-    todo!("note.rb")
+    match ruby_dirname(path) {
+        "." => String::new(),
+        dir => dir.to_owned(),
+    }
 }
 
 /// **[COMPAT]** `Note#valid?` on an (already normalized) path: blank, then the
 /// `..` substring rule. Returns every failing rule in Rails order.
 pub fn validate_note_path(path: &str) -> Vec<ValidationError> {
-    todo!("note.rb:182-187")
+    if is_blank(path) {
+        vec![ValidationError::Blank]
+    } else if path.contains("..") {
+        vec![ValidationError::Traversal]
+    } else {
+        Vec::new()
+    }
 }
 
 /// **[COMPAT]** `Folder#name`: last path segment.
 pub fn folder_name(path: &str) -> String {
-    todo!("folder.rb")
+    ruby_basename(path, None).to_owned()
 }
 
 /// **[COMPAT]** `Folder#parent_path`: `None` at the root level.
 pub fn folder_parent_path(path: &str) -> Option<String> {
-    todo!("folder.rb")
+    match ruby_dirname(path) {
+        "." => None,
+        dir => Some(dir.to_owned()),
+    }
 }
 
 /// **[COMPAT]** `Folder#valid?` (same rules as notes).
 pub fn validate_folder_path(path: &str) -> Vec<ValidationError> {
-    todo!("folder.rb:341-346")
+    validate_note_path(path)
+}
+
+/// ActiveSupport `String#blank?`: empty or only (Unicode) whitespace.
+fn is_blank(s: &str) -> bool {
+    s.chars().all(char::is_whitespace)
+}
+
+/// Ruby `File.basename(path[, suffix])` on Unix: trailing `/` are ignored, an
+/// all-slash path is `"/"`, and `suffix` is removed unless it is the whole name.
+pub fn ruby_basename<'a>(path: &'a str, suffix: Option<&str>) -> &'a str {
+    let trimmed = path.trim_end_matches('/');
+    if trimmed.is_empty() {
+        return if path.is_empty() { "" } else { "/" };
+    }
+    let base = trimmed.rsplit('/').next().unwrap_or(trimmed);
+    match suffix.and_then(|sfx| base.strip_suffix(sfx)) {
+        Some(stem) if !stem.is_empty() => stem,
+        _ => base,
+    }
+}
+
+/// Ruby `File.dirname(path)` on Unix: `"."` without a directory part,
+/// `"/"` for paths directly under the root; repeated slashes collapse.
+pub fn ruby_dirname(path: &str) -> &str {
+    let trimmed = path.trim_end_matches('/');
+    if trimmed.is_empty() {
+        return if path.is_empty() { "." } else { "/" };
+    }
+    match trimmed.rfind('/') {
+        None => ".",
+        Some(i) => {
+            let dir = trimmed[..i].trim_end_matches('/');
+            if dir.is_empty() { "/" } else { dir }
+        }
+    }
 }

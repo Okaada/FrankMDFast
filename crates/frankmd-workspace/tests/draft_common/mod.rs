@@ -212,12 +212,12 @@ pub type Session = AutosaveSession<MemoryBackend>;
 
 /// An autosave session with default **[COMPAT]** timings plus a fake clock.
 pub fn session() -> (Session, FakeClock) {
-    (AutosaveSession::new(drafts(), AutosaveConfig::default()), FakeClock::new())
+    (AutosaveSession::new(drafts(), AutosaveConfig::default()), FakeClock::default())
 }
 
 /// `clock.now()` shorthand.
 pub fn now(clock: &FakeClock) -> Instant {
-    clock.now()
+    clock.instant()
 }
 
 /// `"x".repeat(n)` (the suite's `makeContent`).

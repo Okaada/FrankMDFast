@@ -7,7 +7,7 @@
 
 use std::sync::Arc;
 
-/// 1-based inclusive source line span of a block (comrak `sourcepos`), in
+/// 1-based inclusive source line span of a block (true lines from the lexer), in
 /// lines of the **whole note** (front matter counted), so task toggling and
 /// scroll sync address the editor buffer directly.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -52,17 +52,20 @@ pub enum Block {
     Math { tex: String, span: SourceSpan },
     /// Blockquote / GFM alert.
     Quote { alert: Option<AlertKind>, children: Vec<Block>, span: SourceSpan },
-    /// Ordered (`Some(start)`) or unordered (`None`) list.
-    List { ordered: Option<u64>, items: Vec<ListItem>, span: SourceSpan },
+    /// Ordered (`Some(start)`) or unordered (`None`) list. `loose` lists wrap
+    /// item paragraphs in `<p>` (marked's loose/tight distinction).
+    List { ordered: Option<u64>, loose: bool, items: Vec<ListItem>, span: SourceSpan },
     /// GFM table.
     Table { align: Vec<Align>, header: Vec<Vec<Inline>>, rows: Vec<Vec<Vec<Inline>>>, span: SourceSpan },
     /// `---`.
     Rule { span: SourceSpan },
     /// YouTube (and future allowlisted) embeds rendered as thumbnail cards.
-    Embed { embed: crate::embed::Embed, span: SourceSpan },
-    /// Raw HTML block, already passed through [`crate::html::sanitize`]
-    /// (FrankMD's DOMPurify policy). The app renders a safe subset natively and
-    /// the rest as text; HTML export emits it verbatim.
+    /// `html` is the note's raw `<iframe>` for HTML export.
+    Embed { embed: crate::embed::Embed, html: String, span: SourceSpan },
+    /// Raw HTML block **as written in the note** (untrusted). HTML export
+    /// sanitizes the assembled document with [`crate::html::sanitize`] like
+    /// FrankMD (raw HTML can wrap later markdown, e.g. `<details>`); a native
+    /// renderer must pass it through `sanitize` or show it as text.
     Html { text: String, span: SourceSpan },
 }
 
@@ -117,12 +120,15 @@ pub enum Inline {
     Emoji { shortcode: String, emoji: String },
     /// `:ph-name:` Phosphor icon (inline SVG path data).
     Icon { name: String, path: String, view_box: String },
-    Link { url: SafeUrl, title: Option<String>, children: Vec<Inline> },
+    /// `url` is `None` when the href failed the URL allowlist (DOMPurify
+    /// drops the attribute and keeps the text).
+    Link { url: Option<SafeUrl>, title: Option<String>, children: Vec<Inline> },
     /// `[[target]]` / `[[target|label]]`, both trimmed. Display text is
     /// `label` or the basename of `target`.
     WikiLink { target: String, label: Option<String> },
-    Image { src: SafeUrl, alt: String, title: Option<String> },
-    /// Raw inline HTML after [`crate::html::sanitize`].
+    /// `src` is `None` when the URL failed the allowlist.
+    Image { src: Option<SafeUrl>, alt: String, title: Option<String> },
+    /// Raw inline HTML as written (untrusted, see [`Block::Html`]).
     Html(String),
     FootnoteRef(String),
     SoftBreak,
@@ -131,8 +137,9 @@ pub enum Inline {
     HardBreak,
 }
 
-/// A URL that passed the scheme allowlist (http, https, mailto, relative,
-/// vault-local). `javascript:`/`data:` never reach the IR.
+/// A URL that passed DOMPurify's URI allowlist (http(s), ftp, mailto, tel,
+/// relative, vault-local...; `data:` only for images). `javascript:` and
+/// other script schemes never reach the IR.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SafeUrl(pub String);
 

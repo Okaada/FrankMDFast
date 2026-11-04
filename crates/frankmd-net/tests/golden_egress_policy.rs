@@ -14,7 +14,7 @@ use std::sync::Mutex;
 
 use frankmd_net::NetError;
 use frankmd_net::egress::{
-    HostResolver, SystemResolver, Target, check_target, is_blocked_net, parse_ip,
+    HostResolver, SystemResolver, Target, USERINFO_MESSAGE, check_target, is_blocked_net, parse_ip,
 };
 use frankmd_testkit::serde_json::{Value, json};
 use frankmd_testkit::{Case, assert_cases, golden};
@@ -48,6 +48,12 @@ fn result_json(r: Result<Target, NetError>) -> Value {
     }
 }
 
+/// `true` when the URL's authority carries `userinfo@` (only the two fixture
+/// cases `http://user:pass@example.com/` and `http://example.com@evil.com/`).
+fn has_userinfo(url: &str) -> bool {
+    url.split_once("://").is_some_and(|(_, rest)| rest.split(['/', '?', '#']).next().is_some_and(|a| a.contains('@')))
+}
+
 fn check_eq(actual: &Value, expected: &Value) -> Result<(), String> {
     if actual == expected { Ok(()) } else { Err(format!("expected {expected}, got {actual}")) }
 }
@@ -58,10 +64,13 @@ fn blocked_ip() {
     assert_cases("egress_policy blocked_ip?", g.cases_for("blocked_ip?"), |c: &Case| {
         let input = c.input["ip"].as_str().ok_or("ip not a string")?;
         let actual = match parse_ip(input) {
-            Ok(net) => json!({
-                "normalized": net.addr().to_string(),
-                "family": if net.addr().is_ipv4() { "ipv4" } else { "ipv6" },
-                "blocked": is_blocked_net(&net),
+            // API adjustment: `parse_ip` returns `ParsedIp`, whose `Display` is Ruby's
+            // `IPAddr#to_s` (keeps `%zone`, prints `::127.0.0.1` dotted), which
+            // `Ipv6Addr`'s `Display` cannot reproduce.
+            Ok(ip) => json!({
+                "normalized": ip.to_string(),
+                "family": if ip.addr().is_ipv4() { "ipv4" } else { "ipv6" },
+                "blocked": is_blocked_net(ip.net()),
             }),
             // The fixture recorded only the message prefix (no offending input); so must we.
             Err(NetError::InvalidAddress(m)) => json!({"error": "IPAddr::InvalidAddressError", "message": m}),
@@ -85,8 +94,15 @@ fn checked_target_resolve_stubbed() {
         // `url: null` in Ruby is `nil.to_s` == "".
         let url = c.input["url"].as_str().unwrap_or("");
         let result = result_json(check_target(url, &stub));
-        check_eq(&result, &c.expected["result"])?;
         let calls = json!(stub.calls.lock().expect("lock").clone());
+        // security: the original accepted userinfo (`http://user:pass@example.com/`
+        // passed; `http://example.com@evil.com/` was judged on evil.com). The
+        // policy now refuses any userinfo before resolving; assert that instead.
+        if has_userinfo(url) {
+            check_eq(&result, &json!({"error": "EgressPolicy::BlockedError", "message": USERINFO_MESSAGE}))?;
+            return check_eq(&calls, &json!([]));
+        }
+        check_eq(&result, &c.expected["result"])?;
         check_eq(&calls, &c.expected["resolve_called_with"])
     });
 }

@@ -48,7 +48,7 @@ crates/
                      no-clobber create/rename, compat flock files, tolerant reads    deps: core, rustix
   frankmd-config     .fed line model + surgical write-back + template, schema (45 keys), casting,
                      ResolvedConfig (.fed > ENV > default, provenance, AI file-only mode), ConfigStore,
-                     AppDirs (XDG)                                                   deps: core, fs, etcetera
+                     AppDirs (XDG)                                            deps: core, fs, theme, etcetera
   frankmd-i18n       Rails YAML (embedded unchanged), %{var}, Rails default plural, Locale + RTL flag
   frankmd-markdown   comrak → RenderDoc IR (allowlist by construction, sourcepos), LineMap, highlight
                      trait, math validation, YouTube embed parsing, front matter, HTML export
@@ -59,8 +59,10 @@ crates/
   frankmd-net        tokio runtime owner, TrustedClient, EgressClient (SSRF guard)      deps: tokio, reqwest
   frankmd-media      store_media() single upload pipeline, S3/local providers, library, web image search, YouTube
   frankmd-ai         AiProvider (generic OpenAI-compatible first), grammar fix, OpenRouter image gen
-  frankmd-workspace  the authoritative store: Command → (Event, Effect); open docs, autosave, drafts,
-                     startup phases, scroll-sync/typewriter math                    deps: core, fs, config, watch
+  frankmd-workspace  the authoritative store: Command → (Event, Effect); open docs, autosave, drafts
+                     (DocId-keyed, on disk under the state dir), DocId index, startup, shell view
+                     models (layout, focus, overlays, command registry, quick open, banners, status)
+                                                   deps: core, fs, config, watch, search (+ markdown, i18n)
   frankmd-app        GPUI views + bridges (tokio, theme, vim, assets); binary `frankmd`
 ```
 
@@ -76,10 +78,16 @@ Changes from components.md's 11-crate proposal, and why:
 Dependency direction (acyclic):
 
 ```
-app → workspace → {config → fs → core, watch → core}
+app → workspace → {config → {fs → core, theme}, watch → core}
+workspace → {search, markdown, i18n} → core      (view models; vim stays out: VMs take a ModeLabel)
 app → {markdown, search, theme, i18n, vim} → core (markdown, search only)
 app → {media, ai} → net ;  media → {config, fs}
 ```
+
+`workspace → {markdown, search, i18n}` is allowed (ui-test-plan D-1) so view models can call
+`markdown::{table, edit, linemap}`, `search::{finder, find}` and resolve labels; today only
+`search` is used. `config → theme` resolves the theme settings. The graph stays acyclic: none
+of these depend on workspace.
 
 ## 3. Domain design decisions (keyed to the history lessons)
 
@@ -93,8 +101,10 @@ app → {media, ai} → net ;  media → {config, fs}
   `Vec<Remap>`, and that list becomes the single `Event::Remapped`. Subscribers update from
   it and nothing re-implements prefix matching. `RelPath::starts_with` is segment-wise and
   never a string prefix (HP-008).
-- Identity persists across restarts in `$XDG_STATE_HOME/frankmd/vaults/<hash>/index.json`
-  as `DocId → last path + revision`. It **never** goes into the vault or into front matter
+- Identity persists across restarts in `$XDG_STATE_HOME/frankmd/vaults/<hash>/doc_index.json`
+  (`frankmd_workspace::doc_index`, path → DocId). Until `DocRegistry` can be seeded with known
+  ids, the store re-keys a note's drafts from its persisted id to the id minted this run when it
+  opens the note. It **never** goes into the vault or into front matter
   (compat). External renames detected by the watcher are matched by `(revision, basename)`
   when the old path vanishes in the same debounced batch. Otherwise they get a new DocId.
 - Saves name `(DocId, edit Generation)`. A save whose doc was deleted or renamed in the

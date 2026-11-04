@@ -64,7 +64,14 @@ pub(crate) struct HttpResponse {
 
 impl HttpResponse {
     fn new(status: u16, body: Value) -> Self {
-        Self { status, body, content_type: None, unhandled: false, tree: None, created_path: None }
+        Self {
+            status,
+            body,
+            content_type: None,
+            unhandled: false,
+            tree: None,
+            created_path: None,
+        }
     }
     fn head(status: u16) -> Self {
         Self::new(status, Value::String(String::new()))
@@ -112,7 +119,12 @@ pub(crate) fn dispatch(sb: &Sandbox, method: &str, url: &str, params: &Value) ->
 }
 
 /// One-shot turbo-stream request (`Accept: text/vnd.turbo-stream.html`).
-pub(crate) fn dispatch_turbo(sb: &Sandbox, method: &str, url: &str, params: &Value) -> HttpResponse {
+pub(crate) fn dispatch_turbo(
+    sb: &Sandbox,
+    method: &str,
+    url: &str,
+    params: &Value,
+) -> HttpResponse {
     let store = FedRecentStore::new(&sb.root);
     App::new(sb, &store).call(method, url, params, true)
 }
@@ -141,7 +153,9 @@ pub(crate) fn percent_decode(s: &str) -> String {
 /// (`[^/.?]+` after the last `.`).
 fn strip_format(encoded: &str) -> &str {
     match encoded.rfind('.') {
-        Some(i) if i + 1 < encoded.len() && !encoded[i + 1..].contains(['/', '.', '?']) => &encoded[..i],
+        Some(i) if i + 1 < encoded.len() && !encoded[i + 1..].contains(['/', '.', '?']) => {
+            &encoded[..i]
+        }
         _ => encoded,
     }
 }
@@ -151,15 +165,24 @@ fn param<'v>(params: &'v Value, key: &str) -> Option<&'v str> {
 }
 
 fn join_messages(errors: &[ModelError]) -> String {
-    errors.iter().map(|e| e.full_message(&|k| en(k))).collect::<Vec<_>>().join(", ")
+    errors
+        .iter()
+        .map(|e| e.full_message(&|k| en(k)))
+        .collect::<Vec<_>>()
+        .join(", ")
 }
 
 fn has_base_key(errors: &[ModelError], key: &'static str) -> bool {
-    errors.iter().any(|e| e.field == ErrorField::Base && e.text == ErrorText::Key(key))
+    errors
+        .iter()
+        .any(|e| e.field == ErrorField::Base && e.text == ErrorText::Key(key))
 }
 
 fn mime_for(path: &str) -> &'static str {
-    let ext = path.rsplit_once('.').map(|(_, e)| e.to_ascii_lowercase()).unwrap_or_default();
+    let ext = path
+        .rsplit_once('.')
+        .map(|(_, e)| e.to_ascii_lowercase())
+        .unwrap_or_default();
     match ext.as_str() {
         "png" => "image/png",
         "jpg" | "jpeg" => "image/jpeg",
@@ -176,21 +199,40 @@ fn mime_for(path: &str) -> &'static str {
 impl<'a> App<'a> {
     /// Bind to a sandbox and store; the clock is pinned.
     pub(crate) fn new(sb: &'a Sandbox, store: &'a dyn RecentStore) -> Self {
-        Self { sb, store, now: pinned_now() }
+        Self {
+            sb,
+            store,
+            now: pinned_now(),
+        }
     }
 
     /// Route one request. `params` is the Rails params hash (form or query).
-    pub(crate) fn call(&self, method: &str, url: &str, params: &Value, turbo: bool) -> HttpResponse {
+    pub(crate) fn call(
+        &self,
+        method: &str,
+        url: &str,
+        params: &Value,
+        turbo: bool,
+    ) -> HttpResponse {
         let vault = self.sb.vault();
         let svc = NotesService::new(&vault).with_recents(self.store);
         let (path_part, query) = url.split_once('?').unwrap_or((url, ""));
-        let mut params = if params.is_object() { params.clone() } else { json!({}) };
+        let mut params = if params.is_object() {
+            params.clone()
+        } else {
+            json!({})
+        };
         for pair in query.split('&').filter(|p| !p.is_empty()) {
             let (k, v) = pair.split_once('=').unwrap_or((pair, ""));
             params[percent_decode(k)] = Value::String(percent_decode(&v.replace('+', " ")));
         }
         let m = method.to_ascii_uppercase();
-        let ctx = Ctx { app: self, svc: &svc, params: &params, turbo };
+        let ctx = Ctx {
+            app: self,
+            svc: &svc,
+            params: &params,
+            turbo,
+        };
 
         if path_part == "/" || path_part.is_empty() {
             return ctx.index();
@@ -253,7 +295,11 @@ struct Ctx<'c, 'a> {
 impl Ctx<'_, '_> {
     /// `before_action :reject_config_file` (params file/path/new_path).
     fn guarded(&self, path: Option<&str>, f: impl FnOnce(&Self) -> HttpResponse) -> HttpResponse {
-        let candidates = [param(self.params, "file"), path, param(self.params, "new_path")];
+        let candidates = [
+            param(self.params, "file"),
+            path,
+            param(self.params, "new_path"),
+        ];
         if candidates.into_iter().flatten().any(is_config_file) {
             return HttpResponse::new(403, json!({"error": "forbidden"}));
         }
@@ -266,19 +312,32 @@ impl Ctx<'_, '_> {
         if let Some((from, to)) = remap {
             expanded = remap_expanded(&expanded, from, to);
         }
-        let selected = selected.map(str::to_owned).unwrap_or_else(|| param(self.params, "selected").unwrap_or("").to_owned());
+        let selected = selected
+            .map(str::to_owned)
+            .unwrap_or_else(|| param(self.params, "selected").unwrap_or("").to_owned());
         let set: BTreeSet<String> = expanded.iter().cloned().collect();
-        TreeRender { view: tree_rows(&tree, &set, &selected), expanded, selected }
+        TreeRender {
+            view: tree_rows(&tree, &set, &selected),
+            expanded,
+            selected,
+        }
     }
 
-    fn turbo_ok(&self, status: u16, selected: Option<&str>, remap: Option<(&str, &str)>) -> HttpResponse {
+    fn turbo_ok(
+        &self,
+        status: u16,
+        selected: Option<&str>,
+        remap: Option<(&str, &str)>,
+    ) -> HttpResponse {
         let mut r = HttpResponse::new(status, Value::String("<TURBO>".into()));
         r.tree = Some(self.render_tree(selected, remap));
         r
     }
 
     fn index(&self) -> HttpResponse {
-        self.guarded(None, |_| HttpResponse::new(200, Value::String("<HTML>".into())))
+        self.guarded(None, |_| {
+            HttpResponse::new(200, Value::String("<HTML>".into()))
+        })
     }
 
     fn tree_partial(&self) -> HttpResponse {
@@ -298,7 +357,9 @@ impl Ctx<'_, '_> {
                 "content": String::from_utf8_lossy(&note.bytes),
                 "revision": note.revision.0,
             })),
-            Err(FsError::NotFound(_)) => HttpResponse::new(404, json!({"error": en("errors.note_not_found")})),
+            Err(FsError::NotFound(_)) => {
+                HttpResponse::new(404, json!({"error": en("errors.note_not_found")}))
+            }
             Err(e) => HttpResponse::unhandled(&e),
         }
     }
@@ -308,13 +369,22 @@ impl Ctx<'_, '_> {
         let Some(full) = frankmd_fs::path_safety::contain(root, Some(raw)) else {
             return HttpResponse::head(403);
         };
-        if [frankmd_fs::lock::FILESYSTEM_LOCK, frankmd_fs::lock::CONFIG_LOCK].iter().any(|n| full == root.join(n)) {
+        if [
+            frankmd_fs::lock::FILESYSTEM_LOCK,
+            frankmd_fs::lock::CONFIG_LOCK,
+        ]
+        .iter()
+        .any(|n| full == root.join(n))
+        {
             return HttpResponse::head(404);
         }
         match std::fs::metadata(&full) {
             Ok(m) if m.is_file() => {
                 let bytes = std::fs::read(&full).unwrap();
-                let mut r = HttpResponse::new(200, Value::String(String::from_utf8_lossy(&bytes).into_owned()));
+                let mut r = HttpResponse::new(
+                    200,
+                    Value::String(String::from_utf8_lossy(&bytes).into_owned()),
+                );
                 r.content_type = Some(mime_for(raw).to_owned());
                 r
             }
@@ -329,7 +399,10 @@ impl Ctx<'_, '_> {
                 return HttpResponse::new(422, json!({"error": en("errors.title_required")}));
             }
             let parent = param(self.params, "parent").filter(|p| !p.trim().is_empty());
-            let template = self.svc.hugo_template().map(|b| String::from_utf8_lossy(&b).into_owned());
+            let template = self
+                .svc
+                .hugo_template()
+                .map(|b| String::from_utf8_lossy(&b).into_owned());
             let post = frankmd_core::hugo::generate_post(&NewPost {
                 title,
                 parent,
@@ -339,10 +412,18 @@ impl Ctx<'_, '_> {
             });
             (post.path, post.content.into_bytes())
         } else {
-            (normalize_note_path(raw.unwrap_or("")), param(self.params, "content").unwrap_or("").as_bytes().to_vec())
+            (
+                normalize_note_path(raw.unwrap_or("")),
+                param(self.params, "content")
+                    .unwrap_or("")
+                    .as_bytes()
+                    .to_vec(),
+            )
         };
         match model::note_exists(self.svc, &path) {
-            Ok(true) => return HttpResponse::new(422, json!({"error": en("errors.note_already_exists")})),
+            Ok(true) => {
+                return HttpResponse::new(422, json!({"error": en("errors.note_already_exists")}));
+            }
             Ok(false) => {}
             Err(e) => return HttpResponse::unhandled(&e),
         }
@@ -353,7 +434,10 @@ impl Ctx<'_, '_> {
                     r.created_path = Some(saved);
                     r
                 } else {
-                    HttpResponse::new(201, json!({"path": saved, "message": en("success.note_created")}))
+                    HttpResponse::new(
+                        201,
+                        json!({"path": saved, "message": en("success.note_created")}),
+                    )
                 }
             }
             Ok(Err(errors)) => HttpResponse::new(422, json!({"error": join_messages(&errors)})),
@@ -373,7 +457,10 @@ impl Ctx<'_, '_> {
 
     fn update(&self, raw: &str) -> HttpResponse {
         let path = normalize_note_path(raw);
-        let content = param(self.params, "content").unwrap_or("").as_bytes().to_vec();
+        let content = param(self.params, "content")
+            .unwrap_or("")
+            .as_bytes()
+            .to_vec();
         match model::note_save(self.svc, &path, Some(&content), SaveMode::ExistingOnly) {
             Ok(Ok(saved)) => json_ok(json!({
                 "path": saved,
@@ -381,7 +468,11 @@ impl Ctx<'_, '_> {
                 "revision": sha256_hex(&content),
             })),
             Ok(Err(errors)) => {
-                let status = if has_base_key(&errors, "errors.note_not_found") { 404 } else { 422 };
+                let status = if has_base_key(&errors, "errors.note_not_found") {
+                    404
+                } else {
+                    422
+                };
                 HttpResponse::new(status, json!({"error": join_messages(&errors)}))
             }
             Err(e) => HttpResponse::unhandled(&e),
@@ -398,9 +489,10 @@ impl Ctx<'_, '_> {
                     json_ok(json!({"message": en("success.note_deleted")}))
                 }
             }
-            Ok(Err(errors)) if errors.iter().any(|e| e.revision_conflict) => {
-                HttpResponse::new(409, json!({"error": join_messages(&errors), "code": "revision_conflict"}))
-            }
+            Ok(Err(errors)) if errors.iter().any(|e| e.revision_conflict) => HttpResponse::new(
+                409,
+                json!({"error": join_messages(&errors), "code": "revision_conflict"}),
+            ),
             Ok(Err(errors)) => HttpResponse::new(404, json!({"error": join_messages(&errors)})),
             Err(e) => HttpResponse::unhandled(&e),
         }
@@ -410,7 +502,9 @@ impl Ctx<'_, '_> {
         let path = normalize_note_path(raw);
         match model::note_exists(self.svc, &path) {
             Ok(true) => {}
-            Ok(false) => return HttpResponse::new(404, json!({"error": en("errors.note_not_found")})),
+            Ok(false) => {
+                return HttpResponse::new(404, json!({"error": en("errors.note_not_found")}));
+            }
             Err(e) => return HttpResponse::unhandled(&e),
         }
         let new_path = normalize_note_path(param(self.params, "new_path").unwrap_or(""));
@@ -419,7 +513,9 @@ impl Ctx<'_, '_> {
                 if self.turbo {
                     self.turbo_ok(200, Some(&renamed), None)
                 } else {
-                    json_ok(json!({"old_path": path, "new_path": renamed, "message": en("success.note_renamed")}))
+                    json_ok(
+                        json!({"old_path": path, "new_path": renamed, "message": en("success.note_renamed")}),
+                    )
                 }
             }
             Ok(Err(errors)) => HttpResponse::new(422, json!({"error": join_messages(&errors)})),
@@ -441,7 +537,12 @@ impl Ctx<'_, '_> {
 
     fn folder_create(&self, path: &str) -> HttpResponse {
         match model::folder_exists(self.svc, path) {
-            Ok(true) => return HttpResponse::new(422, json!({"error": en("errors.folder_already_exists")})),
+            Ok(true) => {
+                return HttpResponse::new(
+                    422,
+                    json!({"error": en("errors.folder_already_exists")}),
+                );
+            }
             Ok(false) => {}
             Err(e) => return HttpResponse::unhandled(&e),
         }
@@ -450,7 +551,10 @@ impl Ctx<'_, '_> {
                 if self.turbo {
                     self.turbo_ok(201, None, None)
                 } else {
-                    HttpResponse::new(201, json!({"path": path, "message": en("success.folder_created")}))
+                    HttpResponse::new(
+                        201,
+                        json!({"path": path, "message": en("success.folder_created")}),
+                    )
                 }
             }
             Ok(Err(errors)) => HttpResponse::new(422, json!({"error": join_messages(&errors)})),
@@ -485,7 +589,9 @@ impl Ctx<'_, '_> {
                 if self.turbo {
                     self.turbo_ok(200, Some(&renamed), Some((path, &renamed)))
                 } else {
-                    json_ok(json!({"old_path": path, "new_path": renamed, "message": en("success.folder_renamed")}))
+                    json_ok(
+                        json!({"old_path": path, "new_path": renamed, "message": en("success.folder_renamed")}),
+                    )
                 }
             }
             Ok(Err(errors)) => Self::folder_error(&errors),

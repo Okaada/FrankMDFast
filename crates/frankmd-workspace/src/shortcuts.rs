@@ -13,8 +13,7 @@
 //! Vim ex commands reach the same actions through `frankmd_vim::AppCommand::shortcut_actions`
 //! (one registry, HP-018).
 //!
-//! [`DEFAULT_SHORTCUTS`] is real data (it *is* the spec, recorded verbatim from the JS);
-//! everything else is a `todo!()` skeleton.
+//! [`DEFAULT_SHORTCUTS`] is the spec, recorded verbatim from the JS.
 
 use std::borrow::Cow;
 
@@ -124,13 +123,25 @@ pub struct KeyDispatch {
 impl ShortcutMap {
     /// The [`DEFAULT_SHORTCUTS`] table.
     pub fn defaults() -> Self {
-        todo!("ShortcutMap::from_entries(DEFAULT_SHORTCUTS)")
+        Self::from_entries(DEFAULT_SHORTCUTS.iter().map(|(action, shortcut)| (*action, shortcut.clone())))
     }
 
     /// Build from ordered entries. A repeated action keeps its first position and the last
     /// value (JS object-literal semantics).
     pub fn from_entries<S: Into<String>>(entries: impl IntoIterator<Item = (S, Shortcut)>) -> Self {
-        todo!()
+        let mut map = Self::default();
+        for (action, shortcut) in entries {
+            map.insert(action.into(), shortcut);
+        }
+        map
+    }
+
+    /// Replace in place (keeping the position) or append.
+    fn insert(&mut self, action: String, shortcut: Shortcut) {
+        match self.entries.iter_mut().find(|(a, _)| *a == action) {
+            Some(entry) => entry.1 = shortcut,
+            None => self.entries.push((action, shortcut)),
+        }
     }
 
     /// Entries in order (`Object.entries`).
@@ -141,37 +152,81 @@ impl ShortcutMap {
     /// `getShortcutForAction`. Unknown action → `None` (the JS prototype leak where
     /// `"constructor"`/`"toString"` returned functions is not replicated).
     pub fn get(&self, action: &str) -> Option<&Shortcut> {
-        todo!()
+        self.entries.iter().find(|(a, _)| a == action).map(|(_, s)| s)
     }
 
     /// `findMatchingAction`: first action (in order) whose shortcut matches.
     pub fn find_matching_action(&self, event: &KeyEvent) -> Option<&str> {
-        todo!()
+        self.entries
+            .iter()
+            .find(|(_, shortcut)| match_shortcut(event, Some(shortcut)))
+            .map(|(action, _)| action.as_str())
     }
 
     /// `createKeyHandler` decision: the matched action and whether to prevent default.
     /// `None` = no match (handler not called, default not prevented).
     pub fn dispatch(&self, event: &KeyEvent) -> Option<KeyDispatch> {
-        todo!()
+        let (action, shortcut) = self.entries.iter().find(|(_, s)| match_shortcut(event, Some(s)))?;
+        Some(KeyDispatch { action: action.clone(), prevent_default: shortcut.prevent_default })
     }
 
     /// `mergeShortcuts`: overrides replace in place, new actions append, `None` removes.
     /// `self` is not mutated.
     pub fn merge<S: AsRef<str>>(&self, overrides: impl IntoIterator<Item = (S, Option<Shortcut>)>) -> Self {
-        todo!()
+        let mut merged = self.clone();
+        for (action, shortcut) in overrides {
+            let action = action.as_ref();
+            match shortcut {
+                Some(shortcut) => merged.insert(action.to_owned(), shortcut),
+                None => merged.entries.retain(|(a, _)| a != action),
+            }
+        }
+        merged
     }
 }
 
 /// `matchShortcut`. `None` or an empty-key shortcut never matches.
 pub fn match_shortcut(event: &KeyEvent, shortcut: Option<&Shortcut>) -> bool {
-    todo!()
+    let Some(shortcut) = shortcut.filter(|s| !s.key.is_empty()) else {
+        return false;
+    };
+    event.key == shortcut.key
+        && (event.ctrl || event.meta) == shortcut.ctrl
+        && event.shift == shortcut.shift
+        && event.alt == shortcut.alt
 }
 
 /// `formatShortcut`: `"Ctrl+Shift+V"`, or with `mac` `"⌘⇧V"` (no separator; `⌥` for Alt).
 /// Single-character keys are upper-cased; `F1`..`F12`, `\` and named keys stay as-is.
 /// `None` / empty key → `""`.
 pub fn format_shortcut(shortcut: Option<&Shortcut>, mac: bool) -> String {
-    todo!()
+    let Some(shortcut) = shortcut.filter(|s| !s.key.is_empty()) else {
+        return String::new();
+    };
+    let mut parts: Vec<String> = Vec::with_capacity(4);
+    if shortcut.ctrl {
+        parts.push(if mac { "⌘" } else { "Ctrl" }.to_owned());
+    }
+    if shortcut.shift {
+        parts.push(if mac { "⇧" } else { "Shift" }.to_owned());
+    }
+    if shortcut.alt {
+        parts.push(if mac { "⌥" } else { "Alt" }.to_owned());
+    }
+    parts.push(display_key(&shortcut.key));
+    parts.join(if mac { "" } else { "+" })
+}
+
+/// Key label: `\` and `F1`..`F12` verbatim, single characters upper-cased
+/// (JS `length === 1` counts UTF-16 units, so astral characters stay as-is).
+fn display_key(key: &str) -> String {
+    const FUNCTION_KEYS: [&str; 12] = ["F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12"];
+    let is_function_key = FUNCTION_KEYS.contains(&key);
+    if key == "\\" || is_function_key || key.encode_utf16().count() != 1 {
+        key.to_owned()
+    } else {
+        key.to_uppercase()
+    }
 }
 
 /// Host platform, injected instead of reading a global `navigator` (`isMacOS`).
@@ -195,13 +250,22 @@ pub struct NavigatorInfo {
 impl Platform {
     /// Compile-time platform of this build.
     pub fn current() -> Self {
-        todo!("cfg!(target_os = \"macos\")")
+        if cfg!(target_os = "macos") { Self::MacOS } else { Self::Other }
     }
 
     /// `isMacOS` over a navigator: none → Other; `userAgentData` wins when present
     /// (`platform == "macOS"`); else `/Mac|iPod|iPhone|iPad/` on the user agent.
     pub fn from_navigator(nav: Option<&NavigatorInfo>) -> Self {
-        todo!()
+        let Some(nav) = nav else {
+            return Self::Other;
+        };
+        let mac = match &nav.user_agent_data_platform {
+            Some(platform) => platform == "macOS",
+            None => nav.user_agent.as_deref().is_some_and(|ua| {
+                ["Mac", "iPod", "iPhone", "iPad"].iter().any(|needle| ua.contains(needle))
+            }),
+        };
+        if mac { Self::MacOS } else { Self::Other }
     }
 
     /// Convenience.

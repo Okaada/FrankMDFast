@@ -6,10 +6,9 @@
 //! - `<ext>.tokenizer` → `ext::scan_*` (raw, payload).
 //! - `<ext>.renderer` → [`html::render_inline`] / [`html::render_math_block`],
 //!   compared **exactly** (they are FrankMD's literal renderer strings).
-//! - `marked.parse` → [`render_body`] + [`html::to_html`], normalized. Raw
-//!   `marked.parse` output is unsanitized, so inputs containing `<` are not
-//!   compared here; the same corpus entries are compared sanitized in
-//!   `golden_preview.rs`.
+//! - `marked.parse` → [`render_body`] + [`html::to_html`], normalized, against
+//!   the fixture passed through [`html::sanitize`] (FrankMD's preview is
+//!   `sanitizeHtml(marked.parse(md))`).
 //! - `marked.parseInline` → [`parse_inline`] + [`html::inlines_to_html`], normalized.
 //! - `allExtensions` → [`ext::Extension::ALL`] names/levels.
 #![allow(clippy::unwrap_used)]
@@ -17,7 +16,7 @@
 mod common;
 
 use common::*;
-use frankmd_markdown::html::{inlines_to_html, render_inline, render_math_block, to_html};
+use frankmd_markdown::html::{inlines_to_html, render_inline, render_math_block, sanitize, to_html};
 use frankmd_markdown::ir::Inline;
 use frankmd_markdown::parse::ext::{self, Extension, Level};
 use frankmd_markdown::{RenderOptions, parse_inline, render_body};
@@ -149,13 +148,18 @@ fn golden_extension_renderer() {
 #[test]
 fn golden_marked_parse() {
     let g = golden(FIXTURE);
-    let cases = g
-        .cases_for("marked.parse")
-        .filter(|c| !arg_str(c, 0).contains('<') && !is_known_divergence(FIXTURE, &c.name));
+    // Test fix (a): `to_html` is FrankMD's *sanitized* preview HTML (golden_preview
+    // compares it with the real DOMPurify output, and preview_controller_test
+    // requires clickable checkboxes), while this fixture is raw `marked.parse`
+    // output (`disabled=""` checkboxes, `javascript:` hrefs kept). FrankMD shows
+    // `sanitizeHtml(marked.parse(md))` (markdown_line_mapper.js
+    // `return sanitizeHtml(result)`), so the oracle is the sanitized fixture.
+    // That also lets the 18 raw-HTML inputs be compared instead of skipped.
+    let cases = g.cases_for("marked.parse").filter(|c| !is_known_divergence(FIXTURE, &c.name));
     assert_cases(FIXTURE, cases, |case| {
         let doc = render_body(&arg_str(case, 0), 0, &RenderOptions::default());
         let want = expected(case);
-        check_same_structure(&to_html(&doc), want.as_str().unwrap())
+        check_same_structure(&to_html(&doc), &sanitize(want.as_str().unwrap()))
     });
 }
 

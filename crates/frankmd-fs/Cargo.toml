@@ -10,7 +10,7 @@ publish.workspace = true
 [dependencies]
 frankmd-core.workspace = true
 thiserror.workspace = true
-rustix.workspace = true
+rustix = { workspace = true, features = ["rand"] }
 serde_json.workspace = true
 jiff.workspace = true
 

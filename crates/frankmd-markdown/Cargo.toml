@@ -1,6 +1,6 @@
 [package]
 name = "frankmd-markdown"
-description = "Markdown pipeline: comrak AST -> GUI-free render IR with source positions, highlighted code, math, embeds; HTML export."
+description = "Markdown pipeline: marked-compatible lexer -> GUI-free render IR with source positions, highlighted code, math, embeds; HTML export."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -9,8 +9,16 @@ publish.workspace = true
 
 [dependencies]
 frankmd-core.workspace = true
-comrak.workspace = true
+markup5ever = "0.40"
 thiserror.workspace = true
+syntect.workspace = true
+two-face.workspace = true
+ratex-parser.workspace = true
+regex.workspace = true
+fancy-regex.workspace = true
+# Raw-HTML sanitizer (html/sanitizer): the same html5ever that ammonia/scraper use.
+html5ever = "0.40"
+url.workspace = true
 
 [lints]
 workspace = true

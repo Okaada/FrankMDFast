@@ -76,8 +76,13 @@ fn successful_file_and_folder_mutations_update_shared_history() {
 
     let notes = NotesService::new(&vault).with_recents(&store);
     notes.rename("docs", "renamed").unwrap();
-    assert_eq!(paths(&history.entries()), ["docs-other/other.md", "renamed/first.md"]);
-    notes.rename("renamed/first.md", "renamed/second.md").unwrap();
+    assert_eq!(
+        paths(&history.entries()),
+        ["docs-other/other.md", "renamed/first.md"]
+    );
+    notes
+        .rename("renamed/first.md", "renamed/second.md")
+        .unwrap();
     notes.delete("renamed/second.md", None).unwrap();
     assert_eq!(paths(&history.entries()), ["docs-other/other.md"]);
 }
@@ -102,7 +107,11 @@ fn rejects_traversal_hidden_files_outside_symlinks_and_non_markdown_paths() {
         None,
     ] {
         let err = history.record(path, now()).unwrap_err();
-        assert_eq!(err.compat_class(), "NotesService::NotFoundError", "{path:?}");
+        assert_eq!(
+            err.compat_class(),
+            "NotesService::NotFoundError",
+            "{path:?}"
+        );
     }
 }
 
@@ -141,6 +150,10 @@ fn malformed_history_does_not_discard_other_configuration() {
     let history = RecentFilesService::new(&vault, &store);
     assert!(history.entries().is_empty());
     assert!(history.clear().unwrap());
-    assert!(RecentFilesService::new(&vault, &FedRecentStore::new(&sb.root)).entries().is_empty());
+    assert!(
+        RecentFilesService::new(&vault, &FedRecentStore::new(&sb.root))
+            .entries()
+            .is_empty()
+    );
     assert!(sb.read(".fed").contains("theme = nord"));
 }

@@ -2,7 +2,12 @@
 //! `<NOTES_PATH>/.hugo_template.md` (the IO half: `NotesService::hugo_template`
 //! feeding `frankmd_core::hugo::generate_post`, plus `create_hugo_post`).
 //! The pure slugify / path / front-matter tests are ported in frankmd-core.
-#![allow(clippy::disallowed_methods, clippy::unwrap_used, missing_docs, unreachable_pub)]
+#![allow(
+    clippy::disallowed_methods,
+    clippy::unwrap_used,
+    missing_docs,
+    unreachable_pub
+)]
 
 mod common;
 
@@ -17,7 +22,9 @@ fn at_2026_02_01_1030() -> jiff::Zoned {
 /// `HugoService.generate_blog_post(title)` with the vault's template.
 fn generate(sb: &Sandbox, title: &str) -> String {
     let vault = sb.vault();
-    let tpl = NotesService::new(&vault).hugo_template().map(|b| String::from_utf8(b).unwrap());
+    let tpl = NotesService::new(&vault)
+        .hugo_template()
+        .map(|b| String::from_utf8(b).unwrap());
     let post = generate_post(&NewPost {
         title,
         parent: None,
@@ -45,13 +52,21 @@ fn uses_hugo_template_when_present() {
         "- uncategorized",
         "draft: false",
     ] {
-        assert!(content.contains(needle), "missing {needle:?} in {content:?}");
+        assert!(
+            content.contains(needle),
+            "missing {needle:?} in {content:?}"
+        );
     }
 
     // Same through the creating entry point: the file lands with that content.
     let vault = sb.vault();
     let post = NotesService::new(&vault)
-        .create_hugo_post("Custom Post", None, HugoPathStyle::Dated, at_2026_02_01_1030())
+        .create_hugo_post(
+            "Custom Post",
+            None,
+            HugoPathStyle::Dated,
+            at_2026_02_01_1030(),
+        )
         .unwrap();
     assert_eq!(post.path, "2026/02/01/custom-post/index.md");
     assert_eq!(sb.read(&post.path), post.content);

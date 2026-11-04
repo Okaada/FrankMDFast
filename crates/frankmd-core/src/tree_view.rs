@@ -60,7 +60,74 @@ pub enum TreeView {
 /// **[COMPAT]** `render_tree_items(items, expanded_folders:, selected_file:)`
 /// as data. Empty nested folders render nothing (no "no notes" message).
 pub fn tree_rows(items: &[TreeNode], expanded: &BTreeSet<String>, selected_file: &str) -> TreeView {
-    todo!("tree_helper.rb")
+    if items.is_empty() {
+        return TreeView::Empty;
+    }
+    let mut rows = Vec::new();
+    push_rows(&mut rows, items, expanded, selected_file, 0, true);
+    TreeView::Rows(rows)
+}
+
+fn push_rows(
+    rows: &mut Vec<TreeRow>,
+    items: &[TreeNode],
+    expanded: &BTreeSet<String>,
+    selected_file: &str,
+    depth: usize,
+    visible: bool,
+) {
+    for item in items {
+        match item {
+            TreeNode::Folder {
+                name,
+                path,
+                children,
+            } => {
+                let is_expanded = expanded.contains(path.as_str());
+                rows.push(TreeRow {
+                    path: path.as_str().to_owned(),
+                    name: name.clone(),
+                    depth,
+                    kind: RowKind::Folder,
+                    expanded: is_expanded,
+                    selected: false,
+                    draggable: true,
+                    context_menu: true,
+                    visible,
+                    mtime: None,
+                });
+                push_rows(
+                    rows,
+                    children,
+                    expanded,
+                    selected_file,
+                    depth + 1,
+                    visible && is_expanded,
+                );
+            }
+            TreeNode::File {
+                name,
+                path,
+                file_type,
+                mtime,
+            } => {
+                let kind = file_row_kind(*file_type);
+                let movable = kind != RowKind::Config;
+                rows.push(TreeRow {
+                    path: path.as_str().to_owned(),
+                    name: name.clone(),
+                    depth,
+                    kind,
+                    expanded: false,
+                    selected: path.as_str() == selected_file,
+                    draggable: movable,
+                    context_menu: movable,
+                    visible,
+                    mtime: Some(*mtime),
+                });
+            }
+        }
+    }
 }
 
 /// Row kind of a file leaf.
@@ -77,10 +144,33 @@ pub fn file_row_kind(file_type: FileType) -> RowKind {
 /// Input order is kept and duplicates collapse (Ruby `Set`). Parsing of the
 /// comma list (`""` → empty) is [`parse_expanded`].
 pub fn remap_expanded(expanded: &[String], from: &str, to: &str) -> Vec<String> {
-    todo!("folders_controller.rb:64")
+    let remapped = expanded.iter().map(|path| {
+        let under = path
+            .strip_prefix(from)
+            .filter(|rest| rest.is_empty() || rest.starts_with('/'));
+        match under {
+            Some(rest) => format!("{to}{rest}"),
+            None => path.clone(),
+        }
+    });
+    dedupe(remapped)
+}
+
+/// Keep the first occurrence of each entry (Ruby `Set` insertion order).
+fn dedupe(items: impl IntoIterator<Item = String>) -> Vec<String> {
+    let mut seen = std::collections::HashSet::new();
+    items
+        .into_iter()
+        .filter(|item| seen.insert(item.clone()))
+        .collect()
 }
 
 /// **[COMPAT]** `params[:expanded].to_s.split(",").to_set`, in insertion order.
 pub fn parse_expanded(param: &str) -> Vec<String> {
-    todo!()
+    // Ruby `split(",")` drops trailing empty fields (and yields `[]` for "").
+    let mut parts: Vec<&str> = param.split(',').collect();
+    while parts.last().is_some_and(|p| p.is_empty()) {
+        parts.pop();
+    }
+    dedupe(parts.into_iter().map(str::to_owned))
 }

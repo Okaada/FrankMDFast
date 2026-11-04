@@ -31,7 +31,7 @@ pub struct VideoResults {
 
 /// `GET /youtube/config` → `{enabled: youtube_api_key present}`.
 pub fn enabled(config: &MediaConfig) -> bool {
-    todo!()
+    crate::search::present(config.youtube_api_key.as_deref())
 }
 
 /// YouTube Data API client.
@@ -58,6 +58,48 @@ impl YoutubeSearch {
     /// `part=snippet q type=video maxResults=6 key`; transport/parse failure →
     /// [`SearchError::Failed`].
     pub async fn search(&self, config: &MediaConfig, q: &str) -> Result<VideoResults, SearchError> {
-        todo!()
+        let query = crate::search::ruby_strip(q);
+        if query.is_empty() {
+            return Err(SearchError::QueryRequired);
+        }
+        let key = match config.youtube_api_key.as_deref() {
+            Some(key) if enabled(config) => key,
+            _ => return Err(SearchError::NotConfigured("errors.youtube_not_configured")),
+        };
+        let max = MAX_RESULTS.to_string();
+        let query_string = crate::search::form_query(&[
+            ("part", "snippet"),
+            ("q", query),
+            ("type", "video"),
+            ("maxResults", &max),
+            ("key", key),
+        ]);
+        let url = format!("{}/youtube/v3/search?{query_string}", self.base.trim_end_matches('/'));
+        let response = self.http.reqwest().get(url).send().await.map_err(|_| SearchError::Failed)?;
+        if !response.status().is_success() {
+            return Ok(VideoResults { videos: Vec::new(), error: Some("YouTube API error".into()) });
+        }
+        let body = response.text().await.map_err(|_| SearchError::Failed)?;
+        let data: serde_json::Value = serde_json::from_str(&body).map_err(|_| SearchError::Failed)?;
+        let text = |item: &serde_json::Value, pointer: &str| {
+            item.pointer(pointer).and_then(serde_json::Value::as_str).map(str::to_owned)
+        };
+        let videos = data
+            .get("items")
+            .and_then(serde_json::Value::as_array)
+            .map(|items| {
+                items
+                    .iter()
+                    .map(|item| Video {
+                        id: text(item, "/id/videoId"),
+                        title: text(item, "/snippet/title"),
+                        channel: text(item, "/snippet/channelTitle"),
+                        thumbnail: text(item, "/snippet/thumbnails/medium/url")
+                            .or_else(|| text(item, "/snippet/thumbnails/default/url")),
+                    })
+                    .collect()
+            })
+            .unwrap_or_default();
+        Ok(VideoResults { videos, error: None })
     }
 }

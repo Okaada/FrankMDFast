@@ -43,13 +43,36 @@ pub struct MenuToggle {
 /// Max height so the menu fits between its top edge and the viewport bottom
 /// minus `padding` (JS `menuMaxHeight`, which returns `"<n>px"`).
 pub fn menu_max_height(top: f64, viewport_height: f64, padding: f64) -> i64 {
-    todo!()
+    let available = (viewport_height - top - padding).floor();
+    // `as` saturates for out-of-range floats, which is the clamp we want.
+    (available as i64).max(MIN_MENU_HEIGHT)
 }
 
 /// Max height plus a horizontal shift that brings an overhanging menu back
 /// inside `[padding, viewport_width - padding]` (left edge wins).
 pub fn clamp_menu_to_viewport(rect: &MenuRect, viewport_height: f64, viewport_width: f64) -> MenuPlacement {
-    todo!()
+    let max_height = menu_max_height(rect.top, viewport_height, VIEWPORT_PADDING);
+    let shift_x = match (rect.left, rect.right) {
+        (Some(left), Some(right)) if left.is_finite() && right.is_finite() => {
+            let shift = if left < VIEWPORT_PADDING {
+                VIEWPORT_PADDING - left
+            } else if right > viewport_width - VIEWPORT_PADDING {
+                viewport_width - VIEWPORT_PADDING - right
+            } else {
+                0.0
+            };
+            // **[COMPAT]** the shift is tested before rounding, so 0.3 px
+            // still yields `translateX(0px)`.
+            (shift != 0.0).then(|| js_round(shift))
+        }
+        _ => None,
+    };
+    MenuPlacement { max_height, shift_x }
+}
+
+/// JS `Math.round` (halves round towards +∞).
+fn js_round(x: f64) -> i64 {
+    (x + 0.5).floor() as i64
 }
 
 /// Show a hidden menu (computing its placement) or hide it; `force_hidden`
@@ -61,5 +84,9 @@ pub fn toggle_menu(
     viewport_height: f64,
     viewport_width: f64,
 ) -> MenuToggle {
-    todo!()
+    let will_show = !force_hidden && currently_hidden;
+    MenuToggle {
+        visible: will_show,
+        placement: will_show.then(|| clamp_menu_to_viewport(rect, viewport_height, viewport_width)),
+    }
 }

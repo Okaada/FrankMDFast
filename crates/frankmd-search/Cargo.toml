@@ -15,8 +15,7 @@ fancy-regex.workspace = true
 # Vault content search: Ruby (Onigmo) regex semantics — multi-char case folding
 # (`straße` ~ `STRASSE`), `(?-i)`, look-behind, and a match time/retry limit
 # (backend.md §3 [DECIDE] → onig, see docs/testing/port-markdown-search.md).
-# TODO(workspace): promote to [workspace.dependencies].
-onig = { version = "6.5", default-features = false }
+onig.workspace = true
 
 [dev-dependencies]
 frankmd-testkit.workspace = true

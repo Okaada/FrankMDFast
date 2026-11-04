@@ -208,3 +208,13 @@ fn rebuilds_the_index_after_a_note_is_edited() {
     std::fs::write(&note, "![photo](images/new.png)").expect("edit");
     assert_eq!(*usage.build_index().expect("second"), index(&[("images/new.png", &["edited.md"])]));
 }
+
+// security: a symlinked directory whose target is outside the notes root is never scanned.
+#[test]
+fn never_scans_symlinked_directories_outside_the_root() {
+    let n = Notes::new();
+    n.write("visible.md", "![visible](images/visible.png)");
+    n.write_outside("escaped/secret.md", "![secret](images/secret.png)");
+    n.symlink("linked_dir", &n.outside.path().join("escaped"));
+    assert_eq!(build(&n), index(&[("images/visible.png", &["visible.md"])]));
+}

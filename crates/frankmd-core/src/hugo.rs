@@ -60,28 +60,150 @@ pub struct GeneratedPost {
 
 /// Build the path and front matter for a new Hugo post.
 pub fn generate_post(input: &NewPost<'_>) -> GeneratedPost {
-    todo!("backend.md §4.2-4.3")
+    let slug = crate::slug::slugify(input.title);
+    let relative = match input.style {
+        HugoPathStyle::Flat => format!("{slug}.md"),
+        HugoPathStyle::Dated => format!("{}/{slug}/index.md", date_path(&input.now)),
+    };
+    // Ruby `parent.present?`: nil, "" and whitespace-only are absent.
+    let path = match input.parent {
+        Some(parent) if !parent.trim().is_empty() => format!("{parent}/{relative}"),
+        _ => relative,
+    };
+    let template = input.template.unwrap_or(DEFAULT_TEMPLATE);
+    let content = render_template(template, input.title, &slug, &format_date(&input.now));
+    GeneratedPost { path, content }
 }
 
 /// **[COMPAT]** `strftime("%Y-%m-%dT%H:%M:%S%:z")` (e.g. `2026-02-01T10:30:00+00:00`).
 pub fn format_date(now: &jiff::Zoned) -> String {
-    todo!("backend.md §4.3")
+    now.strftime("%Y-%m-%dT%H:%M:%S%:z").to_string()
 }
 
 /// **[COMPAT]** `strftime("%Y/%m/%d")` of the same instant.
 pub fn date_path(now: &jiff::Zoned) -> String {
-    todo!("backend.md §4.2")
+    now.strftime("%Y/%m/%d").to_string()
 }
 
 /// **[COMPAT]** `HugoService.render_template`: literal replacement of every
 /// `{{title}}` (with `"` → `\"`, backslashes untouched), `{{slug}}` and `{{date}}`.
 pub fn render_template(template: &str, title: &str, slug: &str, date: &str) -> String {
-    todo!("backend.md §4.3")
+    let escaped_title = title.replace('"', "\\\"");
+    template
+        .replace("{{title}}", &escaped_title)
+        .replace("{{slug}}", slug)
+        .replace("{{date}}", date)
 }
 
 /// **[COMPAT]** rewrite the `slug:` of `index.md` after a folder rename.
 /// Returns `None` when the content has no front matter, no slug line, or the
 /// slug is already `new_slug`.
 pub fn update_frontmatter_slug(content: &str, new_slug: &str) -> Option<String> {
-    todo!("backend.md §4.4")
+    if !content.starts_with("---") {
+        return None;
+    }
+    let parts = ruby_split(&patterns().fence, content, 3);
+    let [_, frontmatter, body] = parts.as_slice() else {
+        return None;
+    };
+    if !frontmatter.contains("slug:") {
+        return None;
+    }
+    let replacement = format!("slug: \"{new_slug}\"");
+    let p = patterns();
+    let mut updated = ruby_gsub(&p.double_quoted, frontmatter, &replacement);
+    updated = ruby_gsub(&p.single_quoted, &updated, &replacement);
+    updated = ruby_gsub(&p.bare, &updated, &replacement);
+    if updated == *frontmatter {
+        return None;
+    }
+    Some(format!("---{updated}---{body}"))
+}
+
+/// The front-matter regexes, in Ruby multiline-anchor form (`^`/`$` are
+/// line anchors in Ruby; Ruby `\s` is ASCII-only and spans newlines).
+struct Patterns {
+    fence: regex::Regex,
+    double_quoted: regex::Regex,
+    single_quoted: regex::Regex,
+    bare: regex::Regex,
+}
+
+fn patterns() -> &'static Patterns {
+    static PATTERNS: std::sync::OnceLock<Patterns> = std::sync::OnceLock::new();
+    PATTERNS.get_or_init(|| {
+        // The patterns are literals; failing to compile would be a programming error.
+        let re = |src: &str| {
+            regex::Regex::new(src).unwrap_or_else(|e| panic!("invalid built-in regex {src}: {e}"))
+        };
+        Patterns {
+            fence: re(r"(?m)^---[ \t\r\n\f\v]*$"),
+            double_quoted: re(r#"(?m)^slug:[ \t\r\n\f\v]*"[^"]*""#),
+            single_quoted: re(r"(?m)^slug:[ \t\r\n\f\v]*'[^']*'"),
+            bare: re(r"(?m)^slug:[ \t\r\n\f\v]*[^ \t\r\n\f\v]+"),
+        }
+    })
+}
+
+/// Ruby `String#split(regex, limit)` for a positive `limit` (trailing empty
+/// fields are kept).
+fn ruby_split<'a>(re: &regex::Regex, text: &'a str, limit: usize) -> Vec<&'a str> {
+    let mut parts = Vec::new();
+    let mut start = 0;
+    for m in re.find_iter(text) {
+        if parts.len() + 1 >= limit {
+            break;
+        }
+        parts.push(&text[start..m.start()]);
+        start = m.end();
+    }
+    parts.push(&text[start..]);
+    parts
+}
+
+/// Ruby `String#gsub(regex, replacement_string)`, including the backslash
+/// escapes Ruby expands in a replacement string (`\\0`, `\\&`, `\\1`…, `` \\` ``,
+/// `\\'`, `\\\\`).
+fn ruby_gsub(re: &regex::Regex, text: &str, replacement: &str) -> String {
+    re.replace_all(text, |caps: &regex::Captures<'_>| {
+        expand_ruby_replacement(caps, text, replacement)
+    })
+    .into_owned()
+}
+
+fn expand_ruby_replacement(caps: &regex::Captures<'_>, text: &str, replacement: &str) -> String {
+    let whole = caps.get(0).map_or(0..0, |m| m.range());
+    let mut out = String::with_capacity(replacement.len());
+    let mut chars = replacement.chars().peekable();
+    while let Some(c) = chars.next() {
+        if c != '\\' {
+            out.push(c);
+            continue;
+        }
+        match chars.peek().copied() {
+            Some(d @ '0'..='9') => {
+                chars.next();
+                let index = d as usize - '0' as usize;
+                out.push_str(caps.get(index).map_or("", |m| m.as_str()));
+            }
+            Some('&') => {
+                chars.next();
+                out.push_str(&text[whole.clone()]);
+            }
+            Some('`') => {
+                chars.next();
+                out.push_str(&text[..whole.start]);
+            }
+            Some('\'') => {
+                chars.next();
+                out.push_str(&text[whole.end..]);
+            }
+            Some('\\') => {
+                chars.next();
+                out.push('\\');
+            }
+            _ => out.push('\\'),
+        }
+    }
+    out
 }

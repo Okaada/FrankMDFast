@@ -30,7 +30,8 @@ impl AppDirs {
 
     /// Per-vault state directory, keyed by a hash of the vault's realpath.
     pub fn vault_state(&self, vault_realpath: &Path) -> PathBuf {
-        todo!()
+        let id = frankmd_core::Revision::of(vault_realpath.as_os_str().as_encoded_bytes()).0;
+        self.state.join("vaults").join(id)
     }
 }
 
@@ -39,10 +40,14 @@ impl AppDirs {
 /// neither is given (Rails then used `Rails.root/notes`; the app decides) or
 /// the value is empty.
 pub fn notes_root(explicit: Option<&Path>, env: &EnvSnapshot) -> Option<PathBuf> {
-    todo!()
+    match explicit {
+        Some(path) => Some(path.to_path_buf()),
+        None => env.raw("NOTES_PATH").map(PathBuf::from),
+    }
+    .filter(|p| !p.as_os_str().is_empty())
 }
 
 /// `<root>/.fed`.
 pub fn config_file_path(notes_root: &Path) -> PathBuf {
-    todo!()
+    notes_root.join(crate::store::CONFIG_FILE)
 }

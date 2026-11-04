@@ -15,7 +15,11 @@ pub struct EditorFont {
 
 impl Default for EditorFont {
     fn default() -> Self {
-        todo!()
+        Self {
+            family: "'Cascadia Code', monospace".to_owned(),
+            size_px: 14.0,
+            line_height: 1.6,
+        }
     }
 }
 
@@ -46,8 +50,71 @@ pub struct HighlightSpec {
 
 /// The 26 markdown highlight rules, in the original order.
 pub fn markdown_highlights() -> &'static [HighlightSpec] {
-    todo!("codemirror_theme.js createSyntaxHighlighting")
+    &MARKDOWN_HIGHLIGHTS
 }
+
+/// A rule with only a foreground color.
+const fn color(tag: &'static str, color: &'static str) -> HighlightSpec {
+    HighlightSpec {
+        tag,
+        color,
+        background: None,
+        bold: false,
+        italic: false,
+        decoration: None,
+    }
+}
+
+/// `createSyntaxHighlighting()` in `codemirror_theme.js`, rule for rule.
+static MARKDOWN_HIGHLIGHTS: [HighlightSpec; 26] = [
+    color("heading1", "heading-1"),
+    color("heading2", "heading-2"),
+    color("heading3", "heading-3"),
+    color("heading4", "accent"),
+    color("heading5", "accent"),
+    color("heading6", "accent"),
+    HighlightSpec {
+        bold: true,
+        ..color("strong", "text-primary")
+    },
+    HighlightSpec {
+        italic: true,
+        ..color("emphasis", "text-muted")
+    },
+    HighlightSpec {
+        decoration: Some(Decoration::LineThrough),
+        ..color("strikethrough", "text-muted")
+    },
+    HighlightSpec {
+        background: Some("code-bg"),
+        ..color("monospace", "accent")
+    },
+    HighlightSpec {
+        decoration: Some(Decoration::Underline),
+        ..color("link", "accent")
+    },
+    color("url", "accent"),
+    color("quote", "text-muted"),
+    color("list", "text-muted"),
+    color("processingInstruction", "text-muted"),
+    color("meta", "text-muted"),
+    color("contentSeparator", "border"),
+    color("angleBracket", "text-muted"),
+    color("tagName", "accent"),
+    color("attributeName", "heading-2"),
+    color("attributeValue", "heading-3"),
+    HighlightSpec {
+        italic: true,
+        ..color("comment", "text-faint")
+    },
+    color("labelName", "accent"),
+    color("inserted", "accent"),
+    HighlightSpec {
+        decoration: Some(Decoration::LineThrough),
+        ..color("deleted", "text-muted")
+    },
+    color("escape", "text-muted"),
+];
 
 /// Editor chrome → token mapping (`createEditorTheme` rules).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -80,7 +147,20 @@ pub struct EditorChrome {
 
 /// The editor chrome mapping.
 pub fn editor_chrome() -> EditorChrome {
-    todo!()
+    EditorChrome {
+        background: "bg-primary",
+        text: "text-primary",
+        selection: "selection",
+        gutter_background: "bg-secondary",
+        gutter_text: "text-faint",
+        gutter_border: "border",
+        active_gutter_text: "text-muted",
+        placeholder: "text-faint",
+        search_match: "selection",
+        search_match_outline: "accent",
+        search_match_selected: "accent",
+        panel_background: "bg-secondary",
+    }
 }
 
 /// Autocomplete list grows to this many `em` before scrolling.

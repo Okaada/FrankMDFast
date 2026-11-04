@@ -14,12 +14,13 @@
 //!   which rejects any non-public address, so reqwest connects only to vetted
 //!   IPs (no DNS rebinding); redirects are re-validated per hop; `.no_proxy()`.
 #![allow(clippy::disallowed_types)] // this crate is the sanctioned owner of reqwest::Client
-#![allow(unused_variables, dead_code)] // skeleton
 
 pub mod client;
 pub mod egress;
+mod ruby_ip;
+mod ruby_uri;
 pub mod runtime;
 
 pub use client::{EgressClient, Fetched, Limits, NetError, TrustedClient};
-pub use egress::{HostResolver, StaticResolver, SystemResolver};
+pub use egress::{HostResolver, ParsedIp, StaticResolver, SystemResolver};
 pub use runtime::NetRuntime;

@@ -41,7 +41,21 @@ impl RelPath {
     /// path or a `..` that climbs above the root is [`CoreError::InvalidPath`],
     /// and NUL is rejected. `""` and `"."` give the root.
     pub fn parse(input: &str) -> Result<Self, CoreError> {
-        todo!("lexical normalization per backend.md §2.4")
+        let invalid = || CoreError::InvalidPath(input.to_owned());
+        if input.contains('\0') || input.starts_with('/') {
+            return Err(invalid());
+        }
+        let mut segments: Vec<&str> = Vec::new();
+        for segment in input.split('/') {
+            match segment {
+                "" | "." => {}
+                ".." => {
+                    segments.pop().ok_or_else(invalid)?;
+                }
+                name => segments.push(name),
+            }
+        }
+        Ok(Self(segments.join("/")))
     }
 
     /// The path as a `/`-separated string.
@@ -61,22 +75,41 @@ impl RelPath {
 
     /// Parent directory (`None` for the root).
     pub fn parent(&self) -> Option<RelPath> {
-        todo!()
+        if self.is_root() {
+            return None;
+        }
+        Some(match self.0.rfind('/') {
+            Some(i) => Self(self.0[..i].to_owned()),
+            None => Self::root(),
+        })
     }
 
     /// Append a validated child path.
     pub fn join(&self, child: &RelPath) -> RelPath {
-        todo!()
+        if self.is_root() {
+            child.clone()
+        } else if child.is_root() {
+            self.clone()
+        } else {
+            Self(format!("{}/{}", self.0, child.0))
+        }
     }
 
     /// `self` is `other` or lies below it (segment-wise, never string-prefix).
     pub fn starts_with(&self, other: &RelPath) -> bool {
-        todo!()
+        other.is_root() || is_within(&self.0, &other.0)
     }
 
     /// Re-root `self` from `old` prefix onto `new` (used by rename/move remaps).
     pub fn rebase(&self, old: &RelPath, new: &RelPath) -> Option<RelPath> {
-        todo!()
+        if !self.starts_with(old) {
+            return None;
+        }
+        let rest = self.0[old.0.len()..].trim_start_matches('/');
+        if rest.is_empty() {
+            return Some(new.clone());
+        }
+        Some(new.join(&Self(rest.to_owned())))
     }
 }
 
@@ -91,7 +124,52 @@ impl std::fmt::Display for RelPath {
 /// unless the path already ends with `.md` (case-sensitive), so `foo.txt` →
 /// `foo.txt.md`.
 pub fn normalize_note_path(input: &str) -> String {
-    todo!("backend.md §2.3")
+    if input.trim().is_empty() {
+        return String::new();
+    }
+    if ruby_basename(input) == CONFIG_FILE || input.ends_with(NOTE_EXT) {
+        return input.to_owned();
+    }
+    format!("{input}{NOTE_EXT}")
+}
+
+/// Ruby `File.basename(path)`: the last non-empty segment (`"a/b/"` → `"b"`,
+/// `"/"` → `"/"`).
+fn ruby_basename(path: &str) -> &str {
+    let trimmed = path.trim_end_matches('/');
+    if trimmed.is_empty() {
+        return if path.is_empty() { "" } else { "/" };
+    }
+    trimmed.rsplit('/').next().unwrap_or(trimmed)
+}
+
+/// Ruby `Pathname#cleanpath` (the aggressive, non-conservative form): `.`
+/// and repeated `/` removed, `..` resolved against the previous segment,
+/// `..` above `/` dropped, a leading relative `..` kept; empty → `"."`.
+pub fn clean_path(path: &str) -> String {
+    let absolute = path.starts_with('/');
+    let mut segments: Vec<&str> = Vec::new();
+    for segment in path.split('/') {
+        match segment {
+            "" | "." => {}
+            ".." => match segments.last() {
+                Some(&last) if last != ".." => {
+                    segments.pop();
+                }
+                _ if absolute => {}
+                _ => segments.push(".."),
+            },
+            name => segments.push(name),
+        }
+    }
+    let joined = segments.join("/");
+    if absolute {
+        format!("/{joined}")
+    } else if joined.is_empty() {
+        ".".to_owned()
+    } else {
+        joined
+    }
 }
 
 /// **[COMPAT]** the lexical part of `PathSafety.contain(base, path)`
@@ -101,13 +179,29 @@ pub fn normalize_note_path(input: &str) -> String {
 /// `/data/notes-backup` is outside `/data/notes`). Returns the cleaned absolute
 /// candidate. The symlink/realpath half lives in `frankmd_fs::path_safety`.
 pub fn lexical_contain(base: &str, path: Option<&str>) -> Option<String> {
-    todo!("backend.md §2.4")
+    let path = path?;
+    if path.contains('\0') || base.contains('\0') {
+        return None;
+    }
+    let base = clean_path(base);
+    let joined = if path.starts_with('/') {
+        path.to_owned()
+    } else if path.is_empty() {
+        base.clone()
+    } else {
+        format!("{base}/{path}")
+    };
+    let candidate = clean_path(&joined);
+    is_within(&candidate, &base).then_some(candidate)
 }
 
 /// **[COMPAT]** `PathSafety.within?(path, base)`: `path == base` or `path`
 /// starts with `base + "/"` (both taken as given, no cleaning).
 pub fn is_within(path: &str, base: &str) -> bool {
-    todo!("backend.md §2.4")
+    path == base
+        || path
+            .strip_prefix(base)
+            .is_some_and(|rest| rest.starts_with('/'))
 }
 
 /// **[COMPAT]** `NotesController#reject_config_file`: does this raw request
@@ -115,7 +209,9 @@ pub fn is_within(path: &str, base: &str) -> bool {
 /// `/.fed` …)? Note operations on it are refused (HTTP 403 in Rails).
 /// `sub/.fed` is an ordinary (non-note) file and is **not** the config file.
 pub fn is_config_file(raw: &str) -> bool {
-    todo!("backend.md §2.9")
+    // Any absolute base works: the check is lexical and relative to it.
+    const BASE: &str = "/notes-root";
+    lexical_contain(BASE, Some(raw)).is_some_and(|p| p == format!("{BASE}/{CONFIG_FILE}"))
 }
 
 /// How the Rails `GET /notes/*path` route classified a raw path
@@ -131,5 +227,9 @@ pub enum PathKind {
 
 /// **[COMPAT]** classify a raw request path (see [`PathKind`]).
 pub fn classify(raw: &str) -> PathKind {
-    todo!("backend.md §2.9")
+    if raw.ends_with(NOTE_EXT) || !raw.contains('.') {
+        PathKind::Note
+    } else {
+        PathKind::Asset
+    }
 }

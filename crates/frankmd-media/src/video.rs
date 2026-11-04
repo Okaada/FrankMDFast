@@ -4,7 +4,9 @@
 use crate::env::MediaEnv;
 use crate::error::MediaError;
 use crate::param::Param;
-use crate::upload_storage::Upload;
+use crate::pipeline::{UploadRequest, store_media};
+use crate::upload_storage::{self as us, Upload};
+use crate::{MediaKind, UploadOrigin};
 
 /// `SUBDIR`.
 pub const SUBDIR: &str = "videos";
@@ -30,5 +32,18 @@ pub async fn save_upload(
     upload_to_s3: &Param,
     s3_prefix: Option<&str>,
 ) -> Result<String, MediaError> {
-    todo!("backend.md §7.11")
+    let Some(file) = file else {
+        return Err(MediaError::Invalid("No file provided".to_owned()));
+    };
+    let config = env.settings.current();
+    let provider = us::provider(&config, upload_to_s3)?;
+    let mut req = UploadRequest::new(UploadOrigin::Drop, MediaKind::Video, file.original_filename, file.bytes);
+    req.s3_prefix = s3_prefix.map(str::to_owned);
+    Ok(store_media(env, &config, provider, req).await?.url().to_owned())
+}
+
+/// S3 `Content-Type` for a video key (by its extension, case-insensitive).
+pub fn content_type_for_key(key: &str) -> &'static str {
+    let ext = us::ruby_extname(key).to_lowercase();
+    VIDEO_MIME_TYPES.iter().find(|(e, _)| *e == ext).map_or("application/octet-stream", |(_, t)| t)
 }

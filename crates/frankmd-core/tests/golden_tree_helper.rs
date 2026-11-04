@@ -38,8 +38,15 @@ fn locale(code: &str) -> Locale {
 fn lenient(item: &Value) -> Value {
     let mut o = item.as_object().unwrap().clone();
     if o.get("type").and_then(Value::as_str) == Some("folder") {
-        let kids = o.get("children").and_then(Value::as_array).cloned().unwrap_or_default();
-        o.insert("children".into(), Value::Array(kids.iter().map(lenient).collect()));
+        let kids = o
+            .get("children")
+            .and_then(Value::as_array)
+            .cloned()
+            .unwrap_or_default();
+        o.insert(
+            "children".into(),
+            Value::Array(kids.iter().map(lenient).collect()),
+        );
     } else {
         o.insert("type".into(), "file".into());
         o.remove("children");
@@ -86,7 +93,10 @@ fn parse_rows(html: &str) -> Vec<TreeRow> {
             if has_class(tag, "tree-item") {
                 let depth = stack.iter().filter(|(c, _)| *c).count();
                 let visible = !stack.iter().any(|(_, h)| *h);
-                let kind = match (attr(tag, "data-type").as_deref(), attr(tag, "data-file-type").as_deref()) {
+                let kind = match (
+                    attr(tag, "data-type").as_deref(),
+                    attr(tag, "data-file-type").as_deref(),
+                ) {
                     (Some("folder"), _) => RowKind::Folder,
                     (_, Some("config")) => RowKind::Config,
                     _ => RowKind::Note,
@@ -99,7 +109,8 @@ fn parse_rows(html: &str) -> Vec<TreeRow> {
                     expanded: false,
                     selected: has_class(tag, "selected"),
                     draggable: attr(tag, "draggable").as_deref() == Some("true"),
-                    context_menu: attr(tag, "data-action").is_some_and(|a| a.contains("contextmenu")),
+                    context_menu: attr(tag, "data-action")
+                        .is_some_and(|a| a.contains("contextmenu")),
                     visible,
                     mtime: attr(tag, "data-mtime").map(|m| m.parse().unwrap()),
                 });
@@ -123,8 +134,14 @@ fn parse_rows(html: &str) -> Vec<TreeRow> {
 fn golden_render_tree_items() {
     let g = golden("tree_helper");
     assert_cases("tree_helper", g.cases_for("render_tree_items"), |c| {
-        let items: Vec<Value> = c.input["items"].as_array().unwrap().iter().map(lenient).collect();
-        let nodes: Vec<TreeNode> = serde_json::from_value(Value::Array(items)).map_err(|e| e.to_string())?;
+        let items: Vec<Value> = c.input["items"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(lenient)
+            .collect();
+        let nodes: Vec<TreeNode> =
+            serde_json::from_value(Value::Array(items)).map_err(|e| e.to_string())?;
         let expanded: BTreeSet<String> = c.input["expanded_folders"]
             .as_array()
             .unwrap()
@@ -137,7 +154,12 @@ fn golden_render_tree_items() {
             // TreeNode has no "mtime absent" state (serde default 0); Rails
             // omitted data-mtime then. Treat a 0 mtime as absent.
             TreeView::Rows(rows) => TreeView::Rows(
-                rows.into_iter().map(|r| TreeRow { mtime: r.mtime.filter(|m| *m != 0), ..r }).collect(),
+                rows.into_iter()
+                    .map(|r| TreeRow {
+                        mtime: r.mtime.filter(|m| *m != 0),
+                        ..r
+                    })
+                    .collect(),
             ),
             TreeView::Empty => TreeView::Empty,
         };
@@ -149,9 +171,17 @@ fn golden_render_tree_items() {
             if !html.contains(&format!(">{text}</div>")) {
                 return Err(format!("localized no_notes_yet {text:?} not in {html}"));
             }
-            return if got == TreeView::Empty { Ok(()) } else { Err(format!("expected Empty, got {got:?}")) };
+            return if got == TreeView::Empty {
+                Ok(())
+            } else {
+                Err(format!("expected Empty, got {got:?}"))
+            };
         }
         let want = TreeView::Rows(parse_rows(html));
-        if got == want { Ok(()) } else { Err(format!("\n    expected {want:?}\n    got      {got:?}")) }
+        if got == want {
+            Ok(())
+        } else {
+            Err(format!("\n    expected {want:?}\n    got      {got:?}"))
+        }
     });
 }

@@ -22,6 +22,7 @@ frankmd-testkit.workspace = true
 serde_json.workspace = true
 tempfile.workspace = true
 secrecy.workspace = true
+jiff.workspace = true
 
 [lints]
 workspace = true

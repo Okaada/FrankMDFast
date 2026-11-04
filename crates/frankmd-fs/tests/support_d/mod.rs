@@ -1,5 +1,10 @@
 //! Helpers shared by the rename / backlinks / recents ports (fork D files).
-#![allow(dead_code, unreachable_pub, clippy::disallowed_methods, clippy::unwrap_used)]
+#![allow(
+    dead_code,
+    unreachable_pub,
+    clippy::disallowed_methods,
+    clippy::unwrap_used
+)]
 
 use crate::common::{self, Sandbox, fed_template};
 use frankmd_fs::model::{ModelError, ModelResult};
@@ -30,20 +35,40 @@ pub fn unit_result<T>(r: Result<T, FsError>) -> Result<(), FsError> {
 }
 
 /// Compare a service result (`true` or an error) with the fixture.
-pub fn check_unit(what: &str, actual: Result<(), FsError>, expected: &Value, sb: &Sandbox) -> Result<(), String> {
+pub fn check_unit(
+    what: &str,
+    actual: Result<(), FsError>,
+    expected: &Value,
+    sb: &Sandbox,
+) -> Result<(), String> {
     match actual {
         Ok(()) => common::check_eq(what, &Value::Bool(true), expected),
-        Err(e) if expected.get("error").is_some() => check_error(&e, expected, sb).map_err(|m| format!("{what}: {m}")),
-        Err(e) => Err(format!("{what}: expected {expected}, got error {e} ({})", e.compat_class())),
+        Err(e) if expected.get("error").is_some() => {
+            check_error(&e, expected, sb).map_err(|m| format!("{what}: {m}"))
+        }
+        Err(e) => Err(format!(
+            "{what}: expected {expected}, got error {e} ({})",
+            e.compat_class()
+        )),
     }
 }
 
 /// Compare a `Result<bool, FsError>` (Config#set result or error).
-pub fn check_bool(what: &str, actual: Result<bool, FsError>, expected: &Value, sb: &Sandbox) -> Result<(), String> {
+pub fn check_bool(
+    what: &str,
+    actual: Result<bool, FsError>,
+    expected: &Value,
+    sb: &Sandbox,
+) -> Result<(), String> {
     match actual {
         Ok(b) => common::check_eq(what, &Value::Bool(b), expected),
-        Err(e) if expected.get("error").is_some() => check_error(&e, expected, sb).map_err(|m| format!("{what}: {m}")),
-        Err(e) => Err(format!("{what}: expected {expected}, got error {e} ({})", e.compat_class())),
+        Err(e) if expected.get("error").is_some() => {
+            check_error(&e, expected, sb).map_err(|m| format!("{what}: {m}"))
+        }
+        Err(e) => Err(format!(
+            "{what}: expected {expected}, got error {e} ({})",
+            e.compat_class()
+        )),
     }
 }
 
@@ -66,7 +91,8 @@ pub fn full_messages(errs: &[ModelError]) -> Vec<String> {
 /// case-insensitive in Rails).
 pub fn fed_recent_value(text: &str) -> Option<Value> {
     let re = regex::Regex::new(r"(?mi)^recent_files\s*=\s*(.*)$").unwrap();
-    re.captures(text).and_then(|c| serde_json::from_str(c[1].trim()).ok())
+    re.captures(text)
+        .and_then(|c| serde_json::from_str(c[1].trim()).ok())
 }
 
 /// Lines of `.fed` matching `/\Arecent_files\s*=/` (the fixtures'
@@ -74,7 +100,12 @@ pub fn fed_recent_value(text: &str) -> Option<Value> {
 pub fn fed_recent_lines(root: &Path) -> Option<Vec<String>> {
     let text = fs::read_to_string(root.join(".fed")).ok()?;
     let re = regex::Regex::new(r"^recent_files\s*=").unwrap();
-    Some(text.lines().filter(|l| re.is_match(l)).map(str::to_owned).collect())
+    Some(
+        text.lines()
+            .filter(|l| re.is_match(l))
+            .map(str::to_owned)
+            .collect(),
+    )
 }
 
 /// Compare `tree_after`: everything but `.fed` exactly; `.fed` present on
@@ -95,15 +126,25 @@ pub fn check_tree_after(sb: &Sandbox, expected: &Value) -> Result<(), String> {
     match (a_fed, e_fed) {
         (None, None) => {}
         (Some(a), Some(e)) => {
-            let a = fed_recent_value(a.as_str().unwrap_or_default());
+            // The snapshot shortens a template-prefixed `.fed` to `<FED_TEMPLATE>…`,
+            // so expand both sides before matching the `recent_files` line.
+            let a = fed_recent_value(&common::expand_fed(a.as_str().unwrap_or_default()));
             let e = fed_recent_value(&common::expand_fed(e.as_str().unwrap_or_default()));
             if a != e {
                 errs.push(format!(".fed recent_files: expected {e:?}, actual {a:?}"));
             }
         }
-        (a, e) => errs.push(format!(".fed presence: expected {}, actual {}", e.is_some(), a.is_some())),
+        (a, e) => errs.push(format!(
+            ".fed presence: expected {}, actual {}",
+            e.is_some(),
+            a.is_some()
+        )),
     }
-    if errs.is_empty() { Ok(()) } else { Err(errs.join("\n")) }
+    if errs.is_empty() {
+        Ok(())
+    } else {
+        Err(errs.join("\n"))
+    }
 }
 
 /// Like [`common::FedRecentStore`] but matching the key case-insensitively
@@ -119,7 +160,10 @@ pub struct CiFedStore {
 impl CiFedStore {
     /// Store for a sandbox root.
     pub fn new(root: &Path) -> Self {
-        Self { fed: root.join(".fed"), lock: root.join(".frankmd-config.lock") }
+        Self {
+            fed: root.join(".fed"),
+            lock: root.join(".frankmd-config.lock"),
+        }
     }
 }
 
@@ -130,8 +174,14 @@ impl RecentStore for CiFedStore {
         re.captures(&text).map(|c| c[1].trim().to_owned())
     }
 
-    fn modify(&self, f: &mut dyn FnMut(Option<String>) -> Result<String, FsError>) -> Result<bool, FsError> {
-        fs::OpenOptions::new().create(true).append(true).open(&self.lock)?;
+    fn modify(
+        &self,
+        f: &mut dyn FnMut(Option<String>) -> Result<String, FsError>,
+    ) -> Result<bool, FsError> {
+        fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(&self.lock)?;
         let text = fs::read_to_string(&self.fed).unwrap_or_else(|_| fed_template());
         let new_json = f(self.load())?;
         let line = format!("recent_files = {new_json}");
@@ -167,7 +217,9 @@ pub fn entries_json(entries: &[frankmd_core::recent::RecentFile]) -> Value {
 pub fn unlock_dirs(root: &Path) {
     use std::os::unix::fs::PermissionsExt;
     fn walk(p: &Path) {
-        let Ok(md) = fs::symlink_metadata(p) else { return };
+        let Ok(md) = fs::symlink_metadata(p) else {
+            return;
+        };
         if md.file_type().is_dir() {
             let _ = fs::set_permissions(p, fs::Permissions::from_mode(0o755));
             if let Ok(rd) = fs::read_dir(p) {

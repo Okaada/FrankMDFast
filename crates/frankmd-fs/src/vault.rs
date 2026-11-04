@@ -1,8 +1,19 @@
 //! The notes folder ("vault") and the note operations on it.
+//!
+//! Every operation that mutates the vault, or reads the tree, holds the
+//! **[COMPAT]** `.frankmd-filesystem.lock` (exclusive for mutations, shared
+//! for tree reads), exactly where Rails `NotesService` held it. The
+//! `*_as` variants take the label used in error messages: the raw request
+//! path for [`crate::NotesService`], the vault-relative path otherwise.
 
-use crate::FsError;
-use frankmd_core::tree::TreeNode;
+use crate::atomic::{self, ModePolicy};
+use crate::lock::{self, CONFIG_LOCK, FILESYSTEM_LOCK, LockGuard, LockKind};
+use crate::{FsError, path_safety};
+use frankmd_core::tree::{self, DirEntryInfo, EntryKind, FileType, TreeNode};
 use frankmd_core::{RelPath, Revision};
+use std::fs;
+use std::io;
+use std::os::unix::fs::MetadataExt;
 use std::path::{Path, PathBuf};
 
 /// An opened notes root. Cheap to clone; holds no file handles.
@@ -11,6 +22,8 @@ pub struct Vault {
     root: PathBuf,
     real_root: PathBuf,
     state_dir: PathBuf,
+    /// Locks always live under `state_dir` (folder that is not a notes root).
+    private_locks: bool,
 }
 
 /// A path proven to be inside the vault (component-wise, symlink-aware).
@@ -46,11 +59,42 @@ pub struct NoteFile {
     pub valid_utf8: bool,
 }
 
+impl NoteFile {
+    fn from_bytes(bytes: Vec<u8>, mtime: i64) -> Self {
+        let revision = Revision::of(&bytes);
+        let valid_utf8 = std::str::from_utf8(&bytes).is_ok();
+        Self {
+            bytes,
+            revision,
+            mtime,
+            valid_utf8,
+        }
+    }
+}
+
 impl Vault {
     /// Open (and `mkdir -p`) a notes root. `state_dir` is the app-owned
     /// per-vault state directory outside the vault (HP-012).
     pub fn open(root: impl Into<PathBuf>, state_dir: impl Into<PathBuf>) -> Result<Self, FsError> {
-        todo!()
+        let root = root.into();
+        if !root.exists() {
+            fs::create_dir_all(&root)?;
+        }
+        let real_root = root.canonicalize()?;
+        Ok(Self {
+            root,
+            real_root,
+            state_dir: state_dir.into(),
+            private_locks: false,
+        })
+    }
+
+    /// Open a folder that is **not** a notes root (e.g. the user's
+    /// `images_path` picture folder): same containment and no-clobber
+    /// semantics, but locks are taken only under `state_dir`, so no app file
+    /// is ever created inside the user's folder (no Rails instance shares it).
+    pub fn open_foreign(root: impl Into<PathBuf>, state_dir: impl Into<PathBuf>) -> Result<Self, FsError> {
+        Ok(Self { private_locks: true, ..Self::open(root, state_dir)? })
     }
 
     /// Notes root as given.
@@ -63,16 +107,33 @@ impl Vault {
         &self.real_root
     }
 
+    /// The app-owned state directory of this vault.
+    pub fn state_dir(&self) -> &Path {
+        &self.state_dir
+    }
+
     /// **[COMPAT]** `<realpath root>/.frankmd-filesystem.lock`: the one lock
     /// file every instance (Rails or Rust) on this folder shares.
     pub fn filesystem_lock_path(&self) -> PathBuf {
-        todo!("backend.md §2.7")
+        self.real_root.join(FILESYSTEM_LOCK)
+    }
+
+    /// Take one of the shared compat locks (`FILESYSTEM_LOCK`, `CONFIG_LOCK`)
+    /// of this vault, falling back to a private lock under the state dir
+    /// when the notes root cannot hold the lock file.
+    pub fn lock(&self, name: &str, kind: LockKind) -> Result<LockGuard, FsError> {
+        let id = Revision::of(self.real_root.as_os_str().as_encoded_bytes()).0;
+        let fallback = self.state_dir.join("locks").join(id);
+        if self.private_locks {
+            return lock::acquire_private(name, kind, &fallback);
+        }
+        lock::acquire(&self.real_root, name, kind, &fallback)
     }
 
     /// Prove `rel` is inside the vault (backend.md §2.4 semantics, plus
     /// per-component `lstat` for symlinks). Rejects reserved app files.
     pub fn contain(&self, rel: &RelPath) -> Result<ContainedPath, FsError> {
-        todo!()
+        self.safe_path(rel.as_str(), false)
     }
 
     /// **[COMPAT]** `NotesService#safe_path(path, must_exist:)` on a raw path:
@@ -81,58 +142,354 @@ impl Vault {
     /// `must_exist` and missing (symlinks followed) →
     /// `NotFound("Path not found: <path>")`.
     pub fn safe_path(&self, raw: &str, must_exist: bool) -> Result<ContainedPath, FsError> {
-        todo!("backend.md §2.4")
+        let abs = path_safety::contain(&self.real_root, Some(raw));
+        if abs.as_deref() == Some(self.real_root.join(CONFIG_LOCK).as_path()) {
+            return Err(FsError::InvalidPath("Reserved application path".to_owned()));
+        }
+        let abs = abs.ok_or_else(|| FsError::InvalidPath(format!("Invalid path: {raw}")))?;
+        let rel = self
+            .rel_of(&abs)
+            .ok_or_else(|| FsError::InvalidPath(format!("Invalid path: {raw}")))?;
+        if must_exist && !abs.exists() {
+            return Err(FsError::NotFound(format!("Path not found: {raw}")));
+        }
+        Ok(ContainedPath { rel, abs })
+    }
+
+    /// Vault-relative path of an absolute path under the real root.
+    fn rel_of(&self, abs: &Path) -> Option<RelPath> {
+        let rest = abs.strip_prefix(&self.real_root).ok()?;
+        RelPath::parse(rest.to_str()?).ok()
     }
 
     /// Build the Explorer tree under a shared filesystem lock.
     pub fn list_tree(&self) -> Result<Vec<TreeNode>, FsError> {
-        todo!()
+        let _lock = self.lock(FILESYSTEM_LOCK, LockKind::Shared)?;
+        self.build_tree(&self.real_root)
     }
 
     /// The tree below one folder (`Folder#children`; `[]` when missing).
     pub fn folder_children(&self, path: &ContainedPath) -> Result<Vec<TreeNode>, FsError> {
-        todo!()
+        let _lock = self.lock(FILESYSTEM_LOCK, LockKind::Shared)?;
+        match fs::symlink_metadata(&path.abs) {
+            Ok(meta) if meta.is_dir() => self.build_tree(&path.abs),
+            _ => Ok(Vec::new()),
+        }
+    }
+
+    /// **[COMPAT]** `NotesService#build_tree`: dot entries skipped before any
+    /// `lstat`, symlinks skipped, folders first (by lowercase name), then
+    /// `.md` files newest first; entries vanishing mid-walk are tolerated.
+    fn build_tree(&self, dir: &Path) -> Result<Vec<TreeNode>, FsError> {
+        let reading = match fs::read_dir(dir) {
+            Ok(reading) => reading,
+            Err(e) if is_gone(&e) => return Ok(Vec::new()),
+            Err(e) => return Err(e.into()),
+        };
+        let mut entries = Vec::new();
+        for entry in reading {
+            let entry = match entry {
+                Ok(entry) => entry,
+                Err(e) if is_gone(&e) => continue,
+                Err(e) => return Err(e.into()),
+            };
+            let name = entry.file_name().to_string_lossy().into_owned();
+            if name.starts_with('.') {
+                continue;
+            }
+            let meta = crate::fault_check!(crate::fault::FaultPoint::Lstat(name.clone()))
+                .and_then(|()| fs::symlink_metadata(entry.path()));
+            let meta = match meta {
+                Ok(meta) => meta,
+                Err(e) if is_gone(&e) => continue,
+                Err(e) => return Err(e.into()),
+            };
+            let kind = if meta.file_type().is_symlink() {
+                EntryKind::Symlink
+            } else if meta.is_dir() {
+                EntryKind::Dir
+            } else {
+                EntryKind::File
+            };
+            entries.push(DirEntryInfo {
+                name,
+                kind,
+                mtime: meta.mtime(),
+            });
+        }
+        tree::sort_entries(&mut entries);
+
+        let at_root = dir == self.real_root;
+        let mut nodes = Vec::new();
+        for entry in entries {
+            let abs = dir.join(&entry.name);
+            let has_markdown =
+                |p: &Path| entry.kind == EntryKind::Dir && at_root && has_markdown_below(p);
+            if !tree::is_visible(&entry, at_root, has_markdown(&abs)) {
+                continue;
+            }
+            let Some(path) = self.rel_of(&abs) else {
+                continue;
+            };
+            match entry.kind {
+                EntryKind::Dir => {
+                    let children = self.build_tree(&abs)?;
+                    nodes.push(TreeNode::Folder {
+                        name: entry.name,
+                        path,
+                        children,
+                    });
+                }
+                EntryKind::File => {
+                    let name = entry
+                        .name
+                        .strip_suffix(frankmd_core::path::NOTE_EXT)
+                        .unwrap_or(&entry.name)
+                        .to_owned();
+                    nodes.push(TreeNode::File {
+                        name,
+                        path,
+                        file_type: FileType::Markdown,
+                        mtime: entry.mtime,
+                    });
+                }
+                EntryKind::Symlink => {}
+            }
+        }
+        Ok(nodes)
     }
 
     /// Read a note. Tolerates non-UTF-8.
     pub fn read_note(&self, path: &ContainedPath) -> Result<NoteFile, FsError> {
-        todo!()
+        self.read_note_as(path, path.rel.as_str())
+    }
+
+    /// [`Vault::read_note`] with `label` in the error message.
+    pub(crate) fn read_note_as(
+        &self,
+        path: &ContainedPath,
+        label: &str,
+    ) -> Result<NoteFile, FsError> {
+        let not_found = || FsError::NotFound(format!("Note not found: {label}"));
+        if !path.abs.is_file() {
+            return Err(not_found());
+        }
+        let bytes =
+            fs::read(&path.abs).map_err(|e| if is_gone(&e) { not_found() } else { e.into() })?;
+        let mtime = fs::metadata(&path.abs).map_or(0, |m| m.mtime());
+        Ok(NoteFile::from_bytes(bytes, mtime))
     }
 
     /// Create a new note; `AlreadyExists` if anything is there. Creates parents.
     pub fn create_note(&self, path: &ContainedPath, bytes: &[u8]) -> Result<Revision, FsError> {
-        todo!()
+        let _lock = self.lock(FILESYSTEM_LOCK, LockKind::Exclusive)?;
+        self.create_note_locked(path, bytes, path.rel.as_str())
+    }
+
+    /// `create` body; the caller holds the exclusive lock.
+    pub(crate) fn create_note_locked(
+        &self,
+        path: &ContainedPath,
+        bytes: &[u8],
+        label: &str,
+    ) -> Result<Revision, FsError> {
+        mkdir_parent(&path.abs)?;
+        if path_exists(&path.abs) {
+            return Err(FsError::AlreadyExists(format!(
+                "Destination already exists: {label}"
+            )));
+        }
+        atomic::create_new(&path.abs, bytes).map_err(|e| match e {
+            FsError::AlreadyExists(_) => {
+                FsError::AlreadyExists(format!("Destination already exists: {}", path.rel))
+            }
+            other => other,
+        })?;
+        Ok(Revision::of(bytes))
     }
 
     /// Upsert (`NotesService#write`): `mkdir -p` the parent, atomic replace
     /// keeping the existing mode (new files get `0666 & ~umask`).
     pub fn write_note(&self, path: &ContainedPath, bytes: &[u8]) -> Result<Revision, FsError> {
-        todo!()
+        let _lock = self.lock(FILESYSTEM_LOCK, LockKind::Exclusive)?;
+        self.write_note_locked(path, bytes)
+    }
+
+    /// `write` body; the caller holds the exclusive lock.
+    pub(crate) fn write_note_locked(
+        &self,
+        path: &ContainedPath,
+        bytes: &[u8],
+    ) -> Result<Revision, FsError> {
+        mkdir_parent(&path.abs)?;
+        atomic::atomic_replace(&path.abs, bytes, ModePolicy::Preserve)?;
+        Ok(Revision::of(bytes))
     }
 
     /// Save over an **existing** note; `NotFound` if it is gone (never
     /// resurrects a renamed/deleted note, HP-006).
     pub fn update_existing(&self, path: &ContainedPath, bytes: &[u8]) -> Result<Revision, FsError> {
-        todo!()
+        let _lock = self.lock(FILESYSTEM_LOCK, LockKind::Exclusive)?;
+        self.update_locked(path, bytes, path.rel.as_str())
+    }
+
+    /// `update` body; the caller holds the exclusive lock.
+    pub(crate) fn update_locked(
+        &self,
+        path: &ContainedPath,
+        bytes: &[u8],
+        label: &str,
+    ) -> Result<Revision, FsError> {
+        if !path.abs.is_file() {
+            return Err(FsError::NotFound(format!("Note not found: {label}")));
+        }
+        atomic::atomic_replace(&path.abs, bytes, ModePolicy::Preserve)?;
+        Ok(Revision::of(bytes))
     }
 
     /// Rename/move a file or folder without clobbering.
     pub fn rename(&self, from: &ContainedPath, to: &ContainedPath) -> Result<(), FsError> {
-        todo!()
+        let _lock = self.lock(FILESYSTEM_LOCK, LockKind::Exclusive)?;
+        self.rename_locked(from, to, from.rel.as_str(), to.rel.as_str())
+    }
+
+    /// `rename` body; the caller holds the exclusive lock.
+    pub(crate) fn rename_locked(
+        &self,
+        from: &ContainedPath,
+        to: &ContainedPath,
+        from_label: &str,
+        to_label: &str,
+    ) -> Result<(), FsError> {
+        let already = || FsError::AlreadyExists(format!("Destination already exists: {to_label}"));
+        if !from.abs.exists() {
+            return Err(FsError::NotFound(format!("Note not found: {from_label}")));
+        }
+        if path_exists(&to.abs) {
+            return Err(already());
+        }
+        mkdir_parent(&to.abs)?;
+        atomic::rename_noclobber(&from.abs, &to.abs).map_err(|e| match e {
+            FsError::AlreadyExists(_) => already(),
+            other => other,
+        })
     }
 
     /// Delete a note, optionally only if its revision still matches.
-    pub fn delete_note(&self, path: &ContainedPath, expected: Option<&Revision>) -> Result<(), FsError> {
-        todo!()
+    pub fn delete_note(
+        &self,
+        path: &ContainedPath,
+        expected: Option<&Revision>,
+    ) -> Result<(), FsError> {
+        let _lock = self.lock(FILESYSTEM_LOCK, LockKind::Exclusive)?;
+        self.delete_note_locked(path, expected.map(|r| r.0.as_str()), path.rel.as_str())
+    }
+
+    /// `delete` body; the caller holds the exclusive lock, so the revision
+    /// check and the removal cannot be interleaved by another FrankMD writer.
+    pub(crate) fn delete_note_locked(
+        &self,
+        path: &ContainedPath,
+        expected: Option<&str>,
+        label: &str,
+    ) -> Result<(), FsError> {
+        if !path.abs.is_file() {
+            return Err(FsError::NotFound(format!("Note not found: {label}")));
+        }
+        if let Some(expected) = expected {
+            let current = Revision::of(&fs::read(&path.abs)?);
+            if current.0 != expected {
+                return Err(FsError::RevisionConflict(format!(
+                    "Note has changed: {label}"
+                )));
+            }
+        }
+        fs::remove_file(&path.abs)?;
+        Ok(())
     }
 
     /// Create a folder (`AlreadyExists` if present).
     pub fn create_folder(&self, path: &ContainedPath) -> Result<(), FsError> {
-        todo!()
+        let _lock = self.lock(FILESYSTEM_LOCK, LockKind::Exclusive)?;
+        self.create_folder_locked(path, path.rel.as_str())
+    }
+
+    /// `create_folder` body; the caller holds the exclusive lock.
+    pub(crate) fn create_folder_locked(
+        &self,
+        path: &ContainedPath,
+        label: &str,
+    ) -> Result<(), FsError> {
+        let already = || FsError::AlreadyExists(format!("Destination already exists: {label}"));
+        if path_exists(&path.abs) {
+            return Err(already());
+        }
+        mkdir_parent(&path.abs)?;
+        match fs::create_dir(&path.abs) {
+            Err(e) if e.kind() == io::ErrorKind::AlreadyExists => Err(already()),
+            other => Ok(other?),
+        }
     }
 
     /// Delete an empty folder (hidden files count, **[COMPAT]**).
     pub fn delete_empty_folder(&self, path: &ContainedPath) -> Result<(), FsError> {
-        todo!()
+        let _lock = self.lock(FILESYSTEM_LOCK, LockKind::Exclusive)?;
+        self.delete_folder_locked(path, path.rel.as_str())
     }
+
+    /// `delete_folder` body; the caller holds the exclusive lock.
+    pub(crate) fn delete_folder_locked(
+        &self,
+        path: &ContainedPath,
+        label: &str,
+    ) -> Result<(), FsError> {
+        if !path.abs.is_dir() {
+            return Err(FsError::NotFound(format!("Folder not found: {label}")));
+        }
+        if fs::read_dir(&path.abs)?.next().is_some() {
+            return Err(FsError::NotEmpty(format!("Folder not empty: {label}")));
+        }
+        fs::remove_dir(&path.abs)?;
+        Ok(())
+    }
+}
+
+/// **[COMPAT]** `path_exists?`: anything at `path`, including a dangling symlink.
+pub(crate) fn path_exists(path: &Path) -> bool {
+    fs::symlink_metadata(path).is_ok()
+}
+
+/// `FileUtils.mkdir_p(path.dirname)`.
+fn mkdir_parent(path: &Path) -> Result<(), FsError> {
+    match path.parent() {
+        Some(parent) if !parent.as_os_str().is_empty() => Ok(fs::create_dir_all(parent)?),
+        _ => Ok(()),
+    }
+}
+
+/// ENOENT / ENOTDIR: the entry vanished (or its parent stopped being a dir).
+fn is_gone(err: &io::Error) -> bool {
+    err.kind() == io::ErrorKind::NotFound || err.kind() == io::ErrorKind::NotADirectory
+}
+
+/// **[COMPAT]** `entry.glob("**/*.md").any?`: a non-dot name ending in `.md`
+/// anywhere below `dir`, without descending into dot or symlinked folders.
+fn has_markdown_below(dir: &Path) -> bool {
+    let Ok(reading) = fs::read_dir(dir) else {
+        return false;
+    };
+    for entry in reading.flatten() {
+        let name = entry.file_name();
+        let name = name.to_string_lossy();
+        if name.starts_with('.') {
+            continue;
+        }
+        if name.ends_with(frankmd_core::path::NOTE_EXT) {
+            return true;
+        }
+        if entry.file_type().is_ok_and(|t| t.is_dir()) && has_markdown_below(&entry.path()) {
+            return true;
+        }
+    }
+    false
 }

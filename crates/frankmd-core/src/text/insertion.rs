@@ -8,49 +8,8 @@
 
 use std::ops::Range;
 
-/// Current selection (`from == to` for a caret).
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
-pub struct Selection {
-    /// Start byte offset.
-    pub from: usize,
-    /// End byte offset.
-    pub to: usize,
-    /// Selected text.
-    pub text: String,
-}
-
-/// Cursor location. Defaults to line 1, column 1, offset 0 (**[COMPAT]**
-/// `getCursorPosition` fallback).
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct CursorPosition {
-    /// 1-based line.
-    pub line: usize,
-    /// 1-based column (bytes from line start + 1).
-    pub column: usize,
-    /// Byte offset in the document.
-    pub offset: usize,
-}
-
-impl Default for CursorPosition {
-    fn default() -> Self {
-        Self { line: 1, column: 1, offset: 0 }
-    }
-}
-
-/// Line info for stats / scroll sync. Defaults to 1/1 (**[COMPAT]**).
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct CursorInfo {
-    /// 1-based current line.
-    pub current_line: usize,
-    /// Total line count.
-    pub total_lines: usize,
-}
-
-impl Default for CursorInfo {
-    fn default() -> Self {
-        Self { current_line: 1, total_lines: 1 }
-    }
-}
+pub use super::cursor::{CursorInfo, CursorPosition, Selection};
+use super::js_substring;
 
 /// The editor surface the insertion helpers drive (the controller API of
 /// the original). Each mutating call is one undoable edit.
@@ -115,7 +74,40 @@ pub fn insert_block_content(
     content: &str,
     opts: &BlockInsert,
 ) -> usize {
-    todo!()
+    let Some(editor) = editor.filter(|_| !content.is_empty()) else {
+        return 0;
+    };
+
+    if let Some(edit) = &opts.edit {
+        editor.replace_range(content, edit.start, edit.end);
+        let cursor = edit.start + opts.cursor_offset.unwrap_or(content.len());
+        editor.set_selection(cursor, cursor);
+        return cursor;
+    }
+
+    let text = editor.text();
+    let (from, to) = match &opts.replace {
+        Some(range) => absorb_blanks(&text, range.start, range.end),
+        None => {
+            let offset = editor.cursor_position().offset;
+            (offset, offset)
+        }
+    };
+    let prefix = newline_prefix(js_substring(&text, 0, from));
+    let suffix = newline_suffix(js_substring(&text, to, text.len()));
+    let insert = [prefix, content, suffix].concat();
+    if opts.replace.is_some() {
+        editor.replace_range(&insert, from, to);
+    } else {
+        editor.insert_at(from, &insert);
+    }
+
+    let cursor = match opts.cursor_offset {
+        Some(offset) => from + prefix.len() + offset,
+        None => from + insert.len(),
+    };
+    editor.set_selection(cursor, cursor);
+    cursor
 }
 
 /// Insert inline content (emoji, text); returns the new cursor offset.
@@ -124,7 +116,24 @@ pub fn insert_inline_content(
     content: &str,
     opts: &InlineInsert,
 ) -> usize {
-    todo!()
+    let Some(editor) = editor.filter(|_| !content.is_empty()) else {
+        return 0;
+    };
+    let (from, to) = match &opts.replace {
+        Some(range) => (range.start, range.end),
+        None => {
+            let selection = editor.selection();
+            (selection.from, selection.to)
+        }
+    };
+    if opts.replace_selection {
+        editor.replace_range(content, from, to);
+    } else {
+        editor.insert_at(from, content);
+    }
+    let cursor = from + content.len();
+    editor.set_selection(cursor, cursor);
+    cursor
 }
 
 /// Insert image markdown, padded with single newlines (not blank lines);
@@ -134,12 +143,31 @@ pub fn insert_image(
     markdown: &str,
     replace: Option<Range<usize>>,
 ) -> usize {
-    todo!()
+    let Some(editor) = editor.filter(|_| !markdown.is_empty()) else {
+        return 0;
+    };
+    let text = editor.text();
+    let (from, to) = match replace {
+        Some(range) => absorb_blanks(&text, range.start, range.end),
+        None => {
+            let selection = editor.selection();
+            (selection.from, selection.to)
+        }
+    };
+    let before = js_substring(&text, 0, from);
+    let after = js_substring(&text, to, text.len());
+    let newline_before = if !before.is_empty() && !before.ends_with('\n') { "\n" } else { "" };
+    let newline_after = if !after.is_empty() && !after.starts_with('\n') { "\n" } else { "" };
+    let insert = [newline_before, markdown, newline_after].concat();
+    editor.replace_range(&insert, from, to);
+    let cursor = from + insert.len();
+    editor.set_selection(cursor, cursor);
+    cursor
 }
 
 /// Insert or replace a table (delegates to [`insert_block_content`]).
 pub fn insert_table(editor: Option<&mut dyn EditorSurface>, markdown: &str, opts: &BlockInsert) -> usize {
-    todo!()
+    insert_block_content(editor, markdown, opts)
 }
 
 /// Insert a fenced code block; the cursor lands on the first content line
@@ -150,12 +178,13 @@ pub fn insert_code_block(
     language: &str,
     opts: &BlockInsert,
 ) -> usize {
-    todo!()
+    let opts = BlockInsert { cursor_offset: Some(3 + language.len() + 1), ..opts.clone() };
+    insert_block_content(editor, code_block, &opts)
 }
 
 /// Insert a video embed (delegates to [`insert_block_content`]).
 pub fn insert_video_embed(editor: Option<&mut dyn EditorSurface>, embed: &str, opts: &BlockInsert) -> usize {
-    todo!()
+    insert_block_content(editor, embed, opts)
 }
 
 // ---------------------------------------------------------------------------
@@ -187,66 +216,105 @@ impl std::fmt::Debug for TextareaAdapter<'_> {
 impl<'a> TextareaAdapter<'a> {
     /// `None` when there is no editor (JS returns `null`).
     pub fn new(editor: Option<&'a mut dyn EditorSurface>) -> Option<Self> {
-        todo!()
+        editor.map(|editor| Self { editor, input_handler: None })
     }
     /// Document text (`adapter.value`).
     pub fn value(&self) -> String {
-        todo!()
+        self.editor.text()
     }
     /// Replace document text (`adapter.value = ...`).
     pub fn set_value(&mut self, text: &str) {
-        todo!()
+        self.editor.set_text(text);
     }
     /// Selection start.
     pub fn selection_start(&self) -> usize {
-        todo!()
+        self.editor.selection().from
     }
     /// Selection end.
     pub fn selection_end(&self) -> usize {
-        todo!()
+        self.editor.selection().to
     }
     /// Set selection.
     pub fn set_selection_range(&mut self, from: usize, to: usize) {
-        todo!()
+        self.editor.set_selection(from, to);
     }
     /// Focus the editor.
     pub fn focus(&mut self) {
-        todo!()
+        self.editor.focus();
     }
     /// Register the (single) `input` listener, replacing any previous one.
     pub fn add_input_listener(&mut self, handler: InputHandler<'a>) {
-        todo!()
+        self.input_handler = Some(handler);
     }
     /// Remove the `input` listener.
     pub fn remove_input_listener(&mut self) {
-        todo!()
+        self.input_handler = None;
     }
     /// Whether an `input` listener is registered.
     pub fn has_input_listener(&self) -> bool {
-        todo!()
+        self.input_handler.is_some()
     }
     /// Dispatch a synthetic input event; a no-op without a listener.
     pub fn dispatch_input(&mut self, event: &InputEvent) {
-        todo!()
+        if let Some(handler) = self.input_handler.as_mut() {
+            handler(event);
+        }
     }
 }
 
 /// Editor text, else the fallback textarea's value, else `""`.
 pub fn get_editor_content(editor: Option<&dyn EditorSurface>, fallback: Option<&str>) -> String {
-    todo!()
+    match (editor, fallback) {
+        (Some(editor), _) => editor.text(),
+        (None, Some(fallback)) => fallback.to_owned(),
+        (None, None) => String::new(),
+    }
 }
 
 /// Editor selection, else `{0, 0, ""}`.
 pub fn get_editor_selection(editor: Option<&dyn EditorSurface>) -> Selection {
-    todo!()
+    editor.map(EditorSurface::selection).unwrap_or_default()
 }
 
 /// Editor cursor position, else `{line 1, column 1, offset 0}`.
 pub fn get_cursor_position(editor: Option<&dyn EditorSurface>) -> CursorPosition {
-    todo!()
+    editor.map(EditorSurface::cursor_position).unwrap_or_default()
 }
 
 /// Editor cursor info, else `{current_line 1, total_lines 1}`.
 pub fn get_cursor_info(editor: Option<&dyn EditorSurface>) -> CursorInfo {
-    todo!()
+    editor.map(EditorSurface::cursor_info).unwrap_or_default()
+}
+
+/// Newlines needed before block content so it starts on a blank line.
+fn newline_prefix(before: &str) -> &'static str {
+    if before.is_empty() || before.ends_with("\n\n") {
+        ""
+    } else if before.ends_with('\n') {
+        "\n"
+    } else {
+        "\n\n"
+    }
+}
+
+/// Newlines needed after block content so it ends with a blank line.
+fn newline_suffix(after: &str) -> &'static str {
+    if after.is_empty() || after.starts_with("\n\n") {
+        ""
+    } else if after.starts_with('\n') {
+        "\n"
+    } else {
+        "\n\n"
+    }
+}
+
+/// Widen a slash-command range over the spaces/tabs around it
+/// (JS `/[ \t]*$/` on the text before, `/^[ \t]*/` on the text after).
+fn absorb_blanks(text: &str, from: usize, to: usize) -> (usize, usize) {
+    let is_blank = |c: char| c == ' ' || c == '\t';
+    let before = js_substring(text, 0, from);
+    let after = js_substring(text, to, text.len());
+    let trailing = before.len() - before.trim_end_matches(is_blank).len();
+    let leading = after.len() - after.trim_start_matches(is_blank).len();
+    (from.saturating_sub(trailing), to + leading)
 }

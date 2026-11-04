@@ -4,7 +4,9 @@
 use std::collections::BTreeMap;
 
 /// Immutable copy of the environment variables FrankMD cares about.
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
+///
+/// `Debug` prints variable names only (values may be API keys).
+#[derive(Clone, Default, PartialEq, Eq)]
 pub struct EnvSnapshot(BTreeMap<String, String>);
 
 impl EnvSnapshot {
@@ -39,6 +41,35 @@ impl EnvSnapshot {
     /// empty string counts as set) use `XDG_PICTURES_DIR` verbatim if set,
     /// else `$HOME/Pictures` when `dir_exists` says it is a directory.
     pub fn with_images_path_default(&self, dir_exists: impl Fn(&std::path::Path) -> bool) -> Self {
-        todo!()
+        if self.raw("IMAGES_PATH").is_some() {
+            return self.clone();
+        }
+        let fallback = match self.raw("XDG_PICTURES_DIR") {
+            Some(xdg) => Some(xdg.to_owned()),
+            None => self
+                .home()
+                .map(|home| home.join("Pictures"))
+                .filter(|p| dir_exists(p))
+                .map(|p| p.to_string_lossy().into_owned()),
+        };
+        let mut out = self.clone();
+        if let Some(path) = fallback {
+            out.0.insert("IMAGES_PATH".to_owned(), path);
+        }
+        out
+    }
+
+    /// `~` as Ruby `File.expand_path` sees it: `$HOME`, else the OS home.
+    fn home(&self) -> Option<std::path::PathBuf> {
+        match self.raw("HOME") {
+            Some(home) if !home.is_empty() => Some(home.into()),
+            _ => etcetera::home_dir().ok(),
+        }
+    }
+}
+
+impl std::fmt::Debug for EnvSnapshot {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_tuple("EnvSnapshot").field(&self.0.keys().collect::<Vec<_>>()).finish()
     }
 }

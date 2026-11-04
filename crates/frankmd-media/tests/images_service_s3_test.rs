@@ -78,11 +78,12 @@ async fn saved_s3_provider_handles_multipart_and_base64_images_without_request_f
     let f = Fixture::new().await;
     s3_put_ok(&f.mock, "test-bucket").await;
     let env = f.env();
-    let url = images::upload_file(&env, Some(Upload::new("image.png", "image")), None, &Param::Nil, None)
+    // security: real PNG bytes (placeholder text is rejected by content sniffing).
+    let url = images::upload_file(&env, Some(Upload::new("image.png", PNG_1X1)), None, &Param::Nil, None)
         .await
         .unwrap();
     assert_match("https://test-bucket", &url);
-    let url = images::upload_base64_data(&env, &b64(b"image"), Some("image/png"), None, &Param::Nil, None)
+    let url = images::upload_base64_data(&env, &b64(&PNG_1X1), Some("image/png"), None, &Param::Nil, None)
         .await
         .unwrap();
     assert_match("https://test-bucket", &url);
@@ -115,7 +116,8 @@ async fn unavailable_s3_rejects_every_new_image_without_local_fallback() {
 async fn s3_upload_failures_never_write_a_local_image() {
     let f = Fixture::new().await;
     s3_put_error(&f.mock, "InternalError", 500).await;
-    let err = images::upload_base64_data(&f.env(), "aW1hZ2U=", Some("image/png"), None, &Param::Nil, None)
+    // security: real PNG bytes so the request reaches S3.
+    let err = images::upload_base64_data(&f.env(), &b64(&PNG_1X1), Some("image/png"), None, &Param::Nil, None)
         .await
         .unwrap_err();
     assert!(matches!(err, MediaError::S3(_)), "service error must reach the caller, got {err:?}");
@@ -156,7 +158,8 @@ async fn upload_to_s3_fails_for_non_existent_image() {
 #[tokio::test]
 async fn upload_to_s3_calls_s3_with_correct_parameters() {
     let f = Fixture::new().await;
-    f.image("upload_test.jpg", b"image content");
+    let jpeg = sample_media(".jpg"); // security: real JPEG bytes
+    f.image("upload_test.jpg", &jpeg);
     s3_put_ok(&f.mock, "test-bucket").await;
     let url = images::upload_to_s3(&f.env(), "upload_test.jpg", None, None).await.unwrap();
     assert_match(&format!("{AWS_URL}upload_test-[0-9a-f]{{16}}\\.jpg$"), &url);
@@ -164,14 +167,14 @@ async fn upload_to_s3_calls_s3_with_correct_parameters() {
     assert_eq!(puts.len(), 1);
     assert_eq!(header(&puts[0], "if-none-match").as_deref(), Some("*"));
     assert_eq!(header(&puts[0], "content-type").as_deref(), Some("image/jpeg"));
-    assert_eq!(puts[0].body, b"image content");
+    assert_eq!(puts[0].body, jpeg);
 }
 
 // port: test/services/images_service_test.rb:627 "upload_to_s3 sanitizes special characters in the object key"
 #[tokio::test]
 async fn upload_to_s3_sanitizes_special_characters_in_the_object_key() {
     let f = Fixture::new().await;
-    f.image("my photo (1).jpg", b"image content");
+    f.image("my photo (1).jpg", &sample_media(".jpg")); // security: real JPEG bytes
     s3_put_ok(&f.mock, "test-bucket").await;
     let url = images::upload_to_s3(&f.env(), "my photo (1).jpg", None, None).await.unwrap();
     assert_match(r"my_photo__1_-[0-9a-f]{16}\.jpg", &url);
@@ -182,7 +185,7 @@ async fn upload_to_s3_sanitizes_special_characters_in_the_object_key() {
 #[tokio::test]
 async fn upload_to_s3_handles_acl_not_supported_error_gracefully() {
     let f = Fixture::new().await;
-    f.image("acl_test.jpg", b"image data");
+    f.image("acl_test.jpg", &sample_media(".jpg")); // security: real JPEG bytes
     s3_put_error(&f.mock, "AccessControlListNotSupported", 400).await;
     let url = images::upload_to_s3(&f.env(), "acl_test.jpg", None, None).await.unwrap();
     assert!(!url.is_empty());
@@ -229,20 +232,21 @@ async fn fetch_external_image_stops_when_its_overall_deadline_expires() {
 #[tokio::test]
 async fn download_and_upload_to_s3_downloads_image_and_uploads_to_s3() {
     let f = Fixture::new().await;
-    external(&f.mock, "/photo.jpg", b"fake image content", "image/jpeg").await;
+    let jpeg = sample_media(".jpg"); // security: real JPEG bytes
+    external(&f.mock, "/photo.jpg", &jpeg, "image/jpeg").await;
     s3_put_ok(&f.mock, "test-bucket").await;
     let url = images::download_and_upload_to_s3(&f.env(), "http://example.com/photo.jpg", None, None).await.unwrap();
     assert_match(&format!("{AWS_URL}photo-[0-9a-f]{{16}}\\.jpg$"), &url);
     let puts = puts(&f.mock).await;
     assert_eq!(puts.len(), 1);
-    assert_eq!(puts[0].body, b"fake image content");
+    assert_eq!(puts[0].body, jpeg);
 }
 
 // port: test/services/images_service_test.rb:715 "download_and_upload_to_s3 generates filename when URL has no extension"
 #[tokio::test]
 async fn download_and_upload_to_s3_generates_filename_when_url_has_no_extension() {
     let f = Fixture::new().await;
-    external(&f.mock, "/images/", b"fake image content", "image/png").await;
+    external(&f.mock, "/images/", &PNG_1X1, "image/png").await; // security: real PNG bytes
     s3_put_ok(&f.mock, "test-bucket").await;
     let url = images::download_and_upload_to_s3(&f.env(), "http://example.com/images/", None, None).await.unwrap();
     assert_match(r"\.png$", &url);
@@ -281,7 +285,7 @@ async fn download_and_upload_to_s3_follows_a_redirect_re_validating_the_target()
         .respond_with(ResponseTemplate::new(302).insert_header("Location", "http://cdn.example.com/real.jpg"))
         .mount(&f.mock)
         .await;
-    external(&f.mock, "/real.jpg", b"fake image content", "image/jpeg").await;
+    external(&f.mock, "/real.jpg", &sample_media(".jpg"), "image/jpeg").await; // security: real JPEG bytes
     s3_put_ok(&f.mock, "test-bucket").await;
     let resolver = default_resolver();
     let env = env_with(MemorySettings::new(f.config()), pinned_ctx(), Some(&f.mock), resolver, Limits::EXTERNAL_IMAGE);

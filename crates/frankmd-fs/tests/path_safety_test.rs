@@ -1,5 +1,10 @@
 //! Port of `test/services/path_safety_test.rb`.
-#![allow(clippy::disallowed_methods, clippy::unwrap_used, missing_docs, unreachable_pub)]
+#![allow(
+    clippy::disallowed_methods,
+    clippy::unwrap_used,
+    missing_docs,
+    unreachable_pub
+)]
 
 use frankmd_core::path::lexical_contain;
 use frankmd_fs::path_safety::contain;
@@ -12,7 +17,10 @@ const BASE: &str = "/data/notes";
 fn lex(path: Option<&str>) -> Option<PathBuf> {
     let fs_result = contain(Path::new(BASE), path);
     let core_result = lexical_contain(BASE, path).map(PathBuf::from);
-    assert_eq!(fs_result, core_result, "fs::contain and core::lexical_contain disagree for {path:?}");
+    assert_eq!(
+        fs_result, core_result,
+        "fs::contain and core::lexical_contain disagree for {path:?}"
+    );
     fs_result
 }
 
@@ -30,13 +38,19 @@ fn dirs() -> (tempfile::TempDir, PathBuf, PathBuf) {
 // port: test/services/path_safety_test.rb:8 "contains a plain path inside base"
 #[test]
 fn contains_a_plain_path_inside_base() {
-    assert_eq!(lex(Some("note.md")), Some(PathBuf::from("/data/notes/note.md")));
+    assert_eq!(
+        lex(Some("note.md")),
+        Some(PathBuf::from("/data/notes/note.md"))
+    );
 }
 
 // port: test/services/path_safety_test.rb:12 "contains a nested path inside base"
 #[test]
 fn contains_a_nested_path_inside_base() {
-    assert_eq!(lex(Some("a/b.md")), Some(PathBuf::from("/data/notes/a/b.md")));
+    assert_eq!(
+        lex(Some("a/b.md")),
+        Some(PathBuf::from("/data/notes/a/b.md"))
+    );
 }
 
 // port: test/services/path_safety_test.rb:16 "rejects ../ traversal"
@@ -61,7 +75,10 @@ fn rejects_a_sibling_directory_that_shares_the_name_prefix() {
 // port: test/services/path_safety_test.rb:31 "allows a filename that legitimately contains dot-dot"
 #[test]
 fn allows_a_filename_that_legitimately_contains_dot_dot() {
-    assert_eq!(lex(Some("notes..v2.md")), Some(PathBuf::from("/data/notes/notes..v2.md")));
+    assert_eq!(
+        lex(Some("notes..v2.md")),
+        Some(PathBuf::from("/data/notes/notes..v2.md"))
+    );
 }
 
 // port: test/services/path_safety_test.rb:36 "returns nil for a nil path"

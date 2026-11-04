@@ -1,12 +1,11 @@
 //! Injectable time and randomness (golden fixtures pin both).
+//!
+//! The clock is the workspace-wide [`frankmd_core::clock::Clock`]; it is
+//! re-exported here so media callers keep one import path.
 
 use std::sync::Arc;
 
-/// Wall clock in the zone the original used (process local / Rails zone).
-pub trait Clock: Send + Sync + std::fmt::Debug {
-    /// Current time.
-    fn now(&self) -> jiff::Zoned;
-}
+pub use frankmd_core::clock::{Clock, FakeClock, SystemClock};
 
 /// `SecureRandom.hex(n)` equivalent.
 pub trait RandomHex: Send + Sync + std::fmt::Debug {
@@ -14,33 +13,32 @@ pub trait RandomHex: Send + Sync + std::fmt::Debug {
     fn hex(&self, n_bytes: usize) -> String;
 }
 
-/// System clock (local zone).
-#[derive(Debug, Clone, Copy, Default)]
-pub struct SystemClock;
-
-impl Clock for SystemClock {
-    fn now(&self) -> jiff::Zoned {
-        jiff::Zoned::now()
-    }
-}
-
-/// OS randomness.
+/// OS randomness (`getrandom(2)`).
 #[derive(Debug, Clone, Copy, Default)]
 pub struct OsRandom;
 
 impl RandomHex for OsRandom {
     fn hex(&self, n_bytes: usize) -> String {
-        todo!()
-    }
-}
-
-/// Fixed clock (tests).
-#[derive(Debug, Clone)]
-pub struct FixedClock(pub jiff::Zoned);
-
-impl Clock for FixedClock {
-    fn now(&self) -> jiff::Zoned {
-        self.0.clone()
+        let mut buf = vec![0u8; n_bytes];
+        let mut filled = 0;
+        while filled < n_bytes {
+            match rustix::rand::getrandom(&mut buf[filled..], rustix::rand::GetRandomFlags::empty()) {
+                Ok(0) | Err(_) => break,
+                Ok(read) => filled += read,
+            }
+        }
+        if filled < n_bytes {
+            // getrandom(2) unavailable: names only need to be unlikely to collide
+            // (every write is no-clobber anyway), so mix time and pid.
+            let seed = std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map_or(0, |d| d.as_nanos())
+                ^ u128::from(std::process::id());
+            for (i, b) in buf.iter_mut().enumerate().skip(filled) {
+                *b = (seed >> ((i % 16) * 8)) as u8 ^ (i as u8).wrapping_mul(151);
+            }
+        }
+        buf.iter().map(|b| format!("{b:02x}")).collect()
     }
 }
 
@@ -72,6 +70,6 @@ impl MediaCtx {
 
     /// Golden pinning: fixed time (e.g. `2026-01-01T12:00:00Z` in UTC) + [`PinnedHex`].
     pub fn pinned(now: jiff::Zoned) -> Self {
-        Self { clock: Arc::new(FixedClock(now)), random: Arc::new(PinnedHex) }
+        Self { clock: Arc::new(FakeClock::new(now)), random: Arc::new(PinnedHex) }
     }
 }

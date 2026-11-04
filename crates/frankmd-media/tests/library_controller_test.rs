@@ -12,7 +12,7 @@ use frankmd_media::MediaKind;
 use frankmd_media::library::{Library, LibraryError, UsageResponse};
 use frankmd_media::usage::MediaUsage;
 use library::{Notes, chmod, config, env, is_root, list_objects_xml, s3_config};
-use wiremock::matchers::{header, method, path, query_param};
+use wiremock::matchers::{header, method, path, path_regex, query_param};
 use wiremock::{Mock, MockServer, ResponseTemplate};
 
 fn counts(r: UsageResponse) -> BTreeMap<String, usize> {
@@ -183,7 +183,7 @@ async fn destroy_reports_filesystem_rejection() {
 async fn s3_provider_routes_list_delete_and_rename_through_s3_library() {
     let server = MockServer::start().await;
     Mock::given(method("GET"))
-        .and(path("/bucket"))
+        .and(path_regex("^/bucket/?$")) // mechanical: aws-sdk-s3 (Rust) sends `/bucket/` for path-style ListObjectsV2
         .and(query_param("prefix", "frankmd/"))
         .respond_with(ResponseTemplate::new(200).set_body_string(list_objects_xml("bucket", &[], None)))
         .expect(1)

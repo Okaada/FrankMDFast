@@ -20,9 +20,31 @@
 //!
 //! (ruby_llm 2.1.1 used OpenAI's Responses API; chat completions is an
 //! intentional, invisible-to-the-user divergence — see docs/testing/port-net-ai.md.)
-#![allow(unused_variables, dead_code)] // skeleton
+//!
+//! Modules: `service` (AiService), `chat` (wire formats), `image` (OpenRouter
+//! image generation), `controller` (request validation), `http` (JSON POST +
+//! ruby_llm retry policy). HTTP goes straight through `frankmd-net`'s trusted
+//! client rather than `genai`: the four JSON shapes are small, the tests pin
+//! them exactly, and genai has no OpenRouter image-modality support.
+//!
+//! **Security:** requests only ever carry the prompt/note text and the selected
+//! provider's credential (as a sensitive header). The grammar check accepts
+//! only markdown note paths ([`is_ai_note_path`]) — never `.fed` or dotfiles.
 
-use frankmd_config::{AiProviderId, ResolvedConfig};
+mod chat;
+mod controller;
+mod http;
+mod image;
+mod service;
+
+pub use controller::{
+    AiRequestError, GrammarResponse, NoteSource, fix_grammar_note, generate_image_request,
+    is_ai_note_path,
+};
+pub use image::{extract_image_from_response, parse_openrouter_response};
+pub use service::AiService;
+
+use frankmd_config::AiProviderId;
 
 /// **[COMPAT]** `AiService::GRAMMAR_PROMPT`, verbatim (heredoc, trailing newline).
 pub const GRAMMAR_PROMPT: &str = "You are a grammar and spelling corrector. Fix ONLY:
@@ -110,7 +132,7 @@ pub trait ReferenceImages: Send + Sync {
 pub struct NoReferenceImages;
 
 impl ReferenceImages for NoReferenceImages {
-    fn find(&self, rel_path: &str) -> Option<ReferenceImage> {
+    fn find(&self, _rel_path: &str) -> Option<ReferenceImage> {
         None
     }
 }
@@ -184,153 +206,4 @@ impl Default for Endpoints {
             openrouter: "https://openrouter.ai".into(),
         }
     }
-}
-
-/// `AiService` bound to one config snapshot (the original rebuilt `Config.new`
-/// on every call; callers pass the current `ResolvedConfig`).
-#[derive(Debug, Clone)]
-pub struct AiService {
-    config: std::sync::Arc<ResolvedConfig>,
-    http: frankmd_net::TrustedClient,
-    endpoints: Endpoints,
-}
-
-impl AiService {
-    /// Production endpoints.
-    pub fn new(config: std::sync::Arc<ResolvedConfig>, http: frankmd_net::TrustedClient) -> Self {
-        Self::with_endpoints(config, http, Endpoints::default())
-    }
-
-    /// Injected endpoints (tests point them at wiremock).
-    pub fn with_endpoints(
-        config: std::sync::Arc<ResolvedConfig>,
-        http: frankmd_net::TrustedClient,
-        endpoints: Endpoints,
-    ) -> Self {
-        Self { config, http, endpoints }
-    }
-
-    /// `enabled?` (`feature_available?("ai")`).
-    pub fn enabled(&self) -> bool {
-        todo!()
-    }
-
-    /// `available_providers`.
-    pub fn available_providers(&self) -> Vec<AiProviderId> {
-        todo!()
-    }
-
-    /// `current_provider`.
-    pub fn current_provider(&self) -> Option<AiProviderId> {
-        todo!()
-    }
-
-    /// `current_model`.
-    pub fn current_model(&self) -> Option<String> {
-        todo!()
-    }
-
-    /// `provider_info`.
-    pub fn provider_info(&self) -> ProviderInfo {
-        todo!()
-    }
-
-    /// `fix_grammar(text)`: guards (not configured → blank text → no provider),
-    /// then one chat request with [`GRAMMAR_PROMPT`] as the system instruction
-    /// and `text` as the single user message. Logs carry provider/model only
-    /// (never keys or content).
-    pub async fn fix_grammar(&self, text: Option<&str>) -> Result<GrammarFix, AiError> {
-        todo!("backend.md §9.1")
-    }
-
-    /// `image_generation_enabled?`.
-    pub fn image_generation_enabled(&self) -> bool {
-        todo!()
-    }
-
-    /// `image_generation_model`.
-    pub fn image_generation_model(&self) -> String {
-        todo!()
-    }
-
-    /// `image_generation_info`.
-    pub fn image_generation_info(&self) -> ImageGenerationInfo {
-        todo!()
-    }
-
-    /// `generate_image(prompt, reference_image_path:)`: guards (not configured →
-    /// blank prompt), optional reference lookup via `refs` (missing → text-only),
-    /// OpenRouter request, then [`extract_image_from_response`].
-    pub async fn generate_image(
-        &self,
-        prompt: Option<&str>,
-        reference_image_path: Option<&str>,
-        refs: &dyn ReferenceImages,
-    ) -> Result<GeneratedImage, AiError> {
-        todo!("backend.md §9.2")
-    }
-}
-
-/// **[COMPAT]** `AiService.extract_image_from_response`: first attachment →
-/// base64 + mime (default `image/png`) + model; none → [`AiError::NoImageData`].
-pub fn extract_image_from_response(response: &ChatResponse, model: &str) -> Result<GeneratedImage, AiError> {
-    todo!()
-}
-
-/// Parse an OpenRouter chat-completions body into a [`ChatResponse`]
-/// (`choices[0].message.content` + `message.images[].image_url.url` data URIs).
-pub fn parse_openrouter_response(body: &[u8]) -> Result<ChatResponse, AiError> {
-    todo!()
-}
-
-/// `POST /ai/fix_grammar` / `POST /ai/generate_image` request errors that the
-/// controller raised *before* calling the service. Each carries the i18n key.
-#[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
-pub enum AiRequestError {
-    /// 400 (`errors.no_file_provided`, `errors.note_is_empty`, `errors.no_prompt_provided`).
-    #[error("bad request: {0}")]
-    BadRequest(&'static str),
-    /// 404 (`errors.note_not_found`).
-    #[error("not found: {0}")]
-    NotFound(&'static str),
-    /// 422: the service's error.
-    #[error(transparent)]
-    Service(#[from] AiError),
-}
-
-/// Reads a note's current bytes from disk (the original fixed the file *on
-/// disk*, not the editor buffer). `None` = not found.
-pub trait NoteSource: Send + Sync {
-    /// Read `path` (vault-relative).
-    fn read_note(&self, path: &str) -> Option<String>;
-}
-
-/// `POST /ai/fix_grammar` response body.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct GrammarResponse {
-    /// The note text sent.
-    pub original: String,
-    /// The fix.
-    pub fix: GrammarFix,
-}
-
-/// **[COMPAT]** `AiController#fix_grammar`: blank path → 400, missing note →
-/// 404, blank content → 400, then [`AiService::fix_grammar`] (errors → 422).
-/// All validation happens before any network call.
-pub async fn fix_grammar_note(
-    service: &AiService,
-    notes: &dyn NoteSource,
-    path: &str,
-) -> Result<GrammarResponse, AiRequestError> {
-    todo!()
-}
-
-/// **[COMPAT]** `AiController#generate_image`: blank prompt → 400, then the service.
-pub async fn generate_image_request(
-    service: &AiService,
-    prompt: &str,
-    reference_image_path: Option<&str>,
-    refs: &dyn ReferenceImages,
-) -> Result<GeneratedImage, AiRequestError> {
-    todo!()
 }

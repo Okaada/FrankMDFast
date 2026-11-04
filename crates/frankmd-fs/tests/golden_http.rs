@@ -6,12 +6,19 @@
 //! `Config.new` are dropped from both `tree_after`s (frankmd-config's
 //! contract); tree-partial HTML is compared as its `data-path` sequence;
 //! `/notes/search` requests are skipped (frankmd-search).
-#![allow(missing_docs, unreachable_pub, clippy::unwrap_used, clippy::disallowed_methods)]
+#![allow(
+    missing_docs,
+    unreachable_pub,
+    clippy::unwrap_used,
+    clippy::disallowed_methods
+)]
 
 mod common;
 
 use common::http::{HttpResponse, dispatch};
-use common::{Sandbox, check_eq, expected_tree, fs_error_json, spec_orders, without_config_side_effects};
+use common::{
+    Sandbox, check_eq, expected_tree, fs_error_json, spec_orders, without_config_side_effects,
+};
 use frankmd_fs::{NotesService, RecentStore};
 use frankmd_testkit::serde_json::{Value, json};
 use frankmd_testkit::{Case, assert_cases, golden};
@@ -70,15 +77,32 @@ fn run_other(sb: &Sandbox, op: &Value) -> Value {
     }
 }
 
-fn check_response(sb: &Sandbox, i: usize, resp: &HttpResponse, expected: &Value) -> Result<(), String> {
+fn check_response(
+    sb: &Sandbox,
+    i: usize,
+    resp: &HttpResponse,
+    expected: &Value,
+) -> Result<(), String> {
     if let Some(Value::String(html)) = expected.get("body")
         && (html.contains("data-path=") || html.starts_with("<div"))
     {
-        check_eq(&format!("op {i} status"), &json!(resp.status), &expected["status"])?;
+        check_eq(
+            &format!("op {i} status"),
+            &json!(resp.status),
+            &expected["status"],
+        )?;
         let want = html_tree_paths(html);
-        return check_eq(&format!("op {i} tree data-paths"), &json!(resp.tree_paths()), &json!(want));
+        return check_eq(
+            &format!("op {i} tree data-paths"),
+            &json!(resp.tree_paths()),
+            &json!(want),
+        );
     }
-    check_eq(&format!("op {i}"), &sb.norm_value(&resp.to_fixture()), expected)
+    check_eq(
+        &format!("op {i}"),
+        &sb.norm_value(&resp.to_fixture()),
+        expected,
+    )
 }
 
 fn run_fixture(fixture: &str) {
@@ -89,21 +113,42 @@ fn run_fixture(fixture: &str) {
         .iter()
         .filter(|c| {
             http_ops(c).is_some_and(|ops| {
-                !ops.iter().any(|o| o["url"].as_str().is_some_and(|u| u.starts_with("/notes/search")))
+                !ops.iter().any(|o| {
+                    o["url"]
+                        .as_str()
+                        .is_some_and(|u| u.starts_with("/notes/search"))
+                })
             })
         })
         .collect();
     assert_cases(fixture, cases, |case| {
         let ops = http_ops(case).unwrap();
-        let sb = Sandbox::from_specs(&case.input["tree"], &case.input["outside"], orders.get(&case.name));
+        let sb = Sandbox::from_specs(
+            &case.input["tree"],
+            &case.input["outside"],
+            orders.get(&case.name),
+        );
         let expected_results: Vec<Value> = match case.expected.get("results") {
             Some(Value::Array(a)) => a.clone(),
-            _ => vec![case.expected.clone()],
+            // Single-request cases: the response sits next to `tree_after`,
+            // which is compared separately below.
+            _ => {
+                let mut single = case.expected.clone();
+                if let Some(o) = single.as_object_mut() {
+                    o.remove("tree_after");
+                }
+                vec![single]
+            }
         };
         let mut errs = Vec::new();
         for (i, (op, want)) in ops.iter().zip(&expected_results).enumerate() {
             let res = if op["op"] == "http" {
-                let resp = dispatch(&sb, op["method"].as_str().unwrap(), op["url"].as_str().unwrap(), &op["params"]);
+                let resp = dispatch(
+                    &sb,
+                    op["method"].as_str().unwrap(),
+                    op["url"].as_str().unwrap(),
+                    &op["params"],
+                );
                 check_response(&sb, i, &resp, want)
             } else {
                 check_eq(&format!("op {i} ({})", op["op"]), &run_other(&sb, op), want)
@@ -116,10 +161,16 @@ fn run_fixture(fixture: &str) {
             let actual = without_config_side_effects(sb.snapshot());
             let want = without_config_side_effects(expected_tree(t));
             if actual != want {
-                errs.push(format!("tree_after:\n    expected: {want:?}\n    actual:   {actual:?}"));
+                errs.push(format!(
+                    "tree_after:\n    expected: {want:?}\n    actual:   {actual:?}"
+                ));
             }
         }
-        if errs.is_empty() { Ok(()) } else { Err(errs.join("\n  ")) }
+        if errs.is_empty() {
+            Ok(())
+        } else {
+            Err(errs.join("\n  "))
+        }
     });
 }
 

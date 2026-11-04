@@ -12,8 +12,9 @@
 //!   [`path::RelPath`] before anything else touches them (HP-008).
 //! - Async results carry the [`Generation`] they were computed from so stale
 //!   results can be dropped (HP-003).
-#![allow(unused_variables, dead_code)] // skeleton: bodies are filled by the conformance step
 
+
+pub mod clock;
 pub mod emoji;
 pub mod error;
 pub mod guard;
@@ -30,6 +31,7 @@ pub mod tree;
 pub mod tree_view;
 pub mod wikilink;
 
+pub use clock::{Clock, FakeClock, SystemClock};
 pub use error::CoreError;
 pub use ids::{DocId, Generation, Revision};
 pub use path::RelPath;

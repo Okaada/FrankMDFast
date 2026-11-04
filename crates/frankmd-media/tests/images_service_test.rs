@@ -255,6 +255,21 @@ fn delete_removes_an_existing_image_and_returns_true() {
     assert!(!p.exists());
 }
 
+// security: deleting from the user's picture folder must not leave app files
+// (lock files) behind — only the deleted image disappears.
+#[test]
+fn delete_leaves_no_app_files_in_images_path() {
+    let f = Fixture::new();
+    f.image("gone.jpg", b"x", 0);
+    f.image("keep.jpg", b"x", 0);
+    let root = f.config().images_path.unwrap();
+    assert!(images::delete(&f.config(), "gone.jpg"));
+    let mut left: Vec<String> =
+        std::fs::read_dir(&root).unwrap().map(|e| e.unwrap().file_name().to_string_lossy().into_owned()).collect();
+    left.sort();
+    assert_eq!(left, vec!["keep.jpg".to_owned()]);
+}
+
 // port: test/services/images_service_test.rb:197 "delete works with subdirectories"
 #[test]
 fn delete_works_with_subdirectories() {
@@ -415,8 +430,9 @@ fn local_image_saves_use_unique_filenames_for_same_second_uploads() {
     let f = Fixture::new();
     let mut env = f.env();
     env.ctx.random = std::sync::Arc::new(frankmd_media::ctx::OsRandom); // fixed clock, real randomness
-    let first = images::save_to_notes_directory(&env, b"one", "photo.png", None).unwrap();
-    let second = images::save_to_notes_directory(&env, b"two", "photo.png", None).unwrap();
+    // security: real PNG bytes (placeholder text is rejected by content sniffing).
+    let first = images::save_to_notes_directory(&env, &PNG_1X1, "photo.png", None).unwrap();
+    let second = images::save_to_notes_directory(&env, &PNG_1X1, "photo.png", None).unwrap();
     assert_ne!(first, second);
 }
 

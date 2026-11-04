@@ -10,6 +10,11 @@ publish.workspace = true
 [dependencies]
 frankmd-core.workspace = true
 thiserror.workspace = true
+notify.workspace = true
+notify-debouncer-full.workspace = true
 
 [lints]
 workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true

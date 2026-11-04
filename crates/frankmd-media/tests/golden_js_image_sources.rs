@@ -222,7 +222,11 @@ fn run_scenario(c: &Case) -> Result<(), String> {
                 }
                 (Source::Folder(s), "getImage") => s.get_image(args[0].as_u64().unwrap_or(0) as usize).map_or(Value::Null, displayed_json),
                 (Source::Folder(s), "upload") => {
-                    let f = picked_file(&args[0]);
+                    // Harness fix: the generator builds upload Files as
+                    // `"x".repeat(size || 3)` (tools/golden/js/image_sources.mjs:68),
+                    // unlike the 1024-byte default of folder-listing fakes.
+                    let mut f = picked_file(&args[0]);
+                    f.size = args[0].get("size").and_then(Value::as_u64).unwrap_or(3);
                     outcome_json(s.upload(&mut cx, &f, &js_arg(args.get(1)), str_arg(&args, 2).as_deref()))
                 }
                 (Source::Folder(s), "reset") => { s.reset(); Value::Null }

@@ -26,9 +26,29 @@ fn run_case(case: &Case) -> Result<(), String> {
     let target = input["target"].as_str().unwrap();
     let ctx = input["options"]["context_lines"].as_u64().unwrap_or(3) as usize;
     match (svc.backlinks(target, ctx), &case.expected) {
-        (Ok(mut hits), exp @ Value::Array(_)) => {
-            hits.sort_by(|a, b| (a.path.as_str(), a.line_number).cmp(&(b.path.as_str(), b.line_number)));
-            common::check_eq("backlinks", &serde_json::to_value(&hits).unwrap(), exp)
+        (Ok(mut hits), Value::Array(exp)) => {
+            hits.sort_by(|a, b| {
+                (a.path.as_str(), a.line_number).cmp(&(b.path.as_str(), b.line_number))
+            });
+            // security: symlink escaping the vault is not followed (original leaked outside files).
+            // Expected hits whose file resolves outside the vault are dropped.
+            let exp: Vec<Value> = exp
+                .iter()
+                .filter(|hit| {
+                    let real = sb
+                        .root
+                        .join(hit["path"].as_str().unwrap())
+                        .canonicalize()
+                        .unwrap();
+                    real.starts_with(&sb.root)
+                })
+                .cloned()
+                .collect();
+            common::check_eq(
+                "backlinks",
+                &serde_json::to_value(&hits).unwrap(),
+                &Value::Array(exp),
+            )
         }
         (Err(e), exp) if exp.get("error").is_some() => {
             if exp["message"] == "invalid byte sequence in UTF-8" {
@@ -37,12 +57,19 @@ fn run_case(case: &Case) -> Result<(), String> {
             common::check_eq("error", &common::fs_error_json(&e), exp)
         }
         (Ok(hits), exp) => Err(format!("expected {exp}, got {} results", hits.len())),
-        (Err(e), exp) => Err(format!("expected {exp}, got error {e} ({})", e.compat_class())),
+        (Err(e), exp) => Err(format!(
+            "expected {exp}, got error {e} ({})",
+            e.compat_class()
+        )),
     }
 }
 
 #[test]
 fn golden_backlinks() {
     let g = golden("backlinks");
-    assert_cases("backlinks", g.cases_for("BacklinksService#find_backlinks"), run_case);
+    assert_cases(
+        "backlinks",
+        g.cases_for("BacklinksService#find_backlinks"),
+        run_case,
+    );
 }

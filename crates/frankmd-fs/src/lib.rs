@@ -17,7 +17,20 @@
 //! - **Tolerant reads**: vanished files and non-UTF-8 bytes are reported, not
 //!   fatal (HP-028).
 #![allow(clippy::disallowed_methods)] // this crate is the sanctioned writer
-#![allow(unused_variables, dead_code)] // skeleton
+
+/// Hit a test fault point (`frankmd_fs::fault`); a no-op `Ok(())` unless the
+/// `fault-injection` feature is on. The point expression is only evaluated
+/// with the feature.
+macro_rules! fault_check {
+    ($point:expr) => {{
+        #[cfg(feature = "fault-injection")]
+        let result = crate::fault::check(&$point);
+        #[cfg(not(feature = "fault-injection"))]
+        let result: std::io::Result<()> = Ok(());
+        result
+    }};
+}
+pub(crate) use fault_check;
 
 pub mod atomic;
 pub mod error;

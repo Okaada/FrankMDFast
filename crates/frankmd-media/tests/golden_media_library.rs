@@ -54,6 +54,9 @@ fn eq(actual: &Value, expected: &Value) -> Result<(), String> {
 fn without_config_lock(v: &Value) -> Value {
     let mut m: Map<String, Value> = v.as_object().cloned().unwrap_or_default();
     m.remove(".frankmd-config.lock");
+    // Mechanical: deletion goes through frankmd-fs, which takes the shared
+    // compat lock `.frankmd-filesystem.lock` (Rails' bare `File.delete` did not).
+    m.remove(".frankmd-filesystem.lock");
     m.remove(".fed");
     Value::Object(m)
 }
