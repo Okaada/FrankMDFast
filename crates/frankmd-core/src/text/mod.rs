@@ -87,13 +87,19 @@ pub(crate) fn first_newline_from(text: &str, from: usize) -> Option<usize> {
     text.as_bytes().get(from..)?.iter().position(|&b| b == b'\n').map(|i| i + from)
 }
 
+pub mod aligned_table;
 pub mod clipboard;
 pub mod cursor;
 pub mod diff;
+pub mod edit;
 pub mod editor;
+pub mod format;
 pub mod indent;
 pub mod insertion;
+pub mod link_completion;
 pub mod markdown;
+pub mod pending;
+pub mod slash;
 pub mod stats;
 pub mod table;
 pub mod task;

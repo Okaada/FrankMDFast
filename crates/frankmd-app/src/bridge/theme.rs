@@ -7,7 +7,7 @@
 
 use frankmd_theme::{Mode, Rgb, UiTokens};
 use gpui_kit::component::theme::{Theme, ThemeMode};
-use gpui_kit::{App, Hsla, px, rgb};
+use gpui_kit::{App, Global, Hsla, SharedString, px, rgb};
 
 /// Hyprland's default rounding is 0; without Hyprland the spec uses 6 (§7.4).
 pub(crate) const DEFAULT_RADIUS: f32 = 6.0;
@@ -29,6 +29,20 @@ fn mix(tokens: &UiTokens, a: &str, b: &str, t: f32) -> Hsla {
     hsla(a.mix(b, t))
 }
 
+/// System font families from fontconfig, resolved once at startup.
+///
+/// Kept as a global because `Theme::change` reloads the base theme (and its
+/// fonts) whenever the light/dark mode flips.
+#[derive(Debug, Clone, Default)]
+pub(crate) struct SystemFonts {
+    /// `sans-serif` family for the UI.
+    pub(crate) ui: Option<SharedString>,
+    /// `monospace` family for code and paths.
+    pub(crate) mono: Option<SharedString>,
+}
+
+impl Global for SystemFonts {}
+
 /// Apply `tokens` and corner radius `radius` (px) to the global theme.
 pub(crate) fn apply(tokens: &UiTokens, radius: f32, cx: &mut App) {
     let mode = match tokens.mode {
@@ -38,8 +52,15 @@ pub(crate) fn apply(tokens: &UiTokens, radius: f32, cx: &mut App) {
     if Theme::global(cx).mode != mode {
         Theme::change(mode, None, cx);
     }
+    let fonts = cx.try_global::<SystemFonts>().cloned().unwrap_or_default();
     let r_sm = radius.min(4.0);
     Theme::update(cx, |theme| {
+        if let Some(font) = fonts.ui {
+            theme.font_family = font;
+        }
+        if let Some(font) = fonts.mono {
+            theme.mono_font_family = font;
+        }
         let c = &mut theme.colors;
         let base = token(tokens, "bg-primary");
         let recessed = token(tokens, "bg-secondary");

@@ -8,6 +8,7 @@
 pub mod assets;
 pub mod bridge;
 pub mod cli;
+pub mod dialogs;
 pub mod editor;
 pub mod preview;
 pub mod ui;
@@ -86,11 +87,18 @@ pub fn run() -> anyhow::Result<()> {
     }
 
     let locale = cli.locale.clone();
+    // Resolved before the event loop starts: fc-match is a process spawn.
+    let (ui_font, mono_font) = ui::fonts::resolve_system_fonts();
     gpui_kit::application()
         .with_assets(assets::FrankAssets)
         .run(move |cx| {
             gpui_kit::init(cx);
+            cx.set_global(bridge::theme::SystemFonts {
+                ui: ui_font.map(Into::into),
+                mono: mono_font.map(Into::into),
+            });
             ui::actions::install_keymap(cx);
+            dialogs::media::init(cx);
             match frankmd_net::NetRuntime::new() {
                 Ok(rt) => cx.set_global(bridge::tokio::NetRuntimeGlobal(Arc::new(rt))),
                 Err(err) => tracing::error!(%err, "network runtime unavailable"),
@@ -164,6 +172,8 @@ impl LaunchContext {
                 .map(frankmd_theme::OmarchyPaths::from_home),
             watch: true,
             locale: self.locale.clone(),
+            trash_dir: None,
+            global_config: Some(frankmd_config::global::global_config_path(&self.dirs)),
         };
         let options = WindowOptions {
             app_id: Some(APP_ID.into()),

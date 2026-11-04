@@ -40,6 +40,16 @@ pub enum Command {
         /// How the note is seeded.
         template: NoteTemplate,
     },
+    /// Create a Hugo post with an explicit slug (the New Note dialog lets the
+    /// user edit it: CJK titles slugify to empty, ui-spec §5.13).
+    CreateHugoPost {
+        /// Destination folder (root for the vault root).
+        parent: RelPath,
+        /// Post title (front matter `title`).
+        title: String,
+        /// Slug (path segment and front matter `slug`); blank → slugified title.
+        slug: String,
+    },
     /// Create a folder.
     CreateFolder {
         /// Parent folder.
@@ -71,8 +81,18 @@ pub enum Command {
         /// Key changes (`None` removes the key).
         changes: Vec<(frankmd_config::Key, Option<frankmd_config::Value>)>,
     },
+    /// Write settings to the global `config.toml` (Settings scope "All
+    /// vaults", ui-spec §5.16); `.fed` values still win in this vault.
+    UpdateGlobalSettings {
+        /// Key changes (`None` removes the key).
+        changes: Vec<(frankmd_config::Key, Option<frankmd_config::Value>)>,
+    },
     /// The recovery dialog was answered.
     ResolveRecovery(RecoveryResolution),
+    /// Recovery dialog "Keep both" (ui-spec §5.11): write the draft as
+    /// `<name> (draft YYYY-MM-DD HH-MM).md` next to the note, then keep the
+    /// file on disk in the editor.
+    RecoveryKeepBoth(crate::autosave::RecoveryRequest),
     /// Content-loss banner: the app ran the editor's undo first.
     ContentLossUndo {
         /// Whether the editor's own undo changed anything.

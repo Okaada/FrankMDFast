@@ -11,13 +11,25 @@
 
 mod js_regex;
 
-/// Find options (`{caseSensitive = false, useRegex = false}`).
+/// Find options (`{caseSensitive = false, useRegex = false}`), plus FrankMDFast's
+/// whole-word toggle (ui-spec §5.4, Alt+W).
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub struct FindOptions {
     /// Case sensitive (otherwise the `i` flag).
     pub case_sensitive: bool,
     /// Interpret the query as a JS regex (otherwise it is escaped).
     pub use_regex: bool,
+    /// Only match whole words: the (escaped or regex) query is wrapped in
+    /// `\b(?:…)\b` (JS word boundaries). Off in the original.
+    pub whole_word: bool,
+}
+
+impl FindOptions {
+    /// The JS regex source searched for `query` under these options.
+    pub fn pattern(&self, query: &str) -> String {
+        let inner = if self.use_regex { query.to_owned() } else { escape_regex_chars(query) };
+        if self.whole_word { format!("\\b(?:{inner})\\b") } else { inner }
+    }
 }
 
 /// One match.
@@ -89,7 +101,7 @@ pub fn find_all_matches(text: &str, query: &str, opts: FindOptions) -> Vec<Match
     if text.is_empty() || query.is_empty() {
         return Vec::new();
     }
-    let pattern = if opts.use_regex { query.to_owned() } else { escape_regex_chars(query) };
+    let pattern = opts.pattern(query);
     let Some(regex) = compile(&pattern, opts.case_sensitive) else { return Vec::new() };
 
     let mut matches = Vec::new();
@@ -203,7 +215,7 @@ mod tests {
     use super::*;
 
     fn texts(text: &str, query: &str) -> Vec<String> {
-        let opts = FindOptions { case_sensitive: true, use_regex: true };
+        let opts = FindOptions { case_sensitive: true, use_regex: true, whole_word: false };
         find_all_matches(text, query, opts).into_iter().map(|m| m.text).collect()
     }
 
@@ -222,6 +234,18 @@ mod tests {
         assert_eq!(texts("😀", r"😀"), vec!["😀"]);
         assert_eq!(texts("xay", "(?<=x)a(?=y)"), vec!["a"]);
         assert_eq!(texts("aa", r"(?<n>a)\k<n>"), vec!["aa"]);
+    }
+
+    #[test]
+    fn whole_word_matches_only_complete_words() {
+        let opts = FindOptions { whole_word: true, ..FindOptions::default() };
+        let found: Vec<_> = find_all_matches("cat catalog Cat c.t", "cat", opts).into_iter().map(|m| m.start).collect();
+        assert_eq!(found, vec![0, 12]);
+        // Literal queries stay escaped inside the word boundaries.
+        let found = find_all_matches("c.t cat", "c.t", opts);
+        assert_eq!(found.len(), 1);
+        let regex = FindOptions { use_regex: true, whole_word: true, ..FindOptions::default() };
+        assert_eq!(find_all_matches("ab abc", "ab|abc", regex).len(), 2);
     }
 
     #[test]

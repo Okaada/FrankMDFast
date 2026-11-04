@@ -45,6 +45,14 @@ pub fn resolve_editor_font(id: Option<&str>) -> Option<String> {
     fc_match("monospace")
 }
 
+/// System UI fonts from fontconfig: `(sans, monospace)`.
+///
+/// GPUI's default `.SystemUIFont` doesn't resolve on Linux, so the shell uses
+/// the families fontconfig picks for `sans-serif` and `monospace` (OM-016).
+pub fn resolve_system_fonts() -> (Option<String>, Option<String>) {
+    (fc_match("sans-serif"), fc_match("monospace"))
+}
+
 #[cfg(test)]
 mod tests {
     use super::family_of;

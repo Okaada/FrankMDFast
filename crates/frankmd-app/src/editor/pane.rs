@@ -60,6 +60,11 @@ pub const OWNED_COMMANDS: &[&str] = &[
     "find.replace",
     "find.next",
     "find.prev",
+    "insert.table",
+    "insert.code_block",
+    "insert.emoji",
+    "edit.context_action",
+    "table.edit",
 ];
 
 /// Debounce for recomputing find matches after a document edit.
@@ -115,14 +120,14 @@ struct OwnedBinding {
 
 /// The editor pane view.
 pub struct EditorPane {
-    state: Entity<EditorState>,
+    pub(super) state: Entity<EditorState>,
     /// Observation-only handle on the `editor` wrapper (its scope contains the text focus).
     observed_focus: FocusHandle,
     window: AnyWindowHandle,
     doc: Option<DocId>,
-    settings: EditorSettings,
-    read_only: bool,
-    vim: VimState,
+    pub(super) settings: EditorSettings,
+    pub(super) read_only: bool,
+    pub(super) vim: VimState,
     block_cursor: RangeDecorationCollection,
     block_range: Option<Range<usize>>,
     find: FindState,
@@ -140,6 +145,8 @@ pub struct EditorPane {
     last_selection: Range<usize>,
     last_top_line: usize,
     last_scroll_y: Pixels,
+    /// Slash menu, completions, insert dialogs and the pending `/query` ([`super::insert`]).
+    pub(super) insert: super::insert::InsertHost,
     _subscriptions: Vec<Subscription>,
 }
 
@@ -220,6 +227,7 @@ impl EditorPane {
             last_selection: 0..0,
             last_top_line: 0,
             last_scroll_y: px(0.),
+            insert: super::insert::InsertHost::default(),
             _subscriptions: subscriptions,
         }
     }
@@ -244,6 +252,7 @@ impl EditorPane {
         let text = text.to_owned();
         self.state.update(cx, |s, cx| s.set_value(text, window, cx));
         self.menu = None;
+        self.close_insert_surfaces(cx);
         self.vim = VimState::new(self.settings.macos);
         self.last_selection = 0..0;
         if self.find.open {
@@ -451,7 +460,13 @@ impl EditorPane {
             "insert.link" => {
                 let (text, sel) = self.text_and_selection(cx);
                 self.apply_edit(format::insert_link(&text, sel), window, cx);
+                self.open_link_completion(cx);
             }
+            "insert.table" | "table.edit" => self.open_table_editor(window, cx),
+            "insert.code_block" => self.open_code_dialog(window, cx),
+            "insert.emoji" => self.open_emoji_picker(window, cx),
+            // Nothing to act on at the caret: unhandled, so the shell reports it.
+            "edit.context_action" => return self.run_context_action(window, cx).is_some(),
             "format.menu" => self.open_format_menu(window, cx),
             "edit.toggle_task" => {
                 let (text, sel) = self.text_and_selection(cx);
@@ -533,6 +548,9 @@ impl EditorPane {
             .is_some()
         {
             return false;
+        }
+        if let Some(handled) = self.popover_key(&keystroke_text(keystroke), window, cx) {
+            return handled;
         }
         if self.settings.vim
             && let Some(handled) = self.vim_key(keystroke, window, cx)
@@ -635,6 +653,7 @@ impl EditorPane {
     ) {
         if matches!(event, InputEvent::Change) {
             cx.emit(EditorEvent::Edited { doc: self.doc });
+            self.refresh_popovers_after_edit(cx);
             if self.find.open {
                 self.schedule_find_refresh(cx);
             }
@@ -656,6 +675,7 @@ impl EditorPane {
                 column,
             });
             self.update_block_cursor(cx);
+            self.refresh_popovers_after_move(cx);
             if self.settings.typewriter && empty {
                 center_caret(&self.state, cx);
             }
@@ -904,7 +924,7 @@ impl EditorPane {
         let o = &mut self.find.options;
         match which {
             'c' => o.case_sensitive = !o.case_sensitive,
-            'r' => o.regex = !o.regex,
+            'r' => o.use_regex = !o.use_regex,
             _ => o.whole_word = !o.whole_word,
         }
         self.refresh_find(cx);
@@ -1116,7 +1136,7 @@ impl EditorPane {
             .child(toggle(
                 "find-regex",
                 ".*",
-                opts.regex,
+                opts.use_regex,
                 'r',
                 i18n::t(cx, "dialogs.find_replace.use_regex"),
             ))
@@ -1278,6 +1298,7 @@ impl Render for EditorPane {
             None
         };
         let menu = self.render_format_menu(cx);
+        let insert_layers = self.render_insert_layers(window, cx);
         root.key_context("Editor")
             .size_full()
             .children(find_bar)
@@ -1305,6 +1326,7 @@ impl Render for EditorPane {
                 ),
             )
             .children(menu)
+            .children(insert_layers)
     }
 }
 

@@ -16,6 +16,7 @@ serde.workspace = true
 serde_json.workspace = true
 secrecy.workspace = true
 etcetera.workspace = true
+toml.workspace = true
 
 [dev-dependencies]
 frankmd-testkit.workspace = true

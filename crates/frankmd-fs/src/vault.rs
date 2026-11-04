@@ -16,6 +16,20 @@ use std::io;
 use std::os::unix::fs::MetadataExt;
 use std::path::{Path, PathBuf};
 
+/// Where deleted items go.
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+pub enum TrashBackend {
+    /// The freedesktop / OS trash via the `trash` crate (default).
+    #[default]
+    System,
+    /// Move items into this directory (tests, and a fallback); the name is
+    /// made unique (`name`, `name.1`, `name.2`, ...) with a no-clobber rename.
+    /// Crossing filesystems (EXDEV) falls back to copy + delete like
+    /// [`Vault::rename`]-style moves do; symlinks are not specially handled
+    /// there, so keep the directory on the vault's filesystem.
+    Directory(PathBuf),
+}
+
 /// An opened notes root. Cheap to clone; holds no file handles.
 #[derive(Debug, Clone)]
 pub struct Vault {
@@ -24,6 +38,7 @@ pub struct Vault {
     state_dir: PathBuf,
     /// Locks always live under `state_dir` (folder that is not a notes root).
     private_locks: bool,
+    trash: TrashBackend,
 }
 
 /// A path proven to be inside the vault (component-wise, symlink-aware).
@@ -86,7 +101,19 @@ impl Vault {
             real_root,
             state_dir: state_dir.into(),
             private_locks: false,
+            trash: TrashBackend::default(),
         })
+    }
+
+    /// Use another trash backend (default [`TrashBackend::System`]).
+    pub fn with_trash(mut self, backend: TrashBackend) -> Self {
+        self.trash = backend;
+        self
+    }
+
+    /// The configured trash backend.
+    pub fn trash_backend(&self) -> &TrashBackend {
+        &self.trash
     }
 
     /// Open a folder that is **not** a notes root (e.g. the user's
@@ -406,6 +433,90 @@ impl Vault {
         }
         fs::remove_file(&path.abs)?;
         Ok(())
+    }
+
+    /// Resolve `raw` for trashing: like `safe_path(raw, true)`, except that a
+    /// symlink as the final component is accepted even when it points
+    /// outside the vault (or dangles), because only the link itself moves.
+    /// Its parent must still be contained.
+    pub(crate) fn trash_path(&self, raw: &str) -> Result<ContainedPath, FsError> {
+        let root = self.real_root.to_str().unwrap_or_default();
+        let invalid = || FsError::InvalidPath(format!("Invalid path: {raw}"));
+        if let Some(cand) = frankmd_core::path::lexical_contain(root, Some(raw)).map(PathBuf::from)
+            && cand != self.real_root
+            && fs::symlink_metadata(&cand).is_ok_and(|m| m.file_type().is_symlink())
+        {
+            let parent = cand.parent().ok_or_else(invalid)?;
+            if parent != self.real_root {
+                let rel_parent = parent
+                    .strip_prefix(&self.real_root)
+                    .ok()
+                    .and_then(Path::to_str)
+                    .ok_or_else(invalid)?;
+                path_safety::contain(&self.real_root, Some(rel_parent)).ok_or_else(invalid)?;
+            }
+            let rel = self.rel_of(&cand).ok_or_else(invalid)?;
+            return Ok(ContainedPath { rel, abs: cand });
+        }
+        self.safe_path(raw, true)
+    }
+
+    /// Move a file, symlink or folder (empty or not) to the trash. The
+    /// caller holds the exclusive lock. A symlink is moved itself, never its
+    /// target. `expected` is the revision check for regular files.
+    pub(crate) fn trash_locked(
+        &self,
+        path: &ContainedPath,
+        expected: Option<&str>,
+        label: &str,
+    ) -> Result<(), FsError> {
+        if path.abs == self.real_root || path.rel.as_str().is_empty() {
+            return Err(FsError::InvalidPath(format!("Invalid path: {label}")));
+        }
+        if path.abs == self.real_root.join(CONFIG_LOCK) {
+            return Err(FsError::InvalidPath("Reserved application path".to_owned()));
+        }
+        if frankmd_core::path::is_config_file(path.rel.as_str()) {
+            return Err(FsError::PermissionDenied(
+                "the configuration file cannot be deleted".to_owned(),
+            ));
+        }
+        let meta = fs::symlink_metadata(&path.abs)
+            .map_err(|_| FsError::NotFound(format!("Note not found: {label}")))?;
+        if meta.is_file()
+            && let Some(expected) = expected
+        {
+            let current = Revision::of(&fs::read(&path.abs)?);
+            if current.0 != expected {
+                return Err(FsError::RevisionConflict(format!(
+                    "Note has changed: {label}"
+                )));
+            }
+        }
+        match &self.trash {
+            TrashBackend::System => trash::delete(&path.abs)
+                .map_err(|e| FsError::Io(io::Error::other(format!("could not move to trash: {e}")))),
+            TrashBackend::Directory(dir) => {
+                fs::create_dir_all(dir)?;
+                let name = path
+                    .abs
+                    .file_name()
+                    .and_then(|n| n.to_str())
+                    .ok_or_else(|| FsError::InvalidPath(format!("Invalid path: {label}")))?;
+                let mut n = 0u32;
+                loop {
+                    let target = if n == 0 {
+                        dir.join(name)
+                    } else {
+                        dir.join(format!("{name}.{n}"))
+                    };
+                    match atomic::rename_noclobber(&path.abs, &target) {
+                        Err(FsError::AlreadyExists(_)) => n += 1,
+                        other => return other,
+                    }
+                }
+            }
+        }
     }
 
     /// Create a folder (`AlreadyExists` if present).

@@ -8,26 +8,15 @@
 use std::ops::Range;
 use std::time::{Duration, Instant};
 
+pub use frankmd_search::find::FindOptions;
 use frankmd_search::find::{
-    Direction, FindOptions as SearchOptions, Match, escape_regex_chars, find_all_matches,
-    find_closest_match_index, replace_matches, validate_regex,
+    Direction, Match, find_all_matches, find_closest_match_index, replace_matches, validate_regex,
 };
 
 use super::edit::Edit;
 
 /// How long "Replaced N" stays in place of the counter.
 pub const FEEDBACK_TTL: Duration = Duration::from_secs(2);
-
-/// Toggles of the find bar.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
-pub struct FindOptions {
-    /// Aa.
-    pub case_sensitive: bool,
-    /// .*
-    pub regex: bool,
-    /// Whole word (new in FrankMDFast, Alt+W).
-    pub whole_word: bool,
-}
 
 /// What the counter slot shows.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -60,7 +49,8 @@ pub struct FindState {
     pub query: String,
     /// Replacement text.
     pub replacement: String,
-    /// Toggles.
+    /// Toggles (Aa, .*, whole word): the search crate's options, shared with every
+    /// other find surface.
     pub options: FindOptions,
     matches: Vec<Match>,
     ranges: Vec<Range<usize>>,
@@ -118,20 +108,6 @@ impl FindState {
             .is_some_and(|(_, at)| now.duration_since(at) < FEEDBACK_TTL)
     }
 
-    /// The pattern handed to the matcher and whether it is a regex.
-    fn pattern(&self) -> (String, bool) {
-        if self.options.whole_word {
-            let inner = if self.options.regex {
-                self.query.clone()
-            } else {
-                escape_regex_chars(&self.query)
-            };
-            (format!("\\b(?:{inner})\\b"), true)
-        } else {
-            (self.query.clone(), self.options.regex)
-        }
-    }
-
     /// **[COMPAT]** `findAll`: recompute matches; the current match becomes the closest
     /// one at/after `caret` (byte offset). Doesn't move the editor selection.
     pub fn recompute(&mut self, text: &str, caret: usize) {
@@ -142,18 +118,13 @@ impl FindState {
         if self.query.is_empty() {
             return;
         }
-        if self.options.regex
+        if self.options.use_regex
             && let Err(error) = validate_regex(&self.query)
         {
             self.error = Some(error);
             return;
         }
-        let (pattern, regex) = self.pattern();
-        let opts = SearchOptions {
-            case_sensitive: self.options.case_sensitive,
-            use_regex: regex,
-        };
-        self.matches = find_all_matches(text, &pattern, opts);
+        self.matches = find_all_matches(text, &self.query, self.options);
         self.ranges = utf16_to_byte_ranges(text, &self.matches);
         self.current = self.closest(text, caret, Direction::Next);
     }
@@ -194,8 +165,7 @@ impl FindState {
         let index = self.current?;
         let m = self.matches.get(index)?;
         let range = self.ranges.get(index)?.clone();
-        let (_, regex) = self.pattern();
-        let replacement = resolve_replacement(m, &self.replacement, regex);
+        let replacement = resolve_replacement(m, &self.replacement, self.options.use_regex);
         let caret = range.start + replacement.len();
         Some(Edit {
             range,
@@ -211,8 +181,8 @@ impl FindState {
             return None;
         }
         let count = self.matches.len();
-        let (_, regex) = self.pattern();
-        let updated = replace_matches(text, &self.matches, &self.replacement, regex);
+        let updated =
+            replace_matches(text, &self.matches, &self.replacement, self.options.use_regex);
         let caret = caret.min(updated.len());
         let caret = (0..=caret)
             .rev()
@@ -287,5 +257,23 @@ mod tests {
         };
         s.recompute("é a 😀 a", 0);
         assert_eq!(s.ranges(), &[3..4, 10..11]);
+    }
+
+    #[test]
+    fn whole_word_literal_replacement_keeps_dollar_signs() {
+        let mut s = FindState {
+            query: "a".into(),
+            replacement: "$&!".into(),
+            options: FindOptions {
+                whole_word: true,
+                ..FindOptions::default()
+            },
+            ..Default::default()
+        };
+        s.recompute("a ab a", 0);
+        assert_eq!(s.ranges(), &[0..1, 5..6]);
+        let (edit, count) = s.replace_all("a ab a", 0, Instant::now()).expect("matches");
+        assert_eq!(count, 2);
+        assert_eq!(edit.text, "$&! ab $&!");
     }
 }

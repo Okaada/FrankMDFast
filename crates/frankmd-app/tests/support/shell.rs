@@ -43,6 +43,13 @@ impl VaultFixture {
         }
     }
 
+    /// The sample vault plus `extra` notes.
+    pub fn sample_with(extra: &[(&'static str, &'static str)]) -> Self {
+        let mut fixture = Self::sample();
+        fixture.notes.extend_from_slice(extra);
+        fixture
+    }
+
     /// Same vault, nothing open (empty state with docked quick open, §5.2).
     pub fn sample_no_note() -> Self {
         Self {
@@ -92,6 +99,7 @@ fn build_vault(
 pub fn open_shell(cx: &mut TestAppContext, size: Size<Pixels>, fixture: VaultFixture) -> Shell {
     cx.update(gpui_kit::init);
     cx.update(frankmd_app::ui::actions::install_keymap);
+    cx.update(frankmd_app::dialogs::media::init);
     let (vault_dir, state_dir, root) = build_vault(&fixture);
     let config = ShellConfig {
         vault_root: root.clone(),
@@ -102,6 +110,9 @@ pub fn open_shell(cx: &mut TestAppContext, size: Size<Pixels>, fixture: VaultFix
         omarchy: None,
         watch: false,
         locale: Some("en".into()),
+        // Deletes go to the Trash (ui-spec §5.13); never the user's real one in tests.
+        trash_dir: Some(state_dir.path().join("trash")),
+        global_config: Some(state_dir.path().join("global").join("config.toml")),
     };
     let (window, view) = super::harness::open_window(cx, size, move |window, cx| {
         cx.new(|cx| AppShell::new(config, window, cx))
@@ -151,6 +162,23 @@ impl Shell {
     pub fn simulate(&self, cx: &mut TestAppContext, condition: BannerKind) {
         self.view.update(cx, |s, cx| s.raise_banner(condition, cx));
         super::harness::in_window(cx, self.window, |_, _| ());
+    }
+    /// The per-vault UI state file (sidebar width, expansion, …), or "".
+    pub fn ui_state_json(&self) -> String {
+        std::fs::read_to_string(self._state_dir.path().join("vault").join("ui_state.json"))
+            .unwrap_or_default()
+    }
+    /// Where deleted items went (the test Trash).
+    pub fn trash_dir(&self) -> std::path::PathBuf {
+        self._state_dir.path().join("trash")
+    }
+    /// The global settings file of this test.
+    pub fn global_config(&self) -> std::path::PathBuf {
+        self._state_dir.path().join("global").join("config.toml")
+    }
+    /// Current editor text.
+    pub fn editor_text_of(&self, cx: &mut TestAppContext) -> String {
+        self.view.read_with(cx, |s, cx| s.editor_text(cx))
     }
     /// Read a note from disk.
     pub fn read_note(&self, path: &str) -> Option<String> {

@@ -67,7 +67,7 @@ fn check_find_all(case: &Case, input: &[Value]) -> Result<(), String> {
     let text = arg(input, 0).as_str().unwrap_or_default();
     let query = arg(input, 1).as_str().unwrap_or_default();
     let o = arg(input, 2);
-    let opts = FindOptions { case_sensitive: opt_bool(o, "caseSensitive"), use_regex: opt_bool(o, "useRegex") };
+    let opts = FindOptions { case_sensitive: opt_bool(o, "caseSensitive"), use_regex: opt_bool(o, "useRegex"), whole_word: false };
     let actual: Vec<Value> = find_all_matches(text, query, opts).iter().map(match_to_json).collect();
     let expected: Vec<Value> = decode_js(&case.expected).as_array().unwrap().clone();
 

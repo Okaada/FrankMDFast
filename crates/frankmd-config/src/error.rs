@@ -42,6 +42,18 @@ pub enum ConfigError {
     /// "No valid settings provided").
     #[error("No valid settings provided")]
     NoValidSettings,
+    /// The key may not be stored in the global config (`recent_files`, `auth_token`).
+    #[error("{key:?} cannot be set in the global config")]
+    GlobalKeyNotAllowed {
+        /// Config key.
+        key: Key,
+    },
+    /// The global config file is malformed or cannot be serialized.
+    #[error("global config: {0}")]
+    GlobalFile(String),
+    /// No global config path is attached to the store.
+    #[error("no global config attached")]
+    NoGlobalConfig,
     /// `.fed` could not be read or written (directory, read-only mount,
     /// symlinked lock file, ...). Reads degrade to defaults; writes fail.
     #[error(transparent)]

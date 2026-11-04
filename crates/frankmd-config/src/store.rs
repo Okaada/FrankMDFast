@@ -7,7 +7,7 @@ use frankmd_fs::atomic::{ModePolicy, atomic_replace};
 use frankmd_fs::lock::{CONFIG_LOCK, LockGuard, LockKind};
 use frankmd_fs::{FsError, RecentStore, Vault};
 use std::io;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex, PoisonError};
 
 /// `.fed` file name at the notes root (**[COMPAT]** `Config::CONFIG_FILE`).
@@ -31,6 +31,7 @@ const FED_MODE: ModePolicy = ModePolicy::Fixed(0o600);
 pub struct ConfigStore {
     vault: Vault,
     env: EnvSnapshot,
+    global: Option<PathBuf>,
     current: Mutex<Arc<ResolvedConfig>>,
 }
 
@@ -49,10 +50,36 @@ impl ConfigStore {
         let store = Self {
             vault,
             env,
+            global: None,
             current: Mutex::new(Arc::new(ResolvedConfig::new(None, EnvSnapshot::default()))),
         };
         store.load_from_disk();
         store
+    }
+
+    /// Attach the global settings layer (`config.toml`, see
+    /// [`crate::global`]) and refresh [`Self::current`]. A missing file is fine;
+    /// problems become [`ResolvedConfig::warnings`].
+    #[must_use]
+    pub fn with_global(mut self, path: PathBuf) -> Self {
+        self.global = Some(path);
+        let rc = self.read_snapshot();
+        self.publish(rc);
+        self
+    }
+
+    /// Path of the attached global config, if any.
+    pub fn global_path(&self) -> Option<&Path> {
+        self.global.as_deref()
+    }
+
+    /// Apply `changes` to the global config file (`None` removes a key) and
+    /// refresh [`Self::current`]. `.fed` is not touched.
+    pub fn update_global(&mut self, changes: &[(Key, Option<Value>)]) -> Result<Arc<ResolvedConfig>, ConfigError> {
+        let path = self.global.clone().ok_or(ConfigError::NoGlobalConfig)?;
+        crate::global::write_global(&path, changes)?;
+        let rc = self.read_snapshot();
+        Ok(self.publish(rc))
     }
 
     /// Absolute path of `.fed`.
@@ -109,13 +136,14 @@ impl ConfigStore {
         let _guard = self.lock()?;
         let _ = self.ensure_config_file();
         let text = self.read_text()?;
-        let fresh = ResolvedConfig::new(Some(&text), self.env.clone());
+        let fresh = self.with_global_layer(ResolvedConfig::new(Some(&text), self.env.clone()));
         let new = recast(f(fresh.get(key).value));
         let line = fresh.format_line(key, new.as_ref())?;
         self.write(&fed::apply_changes(&text, &[(key, line)]))
     }
 
-    /// Re-read after the watcher reports an external change to `.fed`.
+    /// Re-read after the watcher reports an external change to `.fed` or the
+    /// global config.
     pub fn reload(&mut self) -> Result<Arc<ResolvedConfig>, ConfigError> {
         Ok(self.load_from_disk())
     }
@@ -142,13 +170,26 @@ impl ConfigStore {
     /// Parse `.fed` as it is on disk now (no template/upgrade step).
     fn read_snapshot(&self) -> ResolvedConfig {
         let path = self.path();
-        if !path.exists() {
-            return ResolvedConfig::new(None, self.env.clone());
-        }
-        match std::fs::read(&path) {
-            Ok(bytes) => ResolvedConfig::from_bytes(Some(&bytes), self.env.clone()),
-            Err(e) => ResolvedConfig::failed(self.env.clone(), format!("Failed to load .fed config: {e}")),
-        }
+        let rc = if !path.exists() {
+            ResolvedConfig::new(None, self.env.clone())
+        } else {
+            match std::fs::read(&path) {
+                Ok(bytes) => ResolvedConfig::from_bytes(Some(&bytes), self.env.clone()),
+                Err(e) => ResolvedConfig::failed(self.env.clone(), format!("Failed to load .fed config: {e}")),
+            }
+        };
+        self.with_global_layer(rc)
+    }
+
+    /// Add the global layer (and its load warnings) to a `.fed` snapshot.
+    fn with_global_layer(&self, rc: ResolvedConfig) -> ResolvedConfig {
+        let Some(path) = &self.global else {
+            return rc;
+        };
+        let (values, mut warnings) = crate::global::load_global(path);
+        let mut rc = rc.with_global(values);
+        rc.warnings.append(&mut warnings);
+        rc
     }
 
     fn publish(&self, rc: ResolvedConfig) -> Arc<ResolvedConfig> {
@@ -192,7 +233,8 @@ impl ConfigStore {
     /// Replace `.fed` with `text` (0600) and publish its parse.
     fn write(&self, text: &str) -> Result<Arc<ResolvedConfig>, ConfigError> {
         atomic_replace(&self.path(), text.as_bytes(), FED_MODE)?;
-        Ok(self.publish(ResolvedConfig::new(Some(text), self.env.clone())))
+        let rc = self.with_global_layer(ResolvedConfig::new(Some(text), self.env.clone()));
+        Ok(self.publish(rc))
     }
 
     /// `modify` for [`RecentStore`]: the closure's compact JSON text is

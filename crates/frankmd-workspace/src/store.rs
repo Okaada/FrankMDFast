@@ -165,6 +165,25 @@ impl<B: DraftBackend> Workspace<B> {
         self.open.as_ref()
     }
 
+    /// Shared recent notes, newest first (missing files filtered out).
+    pub fn recent_paths(&self) -> Vec<String> {
+        frankmd_fs::recent::RecentFilesService::new(&self.vault, &self.config)
+            .entries()
+            .into_iter()
+            .map(|r| r.path)
+            .collect()
+    }
+
+    /// Clear the shared recents (empty state "Clear history…").
+    pub fn clear_recents(&mut self) -> bool {
+        frankmd_fs::recent::RecentFilesService::new(&self.vault, &self.config).clear().unwrap_or(false)
+    }
+
+    /// The vault this workspace edits.
+    pub fn vault(&self) -> &frankmd_fs::Vault {
+        &self.vault
+    }
+
     /// Current path of `doc`.
     pub fn path_of(&self, doc: DocId) -> Option<&RelPath> {
         self.registry.path_of(doc)
@@ -201,6 +220,9 @@ impl<B: DraftBackend> Workspace<B> {
                 }
             }
             Command::CreateNote { parent, name, template } => self.create_note(&parent, &name, template, &mut out),
+            Command::CreateHugoPost { parent, title, slug } => {
+                self.create_hugo_post(&parent, &title, &slug, &mut out)
+            }
             Command::CreateFolder { parent, name } => self.create_folder(&parent, &name, &mut out),
             Command::Rename { from, to } => {
                 let _ = self.rename(&from, &to, &mut out);
@@ -211,7 +233,12 @@ impl<B: DraftBackend> Workspace<B> {
                 Ok(_) => out.events.push(Event::SettingsChanged),
                 Err(_) => out.error(UserError::new("errors.failed_to_save")),
             },
+            Command::UpdateGlobalSettings { changes } => match self.config.update_global(&changes) {
+                Ok(_) => out.events.push(Event::SettingsChanged),
+                Err(_) => out.error(UserError::new("errors.failed_to_save")),
+            },
             Command::ResolveRecovery(resolution) => self.autosave.recovery_resolved(resolution, now),
+            Command::RecoveryKeepBoth(request) => self.keep_both(request, now, &mut out),
             Command::ContentLossUndo { undid_editor_change } => self.autosave.undo_content_loss(undid_editor_change),
             Command::ContentLossSaveAnyway => self.autosave.save_anyway_after_warning(),
             Command::FlushDrafts => {
@@ -332,8 +359,16 @@ impl<B: DraftBackend> Workspace<B> {
             edit_generation: Generation::default(),
             read_only: !file.valid_utf8,
         });
+        self.record_recent(path);
         out.events.push(Event::DocOpened { doc, path: path.clone(), text: shown });
         out.effects.push(Effect::Render { doc, generation: Generation::default() });
+    }
+
+    /// Shared recents (`.fed` `recent_files`, FE-298…301): recorded on every
+    /// successful open, newest first. A failed write only loses history.
+    fn record_recent(&self, path: &RelPath) {
+        let recents = frankmd_fs::recent::RecentFilesService::new(&self.vault, &self.config);
+        let _ = recents.record(Some(path.as_str()), self.clock.now().timestamp());
     }
 
     fn close_note(&mut self, out: &mut Out) {
@@ -388,6 +423,89 @@ impl<B: DraftBackend> Workspace<B> {
         }
     }
 
+    /// Hugo post with a user-edited slug: the same path and front matter as
+    /// `NotesService::create_hugo_post`, with `slug` in place of the slugified
+    /// title (a blank slug falls back to it).
+    fn create_hugo_post(&mut self, parent: &RelPath, title: &str, slug: &str, out: &mut Out) {
+        use frankmd_core::hugo;
+        let slug = slug.trim();
+        let slug = if slug.is_empty() { frankmd_core::slug::slugify(title) } else { frankmd_core::slug::slugify(slug) };
+        if slug.is_empty() {
+            out.error(UserError::new("errors.failed_to_create"));
+            return;
+        }
+        let style_value = self.config.current().value(frankmd_config::Key::HugoPathStyle);
+        let style = hugo::HugoPathStyle::from_config(match &style_value {
+            Some(frankmd_config::Value::Str(s)) => Some(s.as_str()),
+            _ => None,
+        });
+        let now = self.clock.now();
+        let relative = match style {
+            hugo::HugoPathStyle::Flat => format!("{slug}.md"),
+            hugo::HugoPathStyle::Dated => format!("{}/{slug}/index.md", hugo::date_path(&now)),
+        };
+        let service = NotesService::new(&self.vault);
+        let template = service.hugo_template().map(|bytes| String::from_utf8_lossy(&bytes).into_owned());
+        let content = hugo::render_template(
+            template.as_deref().unwrap_or(hugo::DEFAULT_TEMPLATE),
+            title,
+            &slug,
+            &hugo::format_date(&now),
+        );
+        let Ok(path) = RelPath::parse(&join(parent, &relative)) else {
+            out.error(UserError::new("errors.failed_to_create"));
+            return;
+        };
+        self.expect_write(&path, content.as_bytes());
+        match service.create(path.as_str(), content.as_bytes()) {
+            Ok(_) => {
+                out.events.push(Event::Reveal { path: path.clone() });
+                out.effects.push(self.rescan());
+                self.open_note(&path, out);
+            }
+            Err(err) => out.error(user_error(Op::Create, &err, false)),
+        }
+    }
+
+    /// "Keep both": the draft goes to a sibling copy (never overwriting a
+    /// file), then the dialog resolves to the file on disk.
+    fn keep_both(&mut self, request: crate::autosave::RecoveryRequest, now: std::time::Instant, out: &mut Out) {
+        let Ok(path) = RelPath::parse(&request.path) else {
+            out.error(UserError::new("errors.failed_to_create"));
+            out.events.push(Event::Autosave(AutosaveEffect::OpenRecovery(request)));
+            return;
+        };
+        let zone = self.clock.now().time_zone().clone();
+        let service = NotesService::new(&self.vault);
+        let mut created = None;
+        for attempt in 1..=20 {
+            let Some(copy) = crate::recovery_copy::copy_path(&path, request.backup_timestamp, &zone, attempt) else {
+                break;
+            };
+            self.expect_write(&copy, request.backup_content.as_bytes());
+            match service.create(copy.as_str(), request.backup_content.as_bytes()) {
+                Ok(_) => {
+                    created = Some(copy);
+                    break;
+                }
+                Err(FsError::AlreadyExists(_)) => {}
+                Err(err) => {
+                    out.error(user_error(Op::Create, &err, false));
+                    out.events.push(Event::Autosave(AutosaveEffect::OpenRecovery(request)));
+                    return;
+                }
+            }
+        }
+        let Some(copy) = created else {
+            out.error(UserError::new("errors.note_already_exists"));
+            out.events.push(Event::Autosave(AutosaveEffect::OpenRecovery(request)));
+            return;
+        };
+        self.autosave.recovery_resolved(crate::autosave::RecoveryResolution::accept_server(&request), now);
+        out.events.push(Event::Reveal { path: copy });
+        out.effects.push(self.rescan());
+    }
+
     fn create_folder(&mut self, parent: &RelPath, name: &str, out: &mut Out) {
         let Ok(path) = RelPath::parse(&join(parent, name)) else {
             out.error(UserError::new("errors.failed_to_create"));
@@ -416,7 +534,7 @@ impl<B: DraftBackend> Workspace<B> {
             out.error(UserError::new(DRAFT_STORAGE_ERROR));
             return false;
         }
-        let service = NotesService::new(&self.vault);
+        let service = NotesService::new(&self.vault).with_recents(&self.config);
         let folder = service.is_dir(from.as_str()).unwrap_or(false);
         self.expect_removal(from);
         let renamed = if folder {
@@ -490,11 +608,10 @@ impl<B: DraftBackend> Workspace<B> {
             Some((_, false)) | None => {}
         }
         self.expect_removal(path);
-        let deleted = if folder {
-            service.delete_folder(path.as_str())
-        } else {
-            service.delete(path.as_str(), expected_revision.as_deref())
-        };
+        // ui-spec §5.13: delete moves to the Trash, so non-empty folders can
+        // be deleted honestly (FE-267 fixed); recents under the path go too.
+        let service = NotesService::new(&self.vault).with_recents(&self.config);
+        let deleted = service.trash(path.as_str(), expected_revision.as_deref());
         if let Err(err) = deleted {
             self.autosave.resume_after_transition(self.clock.instant());
             out.error(user_error(Op::Delete, &err, folder));

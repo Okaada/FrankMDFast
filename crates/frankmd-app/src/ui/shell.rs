@@ -6,30 +6,25 @@
 //! render from them and every user action is a registry command
 //! ([`Shell::run_command`]); no domain logic lives here.
 
-use std::collections::BTreeSet;
 use std::path::PathBuf;
-use std::rc::Rc;
 use std::sync::Arc;
 use std::time::Instant;
 
 use frankmd_config::store::ConfigStore;
 use frankmd_config::{EnvSnapshot, Key, Value};
 use frankmd_core::tree::{FileType, TreeNode};
-use frankmd_core::{Clock, RelPath};
+use frankmd_core::Clock;
 use frankmd_fs::Vault;
-use frankmd_fs::recent::RecentFilesService;
 use frankmd_i18n::Locale;
 use frankmd_theme::OmarchyPaths;
-use frankmd_workspace::autosave::{
-    AutosaveEffect, RecoveryRequest, RecoveryResolution, SaveStatus,
-};
+use frankmd_workspace::autosave::{AutosaveEffect, SaveStatus};
 use frankmd_workspace::banners::{BannerKind, BannerStack};
-use frankmd_workspace::commands::{CommandContext, CommandRegistry};
+use frankmd_workspace::commands::CommandRegistry;
 use frankmd_workspace::doc_index::DocIndex;
 use frankmd_workspace::drafts::open_draft_storage;
 use frankmd_workspace::focus::FocusRegion;
 use frankmd_workspace::layout::{LayoutState, PreviewMode, SidebarMode, ViewMode, WidthClass};
-use frankmd_workspace::overlay::{OverlayKind, OverlayStack, PaletteMode};
+use frankmd_workspace::overlay::{OverlayKind, OverlayStack};
 use frankmd_workspace::quick_open::{NoteEntry, QuickOpenModel};
 use frankmd_workspace::status::{MessageSlot, SaveState};
 use frankmd_workspace::{Command, Effect, Event, Workspace};
@@ -61,6 +56,12 @@ pub struct ShellConfig {
     pub watch: bool,
     /// Locale override (`--locale`).
     pub locale: Option<String>,
+    /// Where deleted items go: `None` = the system Trash (ui-spec §5.13);
+    /// tests point it at a temp dir.
+    pub trash_dir: Option<PathBuf>,
+    /// Global settings file (`~/.config/frankmd/config.toml`, Settings scope
+    /// "All vaults"); `None` disables the layer.
+    pub global_config: Option<PathBuf>,
 }
 
 /// `Box<dyn Clock>` over a shared clock (the workspace takes ownership of its clock).
@@ -80,15 +81,19 @@ impl Clock for SharedClock {
 pub(crate) struct Core {
     pub(crate) ws: Workspace,
     pub(crate) vault: Vault,
-    /// `.fed` handle used only for `recent_files` (the workspace owns the rest).
-    recents: ConfigStore,
 }
 
 impl Core {
     fn open(config: &ShellConfig) -> anyhow::Result<Self> {
         crate::app_fs::ensure_private_dir(&config.state_dir)?;
-        let vault = Vault::open(&config.vault_root, &config.state_dir)?;
-        let store = ConfigStore::open(vault.clone(), config.env.clone());
+        let mut vault = Vault::open(&config.vault_root, &config.state_dir)?;
+        if let Some(dir) = &config.trash_dir {
+            vault = vault.with_trash(frankmd_fs::TrashBackend::Directory(dir.clone()));
+        }
+        let mut store = ConfigStore::open(vault.clone(), config.env.clone());
+        if let Some(path) = &config.global_config {
+            store = store.with_global(path.clone());
+        }
         let drafts = open_draft_storage(&config.state_dir).map_err(|e| anyhow::anyhow!("{e:?}"))?;
         let index = DocIndex::open(&config.state_dir);
         let ws = Workspace::new(
@@ -98,38 +103,7 @@ impl Core {
             index,
             Box::new(SharedClock(Arc::clone(&config.clock))),
         );
-        let recents = ConfigStore::open(vault.clone(), config.env.clone());
-        Ok(Self { ws, vault, recents })
-    }
-
-    fn recent_paths(&self) -> Vec<String> {
-        RecentFilesService::new(&self.vault, &self.recents)
-            .entries()
-            .into_iter()
-            .map(|r| r.path)
-            .collect()
-    }
-}
-
-/// Explorer state the tree doesn't carry: expansion and the keyboard cursor.
-#[derive(Debug, Default)]
-pub(crate) struct ExplorerState {
-    pub(crate) expanded: BTreeSet<String>,
-    pub(crate) cursor: Option<String>,
-}
-
-impl ExplorerState {
-    /// Expand every ancestor folder of `path`.
-    pub(crate) fn reveal(&mut self, path: &str) {
-        let mut acc = String::new();
-        let parts: Vec<&str> = path.split('/').collect();
-        for part in &parts[..parts.len().saturating_sub(1)] {
-            if !acc.is_empty() {
-                acc.push('/');
-            }
-            acc.push_str(part);
-            self.expanded.insert(acc.clone());
-        }
+        Ok(Self { ws, vault })
     }
 }
 
@@ -169,12 +143,27 @@ pub struct Shell {
     pub(crate) overlay_focus: FocusHandle,
     pub(crate) library_focus: FocusHandle,
     pub(crate) editor: EditorHost,
-    pub(crate) explorer: ExplorerState,
+    pub(crate) explorer: frankmd_workspace::explorer::Explorer,
+    pub(crate) ui_state: frankmd_workspace::ui_state::UiStateStore,
+    pub(crate) history: frankmd_workspace::navigation::History,
+    pub(crate) switcher: frankmd_workspace::navigation::RecentSwitcher,
+    pub(crate) search: super::search::SearchState,
+    pub(crate) files: super::file_dialogs::FileDialogs,
+    pub(crate) backlinks: super::sidebar::Backlinks,
+    pub(crate) splitter: Option<super::render::Splitter>,
+    pub(crate) tree_ui: super::explorer::TreeUi,
+    pub(crate) splitter_focus: (FocusHandle, FocusHandle),
+    /// Last user-facing error of the current dispatch (dialogs show it inline).
+    pub(crate) last_error: Option<frankmd_workspace::command::UserError>,
+    /// Media, AI and editor-request wiring (src/dialogs/**).
+    pub(crate) media: super::media_host::MediaHost,
+    /// Set while a `history.back/forward` open runs (it must not push history).
+    pub(crate) navigating: bool,
     pub(crate) palette: PaletteState,
     pub(crate) quick_open: QuickOpenState,
     pub(crate) settings: SettingsState,
     pub(crate) help_tab: HelpTab,
-    pub(crate) recovery: Option<RecoveryRequest>,
+    pub(crate) recovery: Option<super::recovery::RecoveryState>,
     pub(crate) theme: ResolvedTheme,
     pub(crate) omarchy: Option<OmarchyPaths>,
     pub(crate) radius: f32,
@@ -182,12 +171,12 @@ pub struct Shell {
     pub(crate) recent_commands: Vec<&'static str>,
     pub(crate) scroll_sync: bool,
     pub(crate) vim: bool,
-    autosave_timer: Option<Task<()>>,
-    message_timer: Option<Task<()>>,
-    watchers: Option<frankmd_watch::Watchers>,
+    pub(crate) autosave_timer: Option<Task<()>>,
+    pub(crate) message_timer: Option<Task<()>>,
+    pub(crate) watchers: Option<frankmd_watch::Watchers>,
     pub(crate) last_region: FocusRegion,
-    window: AnyWindowHandle,
-    _subscriptions: Vec<Subscription>,
+    pub(crate) window: AnyWindowHandle,
+    pub(crate) _subscriptions: Vec<Subscription>,
 }
 
 impl Shell {
@@ -223,6 +212,19 @@ impl Shell {
         });
         let (palette, palette_sub) = PaletteState::new(window, cx);
         let (settings, settings_sub) = SettingsState::new(window, cx);
+        let (search, search_subs) = super::search::SearchState::new(window, cx);
+        let (files, files_subs) = super::file_dialogs::FileDialogs::new(window, cx);
+        let ui_state = if core.is_some() {
+            frankmd_workspace::ui_state::UiStateStore::open(&config.state_dir)
+        } else {
+            frankmd_workspace::ui_state::UiStateStore::in_memory()
+        };
+        let media_ctx = core.as_ref().map(|_| crate::dialogs::media::MediaContext {
+            vault_root: config.vault_root.clone(),
+            state_dir: config.state_dir.clone(),
+            env: config.env.clone(),
+        });
+        let (media, media_subs) = super::media_host::MediaHost::new(media_ctx, window, cx);
         let preview = cx.new(|cx| crate::preview::PreviewPane::new(window, cx));
         let preview_sub = cx.subscribe_in(&preview, window, Self::on_preview_event);
 
@@ -247,7 +249,19 @@ impl Shell {
             overlay_focus: cx.focus_handle(),
             library_focus: cx.focus_handle(),
             editor,
-            explorer: ExplorerState::default(),
+            explorer: frankmd_workspace::explorer::Explorer::default(),
+            ui_state,
+            history: Default::default(),
+            switcher: Default::default(),
+            search,
+            files,
+            backlinks: Default::default(),
+            splitter: None,
+            tree_ui: Default::default(),
+            splitter_focus: (cx.focus_handle(), cx.focus_handle()),
+            last_error: None,
+            media,
+            navigating: false,
             palette,
             quick_open: QuickOpenState {
                 model: QuickOpenModel::default(),
@@ -272,8 +286,17 @@ impl Shell {
             watchers: None,
             last_region: FocusRegion::Editor,
             window: window.window_handle(),
-            _subscriptions: vec![editor_sub, qo_sub, palette_sub, settings_sub, preview_sub],
+            _subscriptions: [editor_sub, qo_sub, palette_sub, settings_sub, preview_sub]
+                .into_iter()
+                .chain(search_subs)
+                .chain(files_subs)
+                .chain(media_subs)
+                .collect(),
         };
+        let requests = shell.subscribe_editor_requests(window, cx);
+        shell._subscriptions.push(requests);
+        let expanded = shell.ui_state.get().expanded.clone();
+        shell.explorer.set_expanded(expanded);
         shell.layout.on_resize(shell.width);
         shell.apply_settings(window, cx);
         shell.preview.update(cx, |p, cx| {
@@ -300,6 +323,17 @@ impl Shell {
         shell
     }
 
+    /// Feed a file-watcher event (vault or `.fed` change) to the workspace;
+    /// the watcher loop does this, tests call it directly.
+    pub fn external_event(
+        &mut self,
+        event: frankmd_watch::WatchEvent,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        self.dispatch(Command::External(event), window, cx);
+    }
+
     /// Notes root of this window.
     pub fn vault_root(&self) -> &std::path::Path {
         &self.vault_root
@@ -311,86 +345,6 @@ impl Shell {
     }
 
     // ----- startup ------------------------------------------------------------
-
-    fn open_initial(&mut self, arg: Option<&str>, window: &mut Window, cx: &mut Context<Self>) {
-        let Some(core) = self.core.as_ref() else {
-            self.focus_region(FocusRegion::Editor, window, cx);
-            return;
-        };
-        let root = core.vault.root().to_path_buf();
-        let real = core.vault.real_root().to_path_buf();
-        let vault = core.vault.clone();
-        let target = frankmd_workspace::startup::resolve_initial_note(
-            &[root.as_path(), real.as_path()],
-            arg,
-            |p| {
-                frankmd_fs::service::NotesService::new(&vault)
-                    .read(p.as_str())
-                    .is_ok()
-            },
-        );
-        match target {
-            frankmd_workspace::startup::StartupTarget::Note(path) => {
-                self.open_note(path, window, cx)
-            }
-            frankmd_workspace::startup::StartupTarget::Missing(path) => {
-                let name = path.as_str().trim_end_matches(".md").to_owned();
-                self.show_message(
-                    i18n::t_args(cx, "status.note_not_found", &[("name", &name)]).as_ref(),
-                    false,
-                    cx,
-                );
-                self.focus_region(FocusRegion::Editor, window, cx);
-                self.quick_open
-                    .input
-                    .update(cx, |input, cx| input.set_value(name, window, cx));
-            }
-            frankmd_workspace::startup::StartupTarget::None => {
-                self.focus_region(FocusRegion::Editor, window, cx)
-            }
-        }
-    }
-
-    fn start_watchers(&mut self, cx: &mut Context<Self>) {
-        let (tx, rx) = async_channel::unbounded::<frankmd_watch::WatchEvent>();
-        struct Sink(async_channel::Sender<frankmd_watch::WatchEvent>);
-        impl frankmd_watch::EventSink for Sink {
-            fn send(&self, ev: frankmd_watch::WatchEvent) -> bool {
-                self.0.send_blocking(ev).is_ok()
-            }
-        }
-        let config = frankmd_watch::WatchConfig::with_system_defaults(self.vault_root.clone());
-        match frankmd_watch::start_with(config, Sink(tx)) {
-            Ok(watchers) => {
-                if let Some(core) = self.core.as_mut() {
-                    core.ws.set_self_writes(watchers.self_writes());
-                }
-                self.watchers = Some(watchers);
-            }
-            Err(err) => {
-                tracing::warn!(%err, "file watchers unavailable");
-                return;
-            }
-        }
-        self.spawn_watch_loop(rx, cx);
-    }
-
-    fn load_hyprland_radius(&mut self, cx: &mut Context<Self>) {
-        cx.spawn(async move |this, cx| {
-            let radius = cx
-                .background_executor()
-                .spawn(async { appearance::hyprland_rounding() })
-                .await;
-            if let Some(radius) = radius {
-                let _ = this.update(cx, |this, cx| {
-                    this.radius = radius;
-                    let tokens = this.theme.tokens.clone();
-                    this.apply_tokens(&tokens, cx);
-                });
-            }
-        })
-        .detach();
-    }
 
     // ----- workspace plumbing ----------------------------------------------------
 
@@ -415,8 +369,7 @@ impl Shell {
                 self.editor.set_document(Some(doc), &text, window, cx);
                 self.render_preview_now(cx);
                 self.layout.note_opened();
-                self.explorer.reveal(path.as_str());
-                self.explorer.cursor = Some(path.as_str().to_owned());
+                self.on_note_opened(path.as_str(), cx);
                 self.banners.clear(BannerKind::ChangedOnDisk);
                 self.banners.clear(BannerKind::DeletedOnDisk);
                 self.banners.clear(BannerKind::ContentLoss);
@@ -426,10 +379,10 @@ impl Shell {
                     .and_then(|c| c.ws.open_doc())
                     .is_some_and(|d| d.read_only);
                 self.banners.set(BannerKind::ReadOnly, read_only);
-                self.record_recent(path.as_str(), cx);
                 self.update_title(window);
             }
             Event::DocClosed { .. } | Event::DocDeleted { .. } => {
+                self.on_note_closed(cx);
                 self.editor.set_document(None, "", window, cx);
                 self.render_preview_now(cx);
                 for kind in [
@@ -448,13 +401,23 @@ impl Shell {
             }
             Event::DocConflict { .. } => self.banners.raise(BannerKind::ChangedOnDisk),
             Event::DocDeletedOnDisk { .. } => self.banners.raise(BannerKind::DeletedOnDisk),
-            Event::DocSaved { .. } | Event::Remapped(_) => self.update_title(window),
-            Event::TreeChanged => self.refresh_quick_open(cx),
-            Event::Reveal { path } => self.explorer.reveal(path.as_str()),
-            Event::SettingsChanged => self.apply_settings(window, cx),
+            Event::DocSaved { .. } => self.update_title(window),
+            Event::Remapped(remaps) => {
+                self.on_remapped(&remaps, cx);
+                self.update_title(window);
+            }
+            Event::TreeChanged => self.on_tree_changed(cx),
+            Event::Reveal { path } => self.reveal_in_tree(path.as_str()),
+            Event::SettingsChanged => {
+                self.apply_settings(window, cx);
+                self.media_config_changed(cx);
+            }
             Event::Autosave(effect) => self.apply_autosave(effect, window, cx),
             Event::System(ev) => self.apply_system(ev, window, cx),
             Event::Error(err) => {
+                if self.last_error.is_none() {
+                    self.last_error = Some(err.clone());
+                }
                 let args: Vec<(&str, &str)> =
                     err.args.iter().map(|(k, v)| (*k, v.as_str())).collect();
                 let text = i18n::t_args(cx, err.key, &args);
@@ -486,10 +449,7 @@ impl Shell {
             | AutosaveEffect::LoadEditorText { content: text, .. } => {
                 self.editor.set_text(&text, window, cx);
             }
-            AutosaveEffect::OpenRecovery(request) => {
-                self.recovery = Some(request);
-                self.open_overlay(OverlayKind::Dialog("recovery"), window, cx);
-            }
+            AutosaveEffect::OpenRecovery(request) => self.open_recovery(request, window, cx),
             AutosaveEffect::Status(_)
             | AutosaveEffect::Save(_)
             | AutosaveEffect::UnloadGuard(_)
@@ -497,7 +457,7 @@ impl Shell {
         }
     }
 
-    fn apply_system(
+    pub(crate) fn apply_system(
         &mut self,
         ev: frankmd_watch::WatchEvent,
         window: &mut Window,
@@ -535,7 +495,7 @@ impl Shell {
         let _ = window;
     }
 
-    fn run_effect(&mut self, effect: Effect, cx: &mut Context<Self>) {
+    pub(crate) fn run_effect(&mut self, effect: Effect, cx: &mut Context<Self>) {
         match effect {
             Effect::ScanTree { generation } => {
                 let Some(core) = self.core.as_ref() else {
@@ -570,19 +530,6 @@ impl Shell {
         self.dispatch(Command::Edited { doc, text }, window, cx);
     }
 
-    fn record_recent(&mut self, path: &str, cx: &mut Context<Self>) {
-        let Some(core) = self.core.as_ref() else {
-            return;
-        };
-        let now = self.clock.timestamp();
-        if let Err(err) =
-            RecentFilesService::new(&core.vault, &core.recents).record(Some(path), now)
-        {
-            tracing::warn!(?err, "recent files not recorded");
-        }
-        self.refresh_quick_open(cx);
-    }
-
     /// Rebuild quick open's candidates from the tree and the shared recents.
     pub(crate) fn refresh_quick_open(&mut self, cx: &mut Context<Self>) {
         let Some(core) = self.core.as_ref() else {
@@ -610,7 +557,7 @@ impl Shell {
         let mut notes = Vec::new();
         walk(&core.ws.snapshot().tree, &mut notes);
         let query = self.quick_open.input.read(cx).value().to_string();
-        self.quick_open.model = QuickOpenModel::new(notes, core.recent_paths());
+        self.quick_open.model = QuickOpenModel::new(notes, core.ws.recent_paths());
         self.quick_open.model.set_query(&query);
     }
 
@@ -771,31 +718,6 @@ impl Shell {
         }
     }
 
-    /// `[[target]]`: open the matching note, or the note-not-found flow.
-    fn open_wikilink(&mut self, target: &str, window: &mut Window, cx: &mut Context<Self>) {
-        let link = frankmd_core::wikilink::extract(&format!("[[{target}]]"))
-            .into_iter()
-            .next();
-        let found = link.and_then(|link| {
-            self.quick_open_candidates().into_iter().find(|p| {
-                RelPath::parse(p).is_ok_and(|rel| frankmd_core::wikilink::resolves_to(&link, &rel))
-            })
-        });
-        match found {
-            Some(path) => self.open_path(&path, window, cx),
-            None => {
-                let text = i18n::t_args(cx, "status.note_not_found", &[("name", target)]);
-                self.show_message(&text, false, cx);
-                self.open_overlay(OverlayKind::QuickOpen, window, cx);
-                let target = target.to_owned();
-                self.quick_open
-                    .input
-                    .update(cx, |input, cx| input.set_value(target.clone(), window, cx));
-                self.quick_open.model.set_query(&target);
-            }
-        }
-    }
-
     /// Every note path of the tree.
     pub(crate) fn quick_open_candidates(&self) -> Vec<String> {
         fn walk(nodes: &[TreeNode], out: &mut Vec<String>) {
@@ -816,28 +738,6 @@ impl Shell {
             walk(&core.ws.snapshot().tree, &mut out);
         }
         out
-    }
-
-    fn load_editor_font(&mut self, cx: &mut Context<Self>) {
-        let id = self
-            .core
-            .as_ref()
-            .and_then(|c| c.ws.snapshot().config.value(Key::EditorFont))
-            .and_then(|v| v.as_str().map(str::to_owned));
-        let window = self.window;
-        cx.spawn(async move |this, cx| {
-            let font = cx
-                .background_executor()
-                .spawn(async move { super::fonts::resolve_editor_font(id.as_deref()) })
-                .await;
-            let _ = window.update(cx, |_, window, cx| {
-                let _ = this.update(cx, |shell, cx| {
-                    shell.editor_font = font.map(SharedString::from);
-                    shell.apply_settings(window, cx);
-                });
-            });
-        })
-        .detach();
     }
 
     /// The UI language: `--locale`, then `.fed`/`FRANKMD_LOCALE`, then the system.
@@ -886,23 +786,6 @@ impl Shell {
 
     // ----- navigation -------------------------------------------------------------
 
-    /// Open `path` and give the editor focus.
-    pub(crate) fn open_note(&mut self, path: RelPath, window: &mut Window, cx: &mut Context<Self>) {
-        self.dispatch(Command::OpenNote { path }, window, cx);
-        if self.overlays.current().is_some() {
-            self.overlays.close();
-        }
-        self.focus_region(FocusRegion::Editor, window, cx);
-    }
-
-    /// Open the note at vault-relative `path` (string form).
-    pub(crate) fn open_path(&mut self, path: &str, window: &mut Window, cx: &mut Context<Self>) {
-        match RelPath::parse(path) {
-            Ok(p) => self.open_note(p, window, cx),
-            Err(_) => tracing::warn!(path, "invalid note path"),
-        }
-    }
-
     /// Text of the editor (what the workspace last received as an edit).
     pub fn editor_text(&self, cx: &App) -> String {
         self.editor.text(cx)
@@ -913,25 +796,6 @@ impl Shell {
         self.messages
             .current(self.clock.instant())
             .map(|m| m.text.clone())
-    }
-
-    /// `:n` / `:prev`: next or previous note in tree order (wrapping).
-    pub(crate) fn step_note(&mut self, forward: bool, window: &mut Window, cx: &mut Context<Self>) {
-        let notes = self.quick_open_candidates();
-        if notes.is_empty() {
-            return;
-        }
-        let at = self
-            .active_path()
-            .and_then(|p| notes.iter().position(|n| *n == p));
-        let len = notes.len();
-        let next = match at {
-            Some(i) if forward => (i + 1) % len,
-            Some(i) => (i + len - 1) % len,
-            None => 0,
-        };
-        let path = notes[next].clone();
-        self.open_path(&path, window, cx);
     }
 
     /// Path of the active note.
@@ -1070,7 +934,10 @@ impl Shell {
             }
             FocusRegion::Editor | FocusRegion::StatusLine => {
                 if self.layout.media_library {
-                    self.library_focus.focus(window, cx);
+                    // The library focuses its own grid; keep it there.
+                    if !self.library_focus.contains_focused(window, cx) {
+                        self.library_focus.focus(window, cx);
+                    }
                 } else if self.active_path().is_some() {
                     self.editor.focus(window, cx);
                 } else {
@@ -1104,453 +971,10 @@ impl Shell {
 
     // ----- overlays ---------------------------------------------------------------
 
-    /// Open `kind` (replacing any open overlay) and focus it.
-    pub(crate) fn open_overlay(
-        &mut self,
-        kind: OverlayKind,
-        window: &mut Window,
-        cx: &mut Context<Self>,
-    ) {
-        let from = self.focused_region(window, cx).unwrap_or(self.last_region);
-        self.overlays.open(kind.clone(), from);
-        match kind {
-            OverlayKind::Palette(mode) => self.palette.open(mode, window, cx),
-            OverlayKind::QuickOpen => {
-                let input = self.quick_open.input.clone();
-                input.update(cx, |input, cx| {
-                    input.set_value("", window, cx);
-                    input.focus(window, cx);
-                });
-                self.quick_open.model.set_query("");
-            }
-            OverlayKind::Settings => self.settings.open(window, cx),
-            OverlayKind::Help | OverlayKind::Dialog(_) | OverlayKind::SearchInFiles => {
-                self.overlay_focus.focus(window, cx)
-            }
-        }
-        cx.notify();
-    }
-
-    /// Close the overlay and give focus back.
-    pub(crate) fn close_overlay(&mut self, window: &mut Window, cx: &mut Context<Self>) {
-        if let Some(OverlayKind::Palette(_)) = self.overlays.current() {
-            self.palette_cancel(cx);
-        }
-        if let Some(region) = self.overlays.close() {
-            self.focus_region(region.fallback(&self.arrangement()), window, cx);
-        }
-        cx.notify();
-    }
-
-    /// Esc: inline layers first (§6.1 chain); never leaves zen.
-    pub(crate) fn escape(&mut self, window: &mut Window, cx: &mut Context<Self>) {
-        if let Some(kind) = self.overlays.current() {
-            if kind.closes_on_escape() {
-                self.close_overlay(window, cx);
-            }
-            return;
-        }
-        if self.layout.close_drawer() {
-            self.focus_region(FocusRegion::Editor, window, cx);
-            return;
-        }
-        if self.layout.media_library {
-            self.layout.close_media_library();
-            self.focus_region(FocusRegion::Editor, window, cx);
-        }
-        cx.notify();
-    }
-
-    /// Context for palette filtering.
-    pub(crate) fn command_context(&self) -> CommandContext {
-        let open = self.active_path();
-        CommandContext {
-            markdown_open: open.as_deref().is_some_and(|p| p.ends_with(".md")),
-            caret_in_table: false,
-            vim: self.vim,
-            note_open: open.is_some(),
-            zen: self.layout.zen,
-            preview_visible: self.layout.preview_visible,
-            sidebar_visible: self.layout.sidebar_visible,
-            typewriter: self.layout.typewriter,
-            scroll_sync: self.scroll_sync,
-        }
-    }
-
     // ----- commands -----------------------------------------------------------------
 
-    /// Run registry command `id` (from a shortcut, the palette or a button).
-    pub(crate) fn run_command(
-        &mut self,
-        id: &'static str,
-        window: &mut Window,
-        cx: &mut Context<Self>,
-    ) {
-        // FE-029 changed: inside Settings only Esc and Ctrl+, work.
-        if self.overlays.is_open(&OverlayKind::Settings)
-            && !matches!(id, "app.settings" | "app.escape" | "list.escape")
-        {
-            return;
-        }
-        if !matches!(
-            id,
-            "app.escape" | "list.escape" | "list.confirm" | "list.select_next" | "list.select_prev"
-        ) {
-            self.recent_commands.retain(|c| *c != id);
-            self.recent_commands.insert(0, id);
-            self.recent_commands.truncate(20);
-        }
-        let doc = self
-            .core
-            .as_ref()
-            .and_then(|c| c.ws.open_doc())
-            .map(|d| d.id);
-        match id {
-            "app.command_palette" => {
-                self.toggle_overlay(OverlayKind::Palette(PaletteMode::Commands), window, cx)
-            }
-            "file.quick_open" => self.toggle_overlay(OverlayKind::QuickOpen, window, cx),
-            "theme.select" => {
-                self.open_overlay(OverlayKind::Palette(PaletteMode::Theme), window, cx)
-            }
-            "language.select" => {
-                self.open_overlay(OverlayKind::Palette(PaletteMode::Language), window, cx)
-            }
-            "app.settings" => self.toggle_overlay(OverlayKind::Settings, window, cx),
-            "app.diagnostics" => {
-                self.settings.category = super::settings::Category::Diagnostics;
-                self.open_overlay(OverlayKind::Settings, window, cx);
-            }
-            "help.toggle" => {
-                self.help_tab = HelpTab::Markdown;
-                self.toggle_overlay(OverlayKind::Help, window, cx);
-            }
-            "help.keyboard_shortcuts" => {
-                self.help_tab = HelpTab::Keyboard;
-                self.open_overlay(OverlayKind::Help, window, cx);
-            }
-            "app.escape" | "list.escape" => self.escape(window, cx),
-            "list.confirm" => self.list_confirm(window, cx),
-            "list.select_next" => self.list_step(true, window, cx),
-            "list.select_prev" => self.list_step(false, window, cx),
-            "app.quit" => self.quit(window, cx),
-            "file.save" => {
-                if let Some(doc) = doc {
-                    self.dispatch(Command::SaveNow { doc }, window, cx);
-                }
-            }
-            "file.close" => {
-                self.dispatch(Command::CloseNote, window, cx);
-                self.focus_region(FocusRegion::Editor, window, cx);
-            }
-            "view.toggle_sidebar" => {
-                self.layout.toggle_sidebar();
-                if self.layout.width_class == WidthClass::Narrow {
-                    if self.layout.drawer_open {
-                        self.sidebar_focus.focus(window, cx);
-                    } else {
-                        self.focus_region(FocusRegion::Editor, window, cx);
-                    }
-                } else {
-                    let visible = self.layout.sidebar_visible;
-                    self.update_settings(
-                        vec![(Key::SidebarVisible, Some(Value::Bool(visible)))],
-                        window,
-                        cx,
-                    );
-                }
-                self.ensure_focus_visible(window, cx);
-            }
-            "view.toggle_preview" => {
-                let was_swapped = self.arrangement().preview == PreviewMode::Swapped;
-                self.layout.toggle_preview();
-                if was_swapped {
-                    self.focus_region(FocusRegion::Editor, window, cx);
-                }
-                self.ensure_focus_visible(window, cx);
-            }
-            "view.toggle_zen" => {
-                self.layout.toggle_zen();
-                self.ensure_focus_visible(window, cx);
-            }
-            "view.media_library" => {
-                self.layout.toggle_media_library();
-                self.focus_region(FocusRegion::Editor, window, cx);
-            }
-            "view.toggle_typewriter" => {
-                let on = !self.layout.typewriter;
-                self.update_settings(
-                    vec![(Key::TypewriterMode, Some(Value::Bool(on)))],
-                    window,
-                    cx,
-                );
-            }
-            "view.toggle_scroll_sync" => {
-                let on = !self.scroll_sync;
-                self.update_settings(vec![(Key::ScrollSync, Some(Value::Bool(on)))], window, cx);
-            }
-            "editor.toggle_vim" => {
-                let on = !self.vim;
-                self.update_settings(vec![(Key::VimMode, Some(Value::Bool(on)))], window, cx);
-            }
-            "focus.sidebar" => self.focus_region(FocusRegion::Sidebar, window, cx),
-            "focus.editor" => self.focus_region(FocusRegion::Editor, window, cx),
-            "focus.preview" => self.focus_region(FocusRegion::Preview, window, cx),
-            "focus.next_region" | "focus.prev_region" => {
-                let arrangement = self.arrangement();
-                let from = self.focused_region(window, cx).unwrap_or(self.last_region);
-                let to = from.step(&arrangement, false, id == "focus.next_region");
-                self.focus_region(to, window, cx);
-            }
-            "file.copy_path" => {
-                if let Some(path) = self.active_path() {
-                    cx.write_to_clipboard(ClipboardItem::new_string(path));
-                    let text = i18n::t(cx, "status.copied_to_clipboard");
-                    self.show_message(&text, false, cx);
-                }
-            }
-            "file.copy_contents" => {
-                if doc.is_some() {
-                    cx.write_to_clipboard(ClipboardItem::new_string(self.editor.text(cx)));
-                    let text = i18n::t(cx, "status.copied_to_clipboard");
-                    self.show_message(&text, false, cx);
-                }
-            }
-            "file.reveal" => {
-                if let Some(path) = self.active_path() {
-                    self.explorer.reveal(&path);
-                    self.explorer.cursor = Some(path);
-                    self.focus_region(FocusRegion::Sidebar, window, cx);
-                }
-            }
-            "edit.go_to_line" => {
-                self.open_overlay(OverlayKind::Palette(PaletteMode::GoToLine), window, cx)
-            }
-            "view.zoom_in" | "view.zoom_out" | "view.zoom_reset"
-                if self.preview_focus.contains_focused(window, cx) =>
-            {
-                self.preview.update(cx, |p, cx| match id {
-                    "view.zoom_in" => p.zoom_in(cx),
-                    "view.zoom_out" => p.zoom_out(cx),
-                    _ => p.reset_zoom(cx),
-                });
-            }
-            _ => {
-                if !self.editor.run_command(id, window, cx) {
-                    self.not_available(id, cx);
-                }
-            }
-        }
-        cx.notify();
-    }
-
-    fn not_available(&mut self, id: &str, cx: &mut Context<Self>) {
-        let title = self
-            .registry
-            .get(id)
-            .map_or_else(|| id.to_owned(), |c| c.title());
-        let text = i18n::t_args(cx, "palette.not_available", &[("command", &title)]);
-        self.show_message(&text, false, cx);
-    }
-
-    fn toggle_overlay(&mut self, kind: OverlayKind, window: &mut Window, cx: &mut Context<Self>) {
-        if self.overlays.is_open(&kind) {
-            self.close_overlay(window, cx);
-        } else {
-            self.open_overlay(kind, window, cx);
-        }
-    }
-
-    /// Ctrl+Q: drafts make quitting safe; flush them and quit (§5.23).
-    fn quit(&mut self, window: &mut Window, cx: &mut Context<Self>) {
-        self.dispatch(Command::FlushDrafts, window, cx);
-        cx.quit();
-    }
-
-    /// ↑/↓ in the open list.
-    pub(crate) fn list_step(&mut self, forward: bool, window: &mut Window, cx: &mut Context<Self>) {
-        match self.overlays.current() {
-            Some(OverlayKind::Palette(_)) => self.palette_step(forward, window, cx),
-            Some(OverlayKind::QuickOpen) | None => {
-                if forward {
-                    self.quick_open.model.select_next();
-                } else {
-                    self.quick_open.model.select_prev();
-                }
-            }
-            _ => {}
-        }
-        cx.notify();
-    }
-
-    /// Enter in the open list.
-    pub(crate) fn list_confirm(&mut self, window: &mut Window, cx: &mut Context<Self>) {
-        match self.overlays.current() {
-            Some(OverlayKind::Palette(_)) => self.palette_confirm(window, cx),
-            Some(OverlayKind::QuickOpen) | None => {
-                if let Some(path) = self.quick_open.model.selected_path().map(str::to_owned) {
-                    self.overlays.close();
-                    self.open_path(&path, window, cx);
-                }
-            }
-            _ => {}
-        }
-    }
-
-    /// Recovery dialog answer.
-    pub(crate) fn resolve_recovery(
-        &mut self,
-        keep_draft: bool,
-        window: &mut Window,
-        cx: &mut Context<Self>,
-    ) {
-        let Some(request) = self.recovery.take() else {
-            return;
-        };
-        let resolution = if keep_draft {
-            RecoveryResolution::accept_local(&request)
-        } else {
-            RecoveryResolution::accept_server(&request)
-        };
-        self.overlays.close();
-        self.dispatch(Command::ResolveRecovery(resolution), window, cx);
-        self.focus_region(FocusRegion::Editor, window, cx);
-    }
-
-    /// A banner button was pressed (`key` is the button's i18n key).
-    pub(crate) fn banner_action(
-        &mut self,
-        kind: BannerKind,
-        key: &str,
-        window: &mut Window,
-        cx: &mut Context<Self>,
-    ) {
-        match key {
-            "banners.content_loss.undo" => {
-                self.banners.clear(BannerKind::ContentLoss);
-                self.dispatch(
-                    Command::ContentLossUndo {
-                        undid_editor_change: false,
-                    },
-                    window,
-                    cx,
-                );
-            }
-            "banners.content_loss.save_anyway" => {
-                self.banners.clear(BannerKind::ContentLoss);
-                self.dispatch(Command::ContentLossSaveAnyway, window, cx);
-            }
-            "banners.changed_on_disk.reload" => {
-                self.banners.clear(kind);
-                if let Some(path) = self.active_path() {
-                    self.dispatch(Command::CloseNote, window, cx);
-                    self.open_path(&path, window, cx);
-                }
-            }
-            "banners.deleted_on_disk.close" => {
-                self.banners.clear(kind);
-                self.dispatch(Command::CloseNote, window, cx);
-            }
-            "banners.deleted_on_disk.save_again" => {
-                self.banners.clear(kind);
-                if let Some(doc) = self
-                    .core
-                    .as_ref()
-                    .and_then(|c| c.ws.open_doc())
-                    .map(|d| d.id)
-                {
-                    self.dispatch(Command::SaveNow { doc }, window, cx);
-                }
-            }
-            "banners.offline.retry" => {
-                if self.vault_root.is_dir() {
-                    self.banners.clear(kind);
-                }
-            }
-            "banners.storage_fallback.dismiss" => self.banners.dismiss(kind),
-            "banners.storage_fallback.settings" => {
-                self.open_overlay(OverlayKind::Settings, window, cx)
-            }
-            "banners.draft_storage.details" => {
-                self.settings.category = super::settings::Category::Diagnostics;
-                self.open_overlay(OverlayKind::Settings, window, cx);
-            }
-            _ => {}
-        }
-        if self.overlays.current().is_none() {
-            self.focus_region(FocusRegion::Editor, window, cx);
-        }
-        cx.notify();
-    }
-
-    /// Commands listener for the root element.
-    pub(crate) fn command_handler(cx: &mut Context<Self>) -> super::actions::CommandHandler {
-        let this = cx.entity().downgrade();
-        Rc::new(move |id, window, cx| {
-            let _ = this.update(cx, |shell, cx| shell.run_command(id, window, cx));
-        })
-    }
 }
 
 impl Shell {
-    fn spawn_scan(
-        &self,
-        vault: Vault,
-        generation: frankmd_core::Generation,
-        cx: &mut Context<Self>,
-    ) {
-        let window = self.window;
-        cx.spawn(async move |this, cx| {
-            let tree = cx
-                .background_executor()
-                .spawn(async move { vault.list_tree().unwrap_or_default() })
-                .await;
-            let _ = window.update(cx, |_, window, cx| {
-                let _ = this.update(cx, |shell, cx| {
-                    shell.dispatch(Command::TreeScanned { generation, tree }, window, cx)
-                });
-            });
-        })
-        .detach();
-    }
 
-    fn spawn_tick(&self, delay: std::time::Duration, cx: &mut Context<Self>) -> Task<()> {
-        let window = self.window;
-        cx.spawn(async move |this, cx| {
-            cx.background_executor().timer(delay).await;
-            let _ = window.update(cx, |_, window, cx| {
-                let _ = this.update(cx, |shell, cx| shell.dispatch(Command::Tick, window, cx));
-            });
-        })
-    }
-
-    fn spawn_watch_loop(
-        &self,
-        rx: async_channel::Receiver<frankmd_watch::WatchEvent>,
-        cx: &mut Context<Self>,
-    ) {
-        let window = self.window;
-        cx.spawn(async move |this, cx| {
-            while let Ok(ev) = rx.recv().await {
-                let stop = window
-                    .update(cx, |_, window, cx| {
-                        this.update(cx, |shell, cx| match ev {
-                            frankmd_watch::WatchEvent::OmarchyThemeChanged
-                            | frankmd_watch::WatchEvent::SystemLanguageChanged
-                            | frankmd_watch::WatchEvent::FontsChanged
-                            | frankmd_watch::WatchEvent::Error(_) => {
-                                shell.apply_system(ev, window, cx)
-                            }
-                            other => shell.dispatch(Command::External(other), window, cx),
-                        })
-                        .is_err()
-                    })
-                    .unwrap_or(true);
-                if stop {
-                    break;
-                }
-            }
-        })
-        .detach();
-    }
 }

@@ -33,6 +33,7 @@
 
 mod chat;
 mod controller;
+pub mod grammar;
 mod http;
 mod image;
 mod service;

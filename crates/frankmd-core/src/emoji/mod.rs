@@ -5,6 +5,7 @@
 
 pub mod i18n;
 pub mod icons;
+pub mod picker;
 
 /// `{source, format: "[shortcode, emoji, keywords]", data: [...]}`.
 pub const SHORTCODES_JSON: &str = include_str!("../../../../assets/emoji/shortcodes.json");

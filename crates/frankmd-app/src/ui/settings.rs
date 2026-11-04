@@ -2,16 +2,21 @@
 //! field filtering rows across categories, and a provenance chip on each row.
 //! Changes apply live and are written to `.fed` through the workspace.
 //!
-//! This round covers Appearance, Editor, Writing, Preview, Files, Diagnostics
-//! (config sources) and About; Media, Integrations and Hugo rows come with
-//! their dialogs.
+//! Categories: Appearance, Editor, Writing, Preview, Files, Media,
+//! Integrations, Hugo, Diagnostics (config sources) and About. The scope
+//! toggle picks where edits go: *This vault* writes `.fed`, *All vaults* the
+//! global `config.toml` (both through `frankmd-config`). Secrets are never
+//! shown or echoed: a set secret reads "Set", and replacing one uses a
+//! masked input that starts empty.
 
 use frankmd_config::{Key, Provenance, Value};
+use frankmd_workspace::Command;
 use gpui_kit::component::button::{Button, ButtonVariants as _};
 use gpui_kit::component::input::{Input, InputEvent, InputState};
 use gpui_kit::component::switch::Switch;
+use gpui_kit::component::theme::Theme;
 use gpui_kit::component::{ActiveTheme as _, Sizable as _, h_flex, v_flex};
-use gpui_kit::component::{Selectable as _, StyledExt as _};
+use gpui_kit::component::{Disableable as _, Selectable as _, StyledExt as _};
 use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::*;
 
@@ -27,17 +32,23 @@ pub(crate) enum Category {
     Writing,
     Preview,
     Files,
+    Media,
+    Integrations,
+    Hugo,
     Diagnostics,
     About,
 }
 
 impl Category {
-    const ALL: [Category; 7] = [
+    const ALL: [Category; 10] = [
         Self::Appearance,
         Self::Editor,
         Self::Writing,
         Self::Preview,
         Self::Files,
+        Self::Media,
+        Self::Integrations,
+        Self::Hugo,
         Self::Diagnostics,
         Self::About,
     ];
@@ -49,6 +60,9 @@ impl Category {
             Self::Writing => "writing",
             Self::Preview => "preview",
             Self::Files => "files",
+            Self::Media => "media",
+            Self::Integrations => "integrations",
+            Self::Hugo => "hugo",
             Self::Diagnostics => "diagnostics",
             Self::About => "about",
         }
@@ -68,6 +82,51 @@ enum Control {
     Value(Key),
     /// The vault path.
     NotesFolder,
+    /// Editable text, committed on Enter / blur.
+    Text(Key),
+    /// A secret: "Set"/"Not set", replaced through a masked input.
+    Secret(Key),
+    /// One of a fixed set of values (`value`, label i18n key).
+    Choice(Key, &'static [(&'static str, &'static str)]),
+    /// Hugo default folder (fixed by the backend, HP-014).
+    HugoFolder,
+    /// Opens `.hugo_template.md` as a note.
+    HugoTemplate,
+    /// "Storage for new media", bound to the media layer's storage model
+    /// (saves immediately, disabled while saving, S3 only when configured).
+    MediaStorage,
+}
+
+/// Where Settings writes (ui-spec §5.16).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub(crate) enum Scope {
+    /// `.fed` in this vault.
+    #[default]
+    Vault,
+    /// `~/.config/frankmd/config.toml`.
+    Global,
+}
+
+const HUGO_STYLE_CHOICES: &[(&str, &str)] = &[
+    ("dated", "settings_sheet.hugo.dated"),
+    ("flat", "settings_sheet.hugo.flat"),
+];
+const AI_PROVIDER_CHOICES: &[(&str, &str)] = &[
+    ("auto", "settings_sheet.integrations.auto"),
+    ("openai", "settings_sheet.integrations.openai"),
+    ("anthropic", "settings_sheet.integrations.anthropic"),
+    ("openrouter", "settings_sheet.integrations.openrouter"),
+    ("ollama", "settings_sheet.integrations.ollama"),
+    ("gemini", "settings_sheet.integrations.gemini"),
+];
+
+const fn row(category: Category, label: &'static str, control: Control) -> RowSpec {
+    RowSpec {
+        category,
+        label,
+        description: None,
+        control,
+    }
 }
 
 struct RowSpec {
@@ -168,12 +227,53 @@ const ROWS: &[RowSpec] = &[
         description: Some("settings_sheet.notes_folder_description"),
         control: Control::NotesFolder,
     },
+    // Media (§5.16)
+    row(Category::Media, "settings_sheet.media.provider", Control::MediaStorage),
+    row(Category::Media, "settings_sheet.media.images_path", Control::Text(Key::ImagesPath)),
+    row(Category::Media, "settings_sheet.media.image_types", Control::Text(Key::ImageUploadExtensions)),
+    row(Category::Media, "settings_sheet.media.video_types", Control::Text(Key::VideoUploadExtensions)),
+    row(Category::Media, "settings_sheet.media.s3_bucket", Control::Text(Key::AwsS3Bucket)),
+    row(Category::Media, "settings_sheet.media.s3_region", Control::Text(Key::AwsRegion)),
+    row(Category::Media, "settings_sheet.media.s3_endpoint", Control::Text(Key::AwsS3Endpoint)),
+    row(Category::Media, "settings_sheet.media.s3_path_style", Control::Switch(Key::AwsS3ForcePathStyle)),
+    row(Category::Media, "settings_sheet.media.s3_access_key", Control::Secret(Key::AwsAccessKeyId)),
+    row(Category::Media, "settings_sheet.media.s3_secret_key", Control::Secret(Key::AwsSecretAccessKey)),
+    // Integrations (§5.16, HP-020)
+    row(Category::Integrations, "settings_sheet.integrations.ai_provider", Control::Choice(Key::AiProvider, AI_PROVIDER_CHOICES)),
+    row(Category::Integrations, "settings_sheet.integrations.ai_model", Control::Text(Key::AiModel)),
+    row(Category::Integrations, "settings_sheet.integrations.openai_key", Control::Secret(Key::OpenaiApiKey)),
+    row(Category::Integrations, "settings_sheet.integrations.openai_model", Control::Text(Key::OpenaiModel)),
+    row(Category::Integrations, "settings_sheet.integrations.anthropic_key", Control::Secret(Key::AnthropicApiKey)),
+    row(Category::Integrations, "settings_sheet.integrations.anthropic_model", Control::Text(Key::AnthropicModel)),
+    row(Category::Integrations, "settings_sheet.integrations.openrouter_key", Control::Secret(Key::OpenrouterApiKey)),
+    row(Category::Integrations, "settings_sheet.integrations.openrouter_model", Control::Text(Key::OpenrouterModel)),
+    row(Category::Integrations, "settings_sheet.integrations.gemini_key", Control::Secret(Key::GeminiApiKey)),
+    row(Category::Integrations, "settings_sheet.integrations.gemini_model", Control::Text(Key::GeminiModel)),
+    row(Category::Integrations, "settings_sheet.integrations.ollama_base", Control::Text(Key::OllamaApiBase)),
+    row(Category::Integrations, "settings_sheet.integrations.ollama_model", Control::Text(Key::OllamaModel)),
+    row(Category::Integrations, "settings_sheet.integrations.image_model", Control::Text(Key::ImageGenerationModel)),
+    row(Category::Integrations, "settings_sheet.integrations.youtube_key", Control::Secret(Key::YoutubeApiKey)),
+    row(Category::Integrations, "settings_sheet.integrations.google_key", Control::Secret(Key::GoogleApiKey)),
+    row(Category::Integrations, "settings_sheet.integrations.google_cse", Control::Text(Key::GoogleCseId)),
+    // Hugo (§5.16)
+    row(Category::Hugo, "settings_sheet.hugo.path_style", Control::Choice(Key::HugoPathStyle, HUGO_STYLE_CHOICES)),
+    row(Category::Hugo, "settings_sheet.hugo.default_folder", Control::HugoFolder),
+    row(Category::Hugo, "settings_sheet.hugo.template", Control::HugoTemplate),
 ];
 
 /// Sheet state.
 pub(crate) struct SettingsState {
     pub(crate) category: Category,
     pub(crate) search: Entity<InputState>,
+    /// Where edits are written.
+    pub(crate) scope: Scope,
+    /// Inputs of the text / secret rows, created on first render.
+    inputs: std::collections::HashMap<Key, Entity<InputState>>,
+    /// Secret rows whose "Change…" input is open.
+    pub(crate) editing_secrets: std::collections::HashSet<Key>,
+    /// Inline error of the last failed write, by key.
+    pub(crate) errors: std::collections::HashMap<Key, SharedString>,
+    subscriptions: Vec<Subscription>,
 }
 
 impl SettingsState {
@@ -188,13 +288,61 @@ impl SettingsState {
             Self {
                 category: Category::default(),
                 search,
+                scope: Scope::default(),
+                inputs: Default::default(),
+                editing_secrets: Default::default(),
+                errors: Default::default(),
+                subscriptions: Vec::new(),
             },
             sub,
         )
     }
 
+    /// The input of a text/secret row (created with `initial` the first time).
+    fn input_for(
+        &mut self,
+        key: Key,
+        initial: &str,
+        secret: bool,
+        window: &mut Window,
+        cx: &mut Context<Shell>,
+    ) -> Entity<InputState> {
+        if let Some(input) = self.inputs.get(&key) {
+            return input.clone();
+        }
+        let initial = initial.to_owned();
+        let input = cx.new(|cx| {
+            InputState::new(window, cx)
+                .masked(secret)
+                .default_value(initial)
+        });
+        let sub = cx.subscribe_in(&input, window, move |shell, input, ev: &InputEvent, window, cx| {
+            let commit = match ev {
+                InputEvent::PressEnter { .. } => true,
+                InputEvent::Blur => !secret,
+                _ => false,
+            };
+            if commit {
+                let value = input.read(cx).value().to_string();
+                shell.commit_setting_text(key, &value, secret, window, cx);
+            }
+        });
+        self.subscriptions.push(sub);
+        self.inputs.insert(key, input.clone());
+        input
+    }
+
+    /// Drop cached inputs so they re-read the config (after a write elsewhere).
+    pub(crate) fn reset_inputs(&mut self) {
+        self.inputs.clear();
+        self.subscriptions.clear();
+        self.editing_secrets.clear();
+    }
+
     /// Focus the search field.
     pub(crate) fn open(&mut self, window: &mut Window, cx: &mut Context<Shell>) {
+        self.reset_inputs();
+        self.errors.clear();
         self.search.update(cx, |input, cx| {
             input.set_value("", window, cx);
             input.focus(window, cx);
@@ -221,11 +369,102 @@ impl Shell {
                 i18n::t_args(cx, "settings_sheet.source.env", &[("name", name)])
             }
             Provenance::Default => i18n::t(cx, "settings_sheet.source.default"),
+            Provenance::Global => i18n::t(cx, "settings_sheet.source.global"),
         }
     }
 
+    /// Write `changes` to the scope the sheet is in.
+    pub(crate) fn write_settings(
+        &mut self,
+        changes: Vec<(Key, Option<Value>)>,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        let keys: Vec<Key> = changes.iter().map(|(k, _)| *k).collect();
+        let cmd = match self.settings.scope {
+            Scope::Vault => Command::UpdateSettings { changes },
+            Scope::Global => Command::UpdateGlobalSettings { changes },
+        };
+        let result = self.dispatch_checked(cmd, window, cx);
+        for key in keys {
+            match &result {
+                Ok(()) => {
+                    self.settings.errors.remove(&key);
+                }
+                Err(err) => {
+                    let text = i18n::t(cx, err.key);
+                    self.settings.errors.insert(key, text);
+                }
+            }
+        }
+        cx.notify();
+    }
+
+    /// A text/secret row was committed. Blank removes the key (back to the
+    /// next layer); secrets are never echoed back into the input.
+    fn commit_setting_text(
+        &mut self,
+        key: Key,
+        raw: &str,
+        secret: bool,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        let trimmed = raw.trim();
+        let current = self
+            .core
+            .as_ref()
+            .and_then(|c| c.ws.snapshot().config.value(key));
+        let value = if trimmed.is_empty() {
+            None
+        } else {
+            match frankmd_config::value::cast(trimmed, key.spec().ty) {
+                Ok(v) => v,
+                Err(_) => {
+                    let text = i18n::t(cx, "settings.save_failed");
+                    self.settings.errors.insert(key, text);
+                    cx.notify();
+                    return;
+                }
+            }
+        };
+        if secret {
+            self.settings.editing_secrets.remove(&key);
+            self.settings.inputs.remove(&key);
+            if value.is_none() {
+                cx.notify();
+                return;
+            }
+        } else if value == current {
+            return;
+        }
+        self.write_settings(vec![(key, value)], window, cx);
+    }
+
+    /// Hugo "Edit template": open `.hugo_template.md`, creating it from the
+    /// default template first (§5.16).
+    fn edit_hugo_template(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        let Some(core) = self.core.as_ref() else {
+            return;
+        };
+        let service = frankmd_fs::service::NotesService::new(&core.vault);
+        let path = frankmd_core::hugo::TEMPLATE_FILE;
+        if !service.is_file(path).unwrap_or(false)
+            && let Err(err) = service.create(path, frankmd_core::hugo::DEFAULT_TEMPLATE.as_bytes())
+        {
+            tracing::warn!(%err, "hugo template not created");
+            return;
+        }
+        self.overlays.close();
+        self.open_path(path, window, cx);
+    }
+
     /// The sheet.
-    pub(crate) fn render_settings(&mut self, cx: &mut Context<Self>) -> impl IntoElement + use<> {
+    pub(crate) fn render_settings(
+        &mut self,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) -> impl IntoElement + use<> {
         let theme = cx.theme().clone();
         let query = self.settings.search.read(cx).value().to_lowercase();
         let config = self.core.as_ref().map(|c| c.ws.snapshot().config);
@@ -275,7 +514,7 @@ impl Shell {
             .collect();
         for row in &rows {
             body.push(
-                self.render_setting_row(row, config.as_deref(), &theme, cx)
+                self.render_setting_row(row, config.as_deref(), &theme, window, cx)
                     .into_any_element(),
             );
         }
@@ -405,6 +644,7 @@ impl Shell {
                             }),
                     ),
             )
+            .child(self.render_scope_toggle(&theme, cx))
             .child(
                 h_flex()
                     .flex_1()
@@ -433,14 +673,22 @@ impl Shell {
     }
 
     fn render_setting_row(
-        &self,
+        &mut self,
         row: &RowSpec,
         config: Option<&frankmd_config::ResolvedConfig>,
         theme: &gpui_kit::component::theme::Theme,
+        window: &mut Window,
         cx: &mut Context<Self>,
     ) -> impl IntoElement + use<> {
         let this = cx.entity().downgrade();
         let id_slug = row.label.rsplit('.').next().unwrap_or(row.label).to_owned();
+        let this_reset = this.clone();
+        let row_key = match row.control {
+            Control::Switch(k) | Control::Value(k) | Control::Text(k) | Control::Secret(k) | Control::Choice(k, _) => Some(k),
+            Control::ViewMode => Some(Key::ViewMode),
+            Control::MediaStorage => Some(Key::MediaStorageProvider),
+            _ => None,
+        };
         let label = i18n::t(cx, row.label);
         let description = row.description.map(|d| i18n::t(cx, d));
         let resolved = |key: Key| config.map(|c| c.get(key));
@@ -459,7 +707,7 @@ impl Shell {
                     .on_click(move |checked, window, cx| {
                         let checked = *checked;
                         let _ = this.update(cx, |shell, cx| {
-                            shell.update_settings(
+                            shell.write_settings(
                                 vec![(key, Some(Value::Bool(checked)))],
                                 window,
                                 cx,
@@ -507,7 +755,7 @@ impl Shell {
                             .label(i18n::t(cx, "settings.view_mode_split"))
                             .on_click(move |_, window, cx| {
                                 let _ = this.update(cx, |shell, cx| {
-                                    shell.update_settings(
+                                    shell.write_settings(
                                         vec![(Key::ViewMode, Some(Value::Str("split".into())))],
                                         window,
                                         cx,
@@ -522,7 +770,7 @@ impl Shell {
                             .label(i18n::t(cx, "settings.view_mode_single"))
                             .on_click(move |_, window, cx| {
                                 let _ = this2.update(cx, |shell, cx| {
-                                    shell.update_settings(
+                                    shell.write_settings(
                                         vec![(Key::ViewMode, Some(Value::Str("single".into())))],
                                         window,
                                         cx,
@@ -543,7 +791,187 @@ impl Shell {
                 .text_xs()
                 .child(self.vault_root.display().to_string())
                 .into_any_element(),
+            Control::Text(key) => {
+                let r = resolved(key);
+                chip = r.as_ref().map(|r| self.provenance_chip(r.source, cx));
+                let current = r
+                    .as_ref()
+                    .and_then(|r| r.value.as_ref())
+                    .map(|v| match v {
+                        Value::Str(s) => s.clone(),
+                        other => value_text(Some(other)),
+                    })
+                    .unwrap_or_default();
+                let input = self.settings.input_for(key, &current, false, window, cx);
+                div()
+                    .w(px(260.))
+                    .child(Input::new(&input).id(SharedString::from(format!("setting-{id_slug}"))).small())
+                    .into_any_element()
+            }
+            Control::Secret(key) => {
+                let r = resolved(key);
+                chip = r.as_ref().map(|r| self.provenance_chip(r.source, cx));
+                let set = r.as_ref().is_some_and(|r| {
+                    r.value.as_ref().is_some_and(|v| !matches!(v, Value::Str(s) if s.is_empty()))
+                });
+                if self.settings.editing_secrets.contains(&key) {
+                    // Starts empty: the stored secret is never put back into the UI.
+                    let input = self.settings.input_for(key, "", true, window, cx);
+                    div()
+                        .w(px(260.))
+                        .child(Input::new(&input).id(SharedString::from(format!("setting-{id_slug}"))).small())
+                        .into_any_element()
+                } else {
+                    let change = this.clone();
+                    let clear = this.clone();
+                    h_flex()
+                        .gap_2()
+                        .child(
+                            div()
+                                .id(SharedString::from(format!("setting-{id_slug}-state")))
+                                .test_support()
+                                .text_xs()
+                                .text_color(theme.muted_foreground)
+                                .child(i18n::t(
+                                    cx,
+                                    if set {
+                                        "settings_sheet.secret_set"
+                                    } else {
+                                        "settings_sheet.secret_not_set"
+                                    },
+                                )),
+                        )
+                        .child(
+                            Button::new(SharedString::from(format!("setting-{id_slug}-change")))
+                                .small()
+                                .outline()
+                                .label(i18n::t(cx, "settings_sheet.secret_change"))
+                                .on_click(move |_, window, cx| {
+                                    let _ = change.update(cx, |shell, cx| {
+                                        shell.settings.editing_secrets.insert(key);
+                                        shell.settings.inputs.remove(&key);
+                                        cx.notify();
+                                        let _ = window;
+                                    });
+                                }),
+                        )
+                        .when(set, |el| {
+                            el.child(
+                                Button::new(SharedString::from(format!("setting-{id_slug}-clear")))
+                                    .small()
+                                    .ghost()
+                                    .label(i18n::t(cx, "settings_sheet.secret_clear"))
+                                    .on_click(move |_, window, cx| {
+                                        let _ = clear.update(cx, |shell, cx| {
+                                            shell.write_settings(vec![(key, None)], window, cx)
+                                        });
+                                    }),
+                            )
+                        })
+                        .into_any_element()
+                }
+            }
+            Control::Choice(key, choices) => {
+                let r = resolved(key);
+                chip = r.as_ref().map(|r| self.provenance_chip(r.source, cx));
+                let current = r
+                    .as_ref()
+                    .and_then(|r| r.value.as_ref())
+                    .and_then(Value::as_str)
+                    .map(str::to_owned);
+                let current = current.unwrap_or_else(|| choices[0].0.to_owned());
+                let buttons: Vec<_> = choices
+                    .iter()
+                    .map(|(value, label)| {
+                        let this = this.clone();
+                        let value = *value;
+                        Button::new(SharedString::from(format!("setting-{id_slug}-{value}")))
+                            .small()
+                            .selected(current == value)
+                            .label(i18n::t(cx, label))
+                            .on_click(move |_, window, cx| {
+                                let _ = this.update(cx, |shell, cx| {
+                                    shell.write_settings(
+                                        vec![(key, Some(Value::Str(value.to_owned())))],
+                                        window,
+                                        cx,
+                                    )
+                                });
+                            })
+                    })
+                    .collect();
+                h_flex().gap_1().flex_wrap().children(buttons).into_any_element()
+            }
+            Control::MediaStorage => match self.storage_row(cx) {
+                Some((provider, disabled, s3_reason)) => {
+                    use frankmd_media::vm::storage::Provider;
+                    let local = this.clone();
+                    let s3 = this.clone();
+                    h_flex()
+                        .gap_1()
+                        .child(
+                            Button::new("setting-provider-local")
+                                .small()
+                                .selected(provider == Provider::Local)
+                                .disabled(disabled)
+                                .label(i18n::t(cx, "settings_sheet.media.local"))
+                                .on_click(move |_, _, cx| {
+                                    let _ = local.update(cx, |shell, cx| shell.request_storage(Provider::Local, cx));
+                                }),
+                        )
+                        .child(
+                            Button::new("setting-provider-s3")
+                                .small()
+                                .selected(provider == Provider::S3)
+                                .disabled(disabled || s3_reason.is_some())
+                                .label(i18n::t(cx, "settings_sheet.media.s3"))
+                                .on_click(move |_, _, cx| {
+                                    let _ = s3.update(cx, |shell, cx| shell.request_storage(Provider::S3, cx));
+                                }),
+                        )
+                        .when_some(s3_reason, |el, reason| {
+                            el.child(div().text_xs().text_color(theme.muted_foreground).child(reason))
+                        })
+                        .into_any_element()
+                }
+                None => div()
+                    .child(value_text(resolved(Key::MediaStorageProvider).as_ref().and_then(|r| r.value.as_ref())))
+                    .into_any_element(),
+            },
+            Control::HugoFolder => div()
+                .font_family(theme.mono_font_family.clone())
+                .child("blog/")
+                .into_any_element(),
+            Control::HugoTemplate => {
+                let this = this.clone();
+                Button::new("setting-hugo-template")
+                    .small()
+                    .outline()
+                    .label(i18n::t(cx, "settings_sheet.hugo.edit_template"))
+                    .on_click(move |_, window, cx| {
+                        let _ = this.update(cx, |shell, cx| shell.edit_hugo_template(window, cx));
+                    })
+                    .into_any_element()
+            }
         };
+        let error = row_key.and_then(|k| self.settings.errors.get(&k).cloned());
+        // "Overridden in this vault" dot + Reset to global (§5.16), in the global scope.
+        let overridden = self.settings.scope == Scope::Global
+            && row_key.is_some_and(|k| config.is_some_and(|c| c.in_vault_file(k)));
+        let reset = overridden.then(|| {
+            let this = this_reset.clone();
+            let key = row_key.unwrap_or(Key::Theme);
+            Button::new(SharedString::from(format!("setting-{id_slug}-reset")))
+                .xsmall()
+                .ghost()
+                .label(i18n::t(cx, "settings_sheet.reset_to_global"))
+                .on_click(move |_, window, cx| {
+                    let _ = this.update(cx, |shell, cx| {
+                        shell.update_settings(vec![(key, None)], window, cx);
+                        shell.settings.reset_inputs();
+                    });
+                })
+        });
         h_flex()
             .id(SharedString::from(format!("setting-row-{id_slug}")))
             .test_support()
@@ -552,11 +980,22 @@ impl Shell {
             .child(
                 v_flex()
                     .flex_1()
-                    .child(div().child(label))
+                    .child(
+                        h_flex()
+                            .gap_1()
+                            .child(div().child(label))
+                            .when(overridden, |el| {
+                                el.child(div().text_color(theme.primary).child("●"))
+                            }),
+                    )
                     .when_some(description, |el, d| {
                         el.child(div().text_xs().text_color(theme.muted_foreground).child(d))
+                    })
+                    .when_some(error, |el, e| {
+                        el.child(div().text_xs().text_color(theme.danger).child(e))
                     }),
             )
+            .children(reset)
             .when_some(chip, |el, c| {
                 el.child(
                     div()
@@ -569,5 +1008,47 @@ impl Shell {
                 )
             })
             .child(control)
+    }
+
+    /// `Scope: [ All vaults | This vault (<name>) ]` (§5.16).
+    fn render_scope_toggle(&self, theme: &Theme, cx: &mut Context<Self>) -> impl IntoElement + use<> {
+        let scope = self.settings.scope;
+        let this = cx.entity().downgrade();
+        let button = |id: &'static str, label: SharedString, target: Scope| {
+            let this = this.clone();
+            Button::new(id)
+                .xsmall()
+                .selected(scope == target)
+                .label(label)
+                .on_click(move |_, _, cx| {
+                    let _ = this.update(cx, |shell, cx| {
+                        shell.settings.scope = target;
+                        shell.settings.reset_inputs();
+                        cx.notify();
+                    });
+                })
+        };
+        let global = button(
+            "settings-scope-global",
+            i18n::t(cx, "settings_sheet.scope_global"),
+            Scope::Global,
+        );
+        let vault = button(
+            "settings-scope-vault",
+            i18n::t_args(cx, "settings_sheet.scope_vault", &[("vault", &self.vault_name)]),
+            Scope::Vault,
+        );
+        h_flex()
+            .id("settings-scope")
+            .test_support()
+            .h(px(36.))
+            .px_4()
+            .gap_2()
+            .border_b_1()
+            .border_color(theme.border)
+            .text_xs()
+            .child(div().text_color(theme.muted_foreground).child(i18n::t(cx, "settings_sheet.scope")))
+            .child(global)
+            .child(vault)
     }
 }

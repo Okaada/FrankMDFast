@@ -13,6 +13,7 @@ thiserror.workspace = true
 rustix = { workspace = true, features = ["rand"] }
 serde_json.workspace = true
 jiff.workspace = true
+trash.workspace = true
 
 [features]
 # Thread-local fault injection used by this crate's failure-path tests.

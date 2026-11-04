@@ -286,7 +286,11 @@ fn clicking_an_explorer_row_opens_the_note(cx: &mut TestAppContext) {
         shell.active_note(cx).as_deref(),
         Some("projects/Launch list.md")
     );
-    assert_eq!(shell.focus_region(cx), Some(FocusRegion::Editor));
+    // Fixed to the plan (ui-test-plan §6 notes_test.rb:33, OQ-3): the row
+    // stays selected and focused, the editor doesn't steal focus
+    // (test/system/notes_test.rb:33 asserts `.explorer-selected:focus`).
+    assert_eq!(shell.focus_region(cx), Some(FocusRegion::Sidebar));
+    assert!(shell.view.read_with(cx, |s, _| s.explorer().is_selected("projects/Launch list.md")));
 }
 
 // §5.14 keyboard: ↓ moves, → expands, Enter opens.

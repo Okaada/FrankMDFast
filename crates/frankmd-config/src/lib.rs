@@ -6,7 +6,8 @@
 //!
 //! Resolution is **exactly** the original's (`app/models/config.rb`, see
 //! `docs/inventory/backend.md` §1.3): `.fed` value if the key is *present*
-//! (even if empty → `None`, blocking ENV) > ENV if non-blank > schema default,
+//! (even if empty → `None`, blocking ENV) > the optional global
+//! `config.toml` layer (same present-wins rule) > ENV if non-blank > schema default,
 //! plus the AI "file-only mode" and the image-generation key exception.
 //! Drop-in compatibility is a hard requirement: the golden fixtures
 //! `config_parse.json`, `config_env.json`, `config_writeback.json` and
@@ -16,6 +17,7 @@ pub mod dirs;
 pub mod env;
 pub mod error;
 pub mod fed;
+pub mod global;
 pub mod resolve;
 pub mod schema;
 pub mod store;
@@ -24,6 +26,7 @@ pub mod value;
 
 pub use env::EnvSnapshot;
 pub use error::ConfigError;
+pub use global::{GLOBAL_CONFIG_FILE, global_config_path, load_global, write_global};
 pub use resolve::{AiProviderId, ConfigEntry, Feature, Provenance, Resolved, ResolvedConfig};
 pub use schema::{Key, KeySpec, KeyType};
 pub use store::ConfigStore;

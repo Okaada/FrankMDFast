@@ -36,6 +36,7 @@
 //! - [`youtube`]: YouTube Data API search.
 //! - [`picker`]: client-side image-source logic ported from `lib/image_sources/*.js`.
 //! - [`s3_key`], [`url_utils`], [`clipboard`]: small JS helpers.
+//! - [`vm`]: GUI-free view models of the media dialogs (Insert image/video, library, storage).
 
 pub mod api;
 pub mod clipboard;
@@ -61,6 +62,7 @@ pub mod upload_storage;
 pub mod url_utils;
 pub mod usage;
 pub mod video;
+pub mod vm;
 pub mod youtube;
 
 pub use config::{MediaConfig, S3Settings, StorageProvider};

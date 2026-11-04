@@ -6,7 +6,7 @@ use frankmd_search::find::{
     validate_regex,
 };
 
-const REGEX: FindOptions = FindOptions { case_sensitive: false, use_regex: true };
+const REGEX: FindOptions = FindOptions { case_sensitive: false, use_regex: true, whole_word: false };
 
 // port: test/javascript/lib/find_utils.test.js:11 "escapes regex special characters"
 #[test]
@@ -37,7 +37,7 @@ fn finds_literal_matches() {
 // port: test/javascript/lib/find_utils.test.js:31 "respects case sensitivity"
 #[test]
 fn respects_case_sensitivity() {
-    let m = find_all_matches("Hello hello", "hello", FindOptions { case_sensitive: true, use_regex: false });
+    let m = find_all_matches("Hello hello", "hello", FindOptions { case_sensitive: true, use_regex: false, whole_word: false });
     assert_eq!(m.len(), 1);
     assert_eq!(m[0].text, "hello");
 }

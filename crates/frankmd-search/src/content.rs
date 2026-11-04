@@ -139,6 +139,11 @@ impl SearchRegex {
     }
 }
 
+/// Ruby `Regexp.escape` (public entry point for callers that build literal patterns).
+pub fn regexp_escape(s: &str) -> String {
+    ruby_regexp_escape(s)
+}
+
 /// Ruby `Regexp.escape`: backslash-escape regex metacharacters and spell
 /// out whitespace controls.
 fn ruby_regexp_escape(s: &str) -> String {

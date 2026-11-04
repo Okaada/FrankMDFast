@@ -110,6 +110,21 @@ impl<'a> NotesService<'a> {
         Ok(())
     }
 
+    /// The app's **Delete**: move a note or folder to the Trash (FE-267 fixed:
+    /// non-empty folders can be deleted honestly, and nothing is lost for
+    /// good). `RevisionConflict` when `expected_revision` no longer matches a
+    /// file; a symlink is trashed itself, never its target; removes recents
+    /// under `path`.
+    pub fn trash(&self, path: &str, expected_revision: Option<&str>) -> Result<(), FsError> {
+        {
+            let _lock = self.exclusive()?;
+            let full = self.vault.trash_path(path)?;
+            self.vault.trash_locked(&full, expected_revision, path)?;
+        }
+        self.update_recents(|recents| recents.remove(path));
+        Ok(())
+    }
+
     /// `rename(old, new)` for files **and** folders: source must exist
     /// (`NotFound("Note not found: <old>")`), destination must not
     /// (`AlreadyExists`), `mkdir -p` dest parent, no-clobber rename (EXDEV →

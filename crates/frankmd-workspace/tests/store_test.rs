@@ -47,7 +47,8 @@ impl Fixture {
         NotesService::new(&vault).read(path).ok().map(|f| String::from_utf8(f.bytes).unwrap())
     }
     fn workspace(&self) -> Workspace<FileDraftBackend> {
-        let vault = self.service_vault();
+        // Deletes go to the Trash (ui-spec §5.13); never the user's real one in tests.
+        let vault = self.service_vault().with_trash(frankmd_fs::TrashBackend::Directory(self.state.join("trash")));
         let config = ConfigStore::open(vault.clone(), EnvSnapshot::default());
         let drafts = open_draft_storage(&self.state).unwrap();
         Workspace::new(vault, config, drafts, DocIndex::open(&self.state), Box::new(self.clock.clone()))

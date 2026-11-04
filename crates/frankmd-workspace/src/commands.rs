@@ -260,6 +260,7 @@ pub const BUILTIN: &[CommandSpec] = &[
     cmd("view.zoom_reset", "View", "Reset zoom", &["ctrl-0"]).editor(),
     cmd("ai.grammar_check", "Check", "Grammar check with AI", &["ctrl-shift-g"]).editor().needs(MarkdownNote),
     cmd("file.rename", "Document", "Rename", &["f2"]).editor().needs(Note),
+    cmd("file.move", "Document", "Move to…", &[]).needs(Note).aka(&["folder"]),
     cmd("file.copy_contents", "Document", "Copy contents", &[]).needs(Note),
     cmd("file.copy_path", "Document", "Copy path", &[]).needs(Note),
     cmd("file.reveal", "Document", "Reveal in explorer", &[]).needs(Note),

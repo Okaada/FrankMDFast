@@ -113,6 +113,7 @@ command_actions!(
     ZoomReset => "view.zoom_reset",
     GrammarCheck => "ai.grammar_check",
     RenameNote => "file.rename",
+    MoveNote => "file.move",
     CopyContents => "file.copy_contents",
     CopyPath => "file.copy_path",
     RevealInExplorer => "file.reveal",

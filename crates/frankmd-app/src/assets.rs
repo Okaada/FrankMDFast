@@ -16,8 +16,6 @@ use gpui_kit::{AssetSource, Result, SharedString};
 use std::borrow::Cow;
 
 const BRAND_ICON_SVG: &[u8] = include_bytes!("../../../assets/brand/icon.svg");
-/// FrankMD's curated Phosphor icon table.
-pub(crate) const PHOSPHOR_JSON: &str = include_str!("../../../assets/icons/phosphor.json");
 
 /// Layered asset source: FrankMD assets first, then gpui-kit's.
 pub(crate) struct FrankAssets;
@@ -41,10 +39,12 @@ impl AssetSource for FrankAssets {
     }
 }
 
-/// Build an SVG document for Phosphor icon `name` (parsed table cached once).
+/// Build an SVG document for Phosphor icon `name` from the parsed table
+/// (`frankmd_core::emoji::icons`, parsed once from the same JSON).
 fn phosphor_svg(name: &str) -> Option<String> {
-    // Scaffold: implemented with a LazyLock<HashMap<name, (path, viewBox)>>
-    // over PHOSPHOR_JSON when the icon picker lands.
-    let _ = (name, PHOSPHOR_JSON);
-    None
+    let glyph = frankmd_core::emoji::icons::lookup(name)?;
+    Some(format!(
+        r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="{}"><path fill="currentColor" d="{}"/></svg>"#,
+        glyph.view_box, glyph.path
+    ))
 }

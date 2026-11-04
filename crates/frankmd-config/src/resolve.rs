@@ -10,6 +10,8 @@ use secrecy::SecretString;
 pub enum Provenance {
     /// Key present in `.fed` (possibly with an empty value → `None`).
     Fed,
+    /// Key present in the global `config.toml` (possibly empty → `None`).
+    Global,
     /// Taken from the named ENV variable.
     Env(&'static str),
     /// Schema default.
@@ -21,6 +23,7 @@ impl Provenance {
     pub fn as_str(self) -> &'static str {
         match self {
             Provenance::Fed => "file",
+            Provenance::Global => "global",
             Provenance::Env(_) => "env",
             Provenance::Default => "default",
         }
@@ -138,6 +141,7 @@ pub struct ConfigEntry {
 #[derive(Clone)]
 pub struct ResolvedConfig {
     file: Vec<(Key, Option<Value>)>,
+    global: Vec<(Key, Option<Value>)>,
     env: EnvSnapshot,
     /// Problems found while loading (skipped lines, undecodable file, ...),
     /// surfaced in the UI. Each names the offending key when there is one.
@@ -146,19 +150,21 @@ pub struct ResolvedConfig {
 
 impl std::fmt::Debug for ResolvedConfig {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let file: Vec<(&str, String)> = self
-            .file
-            .iter()
-            .map(|(k, v)| {
-                let shown = match v {
-                    Some(_) if k.spec().secret => "****".to_owned(),
-                    other => format!("{other:?}"),
-                };
-                (k.name(), shown)
-            })
-            .collect();
+        let masked = |layer: &[(Key, Option<Value>)]| -> Vec<(&'static str, String)> {
+            layer
+                .iter()
+                .map(|(k, v)| {
+                    let shown = match v {
+                        Some(_) if k.spec().secret => "****".to_owned(),
+                        other => format!("{other:?}"),
+                    };
+                    (k.name(), shown)
+                })
+                .collect()
+        };
         f.debug_struct("ResolvedConfig")
-            .field("file", &file)
+            .field("file", &masked(&self.file))
+            .field("global", &masked(&self.global))
             .field("env", &self.env)
             .field("warnings", &self.warnings)
             .finish()
@@ -200,7 +206,7 @@ impl ResolvedConfig {
     /// Build from `.fed` text (or `None` if absent) and an ENV snapshot.
     pub fn new(fed_text: Option<&str>, env: EnvSnapshot) -> Self {
         let parsed = fed_text.map(fed::parse).unwrap_or_default();
-        Self { file: parsed.values, env, warnings: parsed.warnings }
+        Self { file: parsed.values, global: Vec::new(), env, warnings: parsed.warnings }
     }
 
     /// Build from raw `.fed` bytes. Invalid UTF-8 → no file values at all plus
@@ -215,7 +221,30 @@ impl ResolvedConfig {
 
     /// No file values, one warning (the file could not be read or decoded).
     pub(crate) fn failed(env: EnvSnapshot, warning: String) -> Self {
-        Self { file: Vec::new(), env, warnings: vec![warning] }
+        Self { file: Vec::new(), global: Vec::new(), env, warnings: vec![warning] }
+    }
+
+    /// Attach the global layer (see [`crate::global::load_global`]); sits
+    /// between `.fed` and ENV.
+    #[must_use]
+    pub fn with_global(mut self, values: Vec<(Key, Option<Value>)>) -> Self {
+        self.global = values;
+        self
+    }
+
+    /// Keys present in the global config, in file order.
+    pub fn global_values(&self) -> &[(Key, Option<Value>)] {
+        &self.global
+    }
+
+    /// Key present in this vault's `.fed` (even with an empty value).
+    pub fn in_vault_file(&self, key: Key) -> bool {
+        self.file_value(key).is_some()
+    }
+
+    /// Key present in the global config (even with an empty value).
+    pub fn in_global_file(&self, key: Key) -> bool {
+        self.global_value(key).is_some()
     }
 
     /// The ENV snapshot this view was built with.
@@ -233,10 +262,17 @@ impl ResolvedConfig {
         self.file.iter().find(|(k, _)| *k == key).map(|(_, v)| v)
     }
 
-    /// **[COMPAT]** `Config#get`.
+    fn global_value(&self, key: Key) -> Option<&Option<Value>> {
+        self.global.iter().find(|(k, _)| *k == key).map(|(_, v)| v)
+    }
+
+    /// **[COMPAT]** `Config#get`, with the global layer between `.fed` and ENV.
     pub fn get(&self, key: Key) -> Resolved {
         if let Some(v) = self.file_value(key) {
             return Resolved { value: v.clone(), source: Provenance::Fed };
+        }
+        if let Some(v) = self.global_value(key) {
+            return Resolved { value: v.clone(), source: Provenance::Global };
         }
         let spec = key.spec();
         if let Some(var) = spec.env
@@ -260,14 +296,20 @@ impl ResolvedConfig {
         }
         match self.file_value(key) {
             Some(v) => Resolved { value: v.clone(), source: Provenance::Fed },
-            None => Resolved { value: default_of(key), source: Provenance::Default },
+            None => match self.global_value(key) {
+                Some(v) => Resolved { value: v.clone(), source: Provenance::Global },
+                None => Resolved { value: default_of(key), source: Provenance::Default },
+            },
         }
     }
 
     /// **[COMPAT]** `ai_configured_in_file?`: any of [`Key::AI_CREDENTIALS`]
-    /// present in `.fed`, even with an empty value.
+    /// present in `.fed`, even with an empty value. Extension: the global
+    /// config counts as "file" too, so a user who keeps their AI credentials
+    /// in `config.toml` gets the same ENV-ignoring file-only mode; lookups in
+    /// that mode are `.fed > global > default`.
     pub fn ai_configured_in_file(&self) -> bool {
-        Key::AI_CREDENTIALS.iter().any(|k| self.file_value(*k).is_some())
+        Key::AI_CREDENTIALS.iter().any(|k| self.file_value(*k).is_some() || self.global_value(*k).is_some())
     }
 
     /// **[COMPAT]** `ai_providers_available` (order: ollama, openrouter,
@@ -307,6 +349,9 @@ impl ResolvedConfig {
     /// file value is nil and falls through; a blank ENV value disables).
     pub fn image_generation_key(&self) -> Option<SecretString> {
         if let Some(Some(Value::Str(key))) = self.file_value(Key::OpenrouterApiKey) {
+            return Some(SecretString::from(key.clone()));
+        }
+        if let Some(Some(Value::Str(key))) = self.global_value(Key::OpenrouterApiKey) {
             return Some(SecretString::from(key.clone()));
         }
         self.env.present("OPENROUTER_API_KEY").map(|key| SecretString::from(key.to_owned()))
