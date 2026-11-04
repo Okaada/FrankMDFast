@@ -1,0 +1,422 @@
+{
+  "source": "app/javascript/lib/menu_bounds.js @ d47a89e92d89f807878d318182fa5dcea0329ec4",
+  "frankmd_sha": "d47a89e92d89f807878d318182fa5dcea0329ec4",
+  "generator": "tools/golden/js/utils.mjs",
+  "notes": "input = encoded argument array (decode with golden.mjs decode: {$undefined}, {$number}, {$date}, {$regexp}, {$utf16}); expected = encoded return value, or {$error:{name,message}}. JS strings are UTF-16: all positions/lengths/indices in inputs and outputs are UTF-16 code-unit offsets; cases with non-BMP/multi-unit strings carry a `utf16` array (utf16_len/scalar_len/utf8_len per such string arg). TZ pinned to UTC for date-based helpers. clampMenuToViewport/toggleMenu take a DOM element; cases use a stub: input[0] = {rect:{left,right,top}, hidden} describes the element (getBoundingClientRect returns rect; classList holds 'hidden' if hidden). expected = {return, style:{transform,maxHeight}, hidden(after)}. window.innerHeight=768, innerWidth=1024 when defaults used.",
+  "functions": [
+    "menuMaxHeight",
+    "clampMenuToViewport",
+    "toggleMenu"
+  ],
+  "cases": [
+    {
+      "name": "menuMaxHeight #1 (from FrankMD vitest suite)",
+      "fn": "menuMaxHeight",
+      "input": [
+        {
+          "top": 100
+        },
+        900,
+        20
+      ],
+      "expected": "780px"
+    },
+    {
+      "name": "menuMaxHeight #2 (from FrankMD vitest suite)",
+      "fn": "menuMaxHeight",
+      "input": [
+        {
+          "top": 890
+        },
+        900
+      ],
+      "expected": "96px"
+    },
+    {
+      "name": "menuMaxHeight #3 (from FrankMD vitest suite)",
+      "fn": "menuMaxHeight",
+      "input": [
+        {
+          "top": 400
+        },
+        900
+      ],
+      "expected": "492px"
+    },
+    {
+      "name": "menuMaxHeight #4 (edge corpus)",
+      "fn": "menuMaxHeight",
+      "input": [
+        {
+          "top": 0
+        },
+        800
+      ],
+      "expected": "792px"
+    },
+    {
+      "name": "menuMaxHeight #5 (edge corpus)",
+      "fn": "menuMaxHeight",
+      "input": [
+        {
+          "top": 100
+        },
+        800
+      ],
+      "expected": "692px"
+    },
+    {
+      "name": "menuMaxHeight #6 (edge corpus)",
+      "fn": "menuMaxHeight",
+      "input": [
+        {
+          "top": 700
+        },
+        800
+      ],
+      "expected": "96px"
+    },
+    {
+      "name": "menuMaxHeight #7 (edge corpus)",
+      "fn": "menuMaxHeight",
+      "input": [
+        {
+          "top": 790
+        },
+        800
+      ],
+      "expected": "96px"
+    },
+    {
+      "name": "menuMaxHeight #8 (edge corpus)",
+      "fn": "menuMaxHeight",
+      "input": [
+        {
+          "top": 100.7
+        },
+        800
+      ],
+      "expected": "691px"
+    },
+    {
+      "name": "menuMaxHeight #9 (edge corpus)",
+      "fn": "menuMaxHeight",
+      "input": [
+        {
+          "top": -50
+        },
+        800
+      ],
+      "expected": "842px"
+    },
+    {
+      "name": "menuMaxHeight #10 (edge corpus)",
+      "fn": "menuMaxHeight",
+      "input": [
+        {
+          "top": 100
+        },
+        800,
+        0
+      ],
+      "expected": "700px"
+    },
+    {
+      "name": "menuMaxHeight #11 (edge corpus)",
+      "fn": "menuMaxHeight",
+      "input": [
+        {
+          "top": 100
+        },
+        800,
+        20
+      ],
+      "expected": "680px"
+    },
+    {
+      "name": "menuMaxHeight #12 (edge corpus)",
+      "fn": "menuMaxHeight",
+      "input": [
+        {
+          "top": 0
+        },
+        0
+      ],
+      "expected": "96px"
+    },
+    {
+      "name": "clampMenuToViewport #1 (edge corpus)",
+      "fn": "clampMenuToViewport",
+      "input": [
+        {
+          "rect": {
+            "left": 100,
+            "right": 300,
+            "top": 50
+          },
+          "hidden": false
+        },
+        800,
+        1024
+      ],
+      "expected": {
+        "return": {
+          "$undefined": true
+        },
+        "style": {
+          "transform": "",
+          "maxHeight": "742px"
+        },
+        "hidden": false
+      }
+    },
+    {
+      "name": "clampMenuToViewport #2 (edge corpus)",
+      "fn": "clampMenuToViewport",
+      "input": [
+        {
+          "rect": {
+            "left": 2,
+            "right": 200,
+            "top": 50
+          },
+          "hidden": false
+        },
+        800,
+        1024
+      ],
+      "expected": {
+        "return": {
+          "$undefined": true
+        },
+        "style": {
+          "transform": "translateX(6px)",
+          "maxHeight": "742px"
+        },
+        "hidden": false
+      }
+    },
+    {
+      "name": "clampMenuToViewport #3 (edge corpus)",
+      "fn": "clampMenuToViewport",
+      "input": [
+        {
+          "rect": {
+            "left": -30,
+            "right": 170,
+            "top": 50
+          },
+          "hidden": false
+        },
+        800,
+        1024
+      ],
+      "expected": {
+        "return": {
+          "$undefined": true
+        },
+        "style": {
+          "transform": "translateX(38px)",
+          "maxHeight": "742px"
+        },
+        "hidden": false
+      }
+    },
+    {
+      "name": "clampMenuToViewport #4 (edge corpus)",
+      "fn": "clampMenuToViewport",
+      "input": [
+        {
+          "rect": {
+            "left": 900,
+            "right": 1100,
+            "top": 50
+          },
+          "hidden": false
+        },
+        800,
+        1024
+      ],
+      "expected": {
+        "return": {
+          "$undefined": true
+        },
+        "style": {
+          "transform": "translateX(-84px)",
+          "maxHeight": "742px"
+        },
+        "hidden": false
+      }
+    },
+    {
+      "name": "clampMenuToViewport #5 (edge corpus)",
+      "fn": "clampMenuToViewport",
+      "input": [
+        {
+          "rect": {
+            "left": 1000,
+            "right": 1019,
+            "top": 700
+          },
+          "hidden": false
+        },
+        800,
+        1024
+      ],
+      "expected": {
+        "return": {
+          "$undefined": true
+        },
+        "style": {
+          "transform": "translateX(-3px)",
+          "maxHeight": "96px"
+        },
+        "hidden": false
+      }
+    },
+    {
+      "name": "clampMenuToViewport #6 (edge corpus)",
+      "fn": "clampMenuToViewport",
+      "input": [
+        {
+          "rect": {
+            "left": null,
+            "right": null,
+            "top": 0
+          },
+          "hidden": false
+        },
+        800,
+        1024
+      ],
+      "expected": {
+        "return": {
+          "$undefined": true
+        },
+        "style": {
+          "transform": "",
+          "maxHeight": "792px"
+        },
+        "hidden": false
+      }
+    },
+    {
+      "name": "clampMenuToViewport #7 (edge corpus)",
+      "fn": "clampMenuToViewport",
+      "input": [
+        {
+          "rect": {
+            "left": 0,
+            "right": 1024,
+            "top": 0
+          },
+          "hidden": false
+        },
+        800,
+        1024
+      ],
+      "expected": {
+        "return": {
+          "$undefined": true
+        },
+        "style": {
+          "transform": "translateX(8px)",
+          "maxHeight": "792px"
+        },
+        "hidden": false
+      }
+    },
+    {
+      "name": "toggleMenu #1 (edge corpus)",
+      "fn": "toggleMenu",
+      "input": [
+        {
+          "rect": {
+            "left": 1000,
+            "right": 1100,
+            "top": 10
+          },
+          "hidden": true
+        },
+        false
+      ],
+      "expected": {
+        "return": true,
+        "style": {
+          "transform": "translateX(-84px)",
+          "maxHeight": "750px"
+        },
+        "hidden": false
+      }
+    },
+    {
+      "name": "toggleMenu #2 (edge corpus)",
+      "fn": "toggleMenu",
+      "input": [
+        {
+          "rect": {
+            "left": 1000,
+            "right": 1100,
+            "top": 10
+          },
+          "hidden": false
+        },
+        false
+      ],
+      "expected": {
+        "return": false,
+        "style": {
+          "transform": "",
+          "maxHeight": ""
+        },
+        "hidden": true
+      }
+    },
+    {
+      "name": "toggleMenu #3 (edge corpus)",
+      "fn": "toggleMenu",
+      "input": [
+        {
+          "rect": {
+            "left": 1000,
+            "right": 1100,
+            "top": 10
+          },
+          "hidden": true
+        },
+        true
+      ],
+      "expected": {
+        "return": false,
+        "style": {
+          "transform": "",
+          "maxHeight": ""
+        },
+        "hidden": true
+      }
+    },
+    {
+      "name": "toggleMenu #4 (edge corpus)",
+      "fn": "toggleMenu",
+      "input": [
+        {
+          "rect": {
+            "left": 1000,
+            "right": 1100,
+            "top": 10
+          },
+          "hidden": false
+        },
+        true
+      ],
+      "expected": {
+        "return": false,
+        "style": {
+          "transform": "",
+          "maxHeight": ""
+        },
+        "hidden": true
+      }
+    }
+  ]
+}

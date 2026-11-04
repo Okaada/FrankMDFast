@@ -1,0 +1,2039 @@
+{
+  "source": "app/services/backlinks_service.rb, app/controllers/notes_controller.rb#backlinks @ d47a89e92d89f807878d318182fa5dcea0329ec4",
+  "frankmd_sha": "d47a89e92d89f807878d318182fa5dcea0329ec4",
+  "generator": "tools/golden/ruby/backlinks.rb",
+  "notes": "Results JSON: [{line_number, match_text, context[{line_number,content,is_match}], path, name}]. The original returns results in filesystem readdir order (Dir.children, recursive, unsorted) with per-file line order; fixtures SORT results by [path, line_number] because that order is not deterministic. Patterns (all /i): /\\[\\[NAME(\\.md)?\\]\\]/, /\\[\\[PATH_NO_EXT(\\.md)?\\]\\]/, /\\[[^\\]]*\\]\\([^)]*PATH_NO_EXT(\\.md)?[^)]*\\)/ with NAME = basename minus .md, Regexp.escape'd. Any '..' in target -> ArgumentError 'Invalid path'. No code-block exclusion, no alias/heading support. Unlike search/tree, symlinks are followed and invalid UTF-8 is not scrubbed (raises).",
+  "cases": [
+    {
+      "name": "no backlinks",
+      "fn": "BacklinksService#find_backlinks",
+      "input": {
+        "tree": {
+          "target.md": "# Target note",
+          "other.md": "# Unrelated note"
+        },
+        "target": "target.md",
+        "options": {}
+      },
+      "expected": []
+    },
+    {
+      "name": "wikilink by name",
+      "fn": "BacklinksService#find_backlinks",
+      "input": {
+        "tree": {
+          "target.md": "# Target note",
+          "source.md": "Links to [[target]] here"
+        },
+        "target": "target.md",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "Links to [[target]] here",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "Links to [[target]] here",
+              "is_match": true
+            }
+          ],
+          "path": "source.md",
+          "name": "source"
+        }
+      ]
+    },
+    {
+      "name": "wikilink with .md extension",
+      "fn": "BacklinksService#find_backlinks",
+      "input": {
+        "tree": {
+          "target.md": "# Target",
+          "source.md": "Links to [[target.md]] here"
+        },
+        "target": "target.md",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "Links to [[target.md]] here",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "Links to [[target.md]] here",
+              "is_match": true
+            }
+          ],
+          "path": "source.md",
+          "name": "source"
+        }
+      ]
+    },
+    {
+      "name": "wikilink case-insensitive",
+      "fn": "BacklinksService#find_backlinks",
+      "input": {
+        "tree": {
+          "Target.md": "# Target",
+          "source.md": "Links to [[target]] here"
+        },
+        "target": "Target.md",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "Links to [[target]] here",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "Links to [[target]] here",
+              "is_match": true
+            }
+          ],
+          "path": "source.md",
+          "name": "source"
+        }
+      ]
+    },
+    {
+      "name": "wikilink by full path",
+      "fn": "BacklinksService#find_backlinks",
+      "input": {
+        "tree": {
+          "projects/myproject.md": "# My Project",
+          "index.md": "See [[projects/myproject]] for details"
+        },
+        "target": "projects/myproject.md",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "See [[projects/myproject]] for details",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "See [[projects/myproject]] for details",
+              "is_match": true
+            }
+          ],
+          "path": "index.md",
+          "name": "index"
+        }
+      ]
+    },
+    {
+      "name": "standard markdown link",
+      "fn": "BacklinksService#find_backlinks",
+      "input": {
+        "tree": {
+          "target.md": "# Target",
+          "source.md": "Check [this link](target.md) out"
+        },
+        "target": "target.md",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "Check [this link](target.md) out",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "Check [this link](target.md) out",
+              "is_match": true
+            }
+          ],
+          "path": "source.md",
+          "name": "source"
+        }
+      ]
+    },
+    {
+      "name": "markdown link with path",
+      "fn": "BacklinksService#find_backlinks",
+      "input": {
+        "tree": {
+          "docs/guide.md": "# Guide",
+          "readme.md": "See [the guide](docs/guide.md)"
+        },
+        "target": "docs/guide.md",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "See [the guide](docs/guide.md)",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "See [the guide](docs/guide.md)",
+              "is_match": true
+            }
+          ],
+          "path": "readme.md",
+          "name": "readme"
+        }
+      ]
+    },
+    {
+      "name": "skips the target file itself",
+      "fn": "BacklinksService#find_backlinks",
+      "input": {
+        "tree": {
+          "self.md": "I link to [[self]] in my own content"
+        },
+        "target": "self.md",
+        "options": {}
+      },
+      "expected": []
+    },
+    {
+      "name": "multiple files",
+      "fn": "BacklinksService#find_backlinks",
+      "input": {
+        "tree": {
+          "target.md": "# Target",
+          "source1.md": "See [[target]]",
+          "source2.md": "Also [[target]]",
+          "source3.md": "No link here"
+        },
+        "target": "target.md",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "See [[target]]",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "See [[target]]",
+              "is_match": true
+            }
+          ],
+          "path": "source1.md",
+          "name": "source1"
+        },
+        {
+          "line_number": 1,
+          "match_text": "Also [[target]]",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "Also [[target]]",
+              "is_match": true
+            }
+          ],
+          "path": "source2.md",
+          "name": "source2"
+        }
+      ]
+    },
+    {
+      "name": "multiple matches in same file",
+      "fn": "BacklinksService#find_backlinks",
+      "input": {
+        "tree": {
+          "target.md": "# Target",
+          "source.md": "First [[target]] and\nlater [[target]] again"
+        },
+        "target": "target.md",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "First [[target]] and",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "First [[target]] and",
+              "is_match": true
+            },
+            {
+              "line_number": 2,
+              "content": "later [[target]] again",
+              "is_match": false
+            }
+          ],
+          "path": "source.md",
+          "name": "source"
+        },
+        {
+          "line_number": 2,
+          "match_text": "later [[target]] again",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "First [[target]] and",
+              "is_match": false
+            },
+            {
+              "line_number": 2,
+              "content": "later [[target]] again",
+              "is_match": true
+            }
+          ],
+          "path": "source.md",
+          "name": "source"
+        }
+      ]
+    },
+    {
+      "name": "context lines option",
+      "fn": "BacklinksService#find_backlinks",
+      "input": {
+        "tree": {
+          "target.md": "# Target",
+          "source.md": "Line 1\nLine 2\nLink to [[target]] here\nLine 4\nLine 5"
+        },
+        "target": "target.md",
+        "options": {
+          "context_lines": 1
+        }
+      },
+      "expected": [
+        {
+          "line_number": 3,
+          "match_text": "Link to [[target]] here",
+          "context": [
+            {
+              "line_number": 2,
+              "content": "Line 2",
+              "is_match": false
+            },
+            {
+              "line_number": 3,
+              "content": "Link to [[target]] here",
+              "is_match": true
+            },
+            {
+              "line_number": 4,
+              "content": "Line 4",
+              "is_match": false
+            }
+          ],
+          "path": "source.md",
+          "name": "source"
+        }
+      ]
+    },
+    {
+      "name": "default context 3 clipped",
+      "fn": "BacklinksService#find_backlinks",
+      "input": {
+        "tree": {
+          "s.md": "a\nb\nc\nd\n[[t]]\ne\nf\ng\nh"
+        },
+        "target": "t.md",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 5,
+          "match_text": "[[t]]",
+          "context": [
+            {
+              "line_number": 2,
+              "content": "b",
+              "is_match": false
+            },
+            {
+              "line_number": 3,
+              "content": "c",
+              "is_match": false
+            },
+            {
+              "line_number": 4,
+              "content": "d",
+              "is_match": false
+            },
+            {
+              "line_number": 5,
+              "content": "[[t]]",
+              "is_match": true
+            },
+            {
+              "line_number": 6,
+              "content": "e",
+              "is_match": false
+            },
+            {
+              "line_number": 7,
+              "content": "f",
+              "is_match": false
+            },
+            {
+              "line_number": 8,
+              "content": "g",
+              "is_match": false
+            }
+          ],
+          "path": "s.md",
+          "name": "s"
+        }
+      ]
+    },
+    {
+      "name": "traversal rejected",
+      "fn": "BacklinksService#find_backlinks",
+      "input": {
+        "tree": {},
+        "target": "../etc/passwd",
+        "options": {}
+      },
+      "expected": {
+        "error": "ArgumentError",
+        "message": "Invalid path"
+      }
+    },
+    {
+      "name": "traversal rejected nested",
+      "fn": "BacklinksService#find_backlinks",
+      "input": {
+        "tree": {},
+        "target": "folder/../../secret.md",
+        "options": {}
+      },
+      "expected": {
+        "error": "ArgumentError",
+        "message": "Invalid path"
+      }
+    },
+    {
+      "name": "double dots anywhere rejected (even in names)",
+      "fn": "BacklinksService#find_backlinks",
+      "input": {
+        "tree": {
+          "s.md": "[[notes..v2]]"
+        },
+        "target": "notes..v2.md",
+        "options": {}
+      },
+      "expected": {
+        "error": "ArgumentError",
+        "message": "Invalid path"
+      }
+    },
+    {
+      "name": "alias [[a|b]] NOT matched",
+      "fn": "BacklinksService#find_backlinks",
+      "input": {
+        "tree": {
+          "s.md": "See [[target|Alias]]"
+        },
+        "target": "target.md",
+        "options": {}
+      },
+      "expected": []
+    },
+    {
+      "name": "heading [[a#h]] NOT matched",
+      "fn": "BacklinksService#find_backlinks",
+      "input": {
+        "tree": {
+          "s.md": "See [[target#Heading]]"
+        },
+        "target": "target.md",
+        "options": {}
+      },
+      "expected": []
+    },
+    {
+      "name": "block ref [[a^id]] NOT matched",
+      "fn": "BacklinksService#find_backlinks",
+      "input": {
+        "tree": {
+          "s.md": "See [[target^abc]]"
+        },
+        "target": "target.md",
+        "options": {}
+      },
+      "expected": []
+    },
+    {
+      "name": "embed ![[a]] matched",
+      "fn": "BacklinksService#find_backlinks",
+      "input": {
+        "tree": {
+          "s.md": "Embed ![[target]]"
+        },
+        "target": "target.md",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "Embed ![[target]]",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "Embed ![[target]]",
+              "is_match": true
+            }
+          ],
+          "path": "s.md",
+          "name": "s"
+        }
+      ]
+    },
+    {
+      "name": "spaces inside brackets NOT matched",
+      "fn": "BacklinksService#find_backlinks",
+      "input": {
+        "tree": {
+          "s.md": "[[ target ]]"
+        },
+        "target": "target.md",
+        "options": {}
+      },
+      "expected": []
+    },
+    {
+      "name": "wikilink with path when target given by name only",
+      "fn": "BacklinksService#find_backlinks",
+      "input": {
+        "tree": {
+          "s.md": "[[folder/target]]"
+        },
+        "target": "target.md",
+        "options": {}
+      },
+      "expected": []
+    },
+    {
+      "name": "wikilink by name for nested target",
+      "fn": "BacklinksService#find_backlinks",
+      "input": {
+        "tree": {
+          "folder/target.md": "t",
+          "s.md": "[[target]]"
+        },
+        "target": "folder/target.md",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "[[target]]",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "[[target]]",
+              "is_match": true
+            }
+          ],
+          "path": "s.md",
+          "name": "s"
+        }
+      ]
+    },
+    {
+      "name": "wikilink by name matches same-named notes in other folders too",
+      "fn": "BacklinksService#find_backlinks",
+      "input": {
+        "tree": {
+          "a/target.md": "a",
+          "b/target.md": "b",
+          "s.md": "[[target]]"
+        },
+        "target": "a/target.md",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "[[target]]",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "[[target]]",
+              "is_match": true
+            }
+          ],
+          "path": "s.md",
+          "name": "s"
+        }
+      ]
+    },
+    {
+      "name": "wikilink with uppercase .MD",
+      "fn": "BacklinksService#find_backlinks",
+      "input": {
+        "tree": {
+          "s.md": "[[target.MD]]"
+        },
+        "target": "target.md",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "[[target.MD]]",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "[[target.MD]]",
+              "is_match": true
+            }
+          ],
+          "path": "s.md",
+          "name": "s"
+        }
+      ]
+    },
+    {
+      "name": "target without .md extension",
+      "fn": "BacklinksService#find_backlinks",
+      "input": {
+        "tree": {
+          "target.md": "t",
+          "s.md": "[[target]]"
+        },
+        "target": "target",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "[[target]]",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "[[target]]",
+              "is_match": true
+            }
+          ],
+          "path": "s.md",
+          "name": "s"
+        }
+      ]
+    },
+    {
+      "name": "target without extension skips itself",
+      "fn": "BacklinksService#find_backlinks",
+      "input": {
+        "tree": {
+          "target.md": "[[target]]"
+        },
+        "target": "target",
+        "options": {}
+      },
+      "expected": []
+    },
+    {
+      "name": "target with other extension",
+      "fn": "BacklinksService#find_backlinks",
+      "input": {
+        "tree": {
+          "s.md": "[[image.png]] and [x](image.png)"
+        },
+        "target": "image.png",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "[[image.png]] and [x](image.png)",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "[[image.png]] and [x](image.png)",
+              "is_match": true
+            }
+          ],
+          "path": "s.md",
+          "name": "s"
+        }
+      ]
+    },
+    {
+      "name": "markdown link without extension",
+      "fn": "BacklinksService#find_backlinks",
+      "input": {
+        "tree": {
+          "s.md": "[t](target)"
+        },
+        "target": "target.md",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "[t](target)",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "[t](target)",
+              "is_match": true
+            }
+          ],
+          "path": "s.md",
+          "name": "s"
+        }
+      ]
+    },
+    {
+      "name": "markdown link with ./ and ../ prefixes (substring match)",
+      "fn": "BacklinksService#find_backlinks",
+      "input": {
+        "tree": {
+          "s.md": "[a](./target.md)\n[b](../target.md)\n[c](/target.md)"
+        },
+        "target": "target.md",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "[a](./target.md)",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "[a](./target.md)",
+              "is_match": true
+            },
+            {
+              "line_number": 2,
+              "content": "[b](../target.md)",
+              "is_match": false
+            },
+            {
+              "line_number": 3,
+              "content": "[c](/target.md)",
+              "is_match": false
+            }
+          ],
+          "path": "s.md",
+          "name": "s"
+        },
+        {
+          "line_number": 2,
+          "match_text": "[b](../target.md)",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "[a](./target.md)",
+              "is_match": false
+            },
+            {
+              "line_number": 2,
+              "content": "[b](../target.md)",
+              "is_match": true
+            },
+            {
+              "line_number": 3,
+              "content": "[c](/target.md)",
+              "is_match": false
+            }
+          ],
+          "path": "s.md",
+          "name": "s"
+        },
+        {
+          "line_number": 3,
+          "match_text": "[c](/target.md)",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "[a](./target.md)",
+              "is_match": false
+            },
+            {
+              "line_number": 2,
+              "content": "[b](../target.md)",
+              "is_match": false
+            },
+            {
+              "line_number": 3,
+              "content": "[c](/target.md)",
+              "is_match": true
+            }
+          ],
+          "path": "s.md",
+          "name": "s"
+        }
+      ]
+    },
+    {
+      "name": "markdown link with anchor",
+      "fn": "BacklinksService#find_backlinks",
+      "input": {
+        "tree": {
+          "s.md": "[t](target.md#section)"
+        },
+        "target": "target.md",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "[t](target.md#section)",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "[t](target.md#section)",
+              "is_match": true
+            }
+          ],
+          "path": "s.md",
+          "name": "s"
+        }
+      ]
+    },
+    {
+      "name": "markdown link substring false positive",
+      "fn": "BacklinksService#find_backlinks",
+      "input": {
+        "tree": {
+          "s.md": "[x](mytarget.md)\n[y](target.mdx)\n[z](target-other.md)"
+        },
+        "target": "target.md",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "[x](mytarget.md)",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "[x](mytarget.md)",
+              "is_match": true
+            },
+            {
+              "line_number": 2,
+              "content": "[y](target.mdx)",
+              "is_match": false
+            },
+            {
+              "line_number": 3,
+              "content": "[z](target-other.md)",
+              "is_match": false
+            }
+          ],
+          "path": "s.md",
+          "name": "s"
+        },
+        {
+          "line_number": 2,
+          "match_text": "[y](target.mdx)",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "[x](mytarget.md)",
+              "is_match": false
+            },
+            {
+              "line_number": 2,
+              "content": "[y](target.mdx)",
+              "is_match": true
+            },
+            {
+              "line_number": 3,
+              "content": "[z](target-other.md)",
+              "is_match": false
+            }
+          ],
+          "path": "s.md",
+          "name": "s"
+        },
+        {
+          "line_number": 3,
+          "match_text": "[z](target-other.md)",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "[x](mytarget.md)",
+              "is_match": false
+            },
+            {
+              "line_number": 2,
+              "content": "[y](target.mdx)",
+              "is_match": false
+            },
+            {
+              "line_number": 3,
+              "content": "[z](target-other.md)",
+              "is_match": true
+            }
+          ],
+          "path": "s.md",
+          "name": "s"
+        }
+      ]
+    },
+    {
+      "name": "markdown link with empty text",
+      "fn": "BacklinksService#find_backlinks",
+      "input": {
+        "tree": {
+          "s.md": "[](target.md)"
+        },
+        "target": "target.md",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "[](target.md)",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "[](target.md)",
+              "is_match": true
+            }
+          ],
+          "path": "s.md",
+          "name": "s"
+        }
+      ]
+    },
+    {
+      "name": "image link matched",
+      "fn": "BacklinksService#find_backlinks",
+      "input": {
+        "tree": {
+          "s.md": "![alt](target.md)"
+        },
+        "target": "target.md",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "![alt](target.md)",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "![alt](target.md)",
+              "is_match": true
+            }
+          ],
+          "path": "s.md",
+          "name": "s"
+        }
+      ]
+    },
+    {
+      "name": "markdown link with URL-encoded space NOT matched",
+      "fn": "BacklinksService#find_backlinks",
+      "input": {
+        "tree": {
+          "my note.md": "x",
+          "s.md": "[a](my%20note.md)\n[b](my note.md)\n[c](<my note.md>)"
+        },
+        "target": "my note.md",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 2,
+          "match_text": "[b](my note.md)",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "[a](my%20note.md)",
+              "is_match": false
+            },
+            {
+              "line_number": 2,
+              "content": "[b](my note.md)",
+              "is_match": true
+            },
+            {
+              "line_number": 3,
+              "content": "[c](<my note.md>)",
+              "is_match": false
+            }
+          ],
+          "path": "s.md",
+          "name": "s"
+        },
+        {
+          "line_number": 3,
+          "match_text": "[c](<my note.md>)",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "[a](my%20note.md)",
+              "is_match": false
+            },
+            {
+              "line_number": 2,
+              "content": "[b](my note.md)",
+              "is_match": false
+            },
+            {
+              "line_number": 3,
+              "content": "[c](<my note.md>)",
+              "is_match": true
+            }
+          ],
+          "path": "s.md",
+          "name": "s"
+        }
+      ]
+    },
+    {
+      "name": "markdown link with title",
+      "fn": "BacklinksService#find_backlinks",
+      "input": {
+        "tree": {
+          "s.md": "[t](target.md \"Title\")"
+        },
+        "target": "target.md",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "[t](target.md \"Title\")",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "[t](target.md \"Title\")",
+              "is_match": true
+            }
+          ],
+          "path": "s.md",
+          "name": "s"
+        }
+      ]
+    },
+    {
+      "name": "markdown link case-insensitive",
+      "fn": "BacklinksService#find_backlinks",
+      "input": {
+        "tree": {
+          "s.md": "[t](TARGET.MD)"
+        },
+        "target": "target.md",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "[t](TARGET.MD)",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "[t](TARGET.MD)",
+              "is_match": true
+            }
+          ],
+          "path": "s.md",
+          "name": "s"
+        }
+      ]
+    },
+    {
+      "name": "reference-style link NOT matched",
+      "fn": "BacklinksService#find_backlinks",
+      "input": {
+        "tree": {
+          "s.md": "[t][ref]\n\n[ref]: target.md"
+        },
+        "target": "target.md",
+        "options": {}
+      },
+      "expected": []
+    },
+    {
+      "name": "bare mention NOT matched",
+      "fn": "BacklinksService#find_backlinks",
+      "input": {
+        "tree": {
+          "s.md": "talk about target.md and target"
+        },
+        "target": "target.md",
+        "options": {}
+      },
+      "expected": []
+    },
+    {
+      "name": "nested path markdown link",
+      "fn": "BacklinksService#find_backlinks",
+      "input": {
+        "tree": {
+          "s.md": "[g](docs/sub/guide.md)\n[h](sub/guide.md)"
+        },
+        "target": "docs/sub/guide.md",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "[g](docs/sub/guide.md)",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "[g](docs/sub/guide.md)",
+              "is_match": true
+            },
+            {
+              "line_number": 2,
+              "content": "[h](sub/guide.md)",
+              "is_match": false
+            }
+          ],
+          "path": "s.md",
+          "name": "s"
+        }
+      ]
+    },
+    {
+      "name": "links inside fenced and inline code still match",
+      "fn": "BacklinksService#find_backlinks",
+      "input": {
+        "tree": {
+          "s.md": "```\n[[target]]\n```\n`[[target]]`\n    [t](target.md)"
+        },
+        "target": "target.md",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 2,
+          "match_text": "[[target]]",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "```",
+              "is_match": false
+            },
+            {
+              "line_number": 2,
+              "content": "[[target]]",
+              "is_match": true
+            },
+            {
+              "line_number": 3,
+              "content": "```",
+              "is_match": false
+            },
+            {
+              "line_number": 4,
+              "content": "`[[target]]`",
+              "is_match": false
+            },
+            {
+              "line_number": 5,
+              "content": "    [t](target.md)",
+              "is_match": false
+            }
+          ],
+          "path": "s.md",
+          "name": "s"
+        },
+        {
+          "line_number": 4,
+          "match_text": "`[[target]]`",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "```",
+              "is_match": false
+            },
+            {
+              "line_number": 2,
+              "content": "[[target]]",
+              "is_match": false
+            },
+            {
+              "line_number": 3,
+              "content": "```",
+              "is_match": false
+            },
+            {
+              "line_number": 4,
+              "content": "`[[target]]`",
+              "is_match": true
+            },
+            {
+              "line_number": 5,
+              "content": "    [t](target.md)",
+              "is_match": false
+            }
+          ],
+          "path": "s.md",
+          "name": "s"
+        },
+        {
+          "line_number": 5,
+          "match_text": "    [t](target.md)",
+          "context": [
+            {
+              "line_number": 2,
+              "content": "[[target]]",
+              "is_match": false
+            },
+            {
+              "line_number": 3,
+              "content": "```",
+              "is_match": false
+            },
+            {
+              "line_number": 4,
+              "content": "`[[target]]`",
+              "is_match": false
+            },
+            {
+              "line_number": 5,
+              "content": "    [t](target.md)",
+              "is_match": true
+            }
+          ],
+          "path": "s.md",
+          "name": "s"
+        }
+      ]
+    },
+    {
+      "name": "regex metacharacters in name are escaped",
+      "fn": "BacklinksService#find_backlinks",
+      "input": {
+        "tree": {
+          "s.md": "[[a+b (draft)]]\n[[aab (draft)]]\n[x](a+b (draft).md)"
+        },
+        "target": "a+b (draft).md",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "[[a+b (draft)]]",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "[[a+b (draft)]]",
+              "is_match": true
+            },
+            {
+              "line_number": 2,
+              "content": "[[aab (draft)]]",
+              "is_match": false
+            },
+            {
+              "line_number": 3,
+              "content": "[x](a+b (draft).md)",
+              "is_match": false
+            }
+          ],
+          "path": "s.md",
+          "name": "s"
+        },
+        {
+          "line_number": 3,
+          "match_text": "[x](a+b (draft).md)",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "[[a+b (draft)]]",
+              "is_match": false
+            },
+            {
+              "line_number": 2,
+              "content": "[[aab (draft)]]",
+              "is_match": false
+            },
+            {
+              "line_number": 3,
+              "content": "[x](a+b (draft).md)",
+              "is_match": true
+            }
+          ],
+          "path": "s.md",
+          "name": "s"
+        }
+      ]
+    },
+    {
+      "name": "brackets in name",
+      "fn": "BacklinksService#find_backlinks",
+      "input": {
+        "tree": {
+          "s.md": "[[note [1]]]\n[[note [1].md]]"
+        },
+        "target": "note [1].md",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "[[note [1]]]",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "[[note [1]]]",
+              "is_match": true
+            },
+            {
+              "line_number": 2,
+              "content": "[[note [1].md]]",
+              "is_match": false
+            }
+          ],
+          "path": "s.md",
+          "name": "s"
+        },
+        {
+          "line_number": 2,
+          "match_text": "[[note [1].md]]",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "[[note [1]]]",
+              "is_match": false
+            },
+            {
+              "line_number": 2,
+              "content": "[[note [1].md]]",
+              "is_match": true
+            }
+          ],
+          "path": "s.md",
+          "name": "s"
+        }
+      ]
+    },
+    {
+      "name": "unicode names (accents/CJK/Hebrew/emoji)",
+      "fn": "BacklinksService#find_backlinks",
+      "input": {
+        "tree": {
+          "s.md": "[[café]]\n[[CAFÉ]]\n[[cafe]]\n[[日本語]]\n[[שלום]]\n[[👨‍👩‍👧]]"
+        },
+        "target": "café.md",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "[[café]]",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "[[café]]",
+              "is_match": true
+            },
+            {
+              "line_number": 2,
+              "content": "[[CAFÉ]]",
+              "is_match": false
+            },
+            {
+              "line_number": 3,
+              "content": "[[cafe]]",
+              "is_match": false
+            },
+            {
+              "line_number": 4,
+              "content": "[[日本語]]",
+              "is_match": false
+            }
+          ],
+          "path": "s.md",
+          "name": "s"
+        },
+        {
+          "line_number": 2,
+          "match_text": "[[CAFÉ]]",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "[[café]]",
+              "is_match": false
+            },
+            {
+              "line_number": 2,
+              "content": "[[CAFÉ]]",
+              "is_match": true
+            },
+            {
+              "line_number": 3,
+              "content": "[[cafe]]",
+              "is_match": false
+            },
+            {
+              "line_number": 4,
+              "content": "[[日本語]]",
+              "is_match": false
+            },
+            {
+              "line_number": 5,
+              "content": "[[שלום]]",
+              "is_match": false
+            }
+          ],
+          "path": "s.md",
+          "name": "s"
+        }
+      ]
+    },
+    {
+      "name": "CJK target",
+      "fn": "BacklinksService#find_backlinks",
+      "input": {
+        "tree": {
+          "s.md": "[[日本語]]\n[x](日本語.md)"
+        },
+        "target": "日本語.md",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "[[日本語]]",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "[[日本語]]",
+              "is_match": true
+            },
+            {
+              "line_number": 2,
+              "content": "[x](日本語.md)",
+              "is_match": false
+            }
+          ],
+          "path": "s.md",
+          "name": "s"
+        },
+        {
+          "line_number": 2,
+          "match_text": "[x](日本語.md)",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "[[日本語]]",
+              "is_match": false
+            },
+            {
+              "line_number": 2,
+              "content": "[x](日本語.md)",
+              "is_match": true
+            }
+          ],
+          "path": "s.md",
+          "name": "s"
+        }
+      ]
+    },
+    {
+      "name": "Hebrew target",
+      "fn": "BacklinksService#find_backlinks",
+      "input": {
+        "tree": {
+          "s.md": "[[שלום]]"
+        },
+        "target": "שלום.md",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "[[שלום]]",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "[[שלום]]",
+              "is_match": true
+            }
+          ],
+          "path": "s.md",
+          "name": "s"
+        }
+      ]
+    },
+    {
+      "name": "emoji ZWJ target",
+      "fn": "BacklinksService#find_backlinks",
+      "input": {
+        "tree": {
+          "s.md": "[[👨‍👩‍👧]]\n[[👨]]"
+        },
+        "target": "👨‍👩‍👧.md",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "[[👨‍👩‍👧]]",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "[[👨‍👩‍👧]]",
+              "is_match": true
+            },
+            {
+              "line_number": 2,
+              "content": "[[👨]]",
+              "is_match": false
+            }
+          ],
+          "path": "s.md",
+          "name": "s"
+        }
+      ]
+    },
+    {
+      "name": "combining vs precomposed not equivalent",
+      "fn": "BacklinksService#find_backlinks",
+      "input": {
+        "tree": {
+          "s.md": "[[étude]]\n[[étude]]"
+        },
+        "target": "étude.md",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 2,
+          "match_text": "[[étude]]",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "[[étude]]",
+              "is_match": false
+            },
+            {
+              "line_number": 2,
+              "content": "[[étude]]",
+              "is_match": true
+            }
+          ],
+          "path": "s.md",
+          "name": "s"
+        }
+      ]
+    },
+    {
+      "name": "spaces in name",
+      "fn": "BacklinksService#find_backlinks",
+      "input": {
+        "tree": {
+          "s.md": "[[My Note]]\n[[my note]]\n[[My  Note]]"
+        },
+        "target": "My Note.md",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "[[My Note]]",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "[[My Note]]",
+              "is_match": true
+            },
+            {
+              "line_number": 2,
+              "content": "[[my note]]",
+              "is_match": false
+            },
+            {
+              "line_number": 3,
+              "content": "[[My  Note]]",
+              "is_match": false
+            }
+          ],
+          "path": "s.md",
+          "name": "s"
+        },
+        {
+          "line_number": 2,
+          "match_text": "[[my note]]",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "[[My Note]]",
+              "is_match": false
+            },
+            {
+              "line_number": 2,
+              "content": "[[my note]]",
+              "is_match": true
+            },
+            {
+              "line_number": 3,
+              "content": "[[My  Note]]",
+              "is_match": false
+            }
+          ],
+          "path": "s.md",
+          "name": "s"
+        }
+      ]
+    },
+    {
+      "name": "hidden files and dirs skipped, non-md skipped",
+      "fn": "BacklinksService#find_backlinks",
+      "input": {
+        "tree": {
+          ".h.md": "[[t]]",
+          ".d/x.md": "[[t]]",
+          "a.txt": "[[t]]",
+          "b.MD": "[[t]]",
+          "v.md": "[[t]]"
+        },
+        "target": "t.md",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "[[t]]",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "[[t]]",
+              "is_match": true
+            }
+          ],
+          "path": "v.md",
+          "name": "v"
+        }
+      ]
+    },
+    {
+      "name": "CRLF lines chomped",
+      "fn": "BacklinksService#find_backlinks",
+      "input": {
+        "tree": {
+          "s.md": "a\r\n[[t]]\r\nb\r\n"
+        },
+        "target": "t.md",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 2,
+          "match_text": "[[t]]",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "a",
+              "is_match": false
+            },
+            {
+              "line_number": 2,
+              "content": "[[t]]",
+              "is_match": true
+            },
+            {
+              "line_number": 3,
+              "content": "b",
+              "is_match": false
+            }
+          ],
+          "path": "s.md",
+          "name": "s"
+        }
+      ]
+    },
+    {
+      "name": "lone CR is not a line break",
+      "fn": "BacklinksService#find_backlinks",
+      "input": {
+        "tree": {
+          "s.md": "a\r[[t]]\rb"
+        },
+        "target": "t.md",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "a\r[[t]]\rb",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "a\r[[t]]\rb",
+              "is_match": true
+            }
+          ],
+          "path": "s.md",
+          "name": "s"
+        }
+      ]
+    },
+    {
+      "name": "empty target",
+      "fn": "BacklinksService#find_backlinks",
+      "input": {
+        "tree": {
+          "s.md": "[[]]\n[x]()\n[[.md]]"
+        },
+        "target": "",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "[[]]",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "[[]]",
+              "is_match": true
+            },
+            {
+              "line_number": 2,
+              "content": "[x]()",
+              "is_match": false
+            },
+            {
+              "line_number": 3,
+              "content": "[[.md]]",
+              "is_match": false
+            }
+          ],
+          "path": "s.md",
+          "name": "s"
+        },
+        {
+          "line_number": 2,
+          "match_text": "[x]()",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "[[]]",
+              "is_match": false
+            },
+            {
+              "line_number": 2,
+              "content": "[x]()",
+              "is_match": true
+            },
+            {
+              "line_number": 3,
+              "content": "[[.md]]",
+              "is_match": false
+            }
+          ],
+          "path": "s.md",
+          "name": "s"
+        },
+        {
+          "line_number": 3,
+          "match_text": "[[.md]]",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "[[]]",
+              "is_match": false
+            },
+            {
+              "line_number": 2,
+              "content": "[x]()",
+              "is_match": false
+            },
+            {
+              "line_number": 3,
+              "content": "[[.md]]",
+              "is_match": true
+            }
+          ],
+          "path": "s.md",
+          "name": "s"
+        }
+      ]
+    },
+    {
+      "name": "target '.md'",
+      "fn": "BacklinksService#find_backlinks",
+      "input": {
+        "tree": {
+          "s.md": "[[]]\n[[.md]]\n[x]()"
+        },
+        "target": ".md",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "[[]]",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "[[]]",
+              "is_match": true
+            },
+            {
+              "line_number": 2,
+              "content": "[[.md]]",
+              "is_match": false
+            },
+            {
+              "line_number": 3,
+              "content": "[x]()",
+              "is_match": false
+            }
+          ],
+          "path": "s.md",
+          "name": "s"
+        },
+        {
+          "line_number": 2,
+          "match_text": "[[.md]]",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "[[]]",
+              "is_match": false
+            },
+            {
+              "line_number": 2,
+              "content": "[[.md]]",
+              "is_match": true
+            },
+            {
+              "line_number": 3,
+              "content": "[x]()",
+              "is_match": false
+            }
+          ],
+          "path": "s.md",
+          "name": "s"
+        },
+        {
+          "line_number": 3,
+          "match_text": "[x]()",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "[[]]",
+              "is_match": false
+            },
+            {
+              "line_number": 2,
+              "content": "[[.md]]",
+              "is_match": false
+            },
+            {
+              "line_number": 3,
+              "content": "[x]()",
+              "is_match": true
+            }
+          ],
+          "path": "s.md",
+          "name": "s"
+        }
+      ]
+    },
+    {
+      "name": "invalid UTF-8 source file raises",
+      "fn": "BacklinksService#find_backlinks",
+      "input": {
+        "tree": {
+          "bad.md": {
+            "base64": "W1t0XV0g/w=="
+          }
+        },
+        "target": "t.md",
+        "options": {}
+      },
+      "expected": {
+        "error": "ArgumentError",
+        "message": "invalid byte sequence in UTF-8"
+      }
+    },
+    {
+      "name": "symlinked files and dirs ARE followed (unlike search)",
+      "fn": "BacklinksService#find_backlinks",
+      "input": {
+        "tree": {
+          "real.md": "[[t]]",
+          "alias.md": {
+            "symlink": "real.md"
+          },
+          "ext": {
+            "symlink": "<OUTSIDE>"
+          }
+        },
+        "outside": {
+          "external.md": "[[t]]"
+        },
+        "target": "t.md",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "[[t]]",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "[[t]]",
+              "is_match": true
+            }
+          ],
+          "path": "alias.md",
+          "name": "alias"
+        },
+        {
+          "line_number": 1,
+          "match_text": "[[t]]",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "[[t]]",
+              "is_match": true
+            }
+          ],
+          "path": "ext/external.md",
+          "name": "external"
+        },
+        {
+          "line_number": 1,
+          "match_text": "[[t]]",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "[[t]]",
+              "is_match": true
+            }
+          ],
+          "path": "real.md",
+          "name": "real"
+        }
+      ]
+    },
+    {
+      "name": "GET /notes/target.md/backlinks",
+      "fn": "http",
+      "input": {
+        "tree": {
+          "target.md": "# T",
+          "s.md": "[[target]]",
+          "n/s2.md": "[x](target.md)"
+        },
+        "url": "/notes/target.md/backlinks"
+      },
+      "expected": {
+        "status": 200,
+        "body": {
+          "backlinks": [
+            {
+              "line_number": 1,
+              "match_text": "[x](target.md)",
+              "context": [
+                {
+                  "line_number": 1,
+                  "content": "[x](target.md)",
+                  "is_match": true
+                }
+              ],
+              "path": "n/s2.md",
+              "name": "s2"
+            },
+            {
+              "line_number": 1,
+              "match_text": "[[target]]",
+              "context": [
+                {
+                  "line_number": 1,
+                  "content": "[[target]]",
+                  "is_match": true
+                }
+              ],
+              "path": "s.md",
+              "name": "s"
+            }
+          ],
+          "count": 2
+        }
+      }
+    },
+    {
+      "name": "GET /notes/target/backlinks",
+      "fn": "http",
+      "input": {
+        "tree": {
+          "target.md": "# T",
+          "s.md": "[[target]]",
+          "n/s2.md": "[x](target.md)"
+        },
+        "url": "/notes/target/backlinks"
+      },
+      "expected": {
+        "status": 200,
+        "body": {
+          "backlinks": [
+            {
+              "line_number": 1,
+              "match_text": "[x](target.md)",
+              "context": [
+                {
+                  "line_number": 1,
+                  "content": "[x](target.md)",
+                  "is_match": true
+                }
+              ],
+              "path": "n/s2.md",
+              "name": "s2"
+            },
+            {
+              "line_number": 1,
+              "match_text": "[[target]]",
+              "context": [
+                {
+                  "line_number": 1,
+                  "content": "[[target]]",
+                  "is_match": true
+                }
+              ],
+              "path": "s.md",
+              "name": "s"
+            }
+          ],
+          "count": 2
+        }
+      }
+    },
+    {
+      "name": "GET /notes/none/backlinks",
+      "fn": "http",
+      "input": {
+        "tree": {
+          "target.md": "# T",
+          "s.md": "[[target]]",
+          "n/s2.md": "[x](target.md)"
+        },
+        "url": "/notes/none/backlinks"
+      },
+      "expected": {
+        "status": 200,
+        "body": {
+          "backlinks": [],
+          "count": 0
+        }
+      }
+    },
+    {
+      "name": "GET /notes/..%2Fx/backlinks",
+      "fn": "http",
+      "input": {
+        "tree": {
+          "target.md": "# T",
+          "s.md": "[[target]]",
+          "n/s2.md": "[x](target.md)"
+        },
+        "url": "/notes/..%2Fx/backlinks"
+      },
+      "expected": {
+        "status": 500,
+        "unhandled_exception": {
+          "error": "ArgumentError",
+          "message": "Invalid path"
+        }
+      }
+    }
+  ]
+}

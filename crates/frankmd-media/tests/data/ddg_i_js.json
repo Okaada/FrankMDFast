@@ -1,0 +1,1 @@
+{"ads":[],"query":"cats","queryEncoded":"cats","response_type":"places","results":[{"height":600,"image":"https://example.com/cat.jpg","image_token":"t","source":"example.com","thumbnail":"https://example.com/cat_thumb.jpg","thumbnail_token":"t","title":"A cute cat","url":"https://example.com/cats","width":800}],"vqd":{"cats":"12345-67890"}}

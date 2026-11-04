@@ -1,0 +1,6 @@
+# Pinned so the gpui-pre snapshot (which tracks Zed's toolchain) and our MSRV
+# checks are reproducible. Bump together with gpui-kit.
+[toolchain]
+channel = "1.99.1"
+components = ["rustfmt", "clippy"]
+profile = "minimal"

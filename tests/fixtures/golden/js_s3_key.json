@@ -1,0 +1,228 @@
+{
+  "source": "app/javascript/lib/s3_key.js @ d47a89e92d89f807878d318182fa5dcea0329ec4",
+  "frankmd_sha": "d47a89e92d89f807878d318182fa5dcea0329ec4",
+  "generator": "tools/golden/js/utils.mjs",
+  "notes": "input = encoded argument array (decode with golden.mjs decode: {$undefined}, {$number}, {$date}, {$regexp}, {$utf16}); expected = encoded return value, or {$error:{name,message}}. JS strings are UTF-16: all positions/lengths/indices in inputs and outputs are UTF-16 code-unit offsets; cases with non-BMP/multi-unit strings carry a `utf16` array (utf16_len/scalar_len/utf8_len per such string arg). TZ pinned to UTC for date-based helpers. Date args are {$date}; local time = UTC.",
+  "functions": [
+    "defaultS3Key",
+    "defaultS3Prefix"
+  ],
+  "cases": [
+    {
+      "name": "defaultS3Key #1 (from FrankMD vitest suite)",
+      "fn": "defaultS3Key",
+      "input": [
+        "photo.png",
+        {
+          "$date": "2026-07-09T00:00:00.000Z"
+        }
+      ],
+      "expected": "frankmd/2026/07/photo.png"
+    },
+    {
+      "name": "defaultS3Prefix #1 (from FrankMD vitest suite)",
+      "fn": "defaultS3Prefix",
+      "input": [
+        {
+          "$date": "2026-07-09T00:00:00.000Z"
+        }
+      ],
+      "expected": "frankmd/2026/07"
+    },
+    {
+      "name": "defaultS3Prefix #2 (edge corpus)",
+      "fn": "defaultS3Prefix",
+      "input": [
+        {
+          "$date": "2026-08-18T12:00:00.000Z"
+        }
+      ],
+      "expected": "frankmd/2026/08"
+    },
+    {
+      "name": "defaultS3Key #2 (edge corpus)",
+      "fn": "defaultS3Key",
+      "input": [
+        "photo.png",
+        {
+          "$date": "2026-08-18T12:00:00.000Z"
+        }
+      ],
+      "expected": "frankmd/2026/08/photo.png"
+    },
+    {
+      "name": "defaultS3Key #3 (edge corpus)",
+      "fn": "defaultS3Key",
+      "input": [
+        "日本.jpg",
+        {
+          "$date": "2026-08-18T12:00:00.000Z"
+        }
+      ],
+      "expected": "frankmd/2026/08/日本.jpg"
+    },
+    {
+      "name": "defaultS3Key #4 (edge corpus)",
+      "fn": "defaultS3Key",
+      "input": [
+        "a b.png",
+        {
+          "$date": "2026-08-18T12:00:00.000Z"
+        }
+      ],
+      "expected": "frankmd/2026/08/a b.png"
+    },
+    {
+      "name": "defaultS3Key #5 (edge corpus)",
+      "fn": "defaultS3Key",
+      "input": [
+        "",
+        {
+          "$date": "2026-08-18T12:00:00.000Z"
+        }
+      ],
+      "expected": "frankmd/2026/08/"
+    },
+    {
+      "name": "defaultS3Key #6 (edge corpus)",
+      "fn": "defaultS3Key",
+      "input": [
+        "x/y.png",
+        {
+          "$date": "2026-08-18T12:00:00.000Z"
+        }
+      ],
+      "expected": "frankmd/2026/08/x/y.png"
+    },
+    {
+      "name": "defaultS3Prefix #3 (edge corpus)",
+      "fn": "defaultS3Prefix",
+      "input": [
+        {
+          "$date": "2025-01-05T23:59:59.000Z"
+        }
+      ],
+      "expected": "frankmd/2025/01"
+    },
+    {
+      "name": "defaultS3Key #7 (edge corpus)",
+      "fn": "defaultS3Key",
+      "input": [
+        "photo.png",
+        {
+          "$date": "2025-01-05T23:59:59.000Z"
+        }
+      ],
+      "expected": "frankmd/2025/01/photo.png"
+    },
+    {
+      "name": "defaultS3Key #8 (edge corpus)",
+      "fn": "defaultS3Key",
+      "input": [
+        "日本.jpg",
+        {
+          "$date": "2025-01-05T23:59:59.000Z"
+        }
+      ],
+      "expected": "frankmd/2025/01/日本.jpg"
+    },
+    {
+      "name": "defaultS3Key #9 (edge corpus)",
+      "fn": "defaultS3Key",
+      "input": [
+        "a b.png",
+        {
+          "$date": "2025-01-05T23:59:59.000Z"
+        }
+      ],
+      "expected": "frankmd/2025/01/a b.png"
+    },
+    {
+      "name": "defaultS3Key #10 (edge corpus)",
+      "fn": "defaultS3Key",
+      "input": [
+        "",
+        {
+          "$date": "2025-01-05T23:59:59.000Z"
+        }
+      ],
+      "expected": "frankmd/2025/01/"
+    },
+    {
+      "name": "defaultS3Key #11 (edge corpus)",
+      "fn": "defaultS3Key",
+      "input": [
+        "x/y.png",
+        {
+          "$date": "2025-01-05T23:59:59.000Z"
+        }
+      ],
+      "expected": "frankmd/2025/01/x/y.png"
+    },
+    {
+      "name": "defaultS3Prefix #4 (edge corpus)",
+      "fn": "defaultS3Prefix",
+      "input": [
+        {
+          "$date": "1999-12-31T00:00:00.000Z"
+        }
+      ],
+      "expected": "frankmd/1999/12"
+    },
+    {
+      "name": "defaultS3Key #12 (edge corpus)",
+      "fn": "defaultS3Key",
+      "input": [
+        "photo.png",
+        {
+          "$date": "1999-12-31T00:00:00.000Z"
+        }
+      ],
+      "expected": "frankmd/1999/12/photo.png"
+    },
+    {
+      "name": "defaultS3Key #13 (edge corpus)",
+      "fn": "defaultS3Key",
+      "input": [
+        "日本.jpg",
+        {
+          "$date": "1999-12-31T00:00:00.000Z"
+        }
+      ],
+      "expected": "frankmd/1999/12/日本.jpg"
+    },
+    {
+      "name": "defaultS3Key #14 (edge corpus)",
+      "fn": "defaultS3Key",
+      "input": [
+        "a b.png",
+        {
+          "$date": "1999-12-31T00:00:00.000Z"
+        }
+      ],
+      "expected": "frankmd/1999/12/a b.png"
+    },
+    {
+      "name": "defaultS3Key #15 (edge corpus)",
+      "fn": "defaultS3Key",
+      "input": [
+        "",
+        {
+          "$date": "1999-12-31T00:00:00.000Z"
+        }
+      ],
+      "expected": "frankmd/1999/12/"
+    },
+    {
+      "name": "defaultS3Key #16 (edge corpus)",
+      "fn": "defaultS3Key",
+      "input": [
+        "x/y.png",
+        {
+          "$date": "1999-12-31T00:00:00.000Z"
+        }
+      ],
+      "expected": "frankmd/1999/12/x/y.png"
+    }
+  ]
+}

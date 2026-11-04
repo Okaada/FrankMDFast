@@ -1,0 +1,2226 @@
+{
+  "source": "app/services/notes_service.rb#rename, app/models/note.rb#rename, app/models/folder.rb#rename/update_hugo_index_slug, app/services/recent_files_service.rb#remap, controllers @ d47a89e92d89f807878d318182fa5dcea0329ec4",
+  "frankmd_sha": "d47a89e92d89f807878d318182fa5dcea0329ec4",
+  "generator": "tools/golden/ruby/notes_rename.rb",
+  "notes": "Same scenario format as notes_crud.json (ops run sequentially; tree_after snapshot; <ROOT>/<OUTSIDE>/<TMP>/<FED_TEMPLATE>/<HEX> placeholders; time frozen at 2026-01-30T12:34:56.789012Z UTC). Rename never rewrites links inside other notes; the only side effects are (1) recent_files remap in .fed (only when <ROOT>/.fed exists) and (2) Folder#rename rewriting the Hugo slug in <new>/index.md frontmatter. Case-only renames were captured on a case-sensitive Linux filesystem. Expanded-folder remap cases call the private controller method directly; expanded_folders is a Ruby Set rendered as an array in insertion order.",
+  "fed_template": "# FrankMD Configuration\n# Uncomment and modify values as needed.\n# Environment variables are used as defaults if not specified here.\n\n# UI Settings\n\n# Theme: light, dark, gruvbox, tokyo-night, solarized-dark,\n#        solarized-light, nord, cappuccino, osaka, hackerman\n# theme = dark\n\n# Editor font: cascadia-code, jetbrains-mono, fira-code,\n#              source-code-pro, ubuntu-mono, roboto-mono, hack\n# editor_font = cascadia-code\n\n# editor_font_size = 14\n# preview_zoom = 100\n# sidebar_visible = true\n# typewriter_mode = false\n# cursor_recenter_on_click = false\n# show_stats = false\n\n# Vim mode: hjkl navigation, modal editing, and : ex-commands (default: false)\n# vim_mode = false\n\n# Editor indent: 0 = tab, 1-6 = spaces (default: 2)\n# editor_indent = 2\n\n# Editor width in characters (default: 72, minimum: 72)\n# Increase for wider text area, e.g., 100, 120, or 150\n# editor_width = 72\n\n# Local Images\n\n# images_path = /path/to/images\n\n# Media Uploads (drag-and-drop)\n\n# Destination for new media: local or s3 (requires AWS S3 configuration).\n# media_storage_provider = local\n\n# Comma-separated file extensions accepted by the image/video drop tabs.\n# image_upload_extensions = .jpg,.jpeg,.png,.gif,.webp,.bmp\n# video_upload_extensions = .mp4,.webm,.mkv,.mov,.avi,.m4v,.ogv\n\n# AWS S3 (for image uploads)\n\n# aws_access_key_id = your-access-key\n# aws_secret_access_key = your-secret-key\n# aws_s3_bucket = your-bucket-name\n# aws_region = us-east-1\n\n# S3-compatible services (MinIO, SeaweedFS, ...): set a custom endpoint\n# and force path-style URLs (bucket in the path).\n# aws_s3_endpoint = http://localhost:9000\n# aws_s3_force_path_style = true\n\n# YouTube API (for video search)\n\n# youtube_api_key = your-youtube-api-key\n\n# Google Custom Search (for image search)\n\n# google_api_key = your-google-api-key\n# google_cse_id = your-custom-search-engine-id\n\n# Hugo Blog Posts\n\n# Path style: dated = YYYY/MM/DD/slug/index.md (default)\n#             flat  = slug.md (in current folder)\n# hugo_path_style = dated\n\n# Custom frontmatter: create a .hugo_template.md file at the notes root\n# to override the generated frontmatter. Placeholders {{title}}, {{slug}}\n# and {{date}} are substituted. Leave unset to use the built-in template.\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+  "cases": [
+    {
+      "name": "rename file",
+      "fn": "rename",
+      "input": {
+        "tree": {
+          "old.md": "Content"
+        },
+        "outside": {},
+        "ops": [
+          {
+            "op": "rename",
+            "old_path": "old.md",
+            "new_path": "new.md"
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          true
+        ],
+        "tree_after": {
+          ".frankmd-filesystem.lock": "",
+          "new.md": "Content"
+        }
+      }
+    },
+    {
+      "name": "rename into existing folder",
+      "fn": "rename",
+      "input": {
+        "tree": {
+          "root.md": "Content",
+          "subfolder/": null
+        },
+        "outside": {},
+        "ops": [
+          {
+            "op": "rename",
+            "old_path": "root.md",
+            "new_path": "subfolder/moved.md"
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          true
+        ],
+        "tree_after": {
+          ".frankmd-filesystem.lock": "",
+          "subfolder/": null,
+          "subfolder/moved.md": "Content"
+        }
+      }
+    },
+    {
+      "name": "rename into missing nested folders (created)",
+      "fn": "rename",
+      "input": {
+        "tree": {
+          "a.md": "a"
+        },
+        "outside": {},
+        "ops": [
+          {
+            "op": "rename",
+            "old_path": "a.md",
+            "new_path": "x/y/z/a.md"
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          true
+        ],
+        "tree_after": {
+          ".frankmd-filesystem.lock": "",
+          "x/": null,
+          "x/y/": null,
+          "x/y/z/": null,
+          "x/y/z/a.md": "a"
+        }
+      }
+    },
+    {
+      "name": "move out of folder leaves empty folder",
+      "fn": "rename",
+      "input": {
+        "tree": {
+          "f/a.md": "a"
+        },
+        "outside": {},
+        "ops": [
+          {
+            "op": "rename",
+            "old_path": "f/a.md",
+            "new_path": "a.md"
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          true
+        ],
+        "tree_after": {
+          ".frankmd-filesystem.lock": "",
+          "a.md": "a",
+          "f/": null
+        }
+      }
+    },
+    {
+      "name": "rename folder with contents",
+      "fn": "rename",
+      "input": {
+        "tree": {
+          "old_folder/note.md": "Content",
+          "old_folder/sub/deep.md": "d"
+        },
+        "outside": {},
+        "ops": [
+          {
+            "op": "rename",
+            "old_path": "old_folder",
+            "new_path": "new_folder"
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          true
+        ],
+        "tree_after": {
+          ".frankmd-filesystem.lock": "",
+          "new_folder/": null,
+          "new_folder/note.md": "Content",
+          "new_folder/sub/": null,
+          "new_folder/sub/deep.md": "d"
+        }
+      }
+    },
+    {
+      "name": "move folder into another folder",
+      "fn": "rename",
+      "input": {
+        "tree": {
+          "a/n.md": "n",
+          "b/": null
+        },
+        "outside": {},
+        "ops": [
+          {
+            "op": "rename",
+            "old_path": "a",
+            "new_path": "b/a"
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          true
+        ],
+        "tree_after": {
+          ".frankmd-filesystem.lock": "",
+          "b/": null,
+          "b/a/": null,
+          "b/a/n.md": "n"
+        }
+      }
+    },
+    {
+      "name": "rename missing source",
+      "fn": "rename",
+      "input": {
+        "tree": {},
+        "outside": {},
+        "ops": [
+          {
+            "op": "rename",
+            "old_path": "nonexistent.md",
+            "new_path": "new.md"
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "error": "NotesService::NotFoundError",
+            "message": "Path not found: nonexistent.md"
+          }
+        ],
+        "tree_after": {
+          ".frankmd-filesystem.lock": ""
+        }
+      }
+    },
+    {
+      "name": "rename onto existing file is rejected",
+      "fn": "rename",
+      "input": {
+        "tree": {
+          "old.md": "original",
+          "new.md": "destination"
+        },
+        "outside": {},
+        "ops": [
+          {
+            "op": "rename",
+            "old_path": "old.md",
+            "new_path": "new.md"
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "error": "NotesService::AlreadyExistsError",
+            "message": "Destination already exists: new.md"
+          }
+        ],
+        "tree_after": {
+          ".frankmd-filesystem.lock": "",
+          "new.md": "destination",
+          "old.md": "original"
+        }
+      }
+    },
+    {
+      "name": "rename file onto existing directory is rejected",
+      "fn": "rename",
+      "input": {
+        "tree": {
+          "a.md": "a",
+          "dir/": null
+        },
+        "outside": {},
+        "ops": [
+          {
+            "op": "rename",
+            "old_path": "a.md",
+            "new_path": "dir"
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "error": "NotesService::AlreadyExistsError",
+            "message": "Destination already exists: dir"
+          }
+        ],
+        "tree_after": {
+          ".frankmd-filesystem.lock": "",
+          "a.md": "a",
+          "dir/": null
+        }
+      }
+    },
+    {
+      "name": "rename folder onto existing empty folder is rejected",
+      "fn": "rename",
+      "input": {
+        "tree": {
+          "a/x.md": "x",
+          "b/": null
+        },
+        "outside": {},
+        "ops": [
+          {
+            "op": "rename",
+            "old_path": "a",
+            "new_path": "b"
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "error": "NotesService::AlreadyExistsError",
+            "message": "Destination already exists: b"
+          }
+        ],
+        "tree_after": {
+          ".frankmd-filesystem.lock": "",
+          "a/": null,
+          "a/x.md": "x",
+          "b/": null
+        }
+      }
+    },
+    {
+      "name": "rename onto broken symlink is rejected",
+      "fn": "rename",
+      "input": {
+        "tree": {
+          "a.md": "a",
+          "b.md": {
+            "symlink": "missing.md"
+          }
+        },
+        "outside": {},
+        "ops": [
+          {
+            "op": "rename",
+            "old_path": "a.md",
+            "new_path": "b.md"
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "error": "NotesService::AlreadyExistsError",
+            "message": "Destination already exists: b.md"
+          }
+        ],
+        "tree_after": {
+          ".frankmd-filesystem.lock": "",
+          "a.md": "a",
+          "b.md": {
+            "symlink": "missing.md"
+          }
+        }
+      }
+    },
+    {
+      "name": "rename to same path is rejected",
+      "fn": "rename",
+      "input": {
+        "tree": {
+          "a.md": "a"
+        },
+        "outside": {},
+        "ops": [
+          {
+            "op": "rename",
+            "old_path": "a.md",
+            "new_path": "a.md"
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "error": "NotesService::AlreadyExistsError",
+            "message": "Destination already exists: a.md"
+          }
+        ],
+        "tree_after": {
+          ".frankmd-filesystem.lock": "",
+          "a.md": "a"
+        }
+      }
+    },
+    {
+      "name": "case-only rename of file (case-sensitive fs)",
+      "fn": "rename",
+      "input": {
+        "tree": {
+          "Note.md": "N"
+        },
+        "outside": {},
+        "ops": [
+          {
+            "op": "rename",
+            "old_path": "Note.md",
+            "new_path": "note.md"
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          true
+        ],
+        "tree_after": {
+          ".frankmd-filesystem.lock": "",
+          "note.md": "N"
+        }
+      }
+    },
+    {
+      "name": "case-only rename of folder",
+      "fn": "rename",
+      "input": {
+        "tree": {
+          "Folder/n.md": "n"
+        },
+        "outside": {},
+        "ops": [
+          {
+            "op": "rename",
+            "old_path": "Folder",
+            "new_path": "folder"
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          true
+        ],
+        "tree_after": {
+          ".frankmd-filesystem.lock": "",
+          "folder/": null,
+          "folder/n.md": "n"
+        }
+      }
+    },
+    {
+      "name": "case-only rename when both exist",
+      "fn": "rename",
+      "input": {
+        "tree": {
+          "Note.md": "N",
+          "note.md": "n"
+        },
+        "outside": {},
+        "ops": [
+          {
+            "op": "rename",
+            "old_path": "Note.md",
+            "new_path": "note.md"
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "error": "NotesService::AlreadyExistsError",
+            "message": "Destination already exists: note.md"
+          }
+        ],
+        "tree_after": {
+          ".frankmd-filesystem.lock": "",
+          "Note.md": "N",
+          "note.md": "n"
+        }
+      }
+    },
+    {
+      "name": "move folder into itself",
+      "fn": "rename",
+      "input": {
+        "tree": {
+          "a/n.md": "n"
+        },
+        "outside": {},
+        "ops": [
+          {
+            "op": "rename",
+            "old_path": "a",
+            "new_path": "a/b"
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "error": "Errno::EINVAL",
+            "message": "Invalid argument @ rb_file_s_rename - (<ROOT>/a, <ROOT>/a/b)"
+          }
+        ],
+        "tree_after": {
+          ".frankmd-filesystem.lock": "",
+          "a/": null,
+          "a/n.md": "n"
+        }
+      }
+    },
+    {
+      "name": "move folder into its existing descendant",
+      "fn": "rename",
+      "input": {
+        "tree": {
+          "a/b/n.md": "n"
+        },
+        "outside": {},
+        "ops": [
+          {
+            "op": "rename",
+            "old_path": "a",
+            "new_path": "a/b/c"
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "error": "Errno::EINVAL",
+            "message": "Invalid argument @ rb_file_s_rename - (<ROOT>/a, <ROOT>/a/b/c)"
+          }
+        ],
+        "tree_after": {
+          ".frankmd-filesystem.lock": "",
+          "a/": null,
+          "a/b/": null,
+          "a/b/n.md": "n"
+        }
+      }
+    },
+    {
+      "name": "move folder into a sibling with shared prefix",
+      "fn": "rename",
+      "input": {
+        "tree": {
+          "a/n.md": "n",
+          "ab/": null
+        },
+        "outside": {},
+        "ops": [
+          {
+            "op": "rename",
+            "old_path": "a",
+            "new_path": "ab/a"
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          true
+        ],
+        "tree_after": {
+          ".frankmd-filesystem.lock": "",
+          "ab/": null,
+          "ab/a/": null,
+          "ab/a/n.md": "n"
+        }
+      }
+    },
+    {
+      "name": "rename file under itself (parent would be a file)",
+      "fn": "rename",
+      "input": {
+        "tree": {
+          "a.md": "a"
+        },
+        "outside": {},
+        "ops": [
+          {
+            "op": "rename",
+            "old_path": "a.md",
+            "new_path": "a.md/x.md"
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "error": "Errno::EEXIST",
+            "message": "File exists @ dir_s_mkdir - <ROOT>/a.md"
+          }
+        ],
+        "tree_after": {
+          ".frankmd-filesystem.lock": "",
+          "a.md": "a"
+        }
+      }
+    },
+    {
+      "name": "service rename does not touch extensions",
+      "fn": "rename",
+      "input": {
+        "tree": {
+          "a.md": "a",
+          "b.md": "b"
+        },
+        "outside": {},
+        "ops": [
+          {
+            "op": "rename",
+            "old_path": "a.md",
+            "new_path": "a.txt"
+          },
+          {
+            "op": "rename",
+            "old_path": "b.md",
+            "new_path": "b"
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          true,
+          true
+        ],
+        "tree_after": {
+          ".frankmd-filesystem.lock": "",
+          "a.txt": "a",
+          "b": "b"
+        }
+      }
+    },
+    {
+      "name": "service rename requires exact source name (no .md added)",
+      "fn": "rename",
+      "input": {
+        "tree": {
+          "a.md": "a"
+        },
+        "outside": {},
+        "ops": [
+          {
+            "op": "rename",
+            "old_path": "a",
+            "new_path": "b.md"
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "error": "NotesService::NotFoundError",
+            "message": "Path not found: a"
+          }
+        ],
+        "tree_after": {
+          ".frankmd-filesystem.lock": "",
+          "a.md": "a"
+        }
+      }
+    },
+    {
+      "name": "rename unicode names",
+      "fn": "rename",
+      "input": {
+        "tree": {
+          "café.md": "c",
+          "日本語/ノート.md": "j"
+        },
+        "outside": {},
+        "ops": [
+          {
+            "op": "rename",
+            "old_path": "café.md",
+            "new_path": "שלום/👨‍👩‍👧.md"
+          },
+          {
+            "op": "rename",
+            "old_path": "日本語",
+            "new_path": "étude"
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          true,
+          true
+        ],
+        "tree_after": {
+          ".frankmd-filesystem.lock": "",
+          "étude/": null,
+          "étude/ノート.md": "j",
+          "שלום/": null,
+          "שלום/👨‍👩‍👧.md": "c"
+        }
+      }
+    },
+    {
+      "name": "rename with spaces and trailing slashes",
+      "fn": "rename",
+      "input": {
+        "tree": {
+          "my folder/n.md": "n",
+          "x.md": "x"
+        },
+        "outside": {},
+        "ops": [
+          {
+            "op": "rename",
+            "old_path": "my folder/",
+            "new_path": "other folder/"
+          },
+          {
+            "op": "rename",
+            "old_path": "x.md",
+            "new_path": "  spaced.md"
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          true,
+          true
+        ],
+        "tree_after": {
+          "  spaced.md": "x",
+          ".frankmd-filesystem.lock": "",
+          "other folder/": null,
+          "other folder/n.md": "n"
+        }
+      }
+    },
+    {
+      "name": "rename hidden file and to hidden name",
+      "fn": "rename",
+      "input": {
+        "tree": {
+          ".hidden.md": "h",
+          "v.md": "v"
+        },
+        "outside": {},
+        "ops": [
+          {
+            "op": "rename",
+            "old_path": ".hidden.md",
+            "new_path": "visible.md"
+          },
+          {
+            "op": "rename",
+            "old_path": "v.md",
+            "new_path": ".v.md"
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          true,
+          true
+        ],
+        "tree_after": {
+          ".frankmd-filesystem.lock": "",
+          ".v.md": "v",
+          "visible.md": "h"
+        }
+      }
+    },
+    {
+      "name": "rename onto .fed via service (no guard at service level)",
+      "fn": "rename",
+      "input": {
+        "tree": {
+          "a.md": "theme = dark\n"
+        },
+        "outside": {},
+        "ops": [
+          {
+            "op": "rename",
+            "old_path": "a.md",
+            "new_path": ".fed"
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          true
+        ],
+        "tree_after": {
+          ".fed": "theme = dark\n\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\nrecent_files = []\n",
+          ".frankmd-config.lock": "",
+          ".frankmd-filesystem.lock": ""
+        }
+      }
+    },
+    {
+      "name": "rename reserved lock path",
+      "fn": "rename",
+      "input": {
+        "tree": {
+          "a.md": "a"
+        },
+        "outside": {},
+        "ops": [
+          {
+            "op": "rename",
+            "old_path": "a.md",
+            "new_path": ".frankmd-config.lock"
+          },
+          {
+            "op": "rename",
+            "old_path": ".frankmd-config.lock",
+            "new_path": "x.md"
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "error": "NotesService::InvalidPathError",
+            "message": "Reserved application path"
+          },
+          {
+            "error": "NotesService::InvalidPathError",
+            "message": "Reserved application path"
+          }
+        ],
+        "tree_after": {
+          ".frankmd-filesystem.lock": "",
+          "a.md": "a"
+        }
+      }
+    },
+    {
+      "name": "rename traversal",
+      "fn": "rename",
+      "input": {
+        "tree": {
+          "a.md": "a"
+        },
+        "outside": {
+          "secret.md": "s"
+        },
+        "ops": [
+          {
+            "op": "rename",
+            "old_path": "../outside/secret.md",
+            "new_path": "x.md"
+          },
+          {
+            "op": "rename",
+            "old_path": "a.md",
+            "new_path": "../a.md"
+          },
+          {
+            "op": "rename",
+            "old_path": "a.md",
+            "new_path": "/tmp/a.md"
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "error": "NotesService::InvalidPathError",
+            "message": "Invalid path: ../outside/secret.md"
+          },
+          {
+            "error": "NotesService::InvalidPathError",
+            "message": "Invalid path: ../a.md"
+          },
+          {
+            "error": "NotesService::InvalidPathError",
+            "message": "Invalid path: /tmp/a.md"
+          }
+        ],
+        "tree_after": {
+          ".frankmd-filesystem.lock": "",
+          "a.md": "a"
+        }
+      }
+    },
+    {
+      "name": "rename into symlinked dir escaping root",
+      "fn": "rename",
+      "input": {
+        "tree": {
+          "a.md": "a",
+          "escape": {
+            "symlink": "<OUTSIDE>"
+          }
+        },
+        "outside": {},
+        "ops": [
+          {
+            "op": "rename",
+            "old_path": "a.md",
+            "new_path": "escape/a.md"
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "error": "NotesService::InvalidPathError",
+            "message": "Invalid path: escape/a.md"
+          }
+        ],
+        "tree_after": {
+          ".frankmd-filesystem.lock": "",
+          "a.md": "a",
+          "escape": {
+            "symlink": "<OUTSIDE>"
+          }
+        }
+      }
+    },
+    {
+      "name": "rename internal symlink moves the link",
+      "fn": "rename",
+      "input": {
+        "tree": {
+          "real.md": "r",
+          "alias.md": {
+            "symlink": "real.md"
+          }
+        },
+        "outside": {},
+        "ops": [
+          {
+            "op": "rename",
+            "old_path": "alias.md",
+            "new_path": "sub/alias.md"
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          true
+        ],
+        "tree_after": {
+          ".frankmd-filesystem.lock": "",
+          "real.md": "r",
+          "sub/": null,
+          "sub/alias.md": {
+            "symlink": "real.md"
+          }
+        }
+      }
+    },
+    {
+      "name": "rename root folder",
+      "fn": "rename",
+      "input": {
+        "tree": {
+          "a.md": "a"
+        },
+        "outside": {},
+        "ops": [
+          {
+            "op": "rename",
+            "old_path": "",
+            "new_path": "x"
+          },
+          {
+            "op": "rename",
+            "old_path": ".",
+            "new_path": "y"
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "error": "Errno::EINVAL",
+            "message": "Invalid argument @ rb_file_s_rename - (<ROOT>, <ROOT>/x)"
+          },
+          {
+            "error": "Errno::EINVAL",
+            "message": "Invalid argument @ rb_file_s_rename - (<ROOT>, <ROOT>/y)"
+          }
+        ],
+        "tree_after": {
+          ".frankmd-filesystem.lock": "",
+          "a.md": "a"
+        }
+      }
+    },
+    {
+      "name": "rename preserves content bytes (CRLF/BOM)",
+      "fn": "rename",
+      "input": {
+        "tree": {
+          "a.md": "﻿a\r\nb\r"
+        },
+        "outside": {},
+        "ops": [
+          {
+            "op": "rename",
+            "old_path": "a.md",
+            "new_path": "b.md"
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          true
+        ],
+        "tree_after": {
+          ".frankmd-filesystem.lock": "",
+          "b.md": "﻿a\r\nb\r"
+        }
+      }
+    },
+    {
+      "name": "rename does not rewrite links in other notes",
+      "fn": "rename",
+      "input": {
+        "tree": {
+          "target.md": "t",
+          "src.md": "See [[target]] and [t](target.md)"
+        },
+        "outside": {},
+        "ops": [
+          {
+            "op": "rename",
+            "old_path": "target.md",
+            "new_path": "renamed.md"
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          true
+        ],
+        "tree_after": {
+          ".frankmd-filesystem.lock": "",
+          "renamed.md": "t",
+          "src.md": "See [[target]] and [t](target.md)"
+        }
+      }
+    },
+    {
+      "name": "rename folder remaps scoped recent entries only",
+      "fn": "rename",
+      "input": {
+        "tree": {
+          ".fed": "<FED_TEMPLATE>recent_files = [{\"path\":\"docs/first.md\",\"opened_at\":\"2026-01-01T00:00:59.000000Z\"},{\"path\":\"docs-other/other.md\",\"opened_at\":\"2026-01-01T00:00:58.000000Z\"}]\n",
+          "docs/first.md": "f",
+          "docs-other/other.md": "o"
+        },
+        "outside": {},
+        "ops": [
+          {
+            "op": "rename",
+            "old_path": "docs",
+            "new_path": "renamed"
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          true
+        ],
+        "tree_after": {
+          ".fed": "<FED_TEMPLATE>recent_files = [{\"path\":\"renamed/first.md\",\"opened_at\":\"2026-01-01T00:00:59.000000Z\"},{\"path\":\"docs-other/other.md\",\"opened_at\":\"2026-01-01T00:00:58.000000Z\"}]\n",
+          ".frankmd-config.lock": "",
+          ".frankmd-filesystem.lock": "",
+          "docs-other/": null,
+          "docs-other/other.md": "o",
+          "renamed/": null,
+          "renamed/first.md": "f"
+        }
+      }
+    },
+    {
+      "name": "rename file remaps entry then delete removes it",
+      "fn": "rename,delete",
+      "input": {
+        "tree": {
+          ".fed": "<FED_TEMPLATE>recent_files = [{\"path\":\"renamed/first.md\",\"opened_at\":\"2026-01-01T00:00:59.000000Z\"},{\"path\":\"docs-other/other.md\",\"opened_at\":\"2026-01-01T00:00:58.000000Z\"}]\n",
+          "renamed/first.md": "f",
+          "docs-other/other.md": "o"
+        },
+        "outside": {},
+        "ops": [
+          {
+            "op": "rename",
+            "old_path": "renamed/first.md",
+            "new_path": "renamed/second.md"
+          },
+          {
+            "op": "delete",
+            "path": "renamed/second.md"
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          true,
+          true
+        ],
+        "tree_after": {
+          ".fed": "<FED_TEMPLATE>recent_files = [{\"path\":\"docs-other/other.md\",\"opened_at\":\"2026-01-01T00:00:58.000000Z\"}]\n",
+          ".frankmd-config.lock": "",
+          ".frankmd-filesystem.lock": "",
+          "docs-other/": null,
+          "docs-other/other.md": "o",
+          "renamed/": null
+        }
+      }
+    },
+    {
+      "name": "rename remap drops entries whose files are gone and dedups",
+      "fn": "rename",
+      "input": {
+        "tree": {
+          ".fed": "<FED_TEMPLATE>recent_files = [{\"path\":\"a.md\",\"opened_at\":\"2026-01-01T00:00:59.000000Z\"},{\"path\":\"gone.md\",\"opened_at\":\"2026-01-01T00:00:58.000000Z\"},{\"path\":\"b.md\",\"opened_at\":\"2026-01-01T00:00:57.000000Z\"}]\n",
+          "a.md": "a",
+          "b.md": "b"
+        },
+        "outside": {},
+        "ops": [
+          {
+            "op": "rename",
+            "old_path": "a.md",
+            "new_path": "b2.md"
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          true
+        ],
+        "tree_after": {
+          ".fed": "<FED_TEMPLATE>recent_files = [{\"path\":\"b2.md\",\"opened_at\":\"2026-01-01T00:00:59.000000Z\"},{\"path\":\"b.md\",\"opened_at\":\"2026-01-01T00:00:57.000000Z\"}]\n",
+          ".frankmd-config.lock": "",
+          ".frankmd-filesystem.lock": "",
+          "b.md": "b",
+          "b2.md": "a"
+        }
+      }
+    },
+    {
+      "name": "rename to non-md keeps entry? (remapped then filtered by valid_path)",
+      "fn": "rename",
+      "input": {
+        "tree": {
+          ".fed": "<FED_TEMPLATE>recent_files = [{\"path\":\"a.md\",\"opened_at\":\"2026-01-01T00:00:59.000000Z\"},{\"path\":\"keep.md\",\"opened_at\":\"2026-01-01T00:00:58.000000Z\"}]\n",
+          "a.md": "a",
+          "keep.md": "k"
+        },
+        "outside": {},
+        "ops": [
+          {
+            "op": "rename",
+            "old_path": "a.md",
+            "new_path": "a.txt"
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          true
+        ],
+        "tree_after": {
+          ".fed": "<FED_TEMPLATE>recent_files = [{\"path\":\"keep.md\",\"opened_at\":\"2026-01-01T00:00:58.000000Z\"}]\n",
+          ".frankmd-config.lock": "",
+          ".frankmd-filesystem.lock": "",
+          "a.txt": "a",
+          "keep.md": "k"
+        }
+      }
+    },
+    {
+      "name": "rename without .fed does not create one",
+      "fn": "rename",
+      "input": {
+        "tree": {
+          "a.md": "a"
+        },
+        "outside": {},
+        "ops": [
+          {
+            "op": "rename",
+            "old_path": "a.md",
+            "new_path": "b.md"
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          true
+        ],
+        "tree_after": {
+          ".frankmd-filesystem.lock": "",
+          "b.md": "a"
+        }
+      }
+    },
+    {
+      "name": "rename with .fed lacking recent_files writes recent_files line",
+      "fn": "rename",
+      "input": {
+        "tree": {
+          ".fed": "<FED_TEMPLATE>",
+          "a.md": "a"
+        },
+        "outside": {},
+        "ops": [
+          {
+            "op": "rename",
+            "old_path": "a.md",
+            "new_path": "b.md"
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          true
+        ],
+        "tree_after": {
+          ".fed": "<FED_TEMPLATE>recent_files = []\n",
+          ".frankmd-config.lock": "",
+          ".frankmd-filesystem.lock": "",
+          "b.md": "a"
+        }
+      }
+    },
+    {
+      "name": "rename prefix-sharing folder 'doc' must not remap 'docs/'",
+      "fn": "rename",
+      "input": {
+        "tree": {
+          ".fed": "<FED_TEMPLATE>recent_files = [{\"path\":\"doc/a.md\",\"opened_at\":\"2026-01-01T00:00:59.000000Z\"},{\"path\":\"docs/b.md\",\"opened_at\":\"2026-01-01T00:00:58.000000Z\"},{\"path\":\"doc.md\",\"opened_at\":\"2026-01-01T00:00:57.000000Z\"}]\n",
+          "doc/a.md": "a",
+          "docs/b.md": "b",
+          "doc.md": "d"
+        },
+        "outside": {},
+        "ops": [
+          {
+            "op": "rename",
+            "old_path": "doc",
+            "new_path": "folder"
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          true
+        ],
+        "tree_after": {
+          ".fed": "<FED_TEMPLATE>recent_files = [{\"path\":\"folder/a.md\",\"opened_at\":\"2026-01-01T00:00:59.000000Z\"},{\"path\":\"docs/b.md\",\"opened_at\":\"2026-01-01T00:00:58.000000Z\"},{\"path\":\"doc.md\",\"opened_at\":\"2026-01-01T00:00:57.000000Z\"}]\n",
+          ".frankmd-config.lock": "",
+          ".frankmd-filesystem.lock": "",
+          "doc.md": "d",
+          "docs/": null,
+          "docs/b.md": "b",
+          "folder/": null,
+          "folder/a.md": "a"
+        }
+      }
+    },
+    {
+      "name": "Note#rename normalizes new path (.md added)",
+      "fn": "Note#rename",
+      "input": {
+        "tree": {
+          "old.md": "x"
+        },
+        "outside": {},
+        "ops": [
+          {
+            "op": "Note#rename",
+            "path": "old.md",
+            "new_path": "new"
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "ok": true,
+            "errors": [],
+            "path": "new.md"
+          }
+        ],
+        "tree_after": {
+          ".frankmd-filesystem.lock": "",
+          "new.md": "x"
+        }
+      }
+    },
+    {
+      "name": "Note#rename into subdirectory",
+      "fn": "Note#rename",
+      "input": {
+        "tree": {
+          "root.md": "x",
+          "subfolder/": null
+        },
+        "outside": {},
+        "ops": [
+          {
+            "op": "Note#rename",
+            "path": "root.md",
+            "new_path": "subfolder/moved.md"
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "ok": true,
+            "errors": [],
+            "path": "subfolder/moved.md"
+          }
+        ],
+        "tree_after": {
+          ".frankmd-filesystem.lock": "",
+          "subfolder/": null,
+          "subfolder/moved.md": "x"
+        }
+      }
+    },
+    {
+      "name": "Note#rename source without extension",
+      "fn": "Note#rename",
+      "input": {
+        "tree": {
+          "old.md": "x"
+        },
+        "outside": {},
+        "ops": [
+          {
+            "op": "Note#rename",
+            "path": "old",
+            "new_path": "new.md"
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "ok": true,
+            "errors": [],
+            "path": "new.md"
+          }
+        ],
+        "tree_after": {
+          ".frankmd-filesystem.lock": "",
+          "new.md": "x"
+        }
+      }
+    },
+    {
+      "name": "Note#rename errors",
+      "fn": "Note#rename",
+      "input": {
+        "tree": {
+          "a.md": "a",
+          "b.md": "b"
+        },
+        "outside": {},
+        "ops": [
+          {
+            "op": "Note#rename",
+            "path": "a.md",
+            "new_path": "b"
+          },
+          {
+            "op": "Note#rename",
+            "path": "missing.md",
+            "new_path": "c"
+          },
+          {
+            "op": "Note#rename",
+            "path": "a.md",
+            "new_path": "../x"
+          },
+          {
+            "op": "Note#rename",
+            "path": "a.md",
+            "new_path": "x.txt"
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "ok": false,
+            "errors": [
+              "Path Note already exists"
+            ],
+            "path": "a.md"
+          },
+          {
+            "ok": false,
+            "errors": [
+              "Note not found"
+            ],
+            "path": "missing.md"
+          },
+          {
+            "ok": false,
+            "errors": [
+              "Path Invalid path: ../x.md"
+            ],
+            "path": "a.md"
+          },
+          {
+            "ok": true,
+            "errors": [],
+            "path": "x.txt.md"
+          }
+        ],
+        "tree_after": {
+          ".frankmd-filesystem.lock": "",
+          "b.md": "b",
+          "x.txt.md": "a"
+        }
+      }
+    },
+    {
+      "name": "Note#rename to .fed keeps name",
+      "fn": "Note#rename",
+      "input": {
+        "tree": {
+          "a.md": "a"
+        },
+        "outside": {},
+        "ops": [
+          {
+            "op": "Note#rename",
+            "path": "a.md",
+            "new_path": ".fed"
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "ok": true,
+            "errors": [],
+            "path": ".fed"
+          }
+        ],
+        "tree_after": {
+          ".fed": "a\n\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\nrecent_files = []\n",
+          ".frankmd-config.lock": "",
+          ".frankmd-filesystem.lock": ""
+        }
+      }
+    },
+    {
+      "name": "Folder#rename simple",
+      "fn": "Folder#rename",
+      "input": {
+        "tree": {
+          "old_folder/": null
+        },
+        "outside": {},
+        "ops": [
+          {
+            "op": "Folder#rename",
+            "path": "old_folder",
+            "new_path": "new_folder"
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "ok": true,
+            "errors": [],
+            "path": "new_folder"
+          }
+        ],
+        "tree_after": {
+          ".frankmd-filesystem.lock": "",
+          "new_folder/": null
+        }
+      }
+    },
+    {
+      "name": "Folder#rename with contents",
+      "fn": "Folder#rename",
+      "input": {
+        "tree": {
+          "folder/note.md": "Content"
+        },
+        "outside": {},
+        "ops": [
+          {
+            "op": "Folder#rename",
+            "path": "folder",
+            "new_path": "renamed"
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "ok": true,
+            "errors": [],
+            "path": "renamed"
+          }
+        ],
+        "tree_after": {
+          ".frankmd-filesystem.lock": "",
+          "renamed/": null,
+          "renamed/note.md": "Content"
+        }
+      }
+    },
+    {
+      "name": "Folder#rename updates Hugo slug",
+      "fn": "Folder#rename",
+      "input": {
+        "tree": {
+          "old-slug/index.md": "---\ntitle: \"My Blog Post\"\nslug: \"old-slug\"\ndate: 2026-02-01T10:00:00-03:00\ndraft: true\ntags:\n-\n---\n\nContent here\n"
+        },
+        "outside": {},
+        "ops": [
+          {
+            "op": "Folder#rename",
+            "path": "old-slug",
+            "new_path": "new-slug"
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "ok": true,
+            "errors": [],
+            "path": "new-slug"
+          }
+        ],
+        "tree_after": {
+          ".frankmd-filesystem.lock": "",
+          "new-slug/": null,
+          "new-slug/index.md": "---\ntitle: \"My Blog Post\"\nslug: \"new-slug\"\ndate: 2026-02-01T10:00:00-03:00\ndraft: true\ntags:\n-\n---\nContent here\n"
+        }
+      }
+    },
+    {
+      "name": "Folder#rename accented folder name slug",
+      "fn": "Folder#rename",
+      "input": {
+        "tree": {
+          "old-post/index.md": "---\ntitle: \"Test\"\nslug: \"old-post\"\n---\n\nBody\n"
+        },
+        "outside": {},
+        "ops": [
+          {
+            "op": "Folder#rename",
+            "path": "old-post",
+            "new_path": "café-açaí"
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "ok": true,
+            "errors": [],
+            "path": "café-açaí"
+          }
+        ],
+        "tree_after": {
+          ".frankmd-filesystem.lock": "",
+          "café-açaí/": null,
+          "café-açaí/index.md": "---\ntitle: \"Test\"\nslug: \"cafe-acai\"\n---\nBody\n"
+        }
+      }
+    },
+    {
+      "name": "Folder#rename non-Hugo index.md untouched",
+      "fn": "Folder#rename",
+      "input": {
+        "tree": {
+          "regular-folder/index.md": "# Just a regular note\n\nNo frontmatter here"
+        },
+        "outside": {},
+        "ops": [
+          {
+            "op": "Folder#rename",
+            "path": "regular-folder",
+            "new_path": "renamed-folder"
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "ok": true,
+            "errors": [],
+            "path": "renamed-folder"
+          }
+        ],
+        "tree_after": {
+          ".frankmd-filesystem.lock": "",
+          "renamed-folder/": null,
+          "renamed-folder/index.md": "# Just a regular note\n\nNo frontmatter here"
+        }
+      }
+    },
+    {
+      "name": "Folder#rename frontmatter without slug untouched",
+      "fn": "Folder#rename",
+      "input": {
+        "tree": {
+          "no-slug-folder/index.md": "---\ntitle: \"No Slug\"\ndate: 2026-02-01\n---\n\nContent\n"
+        },
+        "outside": {},
+        "ops": [
+          {
+            "op": "Folder#rename",
+            "path": "no-slug-folder",
+            "new_path": "renamed-no-slug"
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "ok": true,
+            "errors": [],
+            "path": "renamed-no-slug"
+          }
+        ],
+        "tree_after": {
+          ".frankmd-filesystem.lock": "",
+          "renamed-no-slug/": null,
+          "renamed-no-slug/index.md": "---\ntitle: \"No Slug\"\ndate: 2026-02-01\n---\n\nContent\n"
+        }
+      }
+    },
+    {
+      "name": "Folder#rename single-quoted and unquoted slugs",
+      "fn": "Folder#rename",
+      "input": {
+        "tree": {
+          "a/index.md": "---\nslug: 'old'\n---\nx",
+          "b/index.md": "---\nslug: old-b\n---\ny"
+        },
+        "outside": {},
+        "ops": [
+          {
+            "op": "Folder#rename",
+            "path": "a",
+            "new_path": "Nova Pasta"
+          },
+          {
+            "op": "Folder#rename",
+            "path": "b",
+            "new_path": "日本語 Post 2026"
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "ok": true,
+            "errors": [],
+            "path": "Nova Pasta"
+          },
+          {
+            "ok": true,
+            "errors": [],
+            "path": "日本語 Post 2026"
+          }
+        ],
+        "tree_after": {
+          ".frankmd-filesystem.lock": "",
+          "Nova Pasta/": null,
+          "Nova Pasta/index.md": "---\nslug: \"nova-pasta\"\n---\nx",
+          "日本語 Post 2026/": null,
+          "日本語 Post 2026/index.md": "---\nslug: \"post-2026\"\n---\ny"
+        }
+      }
+    },
+    {
+      "name": "Folder#rename CRLF frontmatter",
+      "fn": "Folder#rename",
+      "input": {
+        "tree": {
+          "c/index.md": "---\r\nslug: \"old\"\r\ntitle: x\r\n---\r\nbody\r\n"
+        },
+        "outside": {},
+        "ops": [
+          {
+            "op": "Folder#rename",
+            "path": "c",
+            "new_path": "crlf-new"
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "ok": true,
+            "errors": [],
+            "path": "crlf-new"
+          }
+        ],
+        "tree_after": {
+          ".frankmd-filesystem.lock": "",
+          "crlf-new/": null,
+          "crlf-new/index.md": "---\nslug: \"crlf-new\"\r\ntitle: x\r\n---\nbody\r\n"
+        }
+      }
+    },
+    {
+      "name": "Folder#rename slug already equal",
+      "fn": "Folder#rename",
+      "input": {
+        "tree": {
+          "x/index.md": "---\nslug: \"same-name\"\n---\n"
+        },
+        "outside": {},
+        "ops": [
+          {
+            "op": "Folder#rename",
+            "path": "x",
+            "new_path": "Same Name"
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "ok": true,
+            "errors": [],
+            "path": "Same Name"
+          }
+        ],
+        "tree_after": {
+          ".frankmd-filesystem.lock": "",
+          "Same Name/": null,
+          "Same Name/index.md": "---\nslug: \"same-name\"\n---\n"
+        }
+      }
+    },
+    {
+      "name": "Folder#rename nested move keeps slug from basename",
+      "fn": "Folder#rename",
+      "input": {
+        "tree": {
+          "p/old/index.md": "---\nslug: \"old\"\n---\n"
+        },
+        "outside": {},
+        "ops": [
+          {
+            "op": "Folder#rename",
+            "path": "p/old",
+            "new_path": "q/Deep Move"
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "ok": true,
+            "errors": [],
+            "path": "q/Deep Move"
+          }
+        ],
+        "tree_after": {
+          ".frankmd-filesystem.lock": "",
+          "p/": null,
+          "q/": null,
+          "q/Deep Move/": null,
+          "q/Deep Move/index.md": "---\nslug: \"deep-move\"\n---"
+        }
+      }
+    },
+    {
+      "name": "Folder#rename slug in body only (after frontmatter) untouched",
+      "fn": "Folder#rename",
+      "input": {
+        "tree": {
+          "d/index.md": "---\ntitle: t\n---\nslug: \"body\"\n"
+        },
+        "outside": {},
+        "ops": [
+          {
+            "op": "Folder#rename",
+            "path": "d",
+            "new_path": "e"
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "ok": true,
+            "errors": [],
+            "path": "e"
+          }
+        ],
+        "tree_after": {
+          ".frankmd-filesystem.lock": "",
+          "e/": null,
+          "e/index.md": "---\ntitle: t\n---\nslug: \"body\"\n"
+        }
+      }
+    },
+    {
+      "name": "Folder#rename errors",
+      "fn": "Folder#rename",
+      "input": {
+        "tree": {
+          "a/": null,
+          "b/": null
+        },
+        "outside": {},
+        "ops": [
+          {
+            "op": "Folder#rename",
+            "path": "a",
+            "new_path": "b"
+          },
+          {
+            "op": "Folder#rename",
+            "path": "missing",
+            "new_path": "x"
+          },
+          {
+            "op": "Folder#rename",
+            "path": "a",
+            "new_path": "../x"
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "ok": false,
+            "errors": [
+              "Folder already exists"
+            ],
+            "path": "a"
+          },
+          {
+            "ok": false,
+            "errors": [
+              "Folder not found"
+            ],
+            "path": "missing"
+          },
+          {
+            "ok": false,
+            "errors": [
+              "Path Invalid path: ../x"
+            ],
+            "path": "a"
+          }
+        ],
+        "tree_after": {
+          ".frankmd-filesystem.lock": "",
+          "a/": null,
+          "b/": null
+        }
+      }
+    },
+    {
+      "name": "POST /notes/:path/rename",
+      "fn": "http",
+      "input": {
+        "tree": {
+          "old.md": "x"
+        },
+        "outside": {},
+        "ops": [
+          {
+            "op": "http",
+            "method": "POST",
+            "url": "/notes/old.md/rename",
+            "params": {
+              "new_path": "new.md"
+            }
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "status": 200,
+            "body": {
+              "old_path": "old.md",
+              "new_path": "new.md",
+              "message": "Note renamed"
+            }
+          }
+        ],
+        "tree_after": {
+          ".fed": "<FED_TEMPLATE>recent_files = []\n",
+          ".frankmd-config.lock": "",
+          ".frankmd-filesystem.lock": "",
+          "new.md": "x"
+        }
+      }
+    },
+    {
+      "name": "POST /notes/:path/rename adds .md and moves to subfolder",
+      "fn": "http",
+      "input": {
+        "tree": {
+          "old.md": "x",
+          "subfolder/": null
+        },
+        "outside": {},
+        "ops": [
+          {
+            "op": "http",
+            "method": "POST",
+            "url": "/notes/old.md/rename",
+            "params": {
+              "new_path": "subfolder/new"
+            }
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "status": 200,
+            "body": {
+              "old_path": "old.md",
+              "new_path": "subfolder/new.md",
+              "message": "Note renamed"
+            }
+          }
+        ],
+        "tree_after": {
+          ".fed": "<FED_TEMPLATE>recent_files = []\n",
+          ".frankmd-config.lock": "",
+          ".frankmd-filesystem.lock": "",
+          "subfolder/": null,
+          "subfolder/new.md": "x"
+        }
+      }
+    },
+    {
+      "name": "POST /notes/:path/rename conflict",
+      "fn": "http",
+      "input": {
+        "tree": {
+          "old.md": "source",
+          "new.md": "dest"
+        },
+        "outside": {},
+        "ops": [
+          {
+            "op": "http",
+            "method": "POST",
+            "url": "/notes/old.md/rename",
+            "params": {
+              "new_path": "new.md"
+            }
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "status": 422,
+            "body": {
+              "error": "Path Note already exists"
+            }
+          }
+        ],
+        "tree_after": {
+          ".fed": "<FED_TEMPLATE>",
+          ".frankmd-config.lock": "",
+          ".frankmd-filesystem.lock": "",
+          "new.md": "dest",
+          "old.md": "source"
+        }
+      }
+    },
+    {
+      "name": "POST /notes/:path/rename missing",
+      "fn": "http",
+      "input": {
+        "tree": {},
+        "outside": {},
+        "ops": [
+          {
+            "op": "http",
+            "method": "POST",
+            "url": "/notes/missing.md/rename",
+            "params": {
+              "new_path": "x.md"
+            }
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "status": 404,
+            "body": {
+              "error": "Note not found"
+            }
+          }
+        ],
+        "tree_after": {
+          ".fed": "<FED_TEMPLATE>",
+          ".frankmd-config.lock": ""
+        }
+      }
+    },
+    {
+      "name": "POST /notes/:path/rename blank new_path",
+      "fn": "http",
+      "input": {
+        "tree": {
+          "a.md": "a"
+        },
+        "outside": {},
+        "ops": [
+          {
+            "op": "http",
+            "method": "POST",
+            "url": "/notes/a.md/rename",
+            "params": {
+              "new_path": ""
+            }
+          },
+          {
+            "op": "http",
+            "method": "POST",
+            "url": "/notes/a.md/rename",
+            "params": null
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "status": 422,
+            "body": {
+              "error": "Path Note already exists"
+            }
+          },
+          {
+            "status": 422,
+            "body": {
+              "error": "Path Note already exists"
+            }
+          }
+        ],
+        "tree_after": {
+          ".fed": "<FED_TEMPLATE>",
+          ".frankmd-config.lock": "",
+          ".frankmd-filesystem.lock": "",
+          "a.md": "a"
+        }
+      }
+    },
+    {
+      "name": "POST /folders/:path/rename",
+      "fn": "http",
+      "input": {
+        "tree": {
+          "old_folder/n.md": "n"
+        },
+        "outside": {},
+        "ops": [
+          {
+            "op": "http",
+            "method": "POST",
+            "url": "/folders/old_folder/rename",
+            "params": {
+              "new_path": "new_folder"
+            }
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "status": 200,
+            "body": {
+              "old_path": "old_folder",
+              "new_path": "new_folder",
+              "message": "Folder renamed"
+            }
+          }
+        ],
+        "tree_after": {
+          ".fed": "<FED_TEMPLATE>recent_files = []\n",
+          ".frankmd-config.lock": "",
+          ".frankmd-filesystem.lock": "",
+          "new_folder/": null,
+          "new_folder/n.md": "n"
+        }
+      }
+    },
+    {
+      "name": "POST /folders/:path/rename to different parent",
+      "fn": "http",
+      "input": {
+        "tree": {
+          "a/n.md": "n",
+          "b/": null
+        },
+        "outside": {},
+        "ops": [
+          {
+            "op": "http",
+            "method": "POST",
+            "url": "/folders/a/rename",
+            "params": {
+              "new_path": "b/a"
+            }
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "status": 200,
+            "body": {
+              "old_path": "a",
+              "new_path": "b/a",
+              "message": "Folder renamed"
+            }
+          }
+        ],
+        "tree_after": {
+          ".fed": "<FED_TEMPLATE>recent_files = []\n",
+          ".frankmd-config.lock": "",
+          ".frankmd-filesystem.lock": "",
+          "b/": null,
+          "b/a/": null,
+          "b/a/n.md": "n"
+        }
+      }
+    },
+    {
+      "name": "POST /folders/:path/rename missing / conflict",
+      "fn": "http",
+      "input": {
+        "tree": {
+          "a/": null,
+          "b/": null
+        },
+        "outside": {},
+        "ops": [
+          {
+            "op": "http",
+            "method": "POST",
+            "url": "/folders/missing/rename",
+            "params": {
+              "new_path": "x"
+            }
+          },
+          {
+            "op": "http",
+            "method": "POST",
+            "url": "/folders/a/rename",
+            "params": {
+              "new_path": "b"
+            }
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "status": 404,
+            "body": {
+              "error": "Folder not found"
+            }
+          },
+          {
+            "status": 422,
+            "body": {
+              "error": "Folder already exists"
+            }
+          }
+        ],
+        "tree_after": {
+          ".fed": "<FED_TEMPLATE>",
+          ".frankmd-config.lock": "",
+          ".frankmd-filesystem.lock": "",
+          "a/": null,
+          "b/": null
+        }
+      }
+    },
+    {
+      "name": "expanded folder remap old->new [old,old/sub,older,other/old]",
+      "fn": "FoldersController#load_tree_for_turbo_stream",
+      "input": {
+        "remap_from": "old",
+        "remap_to": "new",
+        "expanded": "old,old/sub,older,other/old"
+      },
+      "expected": {
+        "expanded_folders": [
+          "new",
+          "new/sub",
+          "older",
+          "other/old"
+        ],
+        "selected_file": "new"
+      }
+    },
+    {
+      "name": "expanded folder remap a/b->c [a,a/b,a/b/c,a/bb]",
+      "fn": "FoldersController#load_tree_for_turbo_stream",
+      "input": {
+        "remap_from": "a/b",
+        "remap_to": "c",
+        "expanded": "a,a/b,a/b/c,a/bb"
+      },
+      "expected": {
+        "expanded_folders": [
+          "a",
+          "c",
+          "c/c",
+          "a/bb"
+        ],
+        "selected_file": "c"
+      }
+    },
+    {
+      "name": "expanded folder remap x->y []",
+      "fn": "FoldersController#load_tree_for_turbo_stream",
+      "input": {
+        "remap_from": "x",
+        "remap_to": "y",
+        "expanded": ""
+      },
+      "expected": {
+        "expanded_folders": [],
+        "selected_file": "y"
+      }
+    },
+    {
+      "name": "expanded folder remap 日本->nihon [日本,日本/語]",
+      "fn": "FoldersController#load_tree_for_turbo_stream",
+      "input": {
+        "remap_from": "日本",
+        "remap_to": "nihon",
+        "expanded": "日本,日本/語"
+      },
+      "expected": {
+        "expanded_folders": [
+          "nihon",
+          "nihon/語"
+        ],
+        "selected_file": "nihon"
+      }
+    }
+  ]
+}

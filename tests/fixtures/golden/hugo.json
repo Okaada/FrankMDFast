@@ -1,0 +1,4206 @@
+{
+  "source": "app/services/hugo_service.rb @ d47a89e92d89f807878d318182fa5dcea0329ec4",
+  "frankmd_sha": "d47a89e92d89f807878d318182fa5dcea0329ec4",
+  "generator": "tools/golden/ruby/hugo.rb",
+  "notes": "Clock pinned with travel_to (input.now = {zone, local time}; Time.current in that zone). NOTES_PATH points at a temp dir (<ROOT>) holding input.tree; HUGO_PATH_STYLE/FRANKMD_LOCALE cleared unless in input.env. generate_blog_post result keys are symbols in Ruby (path, content); tree_after shows the call writes nothing. kwargs_given lists which keyword args were passed (parent/path_style null otherwise). notes_root default with NOTES_PATH unset uses <RAILS_ROOT>/notes. Non-UTF8 template_source returned as {base64, encoding}.",
+  "cases": [
+    {
+      "name": "slugify 000 \"Hello World\"",
+      "fn": "slugify",
+      "input": {
+        "text": "Hello World"
+      },
+      "expected": "hello-world"
+    },
+    {
+      "name": "slugify 001 \"hello world\"",
+      "fn": "slugify",
+      "input": {
+        "text": "hello world"
+      },
+      "expected": "hello-world"
+    },
+    {
+      "name": "slugify 002 \"café açaí\"",
+      "fn": "slugify",
+      "input": {
+        "text": "café açaí"
+      },
+      "expected": "cafe-acai"
+    },
+    {
+      "name": "slugify 003 \"hello! @world#\"",
+      "fn": "slugify",
+      "input": {
+        "text": "hello! @world#"
+      },
+      "expected": "hello-world"
+    },
+    {
+      "name": "slugify 004 \"hello---world\"",
+      "fn": "slugify",
+      "input": {
+        "text": "hello---world"
+      },
+      "expected": "hello-world"
+    },
+    {
+      "name": "slugify 005 \"--hello-world--\"",
+      "fn": "slugify",
+      "input": {
+        "text": "--hello-world--"
+      },
+      "expected": "hello-world"
+    },
+    {
+      "name": "slugify 006 \"Vibe Code: Fiz um Editor de Markdown do zero com ",
+      "fn": "slugify",
+      "input": {
+        "text": "Vibe Code: Fiz um Editor de Markdown do zero com Claude Code (FrankMD)"
+      },
+      "expected": "vibe-code-fiz-um-editor-de-markdown-do-zero-com-claude-code-frankmd"
+    },
+    {
+      "name": "slugify 007 \"My Blog Post\"",
+      "fn": "slugify",
+      "input": {
+        "text": "My Blog Post"
+      },
+      "expected": "my-blog-post"
+    },
+    {
+      "name": "slugify 008 \"Test Post\"",
+      "fn": "slugify",
+      "input": {
+        "text": "Test Post"
+      },
+      "expected": "test-post"
+    },
+    {
+      "name": "slugify 009 \"My Post\"",
+      "fn": "slugify",
+      "input": {
+        "text": "My Post"
+      },
+      "expected": "my-post"
+    },
+    {
+      "name": "slugify 010 \"Config Test\"",
+      "fn": "slugify",
+      "input": {
+        "text": "Config Test"
+      },
+      "expected": "config-test"
+    },
+    {
+      "name": "slugify 011 \"Say \\\"Hello\\\" World\"",
+      "fn": "slugify",
+      "input": {
+        "text": "Say \"Hello\" World"
+      },
+      "expected": "say-hello-world"
+    },
+    {
+      "name": "slugify 012 \"Custom Post\"",
+      "fn": "slugify",
+      "input": {
+        "text": "Custom Post"
+      },
+      "expected": "custom-post"
+    },
+    {
+      "name": "slugify 013 \"No Template\"",
+      "fn": "slugify",
+      "input": {
+        "text": "No Template"
+      },
+      "expected": "no-template"
+    },
+    {
+      "name": "slugify 014 \"Ação e reação\"",
+      "fn": "slugify",
+      "input": {
+        "text": "Ação e reação"
+      },
+      "expected": "acao-e-reacao"
+    },
+    {
+      "name": "slugify 015 \"ÇÃO ÇÃO\"",
+      "fn": "slugify",
+      "input": {
+        "text": "ÇÃO ÇÃO"
+      },
+      "expected": "cao-cao"
+    },
+    {
+      "name": "slugify 016 \"Coração Valente\"",
+      "fn": "slugify",
+      "input": {
+        "text": "Coração Valente"
+      },
+      "expected": "coracao-valente"
+    },
+    {
+      "name": "slugify 017 \"Pão de Açúcar\"",
+      "fn": "slugify",
+      "input": {
+        "text": "Pão de Açúcar"
+      },
+      "expected": "pao-de-acucar"
+    },
+    {
+      "name": "slugify 018 \"Olá, Mundo!\"",
+      "fn": "slugify",
+      "input": {
+        "text": "Olá, Mundo!"
+      },
+      "expected": "ola-mundo"
+    },
+    {
+      "name": "slugify 019 \"Avó e avô\"",
+      "fn": "slugify",
+      "input": {
+        "text": "Avó e avô"
+      },
+      "expected": "avo-e-avo"
+    },
+    {
+      "name": "slugify 020 \"Mañana será otro día\"",
+      "fn": "slugify",
+      "input": {
+        "text": "Mañana será otro día"
+      },
+      "expected": "manana-sera-otro-dia"
+    },
+    {
+      "name": "slugify 021 \"¿Qué pasa?\"",
+      "fn": "slugify",
+      "input": {
+        "text": "¿Qué pasa?"
+      },
+      "expected": "que-pasa"
+    },
+    {
+      "name": "slugify 022 \"¡Hola!\"",
+      "fn": "slugify",
+      "input": {
+        "text": "¡Hola!"
+      },
+      "expected": "hola"
+    },
+    {
+      "name": "slugify 023 \"Niño Español\"",
+      "fn": "slugify",
+      "input": {
+        "text": "Niño Español"
+      },
+      "expected": "nino-espanol"
+    },
+    {
+      "name": "slugify 024 \"PEÑA\"",
+      "fn": "slugify",
+      "input": {
+        "text": "PEÑA"
+      },
+      "expected": "pena"
+    },
+    {
+      "name": "slugify 025 \"Crème brûlée à la française\"",
+      "fn": "slugify",
+      "input": {
+        "text": "Crème brûlée à la française"
+      },
+      "expected": "creme-brulee-a-la-francaise"
+    },
+    {
+      "name": "slugify 026 \"Ça va? Où êtes-vous?\"",
+      "fn": "slugify",
+      "input": {
+        "text": "Ça va? Où êtes-vous?"
+      },
+      "expected": "ca-va-ou-etes-vous"
+    },
+    {
+      "name": "slugify 027 \"L'été dernier\"",
+      "fn": "slugify",
+      "input": {
+        "text": "L'été dernier"
+      },
+      "expected": "l-ete-dernier"
+    },
+    {
+      "name": "slugify 028 \"Noël\"",
+      "fn": "slugify",
+      "input": {
+        "text": "Noël"
+      },
+      "expected": "noel"
+    },
+    {
+      "name": "slugify 029 \"œuvre cœur Œuvre\"",
+      "fn": "slugify",
+      "input": {
+        "text": "œuvre cœur Œuvre"
+      },
+      "expected": "uvre-c-ur-uvre"
+    },
+    {
+      "name": "slugify 030 \"Grüße aus München\"",
+      "fn": "slugify",
+      "input": {
+        "text": "Grüße aus München"
+      },
+      "expected": "grusse-aus-munchen"
+    },
+    {
+      "name": "slugify 031 \"Straße\"",
+      "fn": "slugify",
+      "input": {
+        "text": "Straße"
+      },
+      "expected": "strasse"
+    },
+    {
+      "name": "slugify 032 \"STRASSE\"",
+      "fn": "slugify",
+      "input": {
+        "text": "STRASSE"
+      },
+      "expected": "strasse"
+    },
+    {
+      "name": "slugify 033 \"STRAẞE\"",
+      "fn": "slugify",
+      "input": {
+        "text": "STRAẞE"
+      },
+      "expected": "strasse"
+    },
+    {
+      "name": "slugify 034 \"Äpfel Öl Übel\"",
+      "fn": "slugify",
+      "input": {
+        "text": "Äpfel Öl Übel"
+      },
+      "expected": "apfel-ol-ubel"
+    },
+    {
+      "name": "slugify 035 \"Fußgängerübergänge\"",
+      "fn": "slugify",
+      "input": {
+        "text": "Fußgängerübergänge"
+      },
+      "expected": "fussgangerubergange"
+    },
+    {
+      "name": "slugify 036 \"Zażółć gęślą jaźń\"",
+      "fn": "slugify",
+      "input": {
+        "text": "Zażółć gęślą jaźń"
+      },
+      "expected": "zazolc-g-sl-jaz"
+    },
+    {
+      "name": "slugify 037 \"ŁÓDŹ\"",
+      "fn": "slugify",
+      "input": {
+        "text": "ŁÓDŹ"
+      },
+      "expected": "lodz"
+    },
+    {
+      "name": "slugify 038 \"Łódź\"",
+      "fn": "slugify",
+      "input": {
+        "text": "Łódź"
+      },
+      "expected": "lodz"
+    },
+    {
+      "name": "slugify 039 \"Kraków\"",
+      "fn": "slugify",
+      "input": {
+        "text": "Kraków"
+      },
+      "expected": "krakow"
+    },
+    {
+      "name": "slugify 040 \"Wrocław\"",
+      "fn": "slugify",
+      "input": {
+        "text": "Wrocław"
+      },
+      "expected": "wroclaw"
+    },
+    {
+      "name": "slugify 041 \"Gdańsk\"",
+      "fn": "slugify",
+      "input": {
+        "text": "Gdańsk"
+      },
+      "expected": "gda-sk"
+    },
+    {
+      "name": "slugify 042 \"Szczęście\"",
+      "fn": "slugify",
+      "input": {
+        "text": "Szczęście"
+      },
+      "expected": "szcz-scie"
+    },
+    {
+      "name": "slugify 043 \"Příliš žluťoučký kůň úpěl ďábelské ódy\"",
+      "fn": "slugify",
+      "input": {
+        "text": "Příliš žluťoučký kůň úpěl ďábelské ódy"
+      },
+      "expected": "prilis-zlu-oucky-kun-upel-dabelske-ody"
+    },
+    {
+      "name": "slugify 044 \"ČEŠTINA\"",
+      "fn": "slugify",
+      "input": {
+        "text": "ČEŠTINA"
+      },
+      "expected": "cestina"
+    },
+    {
+      "name": "slugify 045 \"Dvořák\"",
+      "fn": "slugify",
+      "input": {
+        "text": "Dvořák"
+      },
+      "expected": "dvorak"
+    },
+    {
+      "name": "slugify 046 \"Brno ů\"",
+      "fn": "slugify",
+      "input": {
+        "text": "Brno ů"
+      },
+      "expected": "brno-u"
+    },
+    {
+      "name": "slugify 047 \"İstanbul\"",
+      "fn": "slugify",
+      "input": {
+        "text": "İstanbul"
+      },
+      "expected": "i-stanbul"
+    },
+    {
+      "name": "slugify 048 \"Istanbul\"",
+      "fn": "slugify",
+      "input": {
+        "text": "Istanbul"
+      },
+      "expected": "istanbul"
+    },
+    {
+      "name": "slugify 049 \"ılık şişe çiğ öğün\"",
+      "fn": "slugify",
+      "input": {
+        "text": "ılık şişe çiğ öğün"
+      },
+      "expected": "l-k-i-e-ci-o-un"
+    },
+    {
+      "name": "slugify 050 \"Türkçe Ğğ Şş\"",
+      "fn": "slugify",
+      "input": {
+        "text": "Türkçe Ğğ Şş"
+      },
+      "expected": "turkce"
+    },
+    {
+      "name": "slugify 051 \"IĞDIR\"",
+      "fn": "slugify",
+      "input": {
+        "text": "IĞDIR"
+      },
+      "expected": "i-dir"
+    },
+    {
+      "name": "slugify 052 \"Tiếng Việt\"",
+      "fn": "slugify",
+      "input": {
+        "text": "Tiếng Việt"
+      },
+      "expected": "ti-ng-vi-t"
+    },
+    {
+      "name": "slugify 053 \"Phở bò\"",
+      "fn": "slugify",
+      "input": {
+        "text": "Phở bò"
+      },
+      "expected": "ph-bo"
+    },
+    {
+      "name": "slugify 054 \"Đà Nẵng\"",
+      "fn": "slugify",
+      "input": {
+        "text": "Đà Nẵng"
+      },
+      "expected": "a-n-ng"
+    },
+    {
+      "name": "slugify 055 \"đường\"",
+      "fn": "slugify",
+      "input": {
+        "text": "đường"
+      },
+      "expected": "ng"
+    },
+    {
+      "name": "slugify 056 \"Hà Nội\"",
+      "fn": "slugify",
+      "input": {
+        "text": "Hà Nội"
+      },
+      "expected": "ha-n-i"
+    },
+    {
+      "name": "slugify 057 \"Nguyễn\"",
+      "fn": "slugify",
+      "input": {
+        "text": "Nguyễn"
+      },
+      "expected": "nguy-n"
+    },
+    {
+      "name": "slugify 058 \"Smørrebrød\"",
+      "fn": "slugify",
+      "input": {
+        "text": "Smørrebrød"
+      },
+      "expected": "smorrebrod"
+    },
+    {
+      "name": "slugify 059 \"ØRESUND\"",
+      "fn": "slugify",
+      "input": {
+        "text": "ØRESUND"
+      },
+      "expected": "oresund"
+    },
+    {
+      "name": "slugify 060 \"Æble æ\"",
+      "fn": "slugify",
+      "input": {
+        "text": "Æble æ"
+      },
+      "expected": "aeble-ae"
+    },
+    {
+      "name": "slugify 061 \"Ærø\"",
+      "fn": "slugify",
+      "input": {
+        "text": "Ærø"
+      },
+      "expected": "aero"
+    },
+    {
+      "name": "slugify 062 \"Ålesund\"",
+      "fn": "slugify",
+      "input": {
+        "text": "Ålesund"
+      },
+      "expected": "alesund"
+    },
+    {
+      "name": "slugify 063 \"Þórsmörk\"",
+      "fn": "slugify",
+      "input": {
+        "text": "Þórsmörk"
+      },
+      "expected": "thorsmork"
+    },
+    {
+      "name": "slugify 064 \"þ Þ ð Ð\"",
+      "fn": "slugify",
+      "input": {
+        "text": "þ Þ ð Ð"
+      },
+      "expected": "th-th-d-d"
+    },
+    {
+      "name": "slugify 065 \"Reykjavík\"",
+      "fn": "slugify",
+      "input": {
+        "text": "Reykjavík"
+      },
+      "expected": "reykjavik"
+    },
+    {
+      "name": "slugify 066 \"Ísland\"",
+      "fn": "slugify",
+      "input": {
+        "text": "Ísland"
+      },
+      "expected": "island"
+    },
+    {
+      "name": "slugify 067 \"ß\"",
+      "fn": "slugify",
+      "input": {
+        "text": "ß"
+      },
+      "expected": "ss"
+    },
+    {
+      "name": "slugify 068 \"ẞ\"",
+      "fn": "slugify",
+      "input": {
+        "text": "ẞ"
+      },
+      "expected": "ss"
+    },
+    {
+      "name": "slugify 069 \"ø\"",
+      "fn": "slugify",
+      "input": {
+        "text": "ø"
+      },
+      "expected": "o"
+    },
+    {
+      "name": "slugify 070 \"æ\"",
+      "fn": "slugify",
+      "input": {
+        "text": "æ"
+      },
+      "expected": "ae"
+    },
+    {
+      "name": "slugify 071 \"þ\"",
+      "fn": "slugify",
+      "input": {
+        "text": "þ"
+      },
+      "expected": "th"
+    },
+    {
+      "name": "slugify 072 \"Æ\"",
+      "fn": "slugify",
+      "input": {
+        "text": "Æ"
+      },
+      "expected": "ae"
+    },
+    {
+      "name": "slugify 073 \"Ø\"",
+      "fn": "slugify",
+      "input": {
+        "text": "Ø"
+      },
+      "expected": "o"
+    },
+    {
+      "name": "slugify 074 \"Þ\"",
+      "fn": "slugify",
+      "input": {
+        "text": "Þ"
+      },
+      "expected": "th"
+    },
+    {
+      "name": "slugify 075 \"ÿ Ÿ ý Ý\"",
+      "fn": "slugify",
+      "input": {
+        "text": "ÿ Ÿ ý Ý"
+      },
+      "expected": "y-y-y-y"
+    },
+    {
+      "name": "slugify 076 \"日本語\"",
+      "fn": "slugify",
+      "input": {
+        "text": "日本語"
+      },
+      "expected": ""
+    },
+    {
+      "name": "slugify 077 \"日本語のタイトル\"",
+      "fn": "slugify",
+      "input": {
+        "text": "日本語のタイトル"
+      },
+      "expected": ""
+    },
+    {
+      "name": "slugify 078 \"中文标题 test\"",
+      "fn": "slugify",
+      "input": {
+        "text": "中文标题 test"
+      },
+      "expected": "test"
+    },
+    {
+      "name": "slugify 079 \"한국어 제목\"",
+      "fn": "slugify",
+      "input": {
+        "text": "한국어 제목"
+      },
+      "expected": ""
+    },
+    {
+      "name": "slugify 080 \"Привет мир\"",
+      "fn": "slugify",
+      "input": {
+        "text": "Привет мир"
+      },
+      "expected": ""
+    },
+    {
+      "name": "slugify 081 \"Ελληνικά\"",
+      "fn": "slugify",
+      "input": {
+        "text": "Ελληνικά"
+      },
+      "expected": ""
+    },
+    {
+      "name": "slugify 082 \"שלום עולם\"",
+      "fn": "slugify",
+      "input": {
+        "text": "שלום עולם"
+      },
+      "expected": ""
+    },
+    {
+      "name": "slugify 083 \"مرحبا بالعالم\"",
+      "fn": "slugify",
+      "input": {
+        "text": "مرحبا بالعالم"
+      },
+      "expected": ""
+    },
+    {
+      "name": "slugify 084 \"שלום abc\"",
+      "fn": "slugify",
+      "input": {
+        "text": "שלום abc"
+      },
+      "expected": "abc"
+    },
+    {
+      "name": "slugify 085 \"abc 日本 def\"",
+      "fn": "slugify",
+      "input": {
+        "text": "abc 日本 def"
+      },
+      "expected": "abc-def"
+    },
+    {
+      "name": "slugify 086 \"हिन्दी\"",
+      "fn": "slugify",
+      "input": {
+        "text": "हिन्दी"
+      },
+      "expected": ""
+    },
+    {
+      "name": "slugify 087 \"ไทย\"",
+      "fn": "slugify",
+      "input": {
+        "text": "ไทย"
+      },
+      "expected": ""
+    },
+    {
+      "name": "slugify 088 \"Hello 👋 World\"",
+      "fn": "slugify",
+      "input": {
+        "text": "Hello 👋 World"
+      },
+      "expected": "hello-world"
+    },
+    {
+      "name": "slugify 089 \"👨‍👩‍👧\"",
+      "fn": "slugify",
+      "input": {
+        "text": "👨‍👩‍👧"
+      },
+      "expected": ""
+    },
+    {
+      "name": "slugify 090 \"🎉🎉🎉\"",
+      "fn": "slugify",
+      "input": {
+        "text": "🎉🎉🎉"
+      },
+      "expected": ""
+    },
+    {
+      "name": "slugify 091 \"rocket🚀ship\"",
+      "fn": "slugify",
+      "input": {
+        "text": "rocket🚀ship"
+      },
+      "expected": "rocket-ship"
+    },
+    {
+      "name": "slugify 092 \"flag 🇧🇷 brazil\"",
+      "fn": "slugify",
+      "input": {
+        "text": "flag 🇧🇷 brazil"
+      },
+      "expected": "flag-brazil"
+    },
+    {
+      "name": "slugify 093 \"❤️ love\"",
+      "fn": "slugify",
+      "input": {
+        "text": "❤️ love"
+      },
+      "expected": "love"
+    },
+    {
+      "name": "slugify 094 \"1️⃣ one\"",
+      "fn": "slugify",
+      "input": {
+        "text": "1️⃣ one"
+      },
+      "expected": "1-one"
+    },
+    {
+      "name": "slugify 095 \"é\"",
+      "fn": "slugify",
+      "input": {
+        "text": "é"
+      },
+      "expected": "e"
+    },
+    {
+      "name": "slugify 096 \"Café\"",
+      "fn": "slugify",
+      "input": {
+        "text": "Café"
+      },
+      "expected": "cafe"
+    },
+    {
+      "name": "slugify 097 \"ño\"",
+      "fn": "slugify",
+      "input": {
+        "text": "ño"
+      },
+      "expected": "n-o"
+    },
+    {
+      "name": "slugify 098 \"Å\"",
+      "fn": "slugify",
+      "input": {
+        "text": "Å"
+      },
+      "expected": "a"
+    },
+    {
+      "name": "slugify 099 \"nbsp here\"",
+      "fn": "slugify",
+      "input": {
+        "text": "nbsp here"
+      },
+      "expected": "nbsp-here"
+    },
+    {
+      "name": "slugify 100 \"tab\\there\"",
+      "fn": "slugify",
+      "input": {
+        "text": "tab\there"
+      },
+      "expected": "tab-here"
+    },
+    {
+      "name": "slugify 101 \"new\\nline\"",
+      "fn": "slugify",
+      "input": {
+        "text": "new\nline"
+      },
+      "expected": "new-line"
+    },
+    {
+      "name": "slugify 102 \"cr\\rline\"",
+      "fn": "slugify",
+      "input": {
+        "text": "cr\rline"
+      },
+      "expected": "cr-line"
+    },
+    {
+      "name": "slugify 103 \"crlf\\r\\nline\"",
+      "fn": "slugify",
+      "input": {
+        "text": "crlf\r\nline"
+      },
+      "expected": "crlf-line"
+    },
+    {
+      "name": "slugify 104 \"zero​width\"",
+      "fn": "slugify",
+      "input": {
+        "text": "zero​width"
+      },
+      "expected": "zero-width"
+    },
+    {
+      "name": "slugify 105 \"soft­hyphen\"",
+      "fn": "slugify",
+      "input": {
+        "text": "soft­hyphen"
+      },
+      "expected": "soft-hyphen"
+    },
+    {
+      "name": "slugify 106 \"em—dash\"",
+      "fn": "slugify",
+      "input": {
+        "text": "em—dash"
+      },
+      "expected": "em-dash"
+    },
+    {
+      "name": "slugify 107 \"en–dash\"",
+      "fn": "slugify",
+      "input": {
+        "text": "en–dash"
+      },
+      "expected": "en-dash"
+    },
+    {
+      "name": "slugify 108 \"ellipsis…\"",
+      "fn": "slugify",
+      "input": {
+        "text": "ellipsis…"
+      },
+      "expected": "ellipsis"
+    },
+    {
+      "name": "slugify 109 \"fullＡwidth\"",
+      "fn": "slugify",
+      "input": {
+        "text": "fullＡwidth"
+      },
+      "expected": "full-width"
+    },
+    {
+      "name": "slugify 110 \"ﬁ ligature\"",
+      "fn": "slugify",
+      "input": {
+        "text": "ﬁ ligature"
+      },
+      "expected": "ligature"
+    },
+    {
+      "name": "slugify 111 \"ǅ titlecase\"",
+      "fn": "slugify",
+      "input": {
+        "text": "ǅ titlecase"
+      },
+      "expected": "titlecase"
+    },
+    {
+      "name": "slugify 112 \"Ⅻ roman\"",
+      "fn": "slugify",
+      "input": {
+        "text": "Ⅻ roman"
+      },
+      "expected": "roman"
+    },
+    {
+      "name": "slugify 113 \"ⓐ circled\"",
+      "fn": "slugify",
+      "input": {
+        "text": "ⓐ circled"
+      },
+      "expected": "circled"
+    },
+    {
+      "name": "slugify 114 \"² superscript\"",
+      "fn": "slugify",
+      "input": {
+        "text": "² superscript"
+      },
+      "expected": "superscript"
+    },
+    {
+      "name": "slugify 115 \"½ half\"",
+      "fn": "slugify",
+      "input": {
+        "text": "½ half"
+      },
+      "expected": "half"
+    },
+    {
+      "name": "slugify 116 \"\"",
+      "fn": "slugify",
+      "input": {
+        "text": ""
+      },
+      "expected": ""
+    },
+    {
+      "name": "slugify 117 \" \"",
+      "fn": "slugify",
+      "input": {
+        "text": " "
+      },
+      "expected": ""
+    },
+    {
+      "name": "slugify 118 \"   \"",
+      "fn": "slugify",
+      "input": {
+        "text": "   "
+      },
+      "expected": ""
+    },
+    {
+      "name": "slugify 119 \"\\t\"",
+      "fn": "slugify",
+      "input": {
+        "text": "\t"
+      },
+      "expected": ""
+    },
+    {
+      "name": "slugify 120 \"-\"",
+      "fn": "slugify",
+      "input": {
+        "text": "-"
+      },
+      "expected": ""
+    },
+    {
+      "name": "slugify 121 \"---\"",
+      "fn": "slugify",
+      "input": {
+        "text": "---"
+      },
+      "expected": ""
+    },
+    {
+      "name": "slugify 122 \"!!!\"",
+      "fn": "slugify",
+      "input": {
+        "text": "!!!"
+      },
+      "expected": ""
+    },
+    {
+      "name": "slugify 123 \"@\\#$%^&*()\"",
+      "fn": "slugify",
+      "input": {
+        "text": "@#$%^&*()"
+      },
+      "expected": ""
+    },
+    {
+      "name": "slugify 124 \"...\"",
+      "fn": "slugify",
+      "input": {
+        "text": "..."
+      },
+      "expected": ""
+    },
+    {
+      "name": "slugify 125 \"___\"",
+      "fn": "slugify",
+      "input": {
+        "text": "___"
+      },
+      "expected": ""
+    },
+    {
+      "name": "slugify 126 \"a_b_c\"",
+      "fn": "slugify",
+      "input": {
+        "text": "a_b_c"
+      },
+      "expected": "a-b-c"
+    },
+    {
+      "name": "slugify 127 \"a.b.c\"",
+      "fn": "slugify",
+      "input": {
+        "text": "a.b.c"
+      },
+      "expected": "a-b-c"
+    },
+    {
+      "name": "slugify 128 \"a/b/c\"",
+      "fn": "slugify",
+      "input": {
+        "text": "a/b/c"
+      },
+      "expected": "a-b-c"
+    },
+    {
+      "name": "slugify 129 \"a\\\\b\\\\c\"",
+      "fn": "slugify",
+      "input": {
+        "text": "a\\b\\c"
+      },
+      "expected": "a-b-c"
+    },
+    {
+      "name": "slugify 130 \"multiple    spaces\"",
+      "fn": "slugify",
+      "input": {
+        "text": "multiple    spaces"
+      },
+      "expected": "multiple-spaces"
+    },
+    {
+      "name": "slugify 131 \"  leading and trailing  \"",
+      "fn": "slugify",
+      "input": {
+        "text": "  leading and trailing  "
+      },
+      "expected": "leading-and-trailing"
+    },
+    {
+      "name": "slugify 132 \"-leading-dash\"",
+      "fn": "slugify",
+      "input": {
+        "text": "-leading-dash"
+      },
+      "expected": "leading-dash"
+    },
+    {
+      "name": "slugify 133 \"trailing-dash-\"",
+      "fn": "slugify",
+      "input": {
+        "text": "trailing-dash-"
+      },
+      "expected": "trailing-dash"
+    },
+    {
+      "name": "slugify 134 \"a--b\"",
+      "fn": "slugify",
+      "input": {
+        "text": "a--b"
+      },
+      "expected": "a-b"
+    },
+    {
+      "name": "slugify 135 \"a - b\"",
+      "fn": "slugify",
+      "input": {
+        "text": "a - b"
+      },
+      "expected": "a-b"
+    },
+    {
+      "name": "slugify 136 \"a -- b -- c\"",
+      "fn": "slugify",
+      "input": {
+        "text": "a -- b -- c"
+      },
+      "expected": "a-b-c"
+    },
+    {
+      "name": "slugify 137 \"dots.in.title.\"",
+      "fn": "slugify",
+      "input": {
+        "text": "dots.in.title."
+      },
+      "expected": "dots-in-title"
+    },
+    {
+      "name": "slugify 138 \"C++ & C#\"",
+      "fn": "slugify",
+      "input": {
+        "text": "C++ & C#"
+      },
+      "expected": "c-c"
+    },
+    {
+      "name": "slugify 139 \"Node.js v20\"",
+      "fn": "slugify",
+      "input": {
+        "text": "Node.js v20"
+      },
+      "expected": "node-js-v20"
+    },
+    {
+      "name": "slugify 140 \"100%\"",
+      "fn": "slugify",
+      "input": {
+        "text": "100%"
+      },
+      "expected": "100"
+    },
+    {
+      "name": "slugify 141 \"50/50\"",
+      "fn": "slugify",
+      "input": {
+        "text": "50/50"
+      },
+      "expected": "50-50"
+    },
+    {
+      "name": "slugify 142 \"2026-02-01\"",
+      "fn": "slugify",
+      "input": {
+        "text": "2026-02-01"
+      },
+      "expected": "2026-02-01"
+    },
+    {
+      "name": "slugify 143 \"1.2.3\"",
+      "fn": "slugify",
+      "input": {
+        "text": "1.2.3"
+      },
+      "expected": "1-2-3"
+    },
+    {
+      "name": "slugify 144 \"123\"",
+      "fn": "slugify",
+      "input": {
+        "text": "123"
+      },
+      "expected": "123"
+    },
+    {
+      "name": "slugify 145 \"007 James Bond\"",
+      "fn": "slugify",
+      "input": {
+        "text": "007 James Bond"
+      },
+      "expected": "007-james-bond"
+    },
+    {
+      "name": "slugify 146 \"Top 10: Lists!\"",
+      "fn": "slugify",
+      "input": {
+        "text": "Top 10: Lists!"
+      },
+      "expected": "top-10-lists"
+    },
+    {
+      "name": "slugify 147 \"Q&A\"",
+      "fn": "slugify",
+      "input": {
+        "text": "Q&A"
+      },
+      "expected": "q-a"
+    },
+    {
+      "name": "slugify 148 \"it's\"",
+      "fn": "slugify",
+      "input": {
+        "text": "it's"
+      },
+      "expected": "it-s"
+    },
+    {
+      "name": "slugify 149 \"don't stop\"",
+      "fn": "slugify",
+      "input": {
+        "text": "don't stop"
+      },
+      "expected": "don-t-stop"
+    },
+    {
+      "name": "slugify 150 \"\\\"quoted\\\"\"",
+      "fn": "slugify",
+      "input": {
+        "text": "\"quoted\""
+      },
+      "expected": "quoted"
+    },
+    {
+      "name": "slugify 151 \"'single'\"",
+      "fn": "slugify",
+      "input": {
+        "text": "'single'"
+      },
+      "expected": "single"
+    },
+    {
+      "name": "slugify 152 \"(parens)\"",
+      "fn": "slugify",
+      "input": {
+        "text": "(parens)"
+      },
+      "expected": "parens"
+    },
+    {
+      "name": "slugify 153 \"[brackets]\"",
+      "fn": "slugify",
+      "input": {
+        "text": "[brackets]"
+      },
+      "expected": "brackets"
+    },
+    {
+      "name": "slugify 154 \"{braces}\"",
+      "fn": "slugify",
+      "input": {
+        "text": "{braces}"
+      },
+      "expected": "braces"
+    },
+    {
+      "name": "slugify 155 \"<html>\"",
+      "fn": "slugify",
+      "input": {
+        "text": "<html>"
+      },
+      "expected": "html"
+    },
+    {
+      "name": "slugify 156 \"a=b\"",
+      "fn": "slugify",
+      "input": {
+        "text": "a=b"
+      },
+      "expected": "a-b"
+    },
+    {
+      "name": "slugify 157 \"x+y\"",
+      "fn": "slugify",
+      "input": {
+        "text": "x+y"
+      },
+      "expected": "x-y"
+    },
+    {
+      "name": "slugify 158 \"k:v\"",
+      "fn": "slugify",
+      "input": {
+        "text": "k:v"
+      },
+      "expected": "k-v"
+    },
+    {
+      "name": "slugify 159 \"semi;colon\"",
+      "fn": "slugify",
+      "input": {
+        "text": "semi;colon"
+      },
+      "expected": "semi-colon"
+    },
+    {
+      "name": "slugify 160 \"comma,separated\"",
+      "fn": "slugify",
+      "input": {
+        "text": "comma,separated"
+      },
+      "expected": "comma-separated"
+    },
+    {
+      "name": "slugify 161 \"ALLCAPS\"",
+      "fn": "slugify",
+      "input": {
+        "text": "ALLCAPS"
+      },
+      "expected": "allcaps"
+    },
+    {
+      "name": "slugify 162 \"camelCaseTitle\"",
+      "fn": "slugify",
+      "input": {
+        "text": "camelCaseTitle"
+      },
+      "expected": "camelcasetitle"
+    },
+    {
+      "name": "slugify 163 \"snake_case_title\"",
+      "fn": "slugify",
+      "input": {
+        "text": "snake_case_title"
+      },
+      "expected": "snake-case-title"
+    },
+    {
+      "name": "slugify 164 \"kebab-case-title\"",
+      "fn": "slugify",
+      "input": {
+        "text": "kebab-case-title"
+      },
+      "expected": "kebab-case-title"
+    },
+    {
+      "name": "slugify 165 \"MiXeD 123 CaSe\"",
+      "fn": "slugify",
+      "input": {
+        "text": "MiXeD 123 CaSe"
+      },
+      "expected": "mixed-123-case"
+    },
+    {
+      "name": "slugify 166 \"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "fn": "slugify",
+      "input": {
+        "text": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+      },
+      "expected": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    },
+    {
+      "name": "slugify 167 \"Ação Ação Ação Ação Ação Ação Ação Ação Ação Ação",
+      "fn": "slugify",
+      "input": {
+        "text": "Ação Ação Ação Ação Ação Ação Ação Ação Ação Ação Ação Ação Ação Ação Ação Ação Ação Ação Ação Ação Ação Ação Ação Ação Ação Ação Ação Ação Ação Ação Ação Ação Ação Ação Ação Ação Ação Ação Ação Ação Ação Ação Ação Ação Ação Ação Ação Ação Ação Ação Ação Ação Ação Ação Ação Ação Ação Ação Ação Ação"
+      },
+      "expected": "acao-acao-acao-acao-acao-acao-acao-acao-acao-acao-acao-acao-acao-acao-acao-acao-acao-acao-acao-acao-acao-acao-acao-acao-acao-acao-acao-acao-acao-acao-acao-acao-acao-acao-acao-acao-acao-acao-acao-acao-acao-acao-acao-acao-acao-acao-acao-acao-acao-acao-acao-acao-acao-acao-acao-acao-acao-acao-acao-acao"
+    },
+    {
+      "name": "slugify 168 \"a------------------------------------------------",
+      "fn": "slugify",
+      "input": {
+        "text": "a----------------------------------------------------------------------------------------------------b"
+      },
+      "expected": "a-b"
+    },
+    {
+      "name": "slugify 169 \"🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉",
+      "fn": "slugify",
+      "input": {
+        "text": "🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉"
+      },
+      "expected": ""
+    },
+    {
+      "name": "slugify 170 \"../../etc/passwd\"",
+      "fn": "slugify",
+      "input": {
+        "text": "../../etc/passwd"
+      },
+      "expected": "etc-passwd"
+    },
+    {
+      "name": "slugify 171 \"~/.ssh\"",
+      "fn": "slugify",
+      "input": {
+        "text": "~/.ssh"
+      },
+      "expected": "ssh"
+    },
+    {
+      "name": "slugify 172 \"%2e%2e\"",
+      "fn": "slugify",
+      "input": {
+        "text": "%2e%2e"
+      },
+      "expected": "2e-2e"
+    },
+    {
+      "name": "slugify 173 \"nul\\u0000byte\"",
+      "fn": "slugify",
+      "input": {
+        "text": "nul\u0000byte"
+      },
+      "expected": "nul-byte"
+    },
+    {
+      "name": "slugify 174 nil",
+      "fn": "slugify",
+      "input": {
+        "text": null
+      },
+      "expected": {
+        "error": "NoMethodError",
+        "message": "undefined method 'downcase' for nil"
+      }
+    },
+    {
+      "name": "slugify 175 123",
+      "fn": "slugify",
+      "input": {
+        "text": 123
+      },
+      "expected": {
+        "error": "NoMethodError",
+        "message": "undefined method 'downcase' for an instance of Integer"
+      }
+    },
+    {
+      "name": "slugify every ACCENT_MAP key (lower + upper)",
+      "fn": "slugify",
+      "input": {
+        "text": "à á â ã ä å æ ç č ć è é ê ë ě ì í î ï ð ď ñ ň ò ó ô õ ö ø ù ú û ü ů ý ÿ ž ź ż ß þ š ś ř ł À Á Â Ã Ä Å Æ Ç Č Ć È É Ê Ë Ě Ì Í Î Ï Ð Ď Ñ Ň Ò Ó Ô Õ Ö Ø Ù Ú Û Ü Ů Ý Ÿ Ž Ź Ż SS Þ Š Ś Ř Ł"
+      },
+      "expected": "a-a-a-a-a-a-ae-c-c-c-e-e-e-e-e-i-i-i-i-d-d-n-n-o-o-o-o-o-o-u-u-u-u-u-y-y-z-z-z-ss-th-s-s-r-l-a-a-a-a-a-a-ae-c-c-c-e-e-e-e-e-i-i-i-i-d-d-n-n-o-o-o-o-o-o-u-u-u-u-u-y-y-z-z-z-ss-th-s-s-r-l"
+    },
+    {
+      "name": "slugify accent \"à\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xày"
+      },
+      "expected": "xay"
+    },
+    {
+      "name": "slugify accent \"À\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xÀy"
+      },
+      "expected": "xay"
+    },
+    {
+      "name": "slugify accent \"á\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xáy"
+      },
+      "expected": "xay"
+    },
+    {
+      "name": "slugify accent \"Á\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xÁy"
+      },
+      "expected": "xay"
+    },
+    {
+      "name": "slugify accent \"â\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xây"
+      },
+      "expected": "xay"
+    },
+    {
+      "name": "slugify accent \"Â\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xÂy"
+      },
+      "expected": "xay"
+    },
+    {
+      "name": "slugify accent \"ã\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xãy"
+      },
+      "expected": "xay"
+    },
+    {
+      "name": "slugify accent \"Ã\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xÃy"
+      },
+      "expected": "xay"
+    },
+    {
+      "name": "slugify accent \"ä\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xäy"
+      },
+      "expected": "xay"
+    },
+    {
+      "name": "slugify accent \"Ä\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xÄy"
+      },
+      "expected": "xay"
+    },
+    {
+      "name": "slugify accent \"å\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xåy"
+      },
+      "expected": "xay"
+    },
+    {
+      "name": "slugify accent \"Å\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xÅy"
+      },
+      "expected": "xay"
+    },
+    {
+      "name": "slugify accent \"æ\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xæy"
+      },
+      "expected": "xaey"
+    },
+    {
+      "name": "slugify accent \"Æ\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xÆy"
+      },
+      "expected": "xaey"
+    },
+    {
+      "name": "slugify accent \"ç\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xçy"
+      },
+      "expected": "xcy"
+    },
+    {
+      "name": "slugify accent \"Ç\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xÇy"
+      },
+      "expected": "xcy"
+    },
+    {
+      "name": "slugify accent \"č\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xčy"
+      },
+      "expected": "xcy"
+    },
+    {
+      "name": "slugify accent \"Č\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xČy"
+      },
+      "expected": "xcy"
+    },
+    {
+      "name": "slugify accent \"ć\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xćy"
+      },
+      "expected": "xcy"
+    },
+    {
+      "name": "slugify accent \"Ć\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xĆy"
+      },
+      "expected": "xcy"
+    },
+    {
+      "name": "slugify accent \"è\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xèy"
+      },
+      "expected": "xey"
+    },
+    {
+      "name": "slugify accent \"È\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xÈy"
+      },
+      "expected": "xey"
+    },
+    {
+      "name": "slugify accent \"é\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xéy"
+      },
+      "expected": "xey"
+    },
+    {
+      "name": "slugify accent \"É\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xÉy"
+      },
+      "expected": "xey"
+    },
+    {
+      "name": "slugify accent \"ê\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xêy"
+      },
+      "expected": "xey"
+    },
+    {
+      "name": "slugify accent \"Ê\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xÊy"
+      },
+      "expected": "xey"
+    },
+    {
+      "name": "slugify accent \"ë\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xëy"
+      },
+      "expected": "xey"
+    },
+    {
+      "name": "slugify accent \"Ë\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xËy"
+      },
+      "expected": "xey"
+    },
+    {
+      "name": "slugify accent \"ě\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xěy"
+      },
+      "expected": "xey"
+    },
+    {
+      "name": "slugify accent \"Ě\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xĚy"
+      },
+      "expected": "xey"
+    },
+    {
+      "name": "slugify accent \"ì\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xìy"
+      },
+      "expected": "xiy"
+    },
+    {
+      "name": "slugify accent \"Ì\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xÌy"
+      },
+      "expected": "xiy"
+    },
+    {
+      "name": "slugify accent \"í\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xíy"
+      },
+      "expected": "xiy"
+    },
+    {
+      "name": "slugify accent \"Í\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xÍy"
+      },
+      "expected": "xiy"
+    },
+    {
+      "name": "slugify accent \"î\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xîy"
+      },
+      "expected": "xiy"
+    },
+    {
+      "name": "slugify accent \"Î\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xÎy"
+      },
+      "expected": "xiy"
+    },
+    {
+      "name": "slugify accent \"ï\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xïy"
+      },
+      "expected": "xiy"
+    },
+    {
+      "name": "slugify accent \"Ï\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xÏy"
+      },
+      "expected": "xiy"
+    },
+    {
+      "name": "slugify accent \"ð\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xðy"
+      },
+      "expected": "xdy"
+    },
+    {
+      "name": "slugify accent \"Ð\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xÐy"
+      },
+      "expected": "xdy"
+    },
+    {
+      "name": "slugify accent \"ď\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xďy"
+      },
+      "expected": "xdy"
+    },
+    {
+      "name": "slugify accent \"Ď\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xĎy"
+      },
+      "expected": "xdy"
+    },
+    {
+      "name": "slugify accent \"ñ\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xñy"
+      },
+      "expected": "xny"
+    },
+    {
+      "name": "slugify accent \"Ñ\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xÑy"
+      },
+      "expected": "xny"
+    },
+    {
+      "name": "slugify accent \"ň\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xňy"
+      },
+      "expected": "xny"
+    },
+    {
+      "name": "slugify accent \"Ň\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xŇy"
+      },
+      "expected": "xny"
+    },
+    {
+      "name": "slugify accent \"ò\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xòy"
+      },
+      "expected": "xoy"
+    },
+    {
+      "name": "slugify accent \"Ò\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xÒy"
+      },
+      "expected": "xoy"
+    },
+    {
+      "name": "slugify accent \"ó\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xóy"
+      },
+      "expected": "xoy"
+    },
+    {
+      "name": "slugify accent \"Ó\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xÓy"
+      },
+      "expected": "xoy"
+    },
+    {
+      "name": "slugify accent \"ô\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xôy"
+      },
+      "expected": "xoy"
+    },
+    {
+      "name": "slugify accent \"Ô\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xÔy"
+      },
+      "expected": "xoy"
+    },
+    {
+      "name": "slugify accent \"õ\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xõy"
+      },
+      "expected": "xoy"
+    },
+    {
+      "name": "slugify accent \"Õ\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xÕy"
+      },
+      "expected": "xoy"
+    },
+    {
+      "name": "slugify accent \"ö\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xöy"
+      },
+      "expected": "xoy"
+    },
+    {
+      "name": "slugify accent \"Ö\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xÖy"
+      },
+      "expected": "xoy"
+    },
+    {
+      "name": "slugify accent \"ø\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xøy"
+      },
+      "expected": "xoy"
+    },
+    {
+      "name": "slugify accent \"Ø\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xØy"
+      },
+      "expected": "xoy"
+    },
+    {
+      "name": "slugify accent \"ù\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xùy"
+      },
+      "expected": "xuy"
+    },
+    {
+      "name": "slugify accent \"Ù\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xÙy"
+      },
+      "expected": "xuy"
+    },
+    {
+      "name": "slugify accent \"ú\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xúy"
+      },
+      "expected": "xuy"
+    },
+    {
+      "name": "slugify accent \"Ú\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xÚy"
+      },
+      "expected": "xuy"
+    },
+    {
+      "name": "slugify accent \"û\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xûy"
+      },
+      "expected": "xuy"
+    },
+    {
+      "name": "slugify accent \"Û\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xÛy"
+      },
+      "expected": "xuy"
+    },
+    {
+      "name": "slugify accent \"ü\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xüy"
+      },
+      "expected": "xuy"
+    },
+    {
+      "name": "slugify accent \"Ü\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xÜy"
+      },
+      "expected": "xuy"
+    },
+    {
+      "name": "slugify accent \"ů\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xůy"
+      },
+      "expected": "xuy"
+    },
+    {
+      "name": "slugify accent \"Ů\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xŮy"
+      },
+      "expected": "xuy"
+    },
+    {
+      "name": "slugify accent \"ý\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xýy"
+      },
+      "expected": "xyy"
+    },
+    {
+      "name": "slugify accent \"Ý\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xÝy"
+      },
+      "expected": "xyy"
+    },
+    {
+      "name": "slugify accent \"ÿ\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xÿy"
+      },
+      "expected": "xyy"
+    },
+    {
+      "name": "slugify accent \"Ÿ\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xŸy"
+      },
+      "expected": "xyy"
+    },
+    {
+      "name": "slugify accent \"ž\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xžy"
+      },
+      "expected": "xzy"
+    },
+    {
+      "name": "slugify accent \"Ž\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xŽy"
+      },
+      "expected": "xzy"
+    },
+    {
+      "name": "slugify accent \"ź\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xźy"
+      },
+      "expected": "xzy"
+    },
+    {
+      "name": "slugify accent \"Ź\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xŹy"
+      },
+      "expected": "xzy"
+    },
+    {
+      "name": "slugify accent \"ż\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xży"
+      },
+      "expected": "xzy"
+    },
+    {
+      "name": "slugify accent \"Ż\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xŻy"
+      },
+      "expected": "xzy"
+    },
+    {
+      "name": "slugify accent \"ß\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xßy"
+      },
+      "expected": "xssy"
+    },
+    {
+      "name": "slugify accent \"SS\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xSSy"
+      },
+      "expected": "xssy"
+    },
+    {
+      "name": "slugify accent \"þ\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xþy"
+      },
+      "expected": "xthy"
+    },
+    {
+      "name": "slugify accent \"Þ\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xÞy"
+      },
+      "expected": "xthy"
+    },
+    {
+      "name": "slugify accent \"š\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xšy"
+      },
+      "expected": "xsy"
+    },
+    {
+      "name": "slugify accent \"Š\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xŠy"
+      },
+      "expected": "xsy"
+    },
+    {
+      "name": "slugify accent \"ś\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xśy"
+      },
+      "expected": "xsy"
+    },
+    {
+      "name": "slugify accent \"Ś\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xŚy"
+      },
+      "expected": "xsy"
+    },
+    {
+      "name": "slugify accent \"ř\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xřy"
+      },
+      "expected": "xry"
+    },
+    {
+      "name": "slugify accent \"Ř\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xŘy"
+      },
+      "expected": "xry"
+    },
+    {
+      "name": "slugify accent \"ł\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xły"
+      },
+      "expected": "xly"
+    },
+    {
+      "name": "slugify accent \"Ł\"",
+      "fn": "slugify",
+      "input": {
+        "text": "xŁy"
+      },
+      "expected": "xly"
+    },
+    {
+      "name": "render_template 00 \"My Post\"",
+      "fn": "render_template",
+      "input": {
+        "template": "---\ntitle: \"{{title}}\"\nslug: \"{{slug}}\"\ndate: {{date}}\ndraft: true\ntags: []\n---\n\n",
+        "title": "My Post",
+        "slug": "my-post",
+        "date": "2026-02-01T10:30:00+00:00"
+      },
+      "expected": "---\ntitle: \"My Post\"\nslug: \"my-post\"\ndate: 2026-02-01T10:30:00+00:00\ndraft: true\ntags: []\n---\n\n"
+    },
+    {
+      "name": "render_template 01 \"Say \\\"Hello\\\" World\"",
+      "fn": "render_template",
+      "input": {
+        "template": "---\ntitle: \"{{title}}\"\nslug: \"{{slug}}\"\ndate: {{date}}\ndraft: true\ntags: []\n---\n\n",
+        "title": "Say \"Hello\" World",
+        "slug": "say-hello-world",
+        "date": "2026-02-01T10:30:00+00:00"
+      },
+      "expected": "---\ntitle: \"Say \\\"Hello\\\" World\"\nslug: \"say-hello-world\"\ndate: 2026-02-01T10:30:00+00:00\ndraft: true\ntags: []\n---\n\n"
+    },
+    {
+      "name": "render_template 02 \"back\\\\slash \\\\1 \\\\0 \\\\& \\\\\\\\\"",
+      "fn": "render_template",
+      "input": {
+        "template": "---\ntitle: \"{{title}}\"\nslug: \"{{slug}}\"\ndate: {{date}}\ndraft: true\ntags: []\n---\n\n",
+        "title": "back\\slash \\1 \\0 \\& \\\\",
+        "slug": "back-slash",
+        "date": "D"
+      },
+      "expected": "---\ntitle: \"back\\slash \\1 \\0 \\& \\\\\"\nslug: \"back-slash\"\ndate: D\ndraft: true\ntags: []\n---\n\n"
+    },
+    {
+      "name": "render_template 03 \"\"",
+      "fn": "render_template",
+      "input": {
+        "template": "---\ntitle: \"{{title}}\"\nslug: \"{{slug}}\"\ndate: {{date}}\ndraft: true\ntags: []\n---\n\n",
+        "title": "",
+        "slug": "",
+        "date": ""
+      },
+      "expected": "---\ntitle: \"\"\nslug: \"\"\ndate: \ndraft: true\ntags: []\n---\n\n"
+    },
+    {
+      "name": "render_template 04 \"{{slug}} in title\"",
+      "fn": "render_template",
+      "input": {
+        "template": "---\ntitle: \"{{title}}\"\nslug: \"{{slug}}\"\ndate: {{date}}\ndraft: true\ntags: []\n---\n\n",
+        "title": "{{slug}} in title",
+        "slug": "slug-in-title",
+        "date": "D"
+      },
+      "expected": "---\ntitle: \"slug-in-title in title\"\nslug: \"slug-in-title\"\ndate: D\ndraft: true\ntags: []\n---\n\n"
+    },
+    {
+      "name": "render_template 05 \"{{date}} {{title}}\"",
+      "fn": "render_template",
+      "input": {
+        "template": "---\ntitle: \"{{title}}\"\nslug: \"{{slug}}\"\ndate: {{date}}\ndraft: true\ntags: []\n---\n\n",
+        "title": "{{date}} {{title}}",
+        "slug": "date-title",
+        "date": "THE-DATE"
+      },
+      "expected": "---\ntitle: \"THE-DATE {{title}}\"\nslug: \"date-title\"\ndate: THE-DATE\ndraft: true\ntags: []\n---\n\n"
+    },
+    {
+      "name": "render_template 06 \"T\"",
+      "fn": "render_template",
+      "input": {
+        "template": "{{title}}{{title}}{{slug}}{{slug}}{{date}}{{date}}",
+        "title": "T",
+        "slug": "s",
+        "date": "d"
+      },
+      "expected": "TTssdd"
+    },
+    {
+      "name": "render_template 07 \"T\"",
+      "fn": "render_template",
+      "input": {
+        "template": "{{ title }} {{TITLE}} {title} {{title}",
+        "title": "T",
+        "slug": "s",
+        "date": "d"
+      },
+      "expected": "{{ title }} {{TITLE}} {title} {{title}"
+    },
+    {
+      "name": "render_template 08 \"T\"",
+      "fn": "render_template",
+      "input": {
+        "template": "no placeholders",
+        "title": "T",
+        "slug": "s",
+        "date": "d"
+      },
+      "expected": "no placeholders"
+    },
+    {
+      "name": "render_template 09 \"T\"",
+      "fn": "render_template",
+      "input": {
+        "template": "",
+        "title": "T",
+        "slug": "s",
+        "date": "d"
+      },
+      "expected": ""
+    },
+    {
+      "name": "render_template 10 \"it's\"",
+      "fn": "render_template",
+      "input": {
+        "template": "title: '{{title}}'",
+        "title": "it's",
+        "slug": "its",
+        "date": "d"
+      },
+      "expected": "title: 'it's'"
+    },
+    {
+      "name": "render_template 11 \"CRLF \\\"q\\\"\"",
+      "fn": "render_template",
+      "input": {
+        "template": "title: \"{{title}}\"\r\nslug: {{slug}}\r\n",
+        "title": "CRLF \"q\"",
+        "slug": "crlf-q",
+        "date": "d"
+      },
+      "expected": "title: \"CRLF \\\"q\\\"\"\r\nslug: crlf-q\r\n"
+    },
+    {
+      "name": "render_template 12 \"日本語 \\\"引用\\\" 👨‍👩‍👧\"",
+      "fn": "render_template",
+      "input": {
+        "template": "{{title}}",
+        "title": "日本語 \"引用\" 👨‍👩‍👧",
+        "slug": "",
+        "date": "d"
+      },
+      "expected": "日本語 \\\"引用\\\" 👨‍👩‍👧"
+    },
+    {
+      "name": "render_template 13 \"already \\\\\\\"escaped\\\\\\\"\"",
+      "fn": "render_template",
+      "input": {
+        "template": "{{title}}",
+        "title": "already \\\"escaped\\\"",
+        "slug": "x",
+        "date": "d"
+      },
+      "expected": "already \\\\\"escaped\\\\\""
+    },
+    {
+      "name": "render_template 14 \"multi\\nline\\ntitle\"",
+      "fn": "render_template",
+      "input": {
+        "template": "{{title}}",
+        "title": "multi\nline\ntitle",
+        "slug": "multi-line-title",
+        "date": "d"
+      },
+      "expected": "multi\nline\ntitle"
+    },
+    {
+      "name": "render_template 15 \"T\"",
+      "fn": "render_template",
+      "input": {
+        "template": "{{slug}}",
+        "title": "T",
+        "slug": "\\1\\2",
+        "date": "d"
+      },
+      "expected": "\\1\\2"
+    },
+    {
+      "name": "render_template 16 \"T\"",
+      "fn": "render_template",
+      "input": {
+        "template": "{{date}}",
+        "title": "T",
+        "slug": "s",
+        "date": "\\0"
+      },
+      "expected": "\\0"
+    },
+    {
+      "name": "update_frontmatter_slug 00 \"---\\ntitle: \\\"Test\\\"\\nslug: \\\"old-slug\\",
+      "fn": "update_frontmatter_slug",
+      "input": {
+        "content": "---\ntitle: \"Test\"\nslug: \"old-slug\"\ndate: 2026-02-01\n---\n\nContent\n",
+        "new_slug": "new-slug"
+      },
+      "expected": "---\ntitle: \"Test\"\nslug: \"new-slug\"\ndate: 2026-02-01\n---\nContent\n"
+    },
+    {
+      "name": "update_frontmatter_slug 01 \"Just some regular content\"",
+      "fn": "update_frontmatter_slug",
+      "input": {
+        "content": "Just some regular content",
+        "new_slug": "new-slug"
+      },
+      "expected": null
+    },
+    {
+      "name": "update_frontmatter_slug 02 \"---\\ntitle: \\\"Test\\\"\\ndate: 2026-02-01\\",
+      "fn": "update_frontmatter_slug",
+      "input": {
+        "content": "---\ntitle: \"Test\"\ndate: 2026-02-01\n---\n\nContent\n",
+        "new_slug": "new-slug"
+      },
+      "expected": null
+    },
+    {
+      "name": "update_frontmatter_slug 03 \"---\\ntitle: \\\"Test\\\"\\nslug: \\\"same-slug",
+      "fn": "update_frontmatter_slug",
+      "input": {
+        "content": "---\ntitle: \"Test\"\nslug: \"same-slug\"\n---\n\nContent\n",
+        "new_slug": "same-slug"
+      },
+      "expected": null
+    },
+    {
+      "name": "update_frontmatter_slug 04 \"---\\ntitle: \\\"Test\\\"\\nslug: old-slug\\n-",
+      "fn": "update_frontmatter_slug",
+      "input": {
+        "content": "---\ntitle: \"Test\"\nslug: old-slug\n---\n\nContent\n",
+        "new_slug": "new-slug"
+      },
+      "expected": "---\ntitle: \"Test\"\nslug: \"new-slug\"\n---\nContent\n"
+    },
+    {
+      "name": "update_frontmatter_slug 05 \"---\\ntitle: \\\"Test\\\"\\nslug: 'old-slug'\\",
+      "fn": "update_frontmatter_slug",
+      "input": {
+        "content": "---\ntitle: \"Test\"\nslug: 'old-slug'\n---\n\nContent\n",
+        "new_slug": "new-slug"
+      },
+      "expected": "---\ntitle: \"Test\"\nslug: \"new-slug\"\n---\nContent\n"
+    },
+    {
+      "name": "update_frontmatter_slug 06 \"\"",
+      "fn": "update_frontmatter_slug",
+      "input": {
+        "content": "",
+        "new_slug": "x"
+      },
+      "expected": null
+    },
+    {
+      "name": "update_frontmatter_slug 07 \"---\"",
+      "fn": "update_frontmatter_slug",
+      "input": {
+        "content": "---",
+        "new_slug": "x"
+      },
+      "expected": null
+    },
+    {
+      "name": "update_frontmatter_slug 08 \"---\\n\"",
+      "fn": "update_frontmatter_slug",
+      "input": {
+        "content": "---\n",
+        "new_slug": "x"
+      },
+      "expected": null
+    },
+    {
+      "name": "update_frontmatter_slug 09 \"---\\nslug: a\\n\"",
+      "fn": "update_frontmatter_slug",
+      "input": {
+        "content": "---\nslug: a\n",
+        "new_slug": "x"
+      },
+      "expected": null
+    },
+    {
+      "name": "update_frontmatter_slug 10 \"---\\nslug: a\\n---\"",
+      "fn": "update_frontmatter_slug",
+      "input": {
+        "content": "---\nslug: a\n---",
+        "new_slug": "x"
+      },
+      "expected": "---\nslug: \"x\"\n---"
+    },
+    {
+      "name": "update_frontmatter_slug 11 \"---\\nslug: a\\n---\\n\"",
+      "fn": "update_frontmatter_slug",
+      "input": {
+        "content": "---\nslug: a\n---\n",
+        "new_slug": "x"
+      },
+      "expected": "---\nslug: \"x\"\n---"
+    },
+    {
+      "name": "update_frontmatter_slug 12 \"---\\nslug: a\\n---\\nbody\\n---\\nmore\\n\"",
+      "fn": "update_frontmatter_slug",
+      "input": {
+        "content": "---\nslug: a\n---\nbody\n---\nmore\n",
+        "new_slug": "x"
+      },
+      "expected": "---\nslug: \"x\"\n---\nbody\n---\nmore\n"
+    },
+    {
+      "name": "update_frontmatter_slug 13 \"---\\nslug: same\\n---\\n\"",
+      "fn": "update_frontmatter_slug",
+      "input": {
+        "content": "---\nslug: same\n---\n",
+        "new_slug": "same"
+      },
+      "expected": "---\nslug: \"same\"\n---"
+    },
+    {
+      "name": "update_frontmatter_slug 14 \"---\\nslug: 'same'\\n---\\n\"",
+      "fn": "update_frontmatter_slug",
+      "input": {
+        "content": "---\nslug: 'same'\n---\n",
+        "new_slug": "same"
+      },
+      "expected": "---\nslug: \"same\"\n---"
+    },
+    {
+      "name": "update_frontmatter_slug 15 \"---\\nslug: same\\n---\\n\"",
+      "fn": "update_frontmatter_slug",
+      "input": {
+        "content": "---\nslug: same\n---\n",
+        "new_slug": "\"same\""
+      },
+      "expected": "---\nslug: \"\"same\"\"\n---"
+    },
+    {
+      "name": "update_frontmatter_slug 16 \"---\\nslug:\\n---\\n\"",
+      "fn": "update_frontmatter_slug",
+      "input": {
+        "content": "---\nslug:\n---\n",
+        "new_slug": "x"
+      },
+      "expected": null
+    },
+    {
+      "name": "update_frontmatter_slug 17 \"---\\nslug: \\n---\\n\"",
+      "fn": "update_frontmatter_slug",
+      "input": {
+        "content": "---\nslug: \n---\n",
+        "new_slug": "x"
+      },
+      "expected": null
+    },
+    {
+      "name": "update_frontmatter_slug 18 \"---\\nslug: \\\"\\\"\\n---\\n\"",
+      "fn": "update_frontmatter_slug",
+      "input": {
+        "content": "---\nslug: \"\"\n---\n",
+        "new_slug": "x"
+      },
+      "expected": "---\nslug: \"x\"\n---"
+    },
+    {
+      "name": "update_frontmatter_slug 19 \"---\\nslug: ''\\n---\\n\"",
+      "fn": "update_frontmatter_slug",
+      "input": {
+        "content": "---\nslug: ''\n---\n",
+        "new_slug": "x"
+      },
+      "expected": "---\nslug: \"x\"\n---"
+    },
+    {
+      "name": "update_frontmatter_slug 20 \"---\\nslug: \\\"\\\"\\n---\\n\"",
+      "fn": "update_frontmatter_slug",
+      "input": {
+        "content": "---\nslug: \"\"\n---\n",
+        "new_slug": ""
+      },
+      "expected": null
+    },
+    {
+      "name": "update_frontmatter_slug 21 \"---\\nslug: a\\n---\\n\"",
+      "fn": "update_frontmatter_slug",
+      "input": {
+        "content": "---\nslug: a\n---\n",
+        "new_slug": ""
+      },
+      "expected": "---\nslug: \"\"\n---"
+    },
+    {
+      "name": "update_frontmatter_slug 22 \"---\\nslug: \\\"with spaces inside\\\"\\n---\\",
+      "fn": "update_frontmatter_slug",
+      "input": {
+        "content": "---\nslug: \"with spaces inside\"\n---\n",
+        "new_slug": "x"
+      },
+      "expected": "---\nslug: \"x\"\n---"
+    },
+    {
+      "name": "update_frontmatter_slug 23 \"---\\nslug: with spaces inside\\n---\\n\"",
+      "fn": "update_frontmatter_slug",
+      "input": {
+        "content": "---\nslug: with spaces inside\n---\n",
+        "new_slug": "x"
+      },
+      "expected": "---\nslug: \"x\" spaces inside\n---"
+    },
+    {
+      "name": "update_frontmatter_slug 24 \"---\\nslug: a # comment\\n---\\n\"",
+      "fn": "update_frontmatter_slug",
+      "input": {
+        "content": "---\nslug: a # comment\n---\n",
+        "new_slug": "x"
+      },
+      "expected": "---\nslug: \"x\" # comment\n---"
+    },
+    {
+      "name": "update_frontmatter_slug 25 \"---\\nslug: \\\"a\\\" # comment\\n---\\n\"",
+      "fn": "update_frontmatter_slug",
+      "input": {
+        "content": "---\nslug: \"a\" # comment\n---\n",
+        "new_slug": "x"
+      },
+      "expected": "---\nslug: \"x\" # comment\n---"
+    },
+    {
+      "name": "update_frontmatter_slug 26 \"---\\n  slug: indented\\n---\\n\"",
+      "fn": "update_frontmatter_slug",
+      "input": {
+        "content": "---\n  slug: indented\n---\n",
+        "new_slug": "x"
+      },
+      "expected": null
+    },
+    {
+      "name": "update_frontmatter_slug 27 \"---\\nmyslug: a\\n---\\n\"",
+      "fn": "update_frontmatter_slug",
+      "input": {
+        "content": "---\nmyslug: a\n---\n",
+        "new_slug": "x"
+      },
+      "expected": null
+    },
+    {
+      "name": "update_frontmatter_slug 28 \"---\\nslugs: [a]\\n---\\n\"",
+      "fn": "update_frontmatter_slug",
+      "input": {
+        "content": "---\nslugs: [a]\n---\n",
+        "new_slug": "x"
+      },
+      "expected": null
+    },
+    {
+      "name": "update_frontmatter_slug 29 \"---\\nslug:a\\n---\\n\"",
+      "fn": "update_frontmatter_slug",
+      "input": {
+        "content": "---\nslug:a\n---\n",
+        "new_slug": "x"
+      },
+      "expected": "---\nslug: \"x\"\n---"
+    },
+    {
+      "name": "update_frontmatter_slug 30 \"---\\nslug:\\t\\\"tab\\\"\\n---\\n\"",
+      "fn": "update_frontmatter_slug",
+      "input": {
+        "content": "---\nslug:\t\"tab\"\n---\n",
+        "new_slug": "x"
+      },
+      "expected": "---\nslug: \"x\"\n---"
+    },
+    {
+      "name": "update_frontmatter_slug 31 \"---\\nslug: a\\nslug: b\\n---\\n\"",
+      "fn": "update_frontmatter_slug",
+      "input": {
+        "content": "---\nslug: a\nslug: b\n---\n",
+        "new_slug": "x"
+      },
+      "expected": "---\nslug: \"x\"\nslug: \"x\"\n---"
+    },
+    {
+      "name": "update_frontmatter_slug 32 \"---\\ntitle: t\\n---\\nslug: in-body\\n\"",
+      "fn": "update_frontmatter_slug",
+      "input": {
+        "content": "---\ntitle: t\n---\nslug: in-body\n",
+        "new_slug": "x"
+      },
+      "expected": null
+    },
+    {
+      "name": "update_frontmatter_slug 33 \"---\\nslug: a\\n---\\nslug: in-body\\n\"",
+      "fn": "update_frontmatter_slug",
+      "input": {
+        "content": "---\nslug: a\n---\nslug: in-body\n",
+        "new_slug": "x"
+      },
+      "expected": "---\nslug: \"x\"\n---\nslug: in-body\n"
+    },
+    {
+      "name": "update_frontmatter_slug 34 \"---\\r\\ntitle: t\\r\\nslug: \\\"crlf\\\"\\r\\n--",
+      "fn": "update_frontmatter_slug",
+      "input": {
+        "content": "---\r\ntitle: t\r\nslug: \"crlf\"\r\n---\r\n\r\nBody\r\n",
+        "new_slug": "x"
+      },
+      "expected": "---\ntitle: t\r\nslug: \"x\"\r\n---\nBody\r\n"
+    },
+    {
+      "name": "update_frontmatter_slug 35 \"---\\r\\nslug: crlf\\r\\n---\\r\\n\"",
+      "fn": "update_frontmatter_slug",
+      "input": {
+        "content": "---\r\nslug: crlf\r\n---\r\n",
+        "new_slug": "x"
+      },
+      "expected": "---\nslug: \"x\"\r\n---"
+    },
+    {
+      "name": "update_frontmatter_slug 36 \"---\\rslug: cr\\r---\\r\"",
+      "fn": "update_frontmatter_slug",
+      "input": {
+        "content": "---\rslug: cr\r---\r",
+        "new_slug": "x"
+      },
+      "expected": null
+    },
+    {
+      "name": "update_frontmatter_slug 37 \"+++\\ntitle = \\\"t\\\"\\nslug = \\\"toml\\\"\\n++",
+      "fn": "update_frontmatter_slug",
+      "input": {
+        "content": "+++\ntitle = \"t\"\nslug = \"toml\"\n+++\n\nBody\n",
+        "new_slug": "x"
+      },
+      "expected": null
+    },
+    {
+      "name": "update_frontmatter_slug 38 \"+++\\nslug: \\\"weird\\\"\\n+++\\n\"",
+      "fn": "update_frontmatter_slug",
+      "input": {
+        "content": "+++\nslug: \"weird\"\n+++\n",
+        "new_slug": "x"
+      },
+      "expected": null
+    },
+    {
+      "name": "update_frontmatter_slug 39 \"----\\nslug: a\\n----\\n\"",
+      "fn": "update_frontmatter_slug",
+      "input": {
+        "content": "----\nslug: a\n----\n",
+        "new_slug": "x"
+      },
+      "expected": null
+    },
+    {
+      "name": "update_frontmatter_slug 40 \"---  \\nslug: a\\n---  \\nbody\"",
+      "fn": "update_frontmatter_slug",
+      "input": {
+        "content": "---  \nslug: a\n---  \nbody",
+        "new_slug": "x"
+      },
+      "expected": "---\nslug: \"x\"\n---\nbody"
+    },
+    {
+      "name": "update_frontmatter_slug 41 \"--- \\nslug: a\\n---\\t\\nbody\"",
+      "fn": "update_frontmatter_slug",
+      "input": {
+        "content": "--- \nslug: a\n---\t\nbody",
+        "new_slug": "x"
+      },
+      "expected": "---\nslug: \"x\"\n---\nbody"
+    },
+    {
+      "name": "update_frontmatter_slug 42 \"---yaml\\nslug: a\\n---\\n\"",
+      "fn": "update_frontmatter_slug",
+      "input": {
+        "content": "---yaml\nslug: a\n---\n",
+        "new_slug": "x"
+      },
+      "expected": null
+    },
+    {
+      "name": "update_frontmatter_slug 43 \" ---\\nslug: a\\n---\\n\"",
+      "fn": "update_frontmatter_slug",
+      "input": {
+        "content": " ---\nslug: a\n---\n",
+        "new_slug": "x"
+      },
+      "expected": null
+    },
+    {
+      "name": "update_frontmatter_slug 44 \"\\n---\\nslug: a\\n---\\n\"",
+      "fn": "update_frontmatter_slug",
+      "input": {
+        "content": "\n---\nslug: a\n---\n",
+        "new_slug": "x"
+      },
+      "expected": null
+    },
+    {
+      "name": "update_frontmatter_slug 45 \"﻿---\\nslug: a\\n---\\n\"",
+      "fn": "update_frontmatter_slug",
+      "input": {
+        "content": "﻿---\nslug: a\n---\n",
+        "new_slug": "x"
+      },
+      "expected": null
+    },
+    {
+      "name": "update_frontmatter_slug 46 \"---\\nslug: a\\n---\\n\"",
+      "fn": "update_frontmatter_slug",
+      "input": {
+        "content": "---\nslug: a\n---\n",
+        "new_slug": "new \"quoted\" slug"
+      },
+      "expected": "---\nslug: \"new \"quoted\" slug\"\n---"
+    },
+    {
+      "name": "update_frontmatter_slug 47 \"---\\nslug: a\\n---\\n\"",
+      "fn": "update_frontmatter_slug",
+      "input": {
+        "content": "---\nslug: a\n---\n",
+        "new_slug": "back\\1slash"
+      },
+      "expected": "---\nslug: \"backslash\"\n---"
+    },
+    {
+      "name": "update_frontmatter_slug 48 \"---\\nslug: a\\n---\\n\"",
+      "fn": "update_frontmatter_slug",
+      "input": {
+        "content": "---\nslug: a\n---\n",
+        "new_slug": "日本語"
+      },
+      "expected": "---\nslug: \"日本語\"\n---"
+    },
+    {
+      "name": "update_frontmatter_slug 49 \"---\\nslug: 日本語\\n---\\n\"",
+      "fn": "update_frontmatter_slug",
+      "input": {
+        "content": "---\nslug: 日本語\n---\n",
+        "new_slug": "x"
+      },
+      "expected": "---\nslug: \"x\"\n---"
+    },
+    {
+      "name": "update_frontmatter_slug 50 \"---\\nslug: \\\"emoji-👨‍👩‍👧\\\"\\n---\\n\"",
+      "fn": "update_frontmatter_slug",
+      "input": {
+        "content": "---\nslug: \"emoji-👨‍👩‍👧\"\n---\n",
+        "new_slug": "x"
+      },
+      "expected": "---\nslug: \"x\"\n---"
+    },
+    {
+      "name": "update_frontmatter_slug 51 \"---\\ntitle: \\\"slug: inline\\\"\\n---\\n\"",
+      "fn": "update_frontmatter_slug",
+      "input": {
+        "content": "---\ntitle: \"slug: inline\"\n---\n",
+        "new_slug": "x"
+      },
+      "expected": null
+    },
+    {
+      "name": "update_frontmatter_slug 52 \"---\\ntags:\\n  - slug: nested\\n---\\n\"",
+      "fn": "update_frontmatter_slug",
+      "input": {
+        "content": "---\ntags:\n  - slug: nested\n---\n",
+        "new_slug": "x"
+      },
+      "expected": null
+    },
+    {
+      "name": "update_frontmatter_slug 53 \"---\\nslug: \\\"unterminated\\n---\\n\"",
+      "fn": "update_frontmatter_slug",
+      "input": {
+        "content": "---\nslug: \"unterminated\n---\n",
+        "new_slug": "x"
+      },
+      "expected": "---\nslug: \"x\"\n---"
+    },
+    {
+      "name": "update_frontmatter_slug 54 \"---\\nslug: 'mixed\\\"\\n---\\n\"",
+      "fn": "update_frontmatter_slug",
+      "input": {
+        "content": "---\nslug: 'mixed\"\n---\n",
+        "new_slug": "x"
+      },
+      "expected": "---\nslug: \"x\"\n---"
+    },
+    {
+      "name": "update_frontmatter_slug 55 \"---\\nslug: \\\"a\\\"\\\"b\\\"\\n---\\n\"",
+      "fn": "update_frontmatter_slug",
+      "input": {
+        "content": "---\nslug: \"a\"\"b\"\n---\n",
+        "new_slug": "x"
+      },
+      "expected": "---\nslug: \"x\"\n---"
+    },
+    {
+      "name": "update_frontmatter_slug 56 \"---\\n---\\n\"",
+      "fn": "update_frontmatter_slug",
+      "input": {
+        "content": "---\n---\n",
+        "new_slug": "x"
+      },
+      "expected": null
+    },
+    {
+      "name": "update_frontmatter_slug 57 \"------\\n\"",
+      "fn": "update_frontmatter_slug",
+      "input": {
+        "content": "------\n",
+        "new_slug": "x"
+      },
+      "expected": null
+    },
+    {
+      "name": "update_frontmatter_slug 58 \"---\\nslug: a\\n---\"",
+      "fn": "update_frontmatter_slug",
+      "input": {
+        "content": "---\nslug: a\n---",
+        "new_slug": "a"
+      },
+      "expected": "---\nslug: \"a\"\n---"
+    },
+    {
+      "name": "update_frontmatter_slug 59 nil",
+      "fn": "update_frontmatter_slug",
+      "input": {
+        "content": null,
+        "new_slug": "x"
+      },
+      "expected": {
+        "error": "NoMethodError",
+        "message": "undefined method 'start_with?' for nil"
+      }
+    },
+    {
+      "name": "template_source no template",
+      "fn": "template_source",
+      "input": {
+        "tree": {},
+        "base_path": null,
+        "env": {
+          "NOTES_PATH": "<ROOT>"
+        }
+      },
+      "expected": "---\ntitle: \"{{title}}\"\nslug: \"{{slug}}\"\ndate: {{date}}\ndraft: true\ntags: []\n---\n\n"
+    },
+    {
+      "name": "template_source custom .hugo_template.md",
+      "fn": "template_source",
+      "input": {
+        "tree": {
+          ".hugo_template.md": "---\ntitle: \"{{title}}\"\nslug: \"{{slug}}\"\ndate: {{date}}\ndraft: false\nauthor: \"Jane\"\ntags:\n  - uncategorized\n---\n"
+        },
+        "base_path": null,
+        "env": {
+          "NOTES_PATH": "<ROOT>"
+        }
+      },
+      "expected": "---\ntitle: \"{{title}}\"\nslug: \"{{slug}}\"\ndate: {{date}}\ndraft: false\nauthor: \"Jane\"\ntags:\n  - uncategorized\n---\n"
+    },
+    {
+      "name": "template_source empty .hugo_template.md",
+      "fn": "template_source",
+      "input": {
+        "tree": {
+          ".hugo_template.md": ""
+        },
+        "base_path": null,
+        "env": {
+          "NOTES_PATH": "<ROOT>"
+        }
+      },
+      "expected": ""
+    },
+    {
+      "name": "template_source template is a directory",
+      "fn": "template_source",
+      "input": {
+        "tree": {
+          ".hugo_template.md/": null
+        },
+        "base_path": null,
+        "env": {
+          "NOTES_PATH": "<ROOT>"
+        }
+      },
+      "expected": "---\ntitle: \"{{title}}\"\nslug: \"{{slug}}\"\ndate: {{date}}\ndraft: true\ntags: []\n---\n\n"
+    },
+    {
+      "name": "template_source template symlink to file in root",
+      "fn": "template_source",
+      "input": {
+        "tree": {
+          "real.md": "LINKED {{title}}",
+          ".hugo_template.md": {
+            "symlink": "real.md"
+          }
+        },
+        "base_path": null,
+        "env": {
+          "NOTES_PATH": "<ROOT>"
+        }
+      },
+      "expected": "LINKED {{title}}"
+    },
+    {
+      "name": "template_source dangling template symlink",
+      "fn": "template_source",
+      "input": {
+        "tree": {
+          ".hugo_template.md": {
+            "symlink": "missing.md"
+          }
+        },
+        "base_path": null,
+        "env": {
+          "NOTES_PATH": "<ROOT>"
+        }
+      },
+      "expected": "---\ntitle: \"{{title}}\"\nslug: \"{{slug}}\"\ndate: {{date}}\ndraft: true\ntags: []\n---\n\n"
+    },
+    {
+      "name": "template_source visible hugo_template.md (no dot) ignored",
+      "fn": "template_source",
+      "input": {
+        "tree": {
+          "hugo_template.md": "NODOT {{title}}"
+        },
+        "base_path": null,
+        "env": {
+          "NOTES_PATH": "<ROOT>"
+        }
+      },
+      "expected": "---\ntitle: \"{{title}}\"\nslug: \"{{slug}}\"\ndate: {{date}}\ndraft: true\ntags: []\n---\n\n"
+    },
+    {
+      "name": "template_source uppercase .HUGO_TEMPLATE.md ignored",
+      "fn": "template_source",
+      "input": {
+        "tree": {
+          ".HUGO_TEMPLATE.md": "UPPER {{title}}"
+        },
+        "base_path": null,
+        "env": {
+          "NOTES_PATH": "<ROOT>"
+        }
+      },
+      "expected": "---\ntitle: \"{{title}}\"\nslug: \"{{slug}}\"\ndate: {{date}}\ndraft: true\ntags: []\n---\n\n"
+    },
+    {
+      "name": "template_source .hugo_template.toml ignored",
+      "fn": "template_source",
+      "input": {
+        "tree": {
+          ".hugo_template.toml": "TOML"
+        },
+        "base_path": null,
+        "env": {
+          "NOTES_PATH": "<ROOT>"
+        }
+      },
+      "expected": "---\ntitle: \"{{title}}\"\nslug: \"{{slug}}\"\ndate: {{date}}\ndraft: true\ntags: []\n---\n\n"
+    },
+    {
+      "name": "template_source template in subdir ignored",
+      "fn": "template_source",
+      "input": {
+        "tree": {
+          "content/.hugo_template.md": "SUB"
+        },
+        "base_path": null,
+        "env": {
+          "NOTES_PATH": "<ROOT>"
+        }
+      },
+      "expected": "---\ntitle: \"{{title}}\"\nslug: \"{{slug}}\"\ndate: {{date}}\ndraft: true\ntags: []\n---\n\n"
+    },
+    {
+      "name": "template_source crlf template",
+      "fn": "template_source",
+      "input": {
+        "tree": {
+          ".hugo_template.md": "+++\r\ntitle = \"{{title}}\"\r\n+++\r\n"
+        },
+        "base_path": null,
+        "env": {
+          "NOTES_PATH": "<ROOT>"
+        }
+      },
+      "expected": "+++\r\ntitle = \"{{title}}\"\r\n+++\r\n"
+    },
+    {
+      "name": "template_source invalid utf8 template",
+      "fn": "template_source",
+      "input": {
+        "tree": {
+          ".hugo_template.md": {
+            "base64": "YmFkIP/+IHt7dGl0bGV9fQ=="
+          }
+        },
+        "base_path": null,
+        "env": {
+          "NOTES_PATH": "<ROOT>"
+        }
+      },
+      "expected": {
+        "base64": "YmFkIP/+IHt7dGl0bGV9fQ==",
+        "encoding": "UTF-8"
+      }
+    },
+    {
+      "name": "template_source explicit base_path overrides NOTES_PATH",
+      "fn": "template_source",
+      "input": {
+        "tree": {},
+        "base_path": "<OTHER>",
+        "other_tree": {
+          ".hugo_template.md": "OTHER {{title}}"
+        }
+      },
+      "expected": "OTHER {{title}}"
+    },
+    {
+      "name": "notes_root explicit",
+      "fn": "notes_root",
+      "input": {
+        "base_path": "/x/y",
+        "env": {
+          "NOTES_PATH": "<ROOT>"
+        }
+      },
+      "expected": "/x/y"
+    },
+    {
+      "name": "notes_root from NOTES_PATH",
+      "fn": "notes_root",
+      "input": {
+        "base_path": null,
+        "env": {
+          "NOTES_PATH": "<ROOT>"
+        }
+      },
+      "expected": "<ROOT>"
+    },
+    {
+      "name": "notes_root default when NOTES_PATH unset (Rails.root/notes)",
+      "fn": "notes_root",
+      "input": {
+        "base_path": null,
+        "env": {
+          "NOTES_PATH": null
+        }
+      },
+      "expected": "<RAILS_ROOT>/notes"
+    },
+    {
+      "name": "notes_root NOTES_PATH empty string",
+      "fn": "notes_root",
+      "input": {
+        "base_path": null,
+        "env": {
+          "NOTES_PATH": ""
+        }
+      },
+      "expected": ""
+    },
+    {
+      "name": "generate_blog_post 00 \"My Blog Post\" {}",
+      "fn": "generate_blog_post",
+      "input": {
+        "title": "My Blog Post",
+        "parent": null,
+        "path_style": null,
+        "kwargs_given": [],
+        "tree": {},
+        "env": {},
+        "now": {
+          "zone": "UTC",
+          "time": "2026-02-01T10:30:00"
+        }
+      },
+      "expected": {
+        "result": {
+          "path": "2026/02/01/my-blog-post/index.md",
+          "content": "---\ntitle: \"My Blog Post\"\nslug: \"my-blog-post\"\ndate: 2026-02-01T10:30:00+00:00\ndraft: true\ntags: []\n---\n\n"
+        },
+        "tree_after": {
+          ".fed": "# FrankMD Configuration\n# Uncomment and modify values as needed.\n# Environment variables are used as defaults if not specified here.\n\n# UI Settings\n\n# Theme: light, dark, gruvbox, tokyo-night, solarized-dark,\n#        solarized-light, nord, cappuccino, osaka, hackerman\n# theme = dark\n\n# Editor font: cascadia-code, jetbrains-mono, fira-code,\n#              source-code-pro, ubuntu-mono, roboto-mono, hack\n# editor_font = cascadia-code\n\n# editor_font_size = 14\n# preview_zoom = 100\n# sidebar_visible = true\n# typewriter_mode = false\n# cursor_recenter_on_click = false\n# show_stats = false\n\n# Vim mode: hjkl navigation, modal editing, and : ex-commands (default: false)\n# vim_mode = false\n\n# Editor indent: 0 = tab, 1-6 = spaces (default: 2)\n# editor_indent = 2\n\n# Editor width in characters (default: 72, minimum: 72)\n# Increase for wider text area, e.g., 100, 120, or 150\n# editor_width = 72\n\n# Local Images\n\n# images_path = /path/to/images\n\n# Media Uploads (drag-and-drop)\n\n# Destination for new media: local or s3 (requires AWS S3 configuration).\n# media_storage_provider = local\n\n# Comma-separated file extensions accepted by the image/video drop tabs.\n# image_upload_extensions = .jpg,.jpeg,.png,.gif,.webp,.bmp\n# video_upload_extensions = .mp4,.webm,.mkv,.mov,.avi,.m4v,.ogv\n\n# AWS S3 (for image uploads)\n\n# aws_access_key_id = your-access-key\n# aws_secret_access_key = your-secret-key\n# aws_s3_bucket = your-bucket-name\n# aws_region = us-east-1\n\n# S3-compatible services (MinIO, SeaweedFS, ...): set a custom endpoint\n# and force path-style URLs (bucket in the path).\n# aws_s3_endpoint = http://localhost:9000\n# aws_s3_force_path_style = true\n\n# YouTube API (for video search)\n\n# youtube_api_key = your-youtube-api-key\n\n# Google Custom Search (for image search)\n\n# google_api_key = your-google-api-key\n# google_cse_id = your-custom-search-engine-id\n\n# Hugo Blog Posts\n\n# Path style: dated = YYYY/MM/DD/slug/index.md (default)\n#             flat  = slug.md (in current folder)\n# hugo_path_style = dated\n\n# Custom frontmatter: create a .hugo_template.md file at the notes root\n# to override the generated frontmatter. Placeholders {{title}}, {{slug}}\n# and {{date}} are substituted. Leave unset to use the built-in template.\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+          ".frankmd-config.lock": ""
+        }
+      }
+    },
+    {
+      "name": "generate_blog_post 01 \"Test Post\" {}",
+      "fn": "generate_blog_post",
+      "input": {
+        "title": "Test Post",
+        "parent": null,
+        "path_style": null,
+        "kwargs_given": [],
+        "tree": {},
+        "env": {},
+        "now": {
+          "zone": "UTC",
+          "time": "2026-02-01T10:30:00"
+        }
+      },
+      "expected": {
+        "result": {
+          "path": "2026/02/01/test-post/index.md",
+          "content": "---\ntitle: \"Test Post\"\nslug: \"test-post\"\ndate: 2026-02-01T10:30:00+00:00\ndraft: true\ntags: []\n---\n\n"
+        },
+        "tree_after": {
+          ".fed": "# FrankMD Configuration\n# Uncomment and modify values as needed.\n# Environment variables are used as defaults if not specified here.\n\n# UI Settings\n\n# Theme: light, dark, gruvbox, tokyo-night, solarized-dark,\n#        solarized-light, nord, cappuccino, osaka, hackerman\n# theme = dark\n\n# Editor font: cascadia-code, jetbrains-mono, fira-code,\n#              source-code-pro, ubuntu-mono, roboto-mono, hack\n# editor_font = cascadia-code\n\n# editor_font_size = 14\n# preview_zoom = 100\n# sidebar_visible = true\n# typewriter_mode = false\n# cursor_recenter_on_click = false\n# show_stats = false\n\n# Vim mode: hjkl navigation, modal editing, and : ex-commands (default: false)\n# vim_mode = false\n\n# Editor indent: 0 = tab, 1-6 = spaces (default: 2)\n# editor_indent = 2\n\n# Editor width in characters (default: 72, minimum: 72)\n# Increase for wider text area, e.g., 100, 120, or 150\n# editor_width = 72\n\n# Local Images\n\n# images_path = /path/to/images\n\n# Media Uploads (drag-and-drop)\n\n# Destination for new media: local or s3 (requires AWS S3 configuration).\n# media_storage_provider = local\n\n# Comma-separated file extensions accepted by the image/video drop tabs.\n# image_upload_extensions = .jpg,.jpeg,.png,.gif,.webp,.bmp\n# video_upload_extensions = .mp4,.webm,.mkv,.mov,.avi,.m4v,.ogv\n\n# AWS S3 (for image uploads)\n\n# aws_access_key_id = your-access-key\n# aws_secret_access_key = your-secret-key\n# aws_s3_bucket = your-bucket-name\n# aws_region = us-east-1\n\n# S3-compatible services (MinIO, SeaweedFS, ...): set a custom endpoint\n# and force path-style URLs (bucket in the path).\n# aws_s3_endpoint = http://localhost:9000\n# aws_s3_force_path_style = true\n\n# YouTube API (for video search)\n\n# youtube_api_key = your-youtube-api-key\n\n# Google Custom Search (for image search)\n\n# google_api_key = your-google-api-key\n# google_cse_id = your-custom-search-engine-id\n\n# Hugo Blog Posts\n\n# Path style: dated = YYYY/MM/DD/slug/index.md (default)\n#             flat  = slug.md (in current folder)\n# hugo_path_style = dated\n\n# Custom frontmatter: create a .hugo_template.md file at the notes root\n# to override the generated frontmatter. Placeholders {{title}}, {{slug}}\n# and {{date}} are substituted. Leave unset to use the built-in template.\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+          ".frankmd-config.lock": ""
+        }
+      }
+    },
+    {
+      "name": "generate_blog_post 02 \"My Post\" {parent: \"content/posts\"}",
+      "fn": "generate_blog_post",
+      "input": {
+        "title": "My Post",
+        "parent": "content/posts",
+        "path_style": null,
+        "kwargs_given": [
+          "parent"
+        ],
+        "tree": {},
+        "env": {},
+        "now": {
+          "zone": "UTC",
+          "time": "2026-02-01T10:30:00"
+        }
+      },
+      "expected": {
+        "result": {
+          "path": "content/posts/2026/02/01/my-post/index.md",
+          "content": "---\ntitle: \"My Post\"\nslug: \"my-post\"\ndate: 2026-02-01T10:30:00+00:00\ndraft: true\ntags: []\n---\n\n"
+        },
+        "tree_after": {
+          ".fed": "# FrankMD Configuration\n# Uncomment and modify values as needed.\n# Environment variables are used as defaults if not specified here.\n\n# UI Settings\n\n# Theme: light, dark, gruvbox, tokyo-night, solarized-dark,\n#        solarized-light, nord, cappuccino, osaka, hackerman\n# theme = dark\n\n# Editor font: cascadia-code, jetbrains-mono, fira-code,\n#              source-code-pro, ubuntu-mono, roboto-mono, hack\n# editor_font = cascadia-code\n\n# editor_font_size = 14\n# preview_zoom = 100\n# sidebar_visible = true\n# typewriter_mode = false\n# cursor_recenter_on_click = false\n# show_stats = false\n\n# Vim mode: hjkl navigation, modal editing, and : ex-commands (default: false)\n# vim_mode = false\n\n# Editor indent: 0 = tab, 1-6 = spaces (default: 2)\n# editor_indent = 2\n\n# Editor width in characters (default: 72, minimum: 72)\n# Increase for wider text area, e.g., 100, 120, or 150\n# editor_width = 72\n\n# Local Images\n\n# images_path = /path/to/images\n\n# Media Uploads (drag-and-drop)\n\n# Destination for new media: local or s3 (requires AWS S3 configuration).\n# media_storage_provider = local\n\n# Comma-separated file extensions accepted by the image/video drop tabs.\n# image_upload_extensions = .jpg,.jpeg,.png,.gif,.webp,.bmp\n# video_upload_extensions = .mp4,.webm,.mkv,.mov,.avi,.m4v,.ogv\n\n# AWS S3 (for image uploads)\n\n# aws_access_key_id = your-access-key\n# aws_secret_access_key = your-secret-key\n# aws_s3_bucket = your-bucket-name\n# aws_region = us-east-1\n\n# S3-compatible services (MinIO, SeaweedFS, ...): set a custom endpoint\n# and force path-style URLs (bucket in the path).\n# aws_s3_endpoint = http://localhost:9000\n# aws_s3_force_path_style = true\n\n# YouTube API (for video search)\n\n# youtube_api_key = your-youtube-api-key\n\n# Google Custom Search (for image search)\n\n# google_api_key = your-google-api-key\n# google_cse_id = your-custom-search-engine-id\n\n# Hugo Blog Posts\n\n# Path style: dated = YYYY/MM/DD/slug/index.md (default)\n#             flat  = slug.md (in current folder)\n# hugo_path_style = dated\n\n# Custom frontmatter: create a .hugo_template.md file at the notes root\n# to override the generated frontmatter. Placeholders {{title}}, {{slug}}\n# and {{date}} are substituted. Leave unset to use the built-in template.\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+          ".frankmd-config.lock": ""
+        }
+      }
+    },
+    {
+      "name": "generate_blog_post 03 \"My Blog Post\" {path_style: \"flat\"}",
+      "fn": "generate_blog_post",
+      "input": {
+        "title": "My Blog Post",
+        "parent": null,
+        "path_style": "flat",
+        "kwargs_given": [
+          "path_style"
+        ],
+        "tree": {},
+        "env": {},
+        "now": {
+          "zone": "UTC",
+          "time": "2026-02-01T10:30:00"
+        }
+      },
+      "expected": {
+        "result": {
+          "path": "my-blog-post.md",
+          "content": "---\ntitle: \"My Blog Post\"\nslug: \"my-blog-post\"\ndate: 2026-02-01T10:30:00+00:00\ndraft: true\ntags: []\n---\n\n"
+        },
+        "tree_after": {}
+      }
+    },
+    {
+      "name": "generate_blog_post 04 \"My Post\" {parent: \"content/posts\", path_style: \"flat\"}",
+      "fn": "generate_blog_post",
+      "input": {
+        "title": "My Post",
+        "parent": "content/posts",
+        "path_style": "flat",
+        "kwargs_given": [
+          "parent",
+          "path_style"
+        ],
+        "tree": {},
+        "env": {},
+        "now": {
+          "zone": "UTC",
+          "time": "2026-02-01T10:30:00"
+        }
+      },
+      "expected": {
+        "result": {
+          "path": "content/posts/my-post.md",
+          "content": "---\ntitle: \"My Post\"\nslug: \"my-post\"\ndate: 2026-02-01T10:30:00+00:00\ndraft: true\ntags: []\n---\n\n"
+        },
+        "tree_after": {}
+      }
+    },
+    {
+      "name": "generate_blog_post 05 \"My Post\" {path_style: \"dated\"}",
+      "fn": "generate_blog_post",
+      "input": {
+        "title": "My Post",
+        "parent": null,
+        "path_style": "dated",
+        "kwargs_given": [
+          "path_style"
+        ],
+        "tree": {},
+        "env": {},
+        "now": {
+          "zone": "UTC",
+          "time": "2026-02-01T10:30:00"
+        }
+      },
+      "expected": {
+        "result": {
+          "path": "2026/02/01/my-post/index.md",
+          "content": "---\ntitle: \"My Post\"\nslug: \"my-post\"\ndate: 2026-02-01T10:30:00+00:00\ndraft: true\ntags: []\n---\n\n"
+        },
+        "tree_after": {}
+      }
+    },
+    {
+      "name": "generate_blog_post 06 \"Config Test\" {}",
+      "fn": "generate_blog_post",
+      "input": {
+        "title": "Config Test",
+        "parent": null,
+        "path_style": null,
+        "kwargs_given": [],
+        "tree": {
+          ".fed": "hugo_path_style = flat\n"
+        },
+        "env": {},
+        "now": {
+          "zone": "UTC",
+          "time": "2026-02-01T10:30:00"
+        }
+      },
+      "expected": {
+        "result": {
+          "path": "config-test.md",
+          "content": "---\ntitle: \"Config Test\"\nslug: \"config-test\"\ndate: 2026-02-01T10:30:00+00:00\ndraft: true\ntags: []\n---\n\n"
+        },
+        "tree_after": {
+          ".fed": "hugo_path_style = flat\n\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+          ".frankmd-config.lock": ""
+        }
+      }
+    },
+    {
+      "name": "generate_blog_post 07 \"Config Test\" {}",
+      "fn": "generate_blog_post",
+      "input": {
+        "title": "Config Test",
+        "parent": null,
+        "path_style": null,
+        "kwargs_given": [],
+        "tree": {
+          ".fed": "hugo_path_style = dated\n"
+        },
+        "env": {},
+        "now": {
+          "zone": "UTC",
+          "time": "2026-02-01T10:30:00"
+        }
+      },
+      "expected": {
+        "result": {
+          "path": "2026/02/01/config-test/index.md",
+          "content": "---\ntitle: \"Config Test\"\nslug: \"config-test\"\ndate: 2026-02-01T10:30:00+00:00\ndraft: true\ntags: []\n---\n\n"
+        },
+        "tree_after": {
+          ".fed": "hugo_path_style = dated\n\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+          ".frankmd-config.lock": ""
+        }
+      }
+    },
+    {
+      "name": "generate_blog_post 08 \"Config Test\" {}",
+      "fn": "generate_blog_post",
+      "input": {
+        "title": "Config Test",
+        "parent": null,
+        "path_style": null,
+        "kwargs_given": [],
+        "tree": {},
+        "env": {
+          "HUGO_PATH_STYLE": "flat"
+        },
+        "now": {
+          "zone": "UTC",
+          "time": "2026-02-01T10:30:00"
+        }
+      },
+      "expected": {
+        "result": {
+          "path": "config-test.md",
+          "content": "---\ntitle: \"Config Test\"\nslug: \"config-test\"\ndate: 2026-02-01T10:30:00+00:00\ndraft: true\ntags: []\n---\n\n"
+        },
+        "tree_after": {
+          ".fed": "# FrankMD Configuration\n# Uncomment and modify values as needed.\n# Environment variables are used as defaults if not specified here.\n\n# UI Settings\n\n# Theme: light, dark, gruvbox, tokyo-night, solarized-dark,\n#        solarized-light, nord, cappuccino, osaka, hackerman\n# theme = dark\n\n# Editor font: cascadia-code, jetbrains-mono, fira-code,\n#              source-code-pro, ubuntu-mono, roboto-mono, hack\n# editor_font = cascadia-code\n\n# editor_font_size = 14\n# preview_zoom = 100\n# sidebar_visible = true\n# typewriter_mode = false\n# cursor_recenter_on_click = false\n# show_stats = false\n\n# Vim mode: hjkl navigation, modal editing, and : ex-commands (default: false)\n# vim_mode = false\n\n# Editor indent: 0 = tab, 1-6 = spaces (default: 2)\n# editor_indent = 2\n\n# Editor width in characters (default: 72, minimum: 72)\n# Increase for wider text area, e.g., 100, 120, or 150\n# editor_width = 72\n\n# Local Images\n\n# images_path = /path/to/images\n\n# Media Uploads (drag-and-drop)\n\n# Destination for new media: local or s3 (requires AWS S3 configuration).\n# media_storage_provider = local\n\n# Comma-separated file extensions accepted by the image/video drop tabs.\n# image_upload_extensions = .jpg,.jpeg,.png,.gif,.webp,.bmp\n# video_upload_extensions = .mp4,.webm,.mkv,.mov,.avi,.m4v,.ogv\n\n# AWS S3 (for image uploads)\n\n# aws_access_key_id = your-access-key\n# aws_secret_access_key = your-secret-key\n# aws_s3_bucket = your-bucket-name\n# aws_region = us-east-1\n\n# S3-compatible services (MinIO, SeaweedFS, ...): set a custom endpoint\n# and force path-style URLs (bucket in the path).\n# aws_s3_endpoint = http://localhost:9000\n# aws_s3_force_path_style = true\n\n# YouTube API (for video search)\n\n# youtube_api_key = your-youtube-api-key\n\n# Google Custom Search (for image search)\n\n# google_api_key = your-google-api-key\n# google_cse_id = your-custom-search-engine-id\n\n# Hugo Blog Posts\n\n# Path style: dated = YYYY/MM/DD/slug/index.md (default)\n#             flat  = slug.md (in current folder)\n# hugo_path_style = dated\n\n# Custom frontmatter: create a .hugo_template.md file at the notes root\n# to override the generated frontmatter. Placeholders {{title}}, {{slug}}\n# and {{date}} are substituted. Leave unset to use the built-in template.\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+          ".frankmd-config.lock": ""
+        }
+      }
+    },
+    {
+      "name": "generate_blog_post 09 \"Config Test\" {}",
+      "fn": "generate_blog_post",
+      "input": {
+        "title": "Config Test",
+        "parent": null,
+        "path_style": null,
+        "kwargs_given": [],
+        "tree": {
+          ".fed": "hugo_path_style = dated\n"
+        },
+        "env": {
+          "HUGO_PATH_STYLE": "flat"
+        },
+        "now": {
+          "zone": "UTC",
+          "time": "2026-02-01T10:30:00"
+        }
+      },
+      "expected": {
+        "result": {
+          "path": "2026/02/01/config-test/index.md",
+          "content": "---\ntitle: \"Config Test\"\nslug: \"config-test\"\ndate: 2026-02-01T10:30:00+00:00\ndraft: true\ntags: []\n---\n\n"
+        },
+        "tree_after": {
+          ".fed": "hugo_path_style = dated\n\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+          ".frankmd-config.lock": ""
+        }
+      }
+    },
+    {
+      "name": "generate_blog_post 10 \"Config Test\" {}",
+      "fn": "generate_blog_post",
+      "input": {
+        "title": "Config Test",
+        "parent": null,
+        "path_style": null,
+        "kwargs_given": [],
+        "tree": {},
+        "env": {
+          "HUGO_PATH_STYLE": ""
+        },
+        "now": {
+          "zone": "UTC",
+          "time": "2026-02-01T10:30:00"
+        }
+      },
+      "expected": {
+        "result": {
+          "path": "2026/02/01/config-test/index.md",
+          "content": "---\ntitle: \"Config Test\"\nslug: \"config-test\"\ndate: 2026-02-01T10:30:00+00:00\ndraft: true\ntags: []\n---\n\n"
+        },
+        "tree_after": {
+          ".fed": "# FrankMD Configuration\n# Uncomment and modify values as needed.\n# Environment variables are used as defaults if not specified here.\n\n# UI Settings\n\n# Theme: light, dark, gruvbox, tokyo-night, solarized-dark,\n#        solarized-light, nord, cappuccino, osaka, hackerman\n# theme = dark\n\n# Editor font: cascadia-code, jetbrains-mono, fira-code,\n#              source-code-pro, ubuntu-mono, roboto-mono, hack\n# editor_font = cascadia-code\n\n# editor_font_size = 14\n# preview_zoom = 100\n# sidebar_visible = true\n# typewriter_mode = false\n# cursor_recenter_on_click = false\n# show_stats = false\n\n# Vim mode: hjkl navigation, modal editing, and : ex-commands (default: false)\n# vim_mode = false\n\n# Editor indent: 0 = tab, 1-6 = spaces (default: 2)\n# editor_indent = 2\n\n# Editor width in characters (default: 72, minimum: 72)\n# Increase for wider text area, e.g., 100, 120, or 150\n# editor_width = 72\n\n# Local Images\n\n# images_path = /path/to/images\n\n# Media Uploads (drag-and-drop)\n\n# Destination for new media: local or s3 (requires AWS S3 configuration).\n# media_storage_provider = local\n\n# Comma-separated file extensions accepted by the image/video drop tabs.\n# image_upload_extensions = .jpg,.jpeg,.png,.gif,.webp,.bmp\n# video_upload_extensions = .mp4,.webm,.mkv,.mov,.avi,.m4v,.ogv\n\n# AWS S3 (for image uploads)\n\n# aws_access_key_id = your-access-key\n# aws_secret_access_key = your-secret-key\n# aws_s3_bucket = your-bucket-name\n# aws_region = us-east-1\n\n# S3-compatible services (MinIO, SeaweedFS, ...): set a custom endpoint\n# and force path-style URLs (bucket in the path).\n# aws_s3_endpoint = http://localhost:9000\n# aws_s3_force_path_style = true\n\n# YouTube API (for video search)\n\n# youtube_api_key = your-youtube-api-key\n\n# Google Custom Search (for image search)\n\n# google_api_key = your-google-api-key\n# google_cse_id = your-custom-search-engine-id\n\n# Hugo Blog Posts\n\n# Path style: dated = YYYY/MM/DD/slug/index.md (default)\n#             flat  = slug.md (in current folder)\n# hugo_path_style = dated\n\n# Custom frontmatter: create a .hugo_template.md file at the notes root\n# to override the generated frontmatter. Placeholders {{title}}, {{slug}}\n# and {{date}} are substituted. Leave unset to use the built-in template.\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+          ".frankmd-config.lock": ""
+        }
+      }
+    },
+    {
+      "name": "generate_blog_post 11 \"Config Test\" {}",
+      "fn": "generate_blog_post",
+      "input": {
+        "title": "Config Test",
+        "parent": null,
+        "path_style": null,
+        "kwargs_given": [],
+        "tree": {},
+        "env": {
+          "HUGO_PATH_STYLE": "FLAT"
+        },
+        "now": {
+          "zone": "UTC",
+          "time": "2026-02-01T10:30:00"
+        }
+      },
+      "expected": {
+        "result": {
+          "path": "2026/02/01/config-test/index.md",
+          "content": "---\ntitle: \"Config Test\"\nslug: \"config-test\"\ndate: 2026-02-01T10:30:00+00:00\ndraft: true\ntags: []\n---\n\n"
+        },
+        "tree_after": {
+          ".fed": "# FrankMD Configuration\n# Uncomment and modify values as needed.\n# Environment variables are used as defaults if not specified here.\n\n# UI Settings\n\n# Theme: light, dark, gruvbox, tokyo-night, solarized-dark,\n#        solarized-light, nord, cappuccino, osaka, hackerman\n# theme = dark\n\n# Editor font: cascadia-code, jetbrains-mono, fira-code,\n#              source-code-pro, ubuntu-mono, roboto-mono, hack\n# editor_font = cascadia-code\n\n# editor_font_size = 14\n# preview_zoom = 100\n# sidebar_visible = true\n# typewriter_mode = false\n# cursor_recenter_on_click = false\n# show_stats = false\n\n# Vim mode: hjkl navigation, modal editing, and : ex-commands (default: false)\n# vim_mode = false\n\n# Editor indent: 0 = tab, 1-6 = spaces (default: 2)\n# editor_indent = 2\n\n# Editor width in characters (default: 72, minimum: 72)\n# Increase for wider text area, e.g., 100, 120, or 150\n# editor_width = 72\n\n# Local Images\n\n# images_path = /path/to/images\n\n# Media Uploads (drag-and-drop)\n\n# Destination for new media: local or s3 (requires AWS S3 configuration).\n# media_storage_provider = local\n\n# Comma-separated file extensions accepted by the image/video drop tabs.\n# image_upload_extensions = .jpg,.jpeg,.png,.gif,.webp,.bmp\n# video_upload_extensions = .mp4,.webm,.mkv,.mov,.avi,.m4v,.ogv\n\n# AWS S3 (for image uploads)\n\n# aws_access_key_id = your-access-key\n# aws_secret_access_key = your-secret-key\n# aws_s3_bucket = your-bucket-name\n# aws_region = us-east-1\n\n# S3-compatible services (MinIO, SeaweedFS, ...): set a custom endpoint\n# and force path-style URLs (bucket in the path).\n# aws_s3_endpoint = http://localhost:9000\n# aws_s3_force_path_style = true\n\n# YouTube API (for video search)\n\n# youtube_api_key = your-youtube-api-key\n\n# Google Custom Search (for image search)\n\n# google_api_key = your-google-api-key\n# google_cse_id = your-custom-search-engine-id\n\n# Hugo Blog Posts\n\n# Path style: dated = YYYY/MM/DD/slug/index.md (default)\n#             flat  = slug.md (in current folder)\n# hugo_path_style = dated\n\n# Custom frontmatter: create a .hugo_template.md file at the notes root\n# to override the generated frontmatter. Placeholders {{title}}, {{slug}}\n# and {{date}} are substituted. Leave unset to use the built-in template.\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+          ".frankmd-config.lock": ""
+        }
+      }
+    },
+    {
+      "name": "generate_blog_post 12 \"Config Test\" {}",
+      "fn": "generate_blog_post",
+      "input": {
+        "title": "Config Test",
+        "parent": null,
+        "path_style": null,
+        "kwargs_given": [],
+        "tree": {},
+        "env": {
+          "HUGO_PATH_STYLE": " flat "
+        },
+        "now": {
+          "zone": "UTC",
+          "time": "2026-02-01T10:30:00"
+        }
+      },
+      "expected": {
+        "result": {
+          "path": "2026/02/01/config-test/index.md",
+          "content": "---\ntitle: \"Config Test\"\nslug: \"config-test\"\ndate: 2026-02-01T10:30:00+00:00\ndraft: true\ntags: []\n---\n\n"
+        },
+        "tree_after": {
+          ".fed": "# FrankMD Configuration\n# Uncomment and modify values as needed.\n# Environment variables are used as defaults if not specified here.\n\n# UI Settings\n\n# Theme: light, dark, gruvbox, tokyo-night, solarized-dark,\n#        solarized-light, nord, cappuccino, osaka, hackerman\n# theme = dark\n\n# Editor font: cascadia-code, jetbrains-mono, fira-code,\n#              source-code-pro, ubuntu-mono, roboto-mono, hack\n# editor_font = cascadia-code\n\n# editor_font_size = 14\n# preview_zoom = 100\n# sidebar_visible = true\n# typewriter_mode = false\n# cursor_recenter_on_click = false\n# show_stats = false\n\n# Vim mode: hjkl navigation, modal editing, and : ex-commands (default: false)\n# vim_mode = false\n\n# Editor indent: 0 = tab, 1-6 = spaces (default: 2)\n# editor_indent = 2\n\n# Editor width in characters (default: 72, minimum: 72)\n# Increase for wider text area, e.g., 100, 120, or 150\n# editor_width = 72\n\n# Local Images\n\n# images_path = /path/to/images\n\n# Media Uploads (drag-and-drop)\n\n# Destination for new media: local or s3 (requires AWS S3 configuration).\n# media_storage_provider = local\n\n# Comma-separated file extensions accepted by the image/video drop tabs.\n# image_upload_extensions = .jpg,.jpeg,.png,.gif,.webp,.bmp\n# video_upload_extensions = .mp4,.webm,.mkv,.mov,.avi,.m4v,.ogv\n\n# AWS S3 (for image uploads)\n\n# aws_access_key_id = your-access-key\n# aws_secret_access_key = your-secret-key\n# aws_s3_bucket = your-bucket-name\n# aws_region = us-east-1\n\n# S3-compatible services (MinIO, SeaweedFS, ...): set a custom endpoint\n# and force path-style URLs (bucket in the path).\n# aws_s3_endpoint = http://localhost:9000\n# aws_s3_force_path_style = true\n\n# YouTube API (for video search)\n\n# youtube_api_key = your-youtube-api-key\n\n# Google Custom Search (for image search)\n\n# google_api_key = your-google-api-key\n# google_cse_id = your-custom-search-engine-id\n\n# Hugo Blog Posts\n\n# Path style: dated = YYYY/MM/DD/slug/index.md (default)\n#             flat  = slug.md (in current folder)\n# hugo_path_style = dated\n\n# Custom frontmatter: create a .hugo_template.md file at the notes root\n# to override the generated frontmatter. Placeholders {{title}}, {{slug}}\n# and {{date}} are substituted. Leave unset to use the built-in template.\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+          ".frankmd-config.lock": ""
+        }
+      }
+    },
+    {
+      "name": "generate_blog_post 13 \"Config Test\" {}",
+      "fn": "generate_blog_post",
+      "input": {
+        "title": "Config Test",
+        "parent": null,
+        "path_style": null,
+        "kwargs_given": [],
+        "tree": {
+          ".fed": "hugo_path_style = nested\n"
+        },
+        "env": {},
+        "now": {
+          "zone": "UTC",
+          "time": "2026-02-01T10:30:00"
+        }
+      },
+      "expected": {
+        "result": {
+          "path": "2026/02/01/config-test/index.md",
+          "content": "---\ntitle: \"Config Test\"\nslug: \"config-test\"\ndate: 2026-02-01T10:30:00+00:00\ndraft: true\ntags: []\n---\n\n"
+        },
+        "tree_after": {
+          ".fed": "hugo_path_style = nested\n\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+          ".frankmd-config.lock": ""
+        }
+      }
+    },
+    {
+      "name": "generate_blog_post 14 \"Config Test\" {}",
+      "fn": "generate_blog_post",
+      "input": {
+        "title": "Config Test",
+        "parent": null,
+        "path_style": null,
+        "kwargs_given": [],
+        "tree": {
+          ".fed": "hugo_path_style =\n"
+        },
+        "env": {},
+        "now": {
+          "zone": "UTC",
+          "time": "2026-02-01T10:30:00"
+        }
+      },
+      "expected": {
+        "result": {
+          "path": "2026/02/01/config-test/index.md",
+          "content": "---\ntitle: \"Config Test\"\nslug: \"config-test\"\ndate: 2026-02-01T10:30:00+00:00\ndraft: true\ntags: []\n---\n\n"
+        },
+        "tree_after": {
+          ".fed": "hugo_path_style =\n\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+          ".frankmd-config.lock": ""
+        }
+      }
+    },
+    {
+      "name": "generate_blog_post 15 \"Config Test\" {path_style: \"dated\"}",
+      "fn": "generate_blog_post",
+      "input": {
+        "title": "Config Test",
+        "parent": null,
+        "path_style": "dated",
+        "kwargs_given": [
+          "path_style"
+        ],
+        "tree": {
+          ".fed": "hugo_path_style = flat\n"
+        },
+        "env": {},
+        "now": {
+          "zone": "UTC",
+          "time": "2026-02-01T10:30:00"
+        }
+      },
+      "expected": {
+        "result": {
+          "path": "2026/02/01/config-test/index.md",
+          "content": "---\ntitle: \"Config Test\"\nslug: \"config-test\"\ndate: 2026-02-01T10:30:00+00:00\ndraft: true\ntags: []\n---\n\n"
+        },
+        "tree_after": {
+          ".fed": "hugo_path_style = flat\n"
+        }
+      }
+    },
+    {
+      "name": "generate_blog_post 16 \"Config Test\" {path_style: \"\"}",
+      "fn": "generate_blog_post",
+      "input": {
+        "title": "Config Test",
+        "parent": null,
+        "path_style": "",
+        "kwargs_given": [
+          "path_style"
+        ],
+        "tree": {
+          ".fed": "hugo_path_style = flat\n"
+        },
+        "env": {},
+        "now": {
+          "zone": "UTC",
+          "time": "2026-02-01T10:30:00"
+        }
+      },
+      "expected": {
+        "result": {
+          "path": "2026/02/01/config-test/index.md",
+          "content": "---\ntitle: \"Config Test\"\nslug: \"config-test\"\ndate: 2026-02-01T10:30:00+00:00\ndraft: true\ntags: []\n---\n\n"
+        },
+        "tree_after": {
+          ".fed": "hugo_path_style = flat\n"
+        }
+      }
+    },
+    {
+      "name": "generate_blog_post 17 \"Config Test\" {path_style: \"weird\"}",
+      "fn": "generate_blog_post",
+      "input": {
+        "title": "Config Test",
+        "parent": null,
+        "path_style": "weird",
+        "kwargs_given": [
+          "path_style"
+        ],
+        "tree": {},
+        "env": {},
+        "now": {
+          "zone": "UTC",
+          "time": "2026-02-01T10:30:00"
+        }
+      },
+      "expected": {
+        "result": {
+          "path": "2026/02/01/config-test/index.md",
+          "content": "---\ntitle: \"Config Test\"\nslug: \"config-test\"\ndate: 2026-02-01T10:30:00+00:00\ndraft: true\ntags: []\n---\n\n"
+        },
+        "tree_after": {}
+      }
+    },
+    {
+      "name": "generate_blog_post 18 \"Say \\\"Hello\\\" World\" {}",
+      "fn": "generate_blog_post",
+      "input": {
+        "title": "Say \"Hello\" World",
+        "parent": null,
+        "path_style": null,
+        "kwargs_given": [],
+        "tree": {},
+        "env": {},
+        "now": {
+          "zone": "UTC",
+          "time": "2026-02-01T10:30:00"
+        }
+      },
+      "expected": {
+        "result": {
+          "path": "2026/02/01/say-hello-world/index.md",
+          "content": "---\ntitle: \"Say \\\"Hello\\\" World\"\nslug: \"say-hello-world\"\ndate: 2026-02-01T10:30:00+00:00\ndraft: true\ntags: []\n---\n\n"
+        },
+        "tree_after": {
+          ".fed": "# FrankMD Configuration\n# Uncomment and modify values as needed.\n# Environment variables are used as defaults if not specified here.\n\n# UI Settings\n\n# Theme: light, dark, gruvbox, tokyo-night, solarized-dark,\n#        solarized-light, nord, cappuccino, osaka, hackerman\n# theme = dark\n\n# Editor font: cascadia-code, jetbrains-mono, fira-code,\n#              source-code-pro, ubuntu-mono, roboto-mono, hack\n# editor_font = cascadia-code\n\n# editor_font_size = 14\n# preview_zoom = 100\n# sidebar_visible = true\n# typewriter_mode = false\n# cursor_recenter_on_click = false\n# show_stats = false\n\n# Vim mode: hjkl navigation, modal editing, and : ex-commands (default: false)\n# vim_mode = false\n\n# Editor indent: 0 = tab, 1-6 = spaces (default: 2)\n# editor_indent = 2\n\n# Editor width in characters (default: 72, minimum: 72)\n# Increase for wider text area, e.g., 100, 120, or 150\n# editor_width = 72\n\n# Local Images\n\n# images_path = /path/to/images\n\n# Media Uploads (drag-and-drop)\n\n# Destination for new media: local or s3 (requires AWS S3 configuration).\n# media_storage_provider = local\n\n# Comma-separated file extensions accepted by the image/video drop tabs.\n# image_upload_extensions = .jpg,.jpeg,.png,.gif,.webp,.bmp\n# video_upload_extensions = .mp4,.webm,.mkv,.mov,.avi,.m4v,.ogv\n\n# AWS S3 (for image uploads)\n\n# aws_access_key_id = your-access-key\n# aws_secret_access_key = your-secret-key\n# aws_s3_bucket = your-bucket-name\n# aws_region = us-east-1\n\n# S3-compatible services (MinIO, SeaweedFS, ...): set a custom endpoint\n# and force path-style URLs (bucket in the path).\n# aws_s3_endpoint = http://localhost:9000\n# aws_s3_force_path_style = true\n\n# YouTube API (for video search)\n\n# youtube_api_key = your-youtube-api-key\n\n# Google Custom Search (for image search)\n\n# google_api_key = your-google-api-key\n# google_cse_id = your-custom-search-engine-id\n\n# Hugo Blog Posts\n\n# Path style: dated = YYYY/MM/DD/slug/index.md (default)\n#             flat  = slug.md (in current folder)\n# hugo_path_style = dated\n\n# Custom frontmatter: create a .hugo_template.md file at the notes root\n# to override the generated frontmatter. Placeholders {{title}}, {{slug}}\n# and {{date}} are substituted. Leave unset to use the built-in template.\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+          ".frankmd-config.lock": ""
+        }
+      }
+    },
+    {
+      "name": "generate_blog_post 19 \"Custom Post\" {}",
+      "fn": "generate_blog_post",
+      "input": {
+        "title": "Custom Post",
+        "parent": null,
+        "path_style": null,
+        "kwargs_given": [],
+        "tree": {
+          ".hugo_template.md": "---\ntitle: \"{{title}}\"\nslug: \"{{slug}}\"\ndate: {{date}}\ndraft: false\nauthor: \"Jane\"\ntags:\n  - uncategorized\n---\n"
+        },
+        "env": {},
+        "now": {
+          "zone": "UTC",
+          "time": "2026-02-01T10:30:00"
+        }
+      },
+      "expected": {
+        "result": {
+          "path": "2026/02/01/custom-post/index.md",
+          "content": "---\ntitle: \"Custom Post\"\nslug: \"custom-post\"\ndate: 2026-02-01T10:30:00+00:00\ndraft: false\nauthor: \"Jane\"\ntags:\n  - uncategorized\n---\n"
+        },
+        "tree_after": {
+          ".fed": "# FrankMD Configuration\n# Uncomment and modify values as needed.\n# Environment variables are used as defaults if not specified here.\n\n# UI Settings\n\n# Theme: light, dark, gruvbox, tokyo-night, solarized-dark,\n#        solarized-light, nord, cappuccino, osaka, hackerman\n# theme = dark\n\n# Editor font: cascadia-code, jetbrains-mono, fira-code,\n#              source-code-pro, ubuntu-mono, roboto-mono, hack\n# editor_font = cascadia-code\n\n# editor_font_size = 14\n# preview_zoom = 100\n# sidebar_visible = true\n# typewriter_mode = false\n# cursor_recenter_on_click = false\n# show_stats = false\n\n# Vim mode: hjkl navigation, modal editing, and : ex-commands (default: false)\n# vim_mode = false\n\n# Editor indent: 0 = tab, 1-6 = spaces (default: 2)\n# editor_indent = 2\n\n# Editor width in characters (default: 72, minimum: 72)\n# Increase for wider text area, e.g., 100, 120, or 150\n# editor_width = 72\n\n# Local Images\n\n# images_path = /path/to/images\n\n# Media Uploads (drag-and-drop)\n\n# Destination for new media: local or s3 (requires AWS S3 configuration).\n# media_storage_provider = local\n\n# Comma-separated file extensions accepted by the image/video drop tabs.\n# image_upload_extensions = .jpg,.jpeg,.png,.gif,.webp,.bmp\n# video_upload_extensions = .mp4,.webm,.mkv,.mov,.avi,.m4v,.ogv\n\n# AWS S3 (for image uploads)\n\n# aws_access_key_id = your-access-key\n# aws_secret_access_key = your-secret-key\n# aws_s3_bucket = your-bucket-name\n# aws_region = us-east-1\n\n# S3-compatible services (MinIO, SeaweedFS, ...): set a custom endpoint\n# and force path-style URLs (bucket in the path).\n# aws_s3_endpoint = http://localhost:9000\n# aws_s3_force_path_style = true\n\n# YouTube API (for video search)\n\n# youtube_api_key = your-youtube-api-key\n\n# Google Custom Search (for image search)\n\n# google_api_key = your-google-api-key\n# google_cse_id = your-custom-search-engine-id\n\n# Hugo Blog Posts\n\n# Path style: dated = YYYY/MM/DD/slug/index.md (default)\n#             flat  = slug.md (in current folder)\n# hugo_path_style = dated\n\n# Custom frontmatter: create a .hugo_template.md file at the notes root\n# to override the generated frontmatter. Placeholders {{title}}, {{slug}}\n# and {{date}} are substituted. Leave unset to use the built-in template.\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+          ".frankmd-config.lock": "",
+          ".hugo_template.md": "---\ntitle: \"{{title}}\"\nslug: \"{{slug}}\"\ndate: {{date}}\ndraft: false\nauthor: \"Jane\"\ntags:\n  - uncategorized\n---\n"
+        }
+      }
+    },
+    {
+      "name": "generate_blog_post 20 \"Say \\\"Hi\\\"\" {}",
+      "fn": "generate_blog_post",
+      "input": {
+        "title": "Say \"Hi\"",
+        "parent": null,
+        "path_style": null,
+        "kwargs_given": [],
+        "tree": {
+          ".hugo_template.md": "title: \"{{title}}\"\n"
+        },
+        "env": {},
+        "now": {
+          "zone": "UTC",
+          "time": "2026-02-01T10:30:00"
+        }
+      },
+      "expected": {
+        "result": {
+          "path": "2026/02/01/say-hi/index.md",
+          "content": "title: \"Say \\\"Hi\\\"\"\n"
+        },
+        "tree_after": {
+          ".fed": "# FrankMD Configuration\n# Uncomment and modify values as needed.\n# Environment variables are used as defaults if not specified here.\n\n# UI Settings\n\n# Theme: light, dark, gruvbox, tokyo-night, solarized-dark,\n#        solarized-light, nord, cappuccino, osaka, hackerman\n# theme = dark\n\n# Editor font: cascadia-code, jetbrains-mono, fira-code,\n#              source-code-pro, ubuntu-mono, roboto-mono, hack\n# editor_font = cascadia-code\n\n# editor_font_size = 14\n# preview_zoom = 100\n# sidebar_visible = true\n# typewriter_mode = false\n# cursor_recenter_on_click = false\n# show_stats = false\n\n# Vim mode: hjkl navigation, modal editing, and : ex-commands (default: false)\n# vim_mode = false\n\n# Editor indent: 0 = tab, 1-6 = spaces (default: 2)\n# editor_indent = 2\n\n# Editor width in characters (default: 72, minimum: 72)\n# Increase for wider text area, e.g., 100, 120, or 150\n# editor_width = 72\n\n# Local Images\n\n# images_path = /path/to/images\n\n# Media Uploads (drag-and-drop)\n\n# Destination for new media: local or s3 (requires AWS S3 configuration).\n# media_storage_provider = local\n\n# Comma-separated file extensions accepted by the image/video drop tabs.\n# image_upload_extensions = .jpg,.jpeg,.png,.gif,.webp,.bmp\n# video_upload_extensions = .mp4,.webm,.mkv,.mov,.avi,.m4v,.ogv\n\n# AWS S3 (for image uploads)\n\n# aws_access_key_id = your-access-key\n# aws_secret_access_key = your-secret-key\n# aws_s3_bucket = your-bucket-name\n# aws_region = us-east-1\n\n# S3-compatible services (MinIO, SeaweedFS, ...): set a custom endpoint\n# and force path-style URLs (bucket in the path).\n# aws_s3_endpoint = http://localhost:9000\n# aws_s3_force_path_style = true\n\n# YouTube API (for video search)\n\n# youtube_api_key = your-youtube-api-key\n\n# Google Custom Search (for image search)\n\n# google_api_key = your-google-api-key\n# google_cse_id = your-custom-search-engine-id\n\n# Hugo Blog Posts\n\n# Path style: dated = YYYY/MM/DD/slug/index.md (default)\n#             flat  = slug.md (in current folder)\n# hugo_path_style = dated\n\n# Custom frontmatter: create a .hugo_template.md file at the notes root\n# to override the generated frontmatter. Placeholders {{title}}, {{slug}}\n# and {{date}} are substituted. Leave unset to use the built-in template.\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+          ".frankmd-config.lock": "",
+          ".hugo_template.md": "title: \"{{title}}\"\n"
+        }
+      }
+    },
+    {
+      "name": "generate_blog_post 21 \"No Template\" {}",
+      "fn": "generate_blog_post",
+      "input": {
+        "title": "No Template",
+        "parent": null,
+        "path_style": null,
+        "kwargs_given": [],
+        "tree": {},
+        "env": {},
+        "now": {
+          "zone": "UTC",
+          "time": "2026-02-01T10:30:00"
+        }
+      },
+      "expected": {
+        "result": {
+          "path": "2026/02/01/no-template/index.md",
+          "content": "---\ntitle: \"No Template\"\nslug: \"no-template\"\ndate: 2026-02-01T10:30:00+00:00\ndraft: true\ntags: []\n---\n\n"
+        },
+        "tree_after": {
+          ".fed": "# FrankMD Configuration\n# Uncomment and modify values as needed.\n# Environment variables are used as defaults if not specified here.\n\n# UI Settings\n\n# Theme: light, dark, gruvbox, tokyo-night, solarized-dark,\n#        solarized-light, nord, cappuccino, osaka, hackerman\n# theme = dark\n\n# Editor font: cascadia-code, jetbrains-mono, fira-code,\n#              source-code-pro, ubuntu-mono, roboto-mono, hack\n# editor_font = cascadia-code\n\n# editor_font_size = 14\n# preview_zoom = 100\n# sidebar_visible = true\n# typewriter_mode = false\n# cursor_recenter_on_click = false\n# show_stats = false\n\n# Vim mode: hjkl navigation, modal editing, and : ex-commands (default: false)\n# vim_mode = false\n\n# Editor indent: 0 = tab, 1-6 = spaces (default: 2)\n# editor_indent = 2\n\n# Editor width in characters (default: 72, minimum: 72)\n# Increase for wider text area, e.g., 100, 120, or 150\n# editor_width = 72\n\n# Local Images\n\n# images_path = /path/to/images\n\n# Media Uploads (drag-and-drop)\n\n# Destination for new media: local or s3 (requires AWS S3 configuration).\n# media_storage_provider = local\n\n# Comma-separated file extensions accepted by the image/video drop tabs.\n# image_upload_extensions = .jpg,.jpeg,.png,.gif,.webp,.bmp\n# video_upload_extensions = .mp4,.webm,.mkv,.mov,.avi,.m4v,.ogv\n\n# AWS S3 (for image uploads)\n\n# aws_access_key_id = your-access-key\n# aws_secret_access_key = your-secret-key\n# aws_s3_bucket = your-bucket-name\n# aws_region = us-east-1\n\n# S3-compatible services (MinIO, SeaweedFS, ...): set a custom endpoint\n# and force path-style URLs (bucket in the path).\n# aws_s3_endpoint = http://localhost:9000\n# aws_s3_force_path_style = true\n\n# YouTube API (for video search)\n\n# youtube_api_key = your-youtube-api-key\n\n# Google Custom Search (for image search)\n\n# google_api_key = your-google-api-key\n# google_cse_id = your-custom-search-engine-id\n\n# Hugo Blog Posts\n\n# Path style: dated = YYYY/MM/DD/slug/index.md (default)\n#             flat  = slug.md (in current folder)\n# hugo_path_style = dated\n\n# Custom frontmatter: create a .hugo_template.md file at the notes root\n# to override the generated frontmatter. Placeholders {{title}}, {{slug}}\n# and {{date}} are substituted. Leave unset to use the built-in template.\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+          ".frankmd-config.lock": ""
+        }
+      }
+    },
+    {
+      "name": "generate_blog_post 22 \"\" {}",
+      "fn": "generate_blog_post",
+      "input": {
+        "title": "",
+        "parent": null,
+        "path_style": null,
+        "kwargs_given": [],
+        "tree": {},
+        "env": {},
+        "now": {
+          "zone": "UTC",
+          "time": "2026-02-01T10:30:00"
+        }
+      },
+      "expected": {
+        "result": {
+          "path": "2026/02/01//index.md",
+          "content": "---\ntitle: \"\"\nslug: \"\"\ndate: 2026-02-01T10:30:00+00:00\ndraft: true\ntags: []\n---\n\n"
+        },
+        "tree_after": {
+          ".fed": "# FrankMD Configuration\n# Uncomment and modify values as needed.\n# Environment variables are used as defaults if not specified here.\n\n# UI Settings\n\n# Theme: light, dark, gruvbox, tokyo-night, solarized-dark,\n#        solarized-light, nord, cappuccino, osaka, hackerman\n# theme = dark\n\n# Editor font: cascadia-code, jetbrains-mono, fira-code,\n#              source-code-pro, ubuntu-mono, roboto-mono, hack\n# editor_font = cascadia-code\n\n# editor_font_size = 14\n# preview_zoom = 100\n# sidebar_visible = true\n# typewriter_mode = false\n# cursor_recenter_on_click = false\n# show_stats = false\n\n# Vim mode: hjkl navigation, modal editing, and : ex-commands (default: false)\n# vim_mode = false\n\n# Editor indent: 0 = tab, 1-6 = spaces (default: 2)\n# editor_indent = 2\n\n# Editor width in characters (default: 72, minimum: 72)\n# Increase for wider text area, e.g., 100, 120, or 150\n# editor_width = 72\n\n# Local Images\n\n# images_path = /path/to/images\n\n# Media Uploads (drag-and-drop)\n\n# Destination for new media: local or s3 (requires AWS S3 configuration).\n# media_storage_provider = local\n\n# Comma-separated file extensions accepted by the image/video drop tabs.\n# image_upload_extensions = .jpg,.jpeg,.png,.gif,.webp,.bmp\n# video_upload_extensions = .mp4,.webm,.mkv,.mov,.avi,.m4v,.ogv\n\n# AWS S3 (for image uploads)\n\n# aws_access_key_id = your-access-key\n# aws_secret_access_key = your-secret-key\n# aws_s3_bucket = your-bucket-name\n# aws_region = us-east-1\n\n# S3-compatible services (MinIO, SeaweedFS, ...): set a custom endpoint\n# and force path-style URLs (bucket in the path).\n# aws_s3_endpoint = http://localhost:9000\n# aws_s3_force_path_style = true\n\n# YouTube API (for video search)\n\n# youtube_api_key = your-youtube-api-key\n\n# Google Custom Search (for image search)\n\n# google_api_key = your-google-api-key\n# google_cse_id = your-custom-search-engine-id\n\n# Hugo Blog Posts\n\n# Path style: dated = YYYY/MM/DD/slug/index.md (default)\n#             flat  = slug.md (in current folder)\n# hugo_path_style = dated\n\n# Custom frontmatter: create a .hugo_template.md file at the notes root\n# to override the generated frontmatter. Placeholders {{title}}, {{slug}}\n# and {{date}} are substituted. Leave unset to use the built-in template.\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+          ".frankmd-config.lock": ""
+        }
+      }
+    },
+    {
+      "name": "generate_blog_post 23 \"!!!\" {path_style: \"flat\"}",
+      "fn": "generate_blog_post",
+      "input": {
+        "title": "!!!",
+        "parent": null,
+        "path_style": "flat",
+        "kwargs_given": [
+          "path_style"
+        ],
+        "tree": {},
+        "env": {},
+        "now": {
+          "zone": "UTC",
+          "time": "2026-02-01T10:30:00"
+        }
+      },
+      "expected": {
+        "result": {
+          "path": ".md",
+          "content": "---\ntitle: \"!!!\"\nslug: \"\"\ndate: 2026-02-01T10:30:00+00:00\ndraft: true\ntags: []\n---\n\n"
+        },
+        "tree_after": {}
+      }
+    },
+    {
+      "name": "generate_blog_post 24 \"日本語\" {}",
+      "fn": "generate_blog_post",
+      "input": {
+        "title": "日本語",
+        "parent": null,
+        "path_style": null,
+        "kwargs_given": [],
+        "tree": {},
+        "env": {},
+        "now": {
+          "zone": "UTC",
+          "time": "2026-02-01T10:30:00"
+        }
+      },
+      "expected": {
+        "result": {
+          "path": "2026/02/01//index.md",
+          "content": "---\ntitle: \"日本語\"\nslug: \"\"\ndate: 2026-02-01T10:30:00+00:00\ndraft: true\ntags: []\n---\n\n"
+        },
+        "tree_after": {
+          ".fed": "# FrankMD Configuration\n# Uncomment and modify values as needed.\n# Environment variables are used as defaults if not specified here.\n\n# UI Settings\n\n# Theme: light, dark, gruvbox, tokyo-night, solarized-dark,\n#        solarized-light, nord, cappuccino, osaka, hackerman\n# theme = dark\n\n# Editor font: cascadia-code, jetbrains-mono, fira-code,\n#              source-code-pro, ubuntu-mono, roboto-mono, hack\n# editor_font = cascadia-code\n\n# editor_font_size = 14\n# preview_zoom = 100\n# sidebar_visible = true\n# typewriter_mode = false\n# cursor_recenter_on_click = false\n# show_stats = false\n\n# Vim mode: hjkl navigation, modal editing, and : ex-commands (default: false)\n# vim_mode = false\n\n# Editor indent: 0 = tab, 1-6 = spaces (default: 2)\n# editor_indent = 2\n\n# Editor width in characters (default: 72, minimum: 72)\n# Increase for wider text area, e.g., 100, 120, or 150\n# editor_width = 72\n\n# Local Images\n\n# images_path = /path/to/images\n\n# Media Uploads (drag-and-drop)\n\n# Destination for new media: local or s3 (requires AWS S3 configuration).\n# media_storage_provider = local\n\n# Comma-separated file extensions accepted by the image/video drop tabs.\n# image_upload_extensions = .jpg,.jpeg,.png,.gif,.webp,.bmp\n# video_upload_extensions = .mp4,.webm,.mkv,.mov,.avi,.m4v,.ogv\n\n# AWS S3 (for image uploads)\n\n# aws_access_key_id = your-access-key\n# aws_secret_access_key = your-secret-key\n# aws_s3_bucket = your-bucket-name\n# aws_region = us-east-1\n\n# S3-compatible services (MinIO, SeaweedFS, ...): set a custom endpoint\n# and force path-style URLs (bucket in the path).\n# aws_s3_endpoint = http://localhost:9000\n# aws_s3_force_path_style = true\n\n# YouTube API (for video search)\n\n# youtube_api_key = your-youtube-api-key\n\n# Google Custom Search (for image search)\n\n# google_api_key = your-google-api-key\n# google_cse_id = your-custom-search-engine-id\n\n# Hugo Blog Posts\n\n# Path style: dated = YYYY/MM/DD/slug/index.md (default)\n#             flat  = slug.md (in current folder)\n# hugo_path_style = dated\n\n# Custom frontmatter: create a .hugo_template.md file at the notes root\n# to override the generated frontmatter. Placeholders {{title}}, {{slug}}\n# and {{date}} are substituted. Leave unset to use the built-in template.\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+          ".frankmd-config.lock": ""
+        }
+      }
+    },
+    {
+      "name": "generate_blog_post 25 \"Ação Rápida\" {parent: \"blog\"}",
+      "fn": "generate_blog_post",
+      "input": {
+        "title": "Ação Rápida",
+        "parent": "blog",
+        "path_style": null,
+        "kwargs_given": [
+          "parent"
+        ],
+        "tree": {},
+        "env": {},
+        "now": {
+          "zone": "UTC",
+          "time": "2026-02-01T10:30:00"
+        }
+      },
+      "expected": {
+        "result": {
+          "path": "blog/2026/02/01/acao-rapida/index.md",
+          "content": "---\ntitle: \"Ação Rápida\"\nslug: \"acao-rapida\"\ndate: 2026-02-01T10:30:00+00:00\ndraft: true\ntags: []\n---\n\n"
+        },
+        "tree_after": {
+          ".fed": "# FrankMD Configuration\n# Uncomment and modify values as needed.\n# Environment variables are used as defaults if not specified here.\n\n# UI Settings\n\n# Theme: light, dark, gruvbox, tokyo-night, solarized-dark,\n#        solarized-light, nord, cappuccino, osaka, hackerman\n# theme = dark\n\n# Editor font: cascadia-code, jetbrains-mono, fira-code,\n#              source-code-pro, ubuntu-mono, roboto-mono, hack\n# editor_font = cascadia-code\n\n# editor_font_size = 14\n# preview_zoom = 100\n# sidebar_visible = true\n# typewriter_mode = false\n# cursor_recenter_on_click = false\n# show_stats = false\n\n# Vim mode: hjkl navigation, modal editing, and : ex-commands (default: false)\n# vim_mode = false\n\n# Editor indent: 0 = tab, 1-6 = spaces (default: 2)\n# editor_indent = 2\n\n# Editor width in characters (default: 72, minimum: 72)\n# Increase for wider text area, e.g., 100, 120, or 150\n# editor_width = 72\n\n# Local Images\n\n# images_path = /path/to/images\n\n# Media Uploads (drag-and-drop)\n\n# Destination for new media: local or s3 (requires AWS S3 configuration).\n# media_storage_provider = local\n\n# Comma-separated file extensions accepted by the image/video drop tabs.\n# image_upload_extensions = .jpg,.jpeg,.png,.gif,.webp,.bmp\n# video_upload_extensions = .mp4,.webm,.mkv,.mov,.avi,.m4v,.ogv\n\n# AWS S3 (for image uploads)\n\n# aws_access_key_id = your-access-key\n# aws_secret_access_key = your-secret-key\n# aws_s3_bucket = your-bucket-name\n# aws_region = us-east-1\n\n# S3-compatible services (MinIO, SeaweedFS, ...): set a custom endpoint\n# and force path-style URLs (bucket in the path).\n# aws_s3_endpoint = http://localhost:9000\n# aws_s3_force_path_style = true\n\n# YouTube API (for video search)\n\n# youtube_api_key = your-youtube-api-key\n\n# Google Custom Search (for image search)\n\n# google_api_key = your-google-api-key\n# google_cse_id = your-custom-search-engine-id\n\n# Hugo Blog Posts\n\n# Path style: dated = YYYY/MM/DD/slug/index.md (default)\n#             flat  = slug.md (in current folder)\n# hugo_path_style = dated\n\n# Custom frontmatter: create a .hugo_template.md file at the notes root\n# to override the generated frontmatter. Placeholders {{title}}, {{slug}}\n# and {{date}} are substituted. Leave unset to use the built-in template.\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+          ".frankmd-config.lock": ""
+        }
+      }
+    },
+    {
+      "name": "generate_blog_post 26 \"X\" {parent: \"\"}",
+      "fn": "generate_blog_post",
+      "input": {
+        "title": "X",
+        "parent": "",
+        "path_style": null,
+        "kwargs_given": [
+          "parent"
+        ],
+        "tree": {},
+        "env": {},
+        "now": {
+          "zone": "UTC",
+          "time": "2026-02-01T10:30:00"
+        }
+      },
+      "expected": {
+        "result": {
+          "path": "2026/02/01/x/index.md",
+          "content": "---\ntitle: \"X\"\nslug: \"x\"\ndate: 2026-02-01T10:30:00+00:00\ndraft: true\ntags: []\n---\n\n"
+        },
+        "tree_after": {
+          ".fed": "# FrankMD Configuration\n# Uncomment and modify values as needed.\n# Environment variables are used as defaults if not specified here.\n\n# UI Settings\n\n# Theme: light, dark, gruvbox, tokyo-night, solarized-dark,\n#        solarized-light, nord, cappuccino, osaka, hackerman\n# theme = dark\n\n# Editor font: cascadia-code, jetbrains-mono, fira-code,\n#              source-code-pro, ubuntu-mono, roboto-mono, hack\n# editor_font = cascadia-code\n\n# editor_font_size = 14\n# preview_zoom = 100\n# sidebar_visible = true\n# typewriter_mode = false\n# cursor_recenter_on_click = false\n# show_stats = false\n\n# Vim mode: hjkl navigation, modal editing, and : ex-commands (default: false)\n# vim_mode = false\n\n# Editor indent: 0 = tab, 1-6 = spaces (default: 2)\n# editor_indent = 2\n\n# Editor width in characters (default: 72, minimum: 72)\n# Increase for wider text area, e.g., 100, 120, or 150\n# editor_width = 72\n\n# Local Images\n\n# images_path = /path/to/images\n\n# Media Uploads (drag-and-drop)\n\n# Destination for new media: local or s3 (requires AWS S3 configuration).\n# media_storage_provider = local\n\n# Comma-separated file extensions accepted by the image/video drop tabs.\n# image_upload_extensions = .jpg,.jpeg,.png,.gif,.webp,.bmp\n# video_upload_extensions = .mp4,.webm,.mkv,.mov,.avi,.m4v,.ogv\n\n# AWS S3 (for image uploads)\n\n# aws_access_key_id = your-access-key\n# aws_secret_access_key = your-secret-key\n# aws_s3_bucket = your-bucket-name\n# aws_region = us-east-1\n\n# S3-compatible services (MinIO, SeaweedFS, ...): set a custom endpoint\n# and force path-style URLs (bucket in the path).\n# aws_s3_endpoint = http://localhost:9000\n# aws_s3_force_path_style = true\n\n# YouTube API (for video search)\n\n# youtube_api_key = your-youtube-api-key\n\n# Google Custom Search (for image search)\n\n# google_api_key = your-google-api-key\n# google_cse_id = your-custom-search-engine-id\n\n# Hugo Blog Posts\n\n# Path style: dated = YYYY/MM/DD/slug/index.md (default)\n#             flat  = slug.md (in current folder)\n# hugo_path_style = dated\n\n# Custom frontmatter: create a .hugo_template.md file at the notes root\n# to override the generated frontmatter. Placeholders {{title}}, {{slug}}\n# and {{date}} are substituted. Leave unset to use the built-in template.\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+          ".frankmd-config.lock": ""
+        }
+      }
+    },
+    {
+      "name": "generate_blog_post 27 \"X\" {parent: \"   \"}",
+      "fn": "generate_blog_post",
+      "input": {
+        "title": "X",
+        "parent": "   ",
+        "path_style": null,
+        "kwargs_given": [
+          "parent"
+        ],
+        "tree": {},
+        "env": {},
+        "now": {
+          "zone": "UTC",
+          "time": "2026-02-01T10:30:00"
+        }
+      },
+      "expected": {
+        "result": {
+          "path": "2026/02/01/x/index.md",
+          "content": "---\ntitle: \"X\"\nslug: \"x\"\ndate: 2026-02-01T10:30:00+00:00\ndraft: true\ntags: []\n---\n\n"
+        },
+        "tree_after": {
+          ".fed": "# FrankMD Configuration\n# Uncomment and modify values as needed.\n# Environment variables are used as defaults if not specified here.\n\n# UI Settings\n\n# Theme: light, dark, gruvbox, tokyo-night, solarized-dark,\n#        solarized-light, nord, cappuccino, osaka, hackerman\n# theme = dark\n\n# Editor font: cascadia-code, jetbrains-mono, fira-code,\n#              source-code-pro, ubuntu-mono, roboto-mono, hack\n# editor_font = cascadia-code\n\n# editor_font_size = 14\n# preview_zoom = 100\n# sidebar_visible = true\n# typewriter_mode = false\n# cursor_recenter_on_click = false\n# show_stats = false\n\n# Vim mode: hjkl navigation, modal editing, and : ex-commands (default: false)\n# vim_mode = false\n\n# Editor indent: 0 = tab, 1-6 = spaces (default: 2)\n# editor_indent = 2\n\n# Editor width in characters (default: 72, minimum: 72)\n# Increase for wider text area, e.g., 100, 120, or 150\n# editor_width = 72\n\n# Local Images\n\n# images_path = /path/to/images\n\n# Media Uploads (drag-and-drop)\n\n# Destination for new media: local or s3 (requires AWS S3 configuration).\n# media_storage_provider = local\n\n# Comma-separated file extensions accepted by the image/video drop tabs.\n# image_upload_extensions = .jpg,.jpeg,.png,.gif,.webp,.bmp\n# video_upload_extensions = .mp4,.webm,.mkv,.mov,.avi,.m4v,.ogv\n\n# AWS S3 (for image uploads)\n\n# aws_access_key_id = your-access-key\n# aws_secret_access_key = your-secret-key\n# aws_s3_bucket = your-bucket-name\n# aws_region = us-east-1\n\n# S3-compatible services (MinIO, SeaweedFS, ...): set a custom endpoint\n# and force path-style URLs (bucket in the path).\n# aws_s3_endpoint = http://localhost:9000\n# aws_s3_force_path_style = true\n\n# YouTube API (for video search)\n\n# youtube_api_key = your-youtube-api-key\n\n# Google Custom Search (for image search)\n\n# google_api_key = your-google-api-key\n# google_cse_id = your-custom-search-engine-id\n\n# Hugo Blog Posts\n\n# Path style: dated = YYYY/MM/DD/slug/index.md (default)\n#             flat  = slug.md (in current folder)\n# hugo_path_style = dated\n\n# Custom frontmatter: create a .hugo_template.md file at the notes root\n# to override the generated frontmatter. Placeholders {{title}}, {{slug}}\n# and {{date}} are substituted. Leave unset to use the built-in template.\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+          ".frankmd-config.lock": ""
+        }
+      }
+    },
+    {
+      "name": "generate_blog_post 28 \"X\" {parent: \"a/\"}",
+      "fn": "generate_blog_post",
+      "input": {
+        "title": "X",
+        "parent": "a/",
+        "path_style": null,
+        "kwargs_given": [
+          "parent"
+        ],
+        "tree": {},
+        "env": {},
+        "now": {
+          "zone": "UTC",
+          "time": "2026-02-01T10:30:00"
+        }
+      },
+      "expected": {
+        "result": {
+          "path": "a//2026/02/01/x/index.md",
+          "content": "---\ntitle: \"X\"\nslug: \"x\"\ndate: 2026-02-01T10:30:00+00:00\ndraft: true\ntags: []\n---\n\n"
+        },
+        "tree_after": {
+          ".fed": "# FrankMD Configuration\n# Uncomment and modify values as needed.\n# Environment variables are used as defaults if not specified here.\n\n# UI Settings\n\n# Theme: light, dark, gruvbox, tokyo-night, solarized-dark,\n#        solarized-light, nord, cappuccino, osaka, hackerman\n# theme = dark\n\n# Editor font: cascadia-code, jetbrains-mono, fira-code,\n#              source-code-pro, ubuntu-mono, roboto-mono, hack\n# editor_font = cascadia-code\n\n# editor_font_size = 14\n# preview_zoom = 100\n# sidebar_visible = true\n# typewriter_mode = false\n# cursor_recenter_on_click = false\n# show_stats = false\n\n# Vim mode: hjkl navigation, modal editing, and : ex-commands (default: false)\n# vim_mode = false\n\n# Editor indent: 0 = tab, 1-6 = spaces (default: 2)\n# editor_indent = 2\n\n# Editor width in characters (default: 72, minimum: 72)\n# Increase for wider text area, e.g., 100, 120, or 150\n# editor_width = 72\n\n# Local Images\n\n# images_path = /path/to/images\n\n# Media Uploads (drag-and-drop)\n\n# Destination for new media: local or s3 (requires AWS S3 configuration).\n# media_storage_provider = local\n\n# Comma-separated file extensions accepted by the image/video drop tabs.\n# image_upload_extensions = .jpg,.jpeg,.png,.gif,.webp,.bmp\n# video_upload_extensions = .mp4,.webm,.mkv,.mov,.avi,.m4v,.ogv\n\n# AWS S3 (for image uploads)\n\n# aws_access_key_id = your-access-key\n# aws_secret_access_key = your-secret-key\n# aws_s3_bucket = your-bucket-name\n# aws_region = us-east-1\n\n# S3-compatible services (MinIO, SeaweedFS, ...): set a custom endpoint\n# and force path-style URLs (bucket in the path).\n# aws_s3_endpoint = http://localhost:9000\n# aws_s3_force_path_style = true\n\n# YouTube API (for video search)\n\n# youtube_api_key = your-youtube-api-key\n\n# Google Custom Search (for image search)\n\n# google_api_key = your-google-api-key\n# google_cse_id = your-custom-search-engine-id\n\n# Hugo Blog Posts\n\n# Path style: dated = YYYY/MM/DD/slug/index.md (default)\n#             flat  = slug.md (in current folder)\n# hugo_path_style = dated\n\n# Custom frontmatter: create a .hugo_template.md file at the notes root\n# to override the generated frontmatter. Placeholders {{title}}, {{slug}}\n# and {{date}} are substituted. Leave unset to use the built-in template.\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+          ".frankmd-config.lock": ""
+        }
+      }
+    },
+    {
+      "name": "generate_blog_post 29 \"X\" {parent: \"/abs\"}",
+      "fn": "generate_blog_post",
+      "input": {
+        "title": "X",
+        "parent": "/abs",
+        "path_style": null,
+        "kwargs_given": [
+          "parent"
+        ],
+        "tree": {},
+        "env": {},
+        "now": {
+          "zone": "UTC",
+          "time": "2026-02-01T10:30:00"
+        }
+      },
+      "expected": {
+        "result": {
+          "path": "/abs/2026/02/01/x/index.md",
+          "content": "---\ntitle: \"X\"\nslug: \"x\"\ndate: 2026-02-01T10:30:00+00:00\ndraft: true\ntags: []\n---\n\n"
+        },
+        "tree_after": {
+          ".fed": "# FrankMD Configuration\n# Uncomment and modify values as needed.\n# Environment variables are used as defaults if not specified here.\n\n# UI Settings\n\n# Theme: light, dark, gruvbox, tokyo-night, solarized-dark,\n#        solarized-light, nord, cappuccino, osaka, hackerman\n# theme = dark\n\n# Editor font: cascadia-code, jetbrains-mono, fira-code,\n#              source-code-pro, ubuntu-mono, roboto-mono, hack\n# editor_font = cascadia-code\n\n# editor_font_size = 14\n# preview_zoom = 100\n# sidebar_visible = true\n# typewriter_mode = false\n# cursor_recenter_on_click = false\n# show_stats = false\n\n# Vim mode: hjkl navigation, modal editing, and : ex-commands (default: false)\n# vim_mode = false\n\n# Editor indent: 0 = tab, 1-6 = spaces (default: 2)\n# editor_indent = 2\n\n# Editor width in characters (default: 72, minimum: 72)\n# Increase for wider text area, e.g., 100, 120, or 150\n# editor_width = 72\n\n# Local Images\n\n# images_path = /path/to/images\n\n# Media Uploads (drag-and-drop)\n\n# Destination for new media: local or s3 (requires AWS S3 configuration).\n# media_storage_provider = local\n\n# Comma-separated file extensions accepted by the image/video drop tabs.\n# image_upload_extensions = .jpg,.jpeg,.png,.gif,.webp,.bmp\n# video_upload_extensions = .mp4,.webm,.mkv,.mov,.avi,.m4v,.ogv\n\n# AWS S3 (for image uploads)\n\n# aws_access_key_id = your-access-key\n# aws_secret_access_key = your-secret-key\n# aws_s3_bucket = your-bucket-name\n# aws_region = us-east-1\n\n# S3-compatible services (MinIO, SeaweedFS, ...): set a custom endpoint\n# and force path-style URLs (bucket in the path).\n# aws_s3_endpoint = http://localhost:9000\n# aws_s3_force_path_style = true\n\n# YouTube API (for video search)\n\n# youtube_api_key = your-youtube-api-key\n\n# Google Custom Search (for image search)\n\n# google_api_key = your-google-api-key\n# google_cse_id = your-custom-search-engine-id\n\n# Hugo Blog Posts\n\n# Path style: dated = YYYY/MM/DD/slug/index.md (default)\n#             flat  = slug.md (in current folder)\n# hugo_path_style = dated\n\n# Custom frontmatter: create a .hugo_template.md file at the notes root\n# to override the generated frontmatter. Placeholders {{title}}, {{slug}}\n# and {{date}} are substituted. Leave unset to use the built-in template.\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+          ".frankmd-config.lock": ""
+        }
+      }
+    },
+    {
+      "name": "generate_blog_post 30 \"X\" {parent: \"../escape\"}",
+      "fn": "generate_blog_post",
+      "input": {
+        "title": "X",
+        "parent": "../escape",
+        "path_style": null,
+        "kwargs_given": [
+          "parent"
+        ],
+        "tree": {},
+        "env": {},
+        "now": {
+          "zone": "UTC",
+          "time": "2026-02-01T10:30:00"
+        }
+      },
+      "expected": {
+        "result": {
+          "path": "../escape/2026/02/01/x/index.md",
+          "content": "---\ntitle: \"X\"\nslug: \"x\"\ndate: 2026-02-01T10:30:00+00:00\ndraft: true\ntags: []\n---\n\n"
+        },
+        "tree_after": {
+          ".fed": "# FrankMD Configuration\n# Uncomment and modify values as needed.\n# Environment variables are used as defaults if not specified here.\n\n# UI Settings\n\n# Theme: light, dark, gruvbox, tokyo-night, solarized-dark,\n#        solarized-light, nord, cappuccino, osaka, hackerman\n# theme = dark\n\n# Editor font: cascadia-code, jetbrains-mono, fira-code,\n#              source-code-pro, ubuntu-mono, roboto-mono, hack\n# editor_font = cascadia-code\n\n# editor_font_size = 14\n# preview_zoom = 100\n# sidebar_visible = true\n# typewriter_mode = false\n# cursor_recenter_on_click = false\n# show_stats = false\n\n# Vim mode: hjkl navigation, modal editing, and : ex-commands (default: false)\n# vim_mode = false\n\n# Editor indent: 0 = tab, 1-6 = spaces (default: 2)\n# editor_indent = 2\n\n# Editor width in characters (default: 72, minimum: 72)\n# Increase for wider text area, e.g., 100, 120, or 150\n# editor_width = 72\n\n# Local Images\n\n# images_path = /path/to/images\n\n# Media Uploads (drag-and-drop)\n\n# Destination for new media: local or s3 (requires AWS S3 configuration).\n# media_storage_provider = local\n\n# Comma-separated file extensions accepted by the image/video drop tabs.\n# image_upload_extensions = .jpg,.jpeg,.png,.gif,.webp,.bmp\n# video_upload_extensions = .mp4,.webm,.mkv,.mov,.avi,.m4v,.ogv\n\n# AWS S3 (for image uploads)\n\n# aws_access_key_id = your-access-key\n# aws_secret_access_key = your-secret-key\n# aws_s3_bucket = your-bucket-name\n# aws_region = us-east-1\n\n# S3-compatible services (MinIO, SeaweedFS, ...): set a custom endpoint\n# and force path-style URLs (bucket in the path).\n# aws_s3_endpoint = http://localhost:9000\n# aws_s3_force_path_style = true\n\n# YouTube API (for video search)\n\n# youtube_api_key = your-youtube-api-key\n\n# Google Custom Search (for image search)\n\n# google_api_key = your-google-api-key\n# google_cse_id = your-custom-search-engine-id\n\n# Hugo Blog Posts\n\n# Path style: dated = YYYY/MM/DD/slug/index.md (default)\n#             flat  = slug.md (in current folder)\n# hugo_path_style = dated\n\n# Custom frontmatter: create a .hugo_template.md file at the notes root\n# to override the generated frontmatter. Placeholders {{title}}, {{slug}}\n# and {{date}} are substituted. Leave unset to use the built-in template.\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+          ".frankmd-config.lock": ""
+        }
+      }
+    },
+    {
+      "name": "generate_blog_post 31 \"back\\\\slash \\\\1\" {}",
+      "fn": "generate_blog_post",
+      "input": {
+        "title": "back\\slash \\1",
+        "parent": null,
+        "path_style": null,
+        "kwargs_given": [],
+        "tree": {},
+        "env": {},
+        "now": {
+          "zone": "UTC",
+          "time": "2026-02-01T10:30:00"
+        }
+      },
+      "expected": {
+        "result": {
+          "path": "2026/02/01/back-slash-1/index.md",
+          "content": "---\ntitle: \"back\\slash \\1\"\nslug: \"back-slash-1\"\ndate: 2026-02-01T10:30:00+00:00\ndraft: true\ntags: []\n---\n\n"
+        },
+        "tree_after": {
+          ".fed": "# FrankMD Configuration\n# Uncomment and modify values as needed.\n# Environment variables are used as defaults if not specified here.\n\n# UI Settings\n\n# Theme: light, dark, gruvbox, tokyo-night, solarized-dark,\n#        solarized-light, nord, cappuccino, osaka, hackerman\n# theme = dark\n\n# Editor font: cascadia-code, jetbrains-mono, fira-code,\n#              source-code-pro, ubuntu-mono, roboto-mono, hack\n# editor_font = cascadia-code\n\n# editor_font_size = 14\n# preview_zoom = 100\n# sidebar_visible = true\n# typewriter_mode = false\n# cursor_recenter_on_click = false\n# show_stats = false\n\n# Vim mode: hjkl navigation, modal editing, and : ex-commands (default: false)\n# vim_mode = false\n\n# Editor indent: 0 = tab, 1-6 = spaces (default: 2)\n# editor_indent = 2\n\n# Editor width in characters (default: 72, minimum: 72)\n# Increase for wider text area, e.g., 100, 120, or 150\n# editor_width = 72\n\n# Local Images\n\n# images_path = /path/to/images\n\n# Media Uploads (drag-and-drop)\n\n# Destination for new media: local or s3 (requires AWS S3 configuration).\n# media_storage_provider = local\n\n# Comma-separated file extensions accepted by the image/video drop tabs.\n# image_upload_extensions = .jpg,.jpeg,.png,.gif,.webp,.bmp\n# video_upload_extensions = .mp4,.webm,.mkv,.mov,.avi,.m4v,.ogv\n\n# AWS S3 (for image uploads)\n\n# aws_access_key_id = your-access-key\n# aws_secret_access_key = your-secret-key\n# aws_s3_bucket = your-bucket-name\n# aws_region = us-east-1\n\n# S3-compatible services (MinIO, SeaweedFS, ...): set a custom endpoint\n# and force path-style URLs (bucket in the path).\n# aws_s3_endpoint = http://localhost:9000\n# aws_s3_force_path_style = true\n\n# YouTube API (for video search)\n\n# youtube_api_key = your-youtube-api-key\n\n# Google Custom Search (for image search)\n\n# google_api_key = your-google-api-key\n# google_cse_id = your-custom-search-engine-id\n\n# Hugo Blog Posts\n\n# Path style: dated = YYYY/MM/DD/slug/index.md (default)\n#             flat  = slug.md (in current folder)\n# hugo_path_style = dated\n\n# Custom frontmatter: create a .hugo_template.md file at the notes root\n# to override the generated frontmatter. Placeholders {{title}}, {{slug}}\n# and {{date}} are substituted. Leave unset to use the built-in template.\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+          ".frankmd-config.lock": ""
+        }
+      }
+    },
+    {
+      "name": "generate_blog_post 32 \"tpl uses {{slug}}\" {}",
+      "fn": "generate_blog_post",
+      "input": {
+        "title": "tpl uses {{slug}}",
+        "parent": null,
+        "path_style": null,
+        "kwargs_given": [],
+        "tree": {
+          ".hugo_template.md": "{{title}}|{{slug}}|{{date}}"
+        },
+        "env": {},
+        "now": {
+          "zone": "UTC",
+          "time": "2026-02-01T10:30:00"
+        }
+      },
+      "expected": {
+        "result": {
+          "path": "2026/02/01/tpl-uses-slug/index.md",
+          "content": "tpl uses tpl-uses-slug|tpl-uses-slug|2026-02-01T10:30:00+00:00"
+        },
+        "tree_after": {
+          ".fed": "# FrankMD Configuration\n# Uncomment and modify values as needed.\n# Environment variables are used as defaults if not specified here.\n\n# UI Settings\n\n# Theme: light, dark, gruvbox, tokyo-night, solarized-dark,\n#        solarized-light, nord, cappuccino, osaka, hackerman\n# theme = dark\n\n# Editor font: cascadia-code, jetbrains-mono, fira-code,\n#              source-code-pro, ubuntu-mono, roboto-mono, hack\n# editor_font = cascadia-code\n\n# editor_font_size = 14\n# preview_zoom = 100\n# sidebar_visible = true\n# typewriter_mode = false\n# cursor_recenter_on_click = false\n# show_stats = false\n\n# Vim mode: hjkl navigation, modal editing, and : ex-commands (default: false)\n# vim_mode = false\n\n# Editor indent: 0 = tab, 1-6 = spaces (default: 2)\n# editor_indent = 2\n\n# Editor width in characters (default: 72, minimum: 72)\n# Increase for wider text area, e.g., 100, 120, or 150\n# editor_width = 72\n\n# Local Images\n\n# images_path = /path/to/images\n\n# Media Uploads (drag-and-drop)\n\n# Destination for new media: local or s3 (requires AWS S3 configuration).\n# media_storage_provider = local\n\n# Comma-separated file extensions accepted by the image/video drop tabs.\n# image_upload_extensions = .jpg,.jpeg,.png,.gif,.webp,.bmp\n# video_upload_extensions = .mp4,.webm,.mkv,.mov,.avi,.m4v,.ogv\n\n# AWS S3 (for image uploads)\n\n# aws_access_key_id = your-access-key\n# aws_secret_access_key = your-secret-key\n# aws_s3_bucket = your-bucket-name\n# aws_region = us-east-1\n\n# S3-compatible services (MinIO, SeaweedFS, ...): set a custom endpoint\n# and force path-style URLs (bucket in the path).\n# aws_s3_endpoint = http://localhost:9000\n# aws_s3_force_path_style = true\n\n# YouTube API (for video search)\n\n# youtube_api_key = your-youtube-api-key\n\n# Google Custom Search (for image search)\n\n# google_api_key = your-google-api-key\n# google_cse_id = your-custom-search-engine-id\n\n# Hugo Blog Posts\n\n# Path style: dated = YYYY/MM/DD/slug/index.md (default)\n#             flat  = slug.md (in current folder)\n# hugo_path_style = dated\n\n# Custom frontmatter: create a .hugo_template.md file at the notes root\n# to override the generated frontmatter. Placeholders {{title}}, {{slug}}\n# and {{date}} are substituted. Leave unset to use the built-in template.\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+          ".frankmd-config.lock": "",
+          ".hugo_template.md": "{{title}}|{{slug}}|{{date}}"
+        }
+      }
+    },
+    {
+      "name": "generate_blog_post time zone UTC",
+      "fn": "generate_blog_post",
+      "input": {
+        "title": "Zoned",
+        "parent": null,
+        "path_style": null,
+        "kwargs_given": [],
+        "tree": {},
+        "env": {},
+        "now": {
+          "zone": "UTC",
+          "time": "2026-02-01T10:30:00"
+        }
+      },
+      "expected": {
+        "result": {
+          "path": "2026/02/01/zoned/index.md",
+          "content": "---\ntitle: \"Zoned\"\nslug: \"zoned\"\ndate: 2026-02-01T10:30:00+00:00\ndraft: true\ntags: []\n---\n\n"
+        },
+        "tree_after": {
+          ".fed": "# FrankMD Configuration\n# Uncomment and modify values as needed.\n# Environment variables are used as defaults if not specified here.\n\n# UI Settings\n\n# Theme: light, dark, gruvbox, tokyo-night, solarized-dark,\n#        solarized-light, nord, cappuccino, osaka, hackerman\n# theme = dark\n\n# Editor font: cascadia-code, jetbrains-mono, fira-code,\n#              source-code-pro, ubuntu-mono, roboto-mono, hack\n# editor_font = cascadia-code\n\n# editor_font_size = 14\n# preview_zoom = 100\n# sidebar_visible = true\n# typewriter_mode = false\n# cursor_recenter_on_click = false\n# show_stats = false\n\n# Vim mode: hjkl navigation, modal editing, and : ex-commands (default: false)\n# vim_mode = false\n\n# Editor indent: 0 = tab, 1-6 = spaces (default: 2)\n# editor_indent = 2\n\n# Editor width in characters (default: 72, minimum: 72)\n# Increase for wider text area, e.g., 100, 120, or 150\n# editor_width = 72\n\n# Local Images\n\n# images_path = /path/to/images\n\n# Media Uploads (drag-and-drop)\n\n# Destination for new media: local or s3 (requires AWS S3 configuration).\n# media_storage_provider = local\n\n# Comma-separated file extensions accepted by the image/video drop tabs.\n# image_upload_extensions = .jpg,.jpeg,.png,.gif,.webp,.bmp\n# video_upload_extensions = .mp4,.webm,.mkv,.mov,.avi,.m4v,.ogv\n\n# AWS S3 (for image uploads)\n\n# aws_access_key_id = your-access-key\n# aws_secret_access_key = your-secret-key\n# aws_s3_bucket = your-bucket-name\n# aws_region = us-east-1\n\n# S3-compatible services (MinIO, SeaweedFS, ...): set a custom endpoint\n# and force path-style URLs (bucket in the path).\n# aws_s3_endpoint = http://localhost:9000\n# aws_s3_force_path_style = true\n\n# YouTube API (for video search)\n\n# youtube_api_key = your-youtube-api-key\n\n# Google Custom Search (for image search)\n\n# google_api_key = your-google-api-key\n# google_cse_id = your-custom-search-engine-id\n\n# Hugo Blog Posts\n\n# Path style: dated = YYYY/MM/DD/slug/index.md (default)\n#             flat  = slug.md (in current folder)\n# hugo_path_style = dated\n\n# Custom frontmatter: create a .hugo_template.md file at the notes root\n# to override the generated frontmatter. Placeholders {{title}}, {{slug}}\n# and {{date}} are substituted. Leave unset to use the built-in template.\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+          ".frankmd-config.lock": ""
+        }
+      }
+    },
+    {
+      "name": "generate_blog_post time zone America/Sao_Paulo",
+      "fn": "generate_blog_post",
+      "input": {
+        "title": "Zoned",
+        "parent": null,
+        "path_style": null,
+        "kwargs_given": [],
+        "tree": {},
+        "env": {},
+        "now": {
+          "zone": "America/Sao_Paulo",
+          "time": "2026-02-01T10:30:00"
+        }
+      },
+      "expected": {
+        "result": {
+          "path": "2026/02/01/zoned/index.md",
+          "content": "---\ntitle: \"Zoned\"\nslug: \"zoned\"\ndate: 2026-02-01T10:30:00-03:00\ndraft: true\ntags: []\n---\n\n"
+        },
+        "tree_after": {
+          ".fed": "# FrankMD Configuration\n# Uncomment and modify values as needed.\n# Environment variables are used as defaults if not specified here.\n\n# UI Settings\n\n# Theme: light, dark, gruvbox, tokyo-night, solarized-dark,\n#        solarized-light, nord, cappuccino, osaka, hackerman\n# theme = dark\n\n# Editor font: cascadia-code, jetbrains-mono, fira-code,\n#              source-code-pro, ubuntu-mono, roboto-mono, hack\n# editor_font = cascadia-code\n\n# editor_font_size = 14\n# preview_zoom = 100\n# sidebar_visible = true\n# typewriter_mode = false\n# cursor_recenter_on_click = false\n# show_stats = false\n\n# Vim mode: hjkl navigation, modal editing, and : ex-commands (default: false)\n# vim_mode = false\n\n# Editor indent: 0 = tab, 1-6 = spaces (default: 2)\n# editor_indent = 2\n\n# Editor width in characters (default: 72, minimum: 72)\n# Increase for wider text area, e.g., 100, 120, or 150\n# editor_width = 72\n\n# Local Images\n\n# images_path = /path/to/images\n\n# Media Uploads (drag-and-drop)\n\n# Destination for new media: local or s3 (requires AWS S3 configuration).\n# media_storage_provider = local\n\n# Comma-separated file extensions accepted by the image/video drop tabs.\n# image_upload_extensions = .jpg,.jpeg,.png,.gif,.webp,.bmp\n# video_upload_extensions = .mp4,.webm,.mkv,.mov,.avi,.m4v,.ogv\n\n# AWS S3 (for image uploads)\n\n# aws_access_key_id = your-access-key\n# aws_secret_access_key = your-secret-key\n# aws_s3_bucket = your-bucket-name\n# aws_region = us-east-1\n\n# S3-compatible services (MinIO, SeaweedFS, ...): set a custom endpoint\n# and force path-style URLs (bucket in the path).\n# aws_s3_endpoint = http://localhost:9000\n# aws_s3_force_path_style = true\n\n# YouTube API (for video search)\n\n# youtube_api_key = your-youtube-api-key\n\n# Google Custom Search (for image search)\n\n# google_api_key = your-google-api-key\n# google_cse_id = your-custom-search-engine-id\n\n# Hugo Blog Posts\n\n# Path style: dated = YYYY/MM/DD/slug/index.md (default)\n#             flat  = slug.md (in current folder)\n# hugo_path_style = dated\n\n# Custom frontmatter: create a .hugo_template.md file at the notes root\n# to override the generated frontmatter. Placeholders {{title}}, {{slug}}\n# and {{date}} are substituted. Leave unset to use the built-in template.\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+          ".frankmd-config.lock": ""
+        }
+      }
+    },
+    {
+      "name": "generate_blog_post time zone Asia/Kolkata",
+      "fn": "generate_blog_post",
+      "input": {
+        "title": "Zoned",
+        "parent": null,
+        "path_style": null,
+        "kwargs_given": [],
+        "tree": {},
+        "env": {},
+        "now": {
+          "zone": "Asia/Kolkata",
+          "time": "2026-12-31T23:59:59"
+        }
+      },
+      "expected": {
+        "result": {
+          "path": "2026/12/31/zoned/index.md",
+          "content": "---\ntitle: \"Zoned\"\nslug: \"zoned\"\ndate: 2026-12-31T23:59:59+05:30\ndraft: true\ntags: []\n---\n\n"
+        },
+        "tree_after": {
+          ".fed": "# FrankMD Configuration\n# Uncomment and modify values as needed.\n# Environment variables are used as defaults if not specified here.\n\n# UI Settings\n\n# Theme: light, dark, gruvbox, tokyo-night, solarized-dark,\n#        solarized-light, nord, cappuccino, osaka, hackerman\n# theme = dark\n\n# Editor font: cascadia-code, jetbrains-mono, fira-code,\n#              source-code-pro, ubuntu-mono, roboto-mono, hack\n# editor_font = cascadia-code\n\n# editor_font_size = 14\n# preview_zoom = 100\n# sidebar_visible = true\n# typewriter_mode = false\n# cursor_recenter_on_click = false\n# show_stats = false\n\n# Vim mode: hjkl navigation, modal editing, and : ex-commands (default: false)\n# vim_mode = false\n\n# Editor indent: 0 = tab, 1-6 = spaces (default: 2)\n# editor_indent = 2\n\n# Editor width in characters (default: 72, minimum: 72)\n# Increase for wider text area, e.g., 100, 120, or 150\n# editor_width = 72\n\n# Local Images\n\n# images_path = /path/to/images\n\n# Media Uploads (drag-and-drop)\n\n# Destination for new media: local or s3 (requires AWS S3 configuration).\n# media_storage_provider = local\n\n# Comma-separated file extensions accepted by the image/video drop tabs.\n# image_upload_extensions = .jpg,.jpeg,.png,.gif,.webp,.bmp\n# video_upload_extensions = .mp4,.webm,.mkv,.mov,.avi,.m4v,.ogv\n\n# AWS S3 (for image uploads)\n\n# aws_access_key_id = your-access-key\n# aws_secret_access_key = your-secret-key\n# aws_s3_bucket = your-bucket-name\n# aws_region = us-east-1\n\n# S3-compatible services (MinIO, SeaweedFS, ...): set a custom endpoint\n# and force path-style URLs (bucket in the path).\n# aws_s3_endpoint = http://localhost:9000\n# aws_s3_force_path_style = true\n\n# YouTube API (for video search)\n\n# youtube_api_key = your-youtube-api-key\n\n# Google Custom Search (for image search)\n\n# google_api_key = your-google-api-key\n# google_cse_id = your-custom-search-engine-id\n\n# Hugo Blog Posts\n\n# Path style: dated = YYYY/MM/DD/slug/index.md (default)\n#             flat  = slug.md (in current folder)\n# hugo_path_style = dated\n\n# Custom frontmatter: create a .hugo_template.md file at the notes root\n# to override the generated frontmatter. Placeholders {{title}}, {{slug}}\n# and {{date}} are substituted. Leave unset to use the built-in template.\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+          ".frankmd-config.lock": ""
+        }
+      }
+    },
+    {
+      "name": "generate_blog_post time zone Pacific/Chatham",
+      "fn": "generate_blog_post",
+      "input": {
+        "title": "Zoned",
+        "parent": null,
+        "path_style": null,
+        "kwargs_given": [],
+        "tree": {},
+        "env": {},
+        "now": {
+          "zone": "Pacific/Chatham",
+          "time": "2026-07-04T01:02:03"
+        }
+      },
+      "expected": {
+        "result": {
+          "path": "2026/07/04/zoned/index.md",
+          "content": "---\ntitle: \"Zoned\"\nslug: \"zoned\"\ndate: 2026-07-04T01:02:03+12:45\ndraft: true\ntags: []\n---\n\n"
+        },
+        "tree_after": {
+          ".fed": "# FrankMD Configuration\n# Uncomment and modify values as needed.\n# Environment variables are used as defaults if not specified here.\n\n# UI Settings\n\n# Theme: light, dark, gruvbox, tokyo-night, solarized-dark,\n#        solarized-light, nord, cappuccino, osaka, hackerman\n# theme = dark\n\n# Editor font: cascadia-code, jetbrains-mono, fira-code,\n#              source-code-pro, ubuntu-mono, roboto-mono, hack\n# editor_font = cascadia-code\n\n# editor_font_size = 14\n# preview_zoom = 100\n# sidebar_visible = true\n# typewriter_mode = false\n# cursor_recenter_on_click = false\n# show_stats = false\n\n# Vim mode: hjkl navigation, modal editing, and : ex-commands (default: false)\n# vim_mode = false\n\n# Editor indent: 0 = tab, 1-6 = spaces (default: 2)\n# editor_indent = 2\n\n# Editor width in characters (default: 72, minimum: 72)\n# Increase for wider text area, e.g., 100, 120, or 150\n# editor_width = 72\n\n# Local Images\n\n# images_path = /path/to/images\n\n# Media Uploads (drag-and-drop)\n\n# Destination for new media: local or s3 (requires AWS S3 configuration).\n# media_storage_provider = local\n\n# Comma-separated file extensions accepted by the image/video drop tabs.\n# image_upload_extensions = .jpg,.jpeg,.png,.gif,.webp,.bmp\n# video_upload_extensions = .mp4,.webm,.mkv,.mov,.avi,.m4v,.ogv\n\n# AWS S3 (for image uploads)\n\n# aws_access_key_id = your-access-key\n# aws_secret_access_key = your-secret-key\n# aws_s3_bucket = your-bucket-name\n# aws_region = us-east-1\n\n# S3-compatible services (MinIO, SeaweedFS, ...): set a custom endpoint\n# and force path-style URLs (bucket in the path).\n# aws_s3_endpoint = http://localhost:9000\n# aws_s3_force_path_style = true\n\n# YouTube API (for video search)\n\n# youtube_api_key = your-youtube-api-key\n\n# Google Custom Search (for image search)\n\n# google_api_key = your-google-api-key\n# google_cse_id = your-custom-search-engine-id\n\n# Hugo Blog Posts\n\n# Path style: dated = YYYY/MM/DD/slug/index.md (default)\n#             flat  = slug.md (in current folder)\n# hugo_path_style = dated\n\n# Custom frontmatter: create a .hugo_template.md file at the notes root\n# to override the generated frontmatter. Placeholders {{title}}, {{slug}}\n# and {{date}} are substituted. Leave unset to use the built-in template.\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+          ".frankmd-config.lock": ""
+        }
+      }
+    },
+    {
+      "name": "generate_blog_post time zone America/New_York",
+      "fn": "generate_blog_post",
+      "input": {
+        "title": "Zoned",
+        "parent": null,
+        "path_style": null,
+        "kwargs_given": [],
+        "tree": {},
+        "env": {},
+        "now": {
+          "zone": "America/New_York",
+          "time": "2026-01-09T00:00:00"
+        }
+      },
+      "expected": {
+        "result": {
+          "path": "2026/01/09/zoned/index.md",
+          "content": "---\ntitle: \"Zoned\"\nslug: \"zoned\"\ndate: 2026-01-09T00:00:00-05:00\ndraft: true\ntags: []\n---\n\n"
+        },
+        "tree_after": {
+          ".fed": "# FrankMD Configuration\n# Uncomment and modify values as needed.\n# Environment variables are used as defaults if not specified here.\n\n# UI Settings\n\n# Theme: light, dark, gruvbox, tokyo-night, solarized-dark,\n#        solarized-light, nord, cappuccino, osaka, hackerman\n# theme = dark\n\n# Editor font: cascadia-code, jetbrains-mono, fira-code,\n#              source-code-pro, ubuntu-mono, roboto-mono, hack\n# editor_font = cascadia-code\n\n# editor_font_size = 14\n# preview_zoom = 100\n# sidebar_visible = true\n# typewriter_mode = false\n# cursor_recenter_on_click = false\n# show_stats = false\n\n# Vim mode: hjkl navigation, modal editing, and : ex-commands (default: false)\n# vim_mode = false\n\n# Editor indent: 0 = tab, 1-6 = spaces (default: 2)\n# editor_indent = 2\n\n# Editor width in characters (default: 72, minimum: 72)\n# Increase for wider text area, e.g., 100, 120, or 150\n# editor_width = 72\n\n# Local Images\n\n# images_path = /path/to/images\n\n# Media Uploads (drag-and-drop)\n\n# Destination for new media: local or s3 (requires AWS S3 configuration).\n# media_storage_provider = local\n\n# Comma-separated file extensions accepted by the image/video drop tabs.\n# image_upload_extensions = .jpg,.jpeg,.png,.gif,.webp,.bmp\n# video_upload_extensions = .mp4,.webm,.mkv,.mov,.avi,.m4v,.ogv\n\n# AWS S3 (for image uploads)\n\n# aws_access_key_id = your-access-key\n# aws_secret_access_key = your-secret-key\n# aws_s3_bucket = your-bucket-name\n# aws_region = us-east-1\n\n# S3-compatible services (MinIO, SeaweedFS, ...): set a custom endpoint\n# and force path-style URLs (bucket in the path).\n# aws_s3_endpoint = http://localhost:9000\n# aws_s3_force_path_style = true\n\n# YouTube API (for video search)\n\n# youtube_api_key = your-youtube-api-key\n\n# Google Custom Search (for image search)\n\n# google_api_key = your-google-api-key\n# google_cse_id = your-custom-search-engine-id\n\n# Hugo Blog Posts\n\n# Path style: dated = YYYY/MM/DD/slug/index.md (default)\n#             flat  = slug.md (in current folder)\n# hugo_path_style = dated\n\n# Custom frontmatter: create a .hugo_template.md file at the notes root\n# to override the generated frontmatter. Placeholders {{title}}, {{slug}}\n# and {{date}} are substituted. Leave unset to use the built-in template.\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+          ".frankmd-config.lock": ""
+        }
+      }
+    },
+    {
+      "name": "constants",
+      "fn": "constants",
+      "input": {},
+      "expected": {
+        "TEMPLATE_FILE": ".hugo_template.md",
+        "DEFAULT_TEMPLATE": "---\ntitle: \"{{title}}\"\nslug: \"{{slug}}\"\ndate: {{date}}\ndraft: true\ntags: []\n---\n\n",
+        "ACCENT_MAP": {
+          "à": "a",
+          "á": "a",
+          "â": "a",
+          "ã": "a",
+          "ä": "a",
+          "å": "a",
+          "æ": "ae",
+          "ç": "c",
+          "č": "c",
+          "ć": "c",
+          "è": "e",
+          "é": "e",
+          "ê": "e",
+          "ë": "e",
+          "ě": "e",
+          "ì": "i",
+          "í": "i",
+          "î": "i",
+          "ï": "i",
+          "ð": "d",
+          "ď": "d",
+          "ñ": "n",
+          "ň": "n",
+          "ò": "o",
+          "ó": "o",
+          "ô": "o",
+          "õ": "o",
+          "ö": "o",
+          "ø": "o",
+          "ù": "u",
+          "ú": "u",
+          "û": "u",
+          "ü": "u",
+          "ů": "u",
+          "ý": "y",
+          "ÿ": "y",
+          "ž": "z",
+          "ź": "z",
+          "ż": "z",
+          "ß": "ss",
+          "þ": "th",
+          "š": "s",
+          "ś": "s",
+          "ř": "r",
+          "ł": "l"
+        },
+        "config_schema_hugo_path_style": {
+          "default": "dated",
+          "type": "string",
+          "env": "HUGO_PATH_STYLE"
+        }
+      }
+    }
+  ]
+}

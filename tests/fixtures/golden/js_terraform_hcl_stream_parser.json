@@ -1,0 +1,2048 @@
+{
+  "source": "app/javascript/lib/terraform_hcl_stream_parser.js @ d47a89e92d89f807878d318182fa5dcea0329ec4",
+  "frankmd_sha": "d47a89e92d89f807878d318182fa5dcea0329ec4",
+  "generator": "tools/golden/js/render.mjs",
+  "notes": "Driven line-by-line like CodeMirror StreamLanguage: input split on \\n; empty lines call blankLine(state) and yield []; otherwise a fresh StringStream(line, tabSize=2, indentUnit=2) (vendored @codemirror/language) is fed to token() until eol. Each token is [text, style|null]; state carries across lines. endState = state after last line. Styles map to tags via StreamLanguage ('variableName.function' etc).",
+  "cases": [
+    {
+      "name": "tokenize \"resource \\\"aws_instance\\\" \\\"web\\\" {\\n  ami       ",
+      "fn": "tokenize",
+      "input": [
+        "resource \"aws_instance\" \"web\" {\n  ami           = \"ami-123\"\n  instance_type = var.type\n  count = 3\n}"
+      ],
+      "expected": {
+        "lines": [
+          [
+            [
+              "resource",
+              "keyword"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "\"aws_instance\"",
+              "string"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "\"web\"",
+              "string"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "{",
+              "punctuation"
+            ]
+          ],
+          [
+            [
+              "  ",
+              null
+            ],
+            [
+              "ami",
+              "property"
+            ],
+            [
+              "           ",
+              null
+            ],
+            [
+              "=",
+              "operator"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "\"ami-123\"",
+              "string"
+            ]
+          ],
+          [
+            [
+              "  ",
+              null
+            ],
+            [
+              "instance_type",
+              "property"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "=",
+              "operator"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "var",
+              "variable"
+            ],
+            [
+              ".",
+              "operator"
+            ],
+            [
+              "type",
+              "property"
+            ]
+          ],
+          [
+            [
+              "  ",
+              null
+            ],
+            [
+              "count",
+              "property"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "=",
+              "operator"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "3",
+              "number"
+            ]
+          ],
+          [
+            [
+              "}",
+              "punctuation"
+            ]
+          ]
+        ],
+        "endState": {
+          "blockComment": false,
+          "heredocMarker": null,
+          "afterDot": false
+        }
+      }
+    },
+    {
+      "name": "tokenize \"variable \\\"x\\\" {\\n  default = true\\n  type = list",
+      "fn": "tokenize",
+      "input": [
+        "variable \"x\" {\n  default = true\n  type = list(string)\n}\n\noutput \"o\" { value = module.m.out[0] }"
+      ],
+      "expected": {
+        "lines": [
+          [
+            [
+              "variable",
+              "keyword"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "\"x\"",
+              "string"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "{",
+              "punctuation"
+            ]
+          ],
+          [
+            [
+              "  ",
+              null
+            ],
+            [
+              "default",
+              "property"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "=",
+              "operator"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "true",
+              "atom"
+            ]
+          ],
+          [
+            [
+              "  ",
+              null
+            ],
+            [
+              "type",
+              "property"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "=",
+              "operator"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "list",
+              "variableName.function"
+            ],
+            [
+              "(",
+              "punctuation"
+            ],
+            [
+              "string",
+              "variable"
+            ],
+            [
+              ")",
+              "punctuation"
+            ]
+          ],
+          [
+            [
+              "}",
+              "punctuation"
+            ]
+          ],
+          [],
+          [
+            [
+              "output",
+              "keyword"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "\"o\"",
+              "string"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "{",
+              "punctuation"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "value",
+              "property"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "=",
+              "operator"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "module",
+              "keyword"
+            ],
+            [
+              ".",
+              "operator"
+            ],
+            [
+              "m",
+              "property"
+            ],
+            [
+              ".",
+              "operator"
+            ],
+            [
+              "out",
+              "property"
+            ],
+            [
+              "[",
+              "punctuation"
+            ],
+            [
+              "0",
+              "number"
+            ],
+            [
+              "]",
+              "punctuation"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "}",
+              "punctuation"
+            ]
+          ]
+        ],
+        "endState": {
+          "blockComment": false,
+          "heredocMarker": null,
+          "afterDot": false
+        }
+      }
+    },
+    {
+      "name": "tokenize \"# hash comment\\n// slash comment\\n/* block\\n stil",
+      "fn": "tokenize",
+      "input": [
+        "# hash comment\n// slash comment\n/* block\n still comment\n end */ a = 1"
+      ],
+      "expected": {
+        "lines": [
+          [
+            [
+              "# hash comment",
+              "comment"
+            ]
+          ],
+          [
+            [
+              "// slash comment",
+              "comment"
+            ]
+          ],
+          [
+            [
+              "/* block",
+              "comment"
+            ]
+          ],
+          [
+            [
+              " still comment",
+              "comment"
+            ]
+          ],
+          [
+            [
+              " end */",
+              "comment"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "a",
+              "property"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "=",
+              "operator"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "1",
+              "number"
+            ]
+          ]
+        ],
+        "endState": {
+          "blockComment": false,
+          "heredocMarker": null,
+          "afterDot": false
+        }
+      }
+    },
+    {
+      "name": "tokenize \"/* single */ b = 2\"",
+      "fn": "tokenize",
+      "input": [
+        "/* single */ b = 2"
+      ],
+      "expected": {
+        "lines": [
+          [
+            [
+              "/* single */",
+              "comment"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "b",
+              "property"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "=",
+              "operator"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "2",
+              "number"
+            ]
+          ]
+        ],
+        "endState": {
+          "blockComment": false,
+          "heredocMarker": null,
+          "afterDot": false
+        }
+      }
+    },
+    {
+      "name": "tokenize \"/* unterminated\\nline2\\n\"",
+      "fn": "tokenize",
+      "input": [
+        "/* unterminated\nline2\n"
+      ],
+      "expected": {
+        "lines": [
+          [
+            [
+              "/* unterminated",
+              "comment"
+            ]
+          ],
+          [
+            [
+              "line2",
+              "comment"
+            ]
+          ],
+          []
+        ],
+        "endState": {
+          "blockComment": true,
+          "heredocMarker": null,
+          "afterDot": false
+        }
+      }
+    },
+    {
+      "name": "tokenize \"x = <<EOF\\nheredoc line ${var.a}\\n  EOF\\nEOF\\ny =",
+      "fn": "tokenize",
+      "input": [
+        "x = <<EOF\nheredoc line ${var.a}\n  EOF\nEOF\ny = 1"
+      ],
+      "expected": {
+        "lines": [
+          [
+            [
+              "x",
+              "property"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "=",
+              "operator"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "<<EOF",
+              "string"
+            ]
+          ],
+          [
+            [
+              "heredoc line ${var.a}",
+              "string"
+            ]
+          ],
+          [
+            [
+              "  EOF",
+              "string"
+            ]
+          ],
+          [
+            [
+              "EOF",
+              "variable"
+            ]
+          ],
+          [
+            [
+              "y",
+              "property"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "=",
+              "operator"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "1",
+              "number"
+            ]
+          ]
+        ],
+        "endState": {
+          "blockComment": false,
+          "heredocMarker": null,
+          "afterDot": false
+        }
+      }
+    },
+    {
+      "name": "tokenize \"x = <<-EOT\\n  indented\\n  EOT\\nz = null\"",
+      "fn": "tokenize",
+      "input": [
+        "x = <<-EOT\n  indented\n  EOT\nz = null"
+      ],
+      "expected": {
+        "lines": [
+          [
+            [
+              "x",
+              "property"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "=",
+              "operator"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "<<-EOT",
+              "string"
+            ]
+          ],
+          [
+            [
+              "  indented",
+              "string"
+            ]
+          ],
+          [
+            [
+              "  EOT",
+              "string"
+            ]
+          ],
+          [
+            [
+              "z",
+              "property"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "=",
+              "operator"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "null",
+              "atom"
+            ]
+          ]
+        ],
+        "endState": {
+          "blockComment": false,
+          "heredocMarker": null,
+          "afterDot": false
+        }
+      }
+    },
+    {
+      "name": "tokenize \"x = <<NOTCLOSED\\na\\nb\"",
+      "fn": "tokenize",
+      "input": [
+        "x = <<NOTCLOSED\na\nb"
+      ],
+      "expected": {
+        "lines": [
+          [
+            [
+              "x",
+              "property"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "=",
+              "operator"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "<<NOTCLOSED",
+              "string"
+            ]
+          ],
+          [
+            [
+              "a",
+              "string"
+            ]
+          ],
+          [
+            [
+              "b",
+              "string"
+            ]
+          ]
+        ],
+        "endState": {
+          "blockComment": false,
+          "heredocMarker": "NOTCLOSED",
+          "afterDot": false
+        }
+      }
+    },
+    {
+      "name": "tokenize \"n = [0x1F, 0b101, 0o17, 1_000, 3.14, .5, 1e10, 2.",
+      "fn": "tokenize",
+      "input": [
+        "n = [0x1F, 0b101, 0o17, 1_000, 3.14, .5, 1e10, 2.5E-3, 1.]"
+      ],
+      "expected": {
+        "lines": [
+          [
+            [
+              "n",
+              "property"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "=",
+              "operator"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "[",
+              "punctuation"
+            ],
+            [
+              "0x1F",
+              "number"
+            ],
+            [
+              ",",
+              "punctuation"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "0b101",
+              "number"
+            ],
+            [
+              ",",
+              "punctuation"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "0o17",
+              "number"
+            ],
+            [
+              ",",
+              "punctuation"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "1_000",
+              "number"
+            ],
+            [
+              ",",
+              "punctuation"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "3.14",
+              "number"
+            ],
+            [
+              ",",
+              "punctuation"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              ".5",
+              "number"
+            ],
+            [
+              ",",
+              "punctuation"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "1e10",
+              "number"
+            ],
+            [
+              ",",
+              "punctuation"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "2.5E-3",
+              "number"
+            ],
+            [
+              ",",
+              "punctuation"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "1.",
+              "number"
+            ],
+            [
+              "]",
+              "punctuation"
+            ]
+          ]
+        ],
+        "endState": {
+          "blockComment": false,
+          "heredocMarker": null,
+          "afterDot": false
+        }
+      }
+    },
+    {
+      "name": "tokenize \"s = \\\"esc \\\\\\\" quote\\\" t = \\\"unterminated\"",
+      "fn": "tokenize",
+      "input": [
+        "s = \"esc \\\" quote\" t = \"unterminated"
+      ],
+      "expected": {
+        "lines": [
+          [
+            [
+              "s",
+              "property"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "=",
+              "operator"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "\"esc \\\" quote\"",
+              "string"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "t",
+              "property"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "=",
+              "operator"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "\"unterminated",
+              "string"
+            ]
+          ]
+        ],
+        "endState": {
+          "blockComment": false,
+          "heredocMarker": null,
+          "afterDot": false
+        }
+      }
+    },
+    {
+      "name": "tokenize \"a = b.c.d(e)\\nf = g . h\"",
+      "fn": "tokenize",
+      "input": [
+        "a = b.c.d(e)\nf = g . h"
+      ],
+      "expected": {
+        "lines": [
+          [
+            [
+              "a",
+              "property"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "=",
+              "operator"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "b",
+              "variable"
+            ],
+            [
+              ".",
+              "operator"
+            ],
+            [
+              "c",
+              "property"
+            ],
+            [
+              ".",
+              "operator"
+            ],
+            [
+              "d",
+              "property"
+            ],
+            [
+              "(",
+              "punctuation"
+            ],
+            [
+              "e",
+              "variable"
+            ],
+            [
+              ")",
+              "punctuation"
+            ]
+          ],
+          [
+            [
+              "f",
+              "property"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "=",
+              "operator"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "g",
+              "variable"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              ".",
+              "operator"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "h",
+              "property"
+            ]
+          ]
+        ],
+        "endState": {
+          "blockComment": false,
+          "heredocMarker": null,
+          "afterDot": false
+        }
+      }
+    },
+    {
+      "name": "tokenize \"for_each = { for k, v in var.m : k => v if v != n",
+      "fn": "tokenize",
+      "input": [
+        "for_each = { for k, v in var.m : k => v if v != null }"
+      ],
+      "expected": {
+        "lines": [
+          [
+            [
+              "for_each",
+              "property"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "=",
+              "operator"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "{",
+              "punctuation"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "for",
+              "keyword"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "k",
+              "variable"
+            ],
+            [
+              ",",
+              "punctuation"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "v",
+              "variable"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "in",
+              "keyword"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "var",
+              "variable"
+            ],
+            [
+              ".",
+              "operator"
+            ],
+            [
+              "m",
+              "property"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              ":",
+              "operator"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "k",
+              "property"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "=>",
+              "operator"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "v",
+              "variable"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "if",
+              "keyword"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "v",
+              "variable"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "!=",
+              "operator"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "null",
+              "atom"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "}",
+              "punctuation"
+            ]
+          ]
+        ],
+        "endState": {
+          "blockComment": false,
+          "heredocMarker": null,
+          "afterDot": false
+        }
+      }
+    },
+    {
+      "name": "tokenize \"cond = a == b ? x : y && !z || w >= 1\"",
+      "fn": "tokenize",
+      "input": [
+        "cond = a == b ? x : y && !z || w >= 1"
+      ],
+      "expected": {
+        "lines": [
+          [
+            [
+              "cond",
+              "property"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "=",
+              "operator"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "a",
+              "property"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "==",
+              "operator"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "b",
+              "variable"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "?",
+              "operator"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "x",
+              "variable"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              ":",
+              "operator"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "y",
+              "variable"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "&&",
+              "operator"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "!",
+              "operator"
+            ],
+            [
+              "z",
+              "variable"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "||",
+              "operator"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "w",
+              "variable"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              ">=",
+              "operator"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "1",
+              "number"
+            ]
+          ]
+        ],
+        "endState": {
+          "blockComment": false,
+          "heredocMarker": null,
+          "afterDot": false
+        }
+      }
+    },
+    {
+      "name": "tokenize \"locals { a-b = 1 }\"",
+      "fn": "tokenize",
+      "input": [
+        "locals { a-b = 1 }"
+      ],
+      "expected": {
+        "lines": [
+          [
+            [
+              "locals",
+              "keyword"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "{",
+              "punctuation"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "a-b",
+              "property"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "=",
+              "operator"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "1",
+              "number"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "}",
+              "punctuation"
+            ]
+          ]
+        ],
+        "endState": {
+          "blockComment": false,
+          "heredocMarker": null,
+          "afterDot": false
+        }
+      }
+    },
+    {
+      "name": "tokenize \"data \\\"x\\\" \\\"y\\\" {}\\nimport { to = a.b }\"",
+      "fn": "tokenize",
+      "input": [
+        "data \"x\" \"y\" {}\nimport { to = a.b }"
+      ],
+      "expected": {
+        "lines": [
+          [
+            [
+              "data",
+              "keyword"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "\"x\"",
+              "string"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "\"y\"",
+              "string"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "{",
+              "punctuation"
+            ],
+            [
+              "}",
+              "punctuation"
+            ]
+          ],
+          [
+            [
+              "import",
+              "keyword"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "{",
+              "punctuation"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "to",
+              "property"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "=",
+              "operator"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "a",
+              "variable"
+            ],
+            [
+              ".",
+              "operator"
+            ],
+            [
+              "b",
+              "property"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "}",
+              "punctuation"
+            ]
+          ]
+        ],
+        "endState": {
+          "blockComment": false,
+          "heredocMarker": null,
+          "afterDot": false
+        }
+      }
+    },
+    {
+      "name": "tokenize \"removed { from = a }\\ncheck \\\"c\\\" {}\\nprovisioner",
+      "fn": "tokenize",
+      "input": [
+        "removed { from = a }\ncheck \"c\" {}\nprovisioner \"local-exec\" {}\nconnection {}\ndynamic \"x\" {}"
+      ],
+      "expected": {
+        "lines": [
+          [
+            [
+              "removed",
+              "keyword"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "{",
+              "punctuation"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "from",
+              "property"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "=",
+              "operator"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "a",
+              "variable"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "}",
+              "punctuation"
+            ]
+          ],
+          [
+            [
+              "check",
+              "keyword"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "\"c\"",
+              "string"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "{",
+              "punctuation"
+            ],
+            [
+              "}",
+              "punctuation"
+            ]
+          ],
+          [
+            [
+              "provisioner",
+              "keyword"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "\"local-exec\"",
+              "string"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "{",
+              "punctuation"
+            ],
+            [
+              "}",
+              "punctuation"
+            ]
+          ],
+          [
+            [
+              "connection",
+              "keyword"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "{",
+              "punctuation"
+            ],
+            [
+              "}",
+              "punctuation"
+            ]
+          ],
+          [
+            [
+              "dynamic",
+              "keyword"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "\"x\"",
+              "string"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "{",
+              "punctuation"
+            ],
+            [
+              "}",
+              "punctuation"
+            ]
+          ]
+        ],
+        "endState": {
+          "blockComment": false,
+          "heredocMarker": null,
+          "afterDot": false
+        }
+      }
+    },
+    {
+      "name": "tokenize \"a.\\n\\nb\"",
+      "fn": "tokenize",
+      "input": [
+        "a.\n\nb"
+      ],
+      "expected": {
+        "lines": [
+          [
+            [
+              "a",
+              "variable"
+            ],
+            [
+              ".",
+              "operator"
+            ]
+          ],
+          [],
+          [
+            [
+              "b",
+              "variable"
+            ]
+          ]
+        ],
+        "endState": {
+          "blockComment": false,
+          "heredocMarker": null,
+          "afterDot": false
+        }
+      }
+    },
+    {
+      "name": "tokenize \"@ $ ` ~\"",
+      "fn": "tokenize",
+      "input": [
+        "@ $ ` ~"
+      ],
+      "expected": {
+        "lines": [
+          [
+            [
+              "@",
+              null
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "$",
+              null
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "`",
+              null
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "~",
+              null
+            ]
+          ]
+        ],
+        "endState": {
+          "blockComment": false,
+          "heredocMarker": null,
+          "afterDot": false
+        }
+      }
+    },
+    {
+      "name": "tokenize \"ção = \\\"日本\\\"\"",
+      "fn": "tokenize",
+      "input": [
+        "ção = \"日本\""
+      ],
+      "expected": {
+        "lines": [
+          [
+            [
+              "ç",
+              null
+            ],
+            [
+              "ã",
+              null
+            ],
+            [
+              "o",
+              "property"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "=",
+              "operator"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "\"日本\"",
+              "string"
+            ]
+          ]
+        ],
+        "endState": {
+          "blockComment": false,
+          "heredocMarker": null,
+          "afterDot": false
+        }
+      }
+    },
+    {
+      "name": "tokenize \"\"",
+      "fn": "tokenize",
+      "input": [
+        ""
+      ],
+      "expected": {
+        "lines": [
+          []
+        ],
+        "endState": {
+          "blockComment": false,
+          "heredocMarker": null,
+          "afterDot": false
+        }
+      }
+    },
+    {
+      "name": "tokenize \"\\t\\tx\\t=\\t1\"",
+      "fn": "tokenize",
+      "input": [
+        "\t\tx\t=\t1"
+      ],
+      "expected": {
+        "lines": [
+          [
+            [
+              "\t\t",
+              null
+            ],
+            [
+              "x",
+              "property"
+            ],
+            [
+              "\t",
+              null
+            ],
+            [
+              "=",
+              "operator"
+            ],
+            [
+              "\t",
+              null
+            ],
+            [
+              "1",
+              "number"
+            ]
+          ]
+        ],
+        "endState": {
+          "blockComment": false,
+          "heredocMarker": null,
+          "afterDot": false
+        }
+      }
+    },
+    {
+      "name": "tokenize \"a = 1\\r\\nb = 2\"",
+      "fn": "tokenize",
+      "input": [
+        "a = 1\r\nb = 2"
+      ],
+      "expected": {
+        "lines": [
+          [
+            [
+              "a",
+              "property"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "=",
+              "operator"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "1",
+              "number"
+            ],
+            [
+              "\r",
+              null
+            ]
+          ],
+          [
+            [
+              "b",
+              "property"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "=",
+              "operator"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "2",
+              "number"
+            ]
+          ]
+        ],
+        "endState": {
+          "blockComment": false,
+          "heredocMarker": null,
+          "afterDot": false
+        }
+      }
+    },
+    {
+      "name": "tokenize \"fn  (x)\\nkey   =1\"",
+      "fn": "tokenize",
+      "input": [
+        "fn  (x)\nkey   =1"
+      ],
+      "expected": {
+        "lines": [
+          [
+            [
+              "fn",
+              "variableName.function"
+            ],
+            [
+              "  ",
+              null
+            ],
+            [
+              "(",
+              "punctuation"
+            ],
+            [
+              "x",
+              "variable"
+            ],
+            [
+              ")",
+              "punctuation"
+            ]
+          ],
+          [
+            [
+              "key",
+              "property"
+            ],
+            [
+              "   ",
+              null
+            ],
+            [
+              "=",
+              "operator"
+            ],
+            [
+              "1",
+              "number"
+            ]
+          ]
+        ],
+        "endState": {
+          "blockComment": false,
+          "heredocMarker": null,
+          "afterDot": false
+        }
+      }
+    },
+    {
+      "name": "tokenize \"provider.foo = 1\"",
+      "fn": "tokenize",
+      "input": [
+        "provider.foo = 1"
+      ],
+      "expected": {
+        "lines": [
+          [
+            [
+              "provider",
+              "keyword"
+            ],
+            [
+              ".",
+              "operator"
+            ],
+            [
+              "foo",
+              "property"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "=",
+              "operator"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "1",
+              "number"
+            ]
+          ]
+        ],
+        "endState": {
+          "blockComment": false,
+          "heredocMarker": null,
+          "afterDot": false
+        }
+      }
+    },
+    {
+      "name": "tokenize \"x = foo.bar(baz)\"",
+      "fn": "tokenize",
+      "input": [
+        "x = foo.bar(baz)"
+      ],
+      "expected": {
+        "lines": [
+          [
+            [
+              "x",
+              "property"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "=",
+              "operator"
+            ],
+            [
+              " ",
+              null
+            ],
+            [
+              "foo",
+              "variable"
+            ],
+            [
+              ".",
+              "operator"
+            ],
+            [
+              "bar",
+              "property"
+            ],
+            [
+              "(",
+              "punctuation"
+            ],
+            [
+              "baz",
+              "variable"
+            ],
+            [
+              ")",
+              "punctuation"
+            ]
+          ]
+        ],
+        "endState": {
+          "blockComment": false,
+          "heredocMarker": null,
+          "afterDot": false
+        }
+      }
+    },
+    {
+      "name": "startState",
+      "fn": "startState",
+      "input": [],
+      "expected": {
+        "blockComment": false,
+        "heredocMarker": null,
+        "afterDot": false
+      }
+    },
+    {
+      "name": "copyState",
+      "fn": "copyState",
+      "input": [
+        {
+          "blockComment": true,
+          "heredocMarker": "EOF",
+          "afterDot": true
+        }
+      ],
+      "expected": {
+        "blockComment": true,
+        "heredocMarker": "EOF",
+        "afterDot": true
+      }
+    }
+  ]
+}

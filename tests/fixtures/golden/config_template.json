@@ -1,0 +1,1152 @@
+{
+  "source": "app/models/config.rb#create_template_config/upgrade_config_file @ d47a89e92d89f807878d318182fa5dcea0329ec4",
+  "frankmd_sha": "d47a89e92d89f807878d318182fa5dcea0329ec4",
+  "generator": "tools/golden/ruby/config.rb",
+  "notes": "Template content is static (TEMPLATE_SECTIONS joined by \\n plus trailing \\n); see fed_template.fed. tree_after values equal to the template are replaced by \"<TEMPLATE>\". Config.new always creates <base>/.frankmd-config.lock (mode 600, empty). .fed written atomically via .fed.<hex>.tmp + rename, mode 600. 'appended' = text appended to the chomp-joined original lines (upgrade rewrites lines joined by \\n, so CRLF becomes LF). log = Rails.logger lines (info+).",
+  "template_sections": [
+    {
+      "marker": "# FrankMD Configuration",
+      "lines": [
+        "# FrankMD Configuration",
+        "# Uncomment and modify values as needed.",
+        "# Environment variables are used as defaults if not specified here."
+      ]
+    },
+    {
+      "marker": "# UI Settings",
+      "lines": [
+        "",
+        "# UI Settings",
+        "",
+        "# Theme: light, dark, gruvbox, tokyo-night, solarized-dark,",
+        "#        solarized-light, nord, cappuccino, osaka, hackerman",
+        "# theme = dark",
+        "",
+        "# Editor font: cascadia-code, jetbrains-mono, fira-code,",
+        "#              source-code-pro, ubuntu-mono, roboto-mono, hack",
+        "# editor_font = cascadia-code",
+        "",
+        "# editor_font_size = 14",
+        "# preview_zoom = 100",
+        "# sidebar_visible = true",
+        "# typewriter_mode = false",
+        "# cursor_recenter_on_click = false",
+        "# show_stats = false",
+        "",
+        "# Vim mode: hjkl navigation, modal editing, and : ex-commands (default: false)",
+        "# vim_mode = false",
+        "",
+        "# Editor indent: 0 = tab, 1-6 = spaces (default: 2)",
+        "# editor_indent = 2",
+        "",
+        "# Editor width in characters (default: 72, minimum: 72)",
+        "# Increase for wider text area, e.g., 100, 120, or 150",
+        "# editor_width = 72"
+      ]
+    },
+    {
+      "marker": "# Local Images",
+      "lines": [
+        "",
+        "# Local Images",
+        "",
+        "# images_path = /path/to/images"
+      ]
+    },
+    {
+      "marker": "# Media Uploads",
+      "lines": [
+        "",
+        "# Media Uploads (drag-and-drop)",
+        "",
+        "# Destination for new media: local or s3 (requires AWS S3 configuration).",
+        "# media_storage_provider = local",
+        "",
+        "# Comma-separated file extensions accepted by the image/video drop tabs.",
+        "# image_upload_extensions = .jpg,.jpeg,.png,.gif,.webp,.bmp",
+        "# video_upload_extensions = .mp4,.webm,.mkv,.mov,.avi,.m4v,.ogv"
+      ]
+    },
+    {
+      "marker": "# AWS S3",
+      "lines": [
+        "",
+        "# AWS S3 (for image uploads)",
+        "",
+        "# aws_access_key_id = your-access-key",
+        "# aws_secret_access_key = your-secret-key",
+        "# aws_s3_bucket = your-bucket-name",
+        "# aws_region = us-east-1",
+        "",
+        "# S3-compatible services (MinIO, SeaweedFS, ...): set a custom endpoint",
+        "# and force path-style URLs (bucket in the path).",
+        "# aws_s3_endpoint = http://localhost:9000",
+        "# aws_s3_force_path_style = true"
+      ]
+    },
+    {
+      "marker": "# YouTube API",
+      "lines": [
+        "",
+        "# YouTube API (for video search)",
+        "",
+        "# youtube_api_key = your-youtube-api-key"
+      ]
+    },
+    {
+      "marker": "# Google Custom Search",
+      "lines": [
+        "",
+        "# Google Custom Search (for image search)",
+        "",
+        "# google_api_key = your-google-api-key",
+        "# google_cse_id = your-custom-search-engine-id"
+      ]
+    },
+    {
+      "marker": "# Hugo",
+      "lines": [
+        "",
+        "# Hugo Blog Posts",
+        "",
+        "# Path style: dated = YYYY/MM/DD/slug/index.md (default)",
+        "#             flat  = slug.md (in current folder)",
+        "# hugo_path_style = dated",
+        "",
+        "# Custom frontmatter: create a .hugo_template.md file at the notes root",
+        "# to override the generated frontmatter. Placeholders {{title}}, {{slug}}",
+        "# and {{date}} are substituted. Leave unset to use the built-in template."
+      ]
+    },
+    {
+      "marker": "# AI/LLM",
+      "lines": [
+        "",
+        "# AI/LLM (for grammar checking)",
+        "# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini",
+        "# Gemini is lowest priority for text (its key is mainly for image generation)",
+        "",
+        "# ai_provider = auto",
+        "# ai_model = (uses provider-specific default if not set)",
+        "",
+        "# OpenAI (recommended)",
+        "# openai_api_key = sk-...",
+        "# openai_model = gpt-4o-mini",
+        "",
+        "# Anthropic (Claude models)",
+        "# anthropic_api_key = sk-ant-...",
+        "# anthropic_model = claude-sonnet-4-20250514",
+        "",
+        "# Google Gemini",
+        "# gemini_api_key = ...",
+        "# gemini_model = gemini-2.0-flash",
+        "",
+        "# OpenRouter (multiple providers, pay-per-use)",
+        "# openrouter_api_key = sk-or-...",
+        "# openrouter_model = openai/gpt-4o-mini",
+        "",
+        "# Ollama (local, free) - for privacy, requires local setup",
+        "# ollama_api_base = http://localhost:11434",
+        "# ollama_model = llama3.2:latest"
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "name": "fresh empty dir, no env",
+      "fn": "Config.new (template creation)",
+      "input": {
+        "env": {},
+        "tree": {},
+        "base_path": "<ROOT>",
+        "notes_path_env": null,
+        "cwd": null,
+        "readonly_root": false
+      },
+      "expected": {
+        "config_file_path": "<ROOT>/.fed",
+        "fed_content": "# FrankMD Configuration\n# Uncomment and modify values as needed.\n# Environment variables are used as defaults if not specified here.\n\n# UI Settings\n\n# Theme: light, dark, gruvbox, tokyo-night, solarized-dark,\n#        solarized-light, nord, cappuccino, osaka, hackerman\n# theme = dark\n\n# Editor font: cascadia-code, jetbrains-mono, fira-code,\n#              source-code-pro, ubuntu-mono, roboto-mono, hack\n# editor_font = cascadia-code\n\n# editor_font_size = 14\n# preview_zoom = 100\n# sidebar_visible = true\n# typewriter_mode = false\n# cursor_recenter_on_click = false\n# show_stats = false\n\n# Vim mode: hjkl navigation, modal editing, and : ex-commands (default: false)\n# vim_mode = false\n\n# Editor indent: 0 = tab, 1-6 = spaces (default: 2)\n# editor_indent = 2\n\n# Editor width in characters (default: 72, minimum: 72)\n# Increase for wider text area, e.g., 100, 120, or 150\n# editor_width = 72\n\n# Local Images\n\n# images_path = /path/to/images\n\n# Media Uploads (drag-and-drop)\n\n# Destination for new media: local or s3 (requires AWS S3 configuration).\n# media_storage_provider = local\n\n# Comma-separated file extensions accepted by the image/video drop tabs.\n# image_upload_extensions = .jpg,.jpeg,.png,.gif,.webp,.bmp\n# video_upload_extensions = .mp4,.webm,.mkv,.mov,.avi,.m4v,.ogv\n\n# AWS S3 (for image uploads)\n\n# aws_access_key_id = your-access-key\n# aws_secret_access_key = your-secret-key\n# aws_s3_bucket = your-bucket-name\n# aws_region = us-east-1\n\n# S3-compatible services (MinIO, SeaweedFS, ...): set a custom endpoint\n# and force path-style URLs (bucket in the path).\n# aws_s3_endpoint = http://localhost:9000\n# aws_s3_force_path_style = true\n\n# YouTube API (for video search)\n\n# youtube_api_key = your-youtube-api-key\n\n# Google Custom Search (for image search)\n\n# google_api_key = your-google-api-key\n# google_cse_id = your-custom-search-engine-id\n\n# Hugo Blog Posts\n\n# Path style: dated = YYYY/MM/DD/slug/index.md (default)\n#             flat  = slug.md (in current folder)\n# hugo_path_style = dated\n\n# Custom frontmatter: create a .hugo_template.md file at the notes root\n# to override the generated frontmatter. Placeholders {{title}}, {{slug}}\n# and {{date}} are substituted. Leave unset to use the built-in template.\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+        "fed_equals_template": true,
+        "file_values": {},
+        "resolved_sample": {
+          "theme": null,
+          "locale": "en",
+          "editor_font": "cascadia-code",
+          "images_path": null,
+          "aws_s3_force_path_style": false
+        },
+        "tree_after": {
+          ".fed": "<TEMPLATE>",
+          ".frankmd-config.lock": ""
+        },
+        "modes": {
+          ".fed": "600",
+          ".frankmd-config.lock": "600"
+        },
+        "log": [
+          "WARN: [Config] .fed not found at <ROOT>/.fed, creating template...",
+          "WARN: [Config] Writing .fed config to: <ROOT>/.fed",
+          "WARN: [Config] Successfully created .fed config"
+        ]
+      }
+    },
+    {
+      "name": "fresh empty dir, every schema ENV var set (template is static)",
+      "fn": "Config.new (template creation)",
+      "input": {
+        "env": {
+          "FRANKMD_LOCALE": "env-frankmd_locale",
+          "IMAGES_PATH": "env-images_path",
+          "IMAGE_UPLOAD_EXTENSIONS": "env-image_upload_extensions",
+          "VIDEO_UPLOAD_EXTENSIONS": "env-video_upload_extensions",
+          "AWS_ACCESS_KEY_ID": "env-aws_access_key_id",
+          "AWS_SECRET_ACCESS_KEY": "env-aws_secret_access_key",
+          "AWS_S3_BUCKET": "env-aws_s3_bucket",
+          "AWS_REGION": "env-aws_region",
+          "AWS_S3_ENDPOINT": "env-aws_s3_endpoint",
+          "AWS_S3_FORCE_PATH_STYLE": "env-aws_s3_force_path_style",
+          "YOUTUBE_API_KEY": "env-youtube_api_key",
+          "GOOGLE_API_KEY": "env-google_api_key",
+          "GOOGLE_CSE_ID": "env-google_cse_id",
+          "AI_PROVIDER": "env-ai_provider",
+          "AI_MODEL": "env-ai_model",
+          "OLLAMA_API_BASE": "env-ollama_api_base",
+          "OLLAMA_MODEL": "env-ollama_model",
+          "OPENROUTER_API_KEY": "env-openrouter_api_key",
+          "OPENROUTER_MODEL": "env-openrouter_model",
+          "ANTHROPIC_API_KEY": "env-anthropic_api_key",
+          "ANTHROPIC_MODEL": "env-anthropic_model",
+          "GEMINI_API_KEY": "env-gemini_api_key",
+          "GEMINI_MODEL": "env-gemini_model",
+          "OPENAI_API_KEY": "env-openai_api_key",
+          "OPENAI_MODEL": "env-openai_model",
+          "HUGO_PATH_STYLE": "env-hugo_path_style",
+          "FRANKMD_AUTH_TOKEN": "env-frankmd_auth_token",
+          "IMAGE_GENERATION_MODEL": "env-image_generation_model"
+        },
+        "tree": {},
+        "base_path": "<ROOT>",
+        "notes_path_env": null,
+        "cwd": null,
+        "readonly_root": false
+      },
+      "expected": {
+        "config_file_path": "<ROOT>/.fed",
+        "fed_content": "# FrankMD Configuration\n# Uncomment and modify values as needed.\n# Environment variables are used as defaults if not specified here.\n\n# UI Settings\n\n# Theme: light, dark, gruvbox, tokyo-night, solarized-dark,\n#        solarized-light, nord, cappuccino, osaka, hackerman\n# theme = dark\n\n# Editor font: cascadia-code, jetbrains-mono, fira-code,\n#              source-code-pro, ubuntu-mono, roboto-mono, hack\n# editor_font = cascadia-code\n\n# editor_font_size = 14\n# preview_zoom = 100\n# sidebar_visible = true\n# typewriter_mode = false\n# cursor_recenter_on_click = false\n# show_stats = false\n\n# Vim mode: hjkl navigation, modal editing, and : ex-commands (default: false)\n# vim_mode = false\n\n# Editor indent: 0 = tab, 1-6 = spaces (default: 2)\n# editor_indent = 2\n\n# Editor width in characters (default: 72, minimum: 72)\n# Increase for wider text area, e.g., 100, 120, or 150\n# editor_width = 72\n\n# Local Images\n\n# images_path = /path/to/images\n\n# Media Uploads (drag-and-drop)\n\n# Destination for new media: local or s3 (requires AWS S3 configuration).\n# media_storage_provider = local\n\n# Comma-separated file extensions accepted by the image/video drop tabs.\n# image_upload_extensions = .jpg,.jpeg,.png,.gif,.webp,.bmp\n# video_upload_extensions = .mp4,.webm,.mkv,.mov,.avi,.m4v,.ogv\n\n# AWS S3 (for image uploads)\n\n# aws_access_key_id = your-access-key\n# aws_secret_access_key = your-secret-key\n# aws_s3_bucket = your-bucket-name\n# aws_region = us-east-1\n\n# S3-compatible services (MinIO, SeaweedFS, ...): set a custom endpoint\n# and force path-style URLs (bucket in the path).\n# aws_s3_endpoint = http://localhost:9000\n# aws_s3_force_path_style = true\n\n# YouTube API (for video search)\n\n# youtube_api_key = your-youtube-api-key\n\n# Google Custom Search (for image search)\n\n# google_api_key = your-google-api-key\n# google_cse_id = your-custom-search-engine-id\n\n# Hugo Blog Posts\n\n# Path style: dated = YYYY/MM/DD/slug/index.md (default)\n#             flat  = slug.md (in current folder)\n# hugo_path_style = dated\n\n# Custom frontmatter: create a .hugo_template.md file at the notes root\n# to override the generated frontmatter. Placeholders {{title}}, {{slug}}\n# and {{date}} are substituted. Leave unset to use the built-in template.\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+        "fed_equals_template": true,
+        "file_values": {},
+        "resolved_sample": {
+          "theme": null,
+          "locale": "env-frankmd_locale",
+          "editor_font": "cascadia-code",
+          "images_path": "env-images_path",
+          "aws_s3_force_path_style": false
+        },
+        "tree_after": {
+          ".fed": "<TEMPLATE>",
+          ".frankmd-config.lock": ""
+        },
+        "modes": {
+          ".fed": "600",
+          ".frankmd-config.lock": "600"
+        },
+        "log": [
+          "WARN: [Config] .fed not found at <ROOT>/.fed, creating template...",
+          "WARN: [Config] Writing .fed config to: <ROOT>/.fed",
+          "WARN: [Config] Successfully created .fed config"
+        ]
+      }
+    },
+    {
+      "name": "fresh dir with ENV booleans/locale set",
+      "fn": "Config.new (template creation)",
+      "input": {
+        "env": {
+          "FRANKMD_LOCALE": "pt-BR",
+          "AWS_S3_FORCE_PATH_STYLE": "true",
+          "IMAGES_PATH": "/pics"
+        },
+        "tree": {},
+        "base_path": "<ROOT>",
+        "notes_path_env": null,
+        "cwd": null,
+        "readonly_root": false
+      },
+      "expected": {
+        "config_file_path": "<ROOT>/.fed",
+        "fed_content": "# FrankMD Configuration\n# Uncomment and modify values as needed.\n# Environment variables are used as defaults if not specified here.\n\n# UI Settings\n\n# Theme: light, dark, gruvbox, tokyo-night, solarized-dark,\n#        solarized-light, nord, cappuccino, osaka, hackerman\n# theme = dark\n\n# Editor font: cascadia-code, jetbrains-mono, fira-code,\n#              source-code-pro, ubuntu-mono, roboto-mono, hack\n# editor_font = cascadia-code\n\n# editor_font_size = 14\n# preview_zoom = 100\n# sidebar_visible = true\n# typewriter_mode = false\n# cursor_recenter_on_click = false\n# show_stats = false\n\n# Vim mode: hjkl navigation, modal editing, and : ex-commands (default: false)\n# vim_mode = false\n\n# Editor indent: 0 = tab, 1-6 = spaces (default: 2)\n# editor_indent = 2\n\n# Editor width in characters (default: 72, minimum: 72)\n# Increase for wider text area, e.g., 100, 120, or 150\n# editor_width = 72\n\n# Local Images\n\n# images_path = /path/to/images\n\n# Media Uploads (drag-and-drop)\n\n# Destination for new media: local or s3 (requires AWS S3 configuration).\n# media_storage_provider = local\n\n# Comma-separated file extensions accepted by the image/video drop tabs.\n# image_upload_extensions = .jpg,.jpeg,.png,.gif,.webp,.bmp\n# video_upload_extensions = .mp4,.webm,.mkv,.mov,.avi,.m4v,.ogv\n\n# AWS S3 (for image uploads)\n\n# aws_access_key_id = your-access-key\n# aws_secret_access_key = your-secret-key\n# aws_s3_bucket = your-bucket-name\n# aws_region = us-east-1\n\n# S3-compatible services (MinIO, SeaweedFS, ...): set a custom endpoint\n# and force path-style URLs (bucket in the path).\n# aws_s3_endpoint = http://localhost:9000\n# aws_s3_force_path_style = true\n\n# YouTube API (for video search)\n\n# youtube_api_key = your-youtube-api-key\n\n# Google Custom Search (for image search)\n\n# google_api_key = your-google-api-key\n# google_cse_id = your-custom-search-engine-id\n\n# Hugo Blog Posts\n\n# Path style: dated = YYYY/MM/DD/slug/index.md (default)\n#             flat  = slug.md (in current folder)\n# hugo_path_style = dated\n\n# Custom frontmatter: create a .hugo_template.md file at the notes root\n# to override the generated frontmatter. Placeholders {{title}}, {{slug}}\n# and {{date}} are substituted. Leave unset to use the built-in template.\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+        "fed_equals_template": true,
+        "file_values": {},
+        "resolved_sample": {
+          "theme": null,
+          "locale": "pt-BR",
+          "editor_font": "cascadia-code",
+          "images_path": "/pics",
+          "aws_s3_force_path_style": true
+        },
+        "tree_after": {
+          ".fed": "<TEMPLATE>",
+          ".frankmd-config.lock": ""
+        },
+        "modes": {
+          ".fed": "600",
+          ".frankmd-config.lock": "600"
+        },
+        "log": [
+          "WARN: [Config] .fed not found at <ROOT>/.fed, creating template...",
+          "WARN: [Config] Writing .fed config to: <ROOT>/.fed",
+          "WARN: [Config] Successfully created .fed config"
+        ]
+      }
+    },
+    {
+      "name": "dir with existing notes but no .fed",
+      "fn": "Config.new (template creation)",
+      "input": {
+        "env": {},
+        "tree": {
+          "a.md": "# A\n",
+          "sub/b.md": "b",
+          ".hidden/": null
+        },
+        "base_path": "<ROOT>",
+        "notes_path_env": null,
+        "cwd": null,
+        "readonly_root": false
+      },
+      "expected": {
+        "config_file_path": "<ROOT>/.fed",
+        "fed_content": "# FrankMD Configuration\n# Uncomment and modify values as needed.\n# Environment variables are used as defaults if not specified here.\n\n# UI Settings\n\n# Theme: light, dark, gruvbox, tokyo-night, solarized-dark,\n#        solarized-light, nord, cappuccino, osaka, hackerman\n# theme = dark\n\n# Editor font: cascadia-code, jetbrains-mono, fira-code,\n#              source-code-pro, ubuntu-mono, roboto-mono, hack\n# editor_font = cascadia-code\n\n# editor_font_size = 14\n# preview_zoom = 100\n# sidebar_visible = true\n# typewriter_mode = false\n# cursor_recenter_on_click = false\n# show_stats = false\n\n# Vim mode: hjkl navigation, modal editing, and : ex-commands (default: false)\n# vim_mode = false\n\n# Editor indent: 0 = tab, 1-6 = spaces (default: 2)\n# editor_indent = 2\n\n# Editor width in characters (default: 72, minimum: 72)\n# Increase for wider text area, e.g., 100, 120, or 150\n# editor_width = 72\n\n# Local Images\n\n# images_path = /path/to/images\n\n# Media Uploads (drag-and-drop)\n\n# Destination for new media: local or s3 (requires AWS S3 configuration).\n# media_storage_provider = local\n\n# Comma-separated file extensions accepted by the image/video drop tabs.\n# image_upload_extensions = .jpg,.jpeg,.png,.gif,.webp,.bmp\n# video_upload_extensions = .mp4,.webm,.mkv,.mov,.avi,.m4v,.ogv\n\n# AWS S3 (for image uploads)\n\n# aws_access_key_id = your-access-key\n# aws_secret_access_key = your-secret-key\n# aws_s3_bucket = your-bucket-name\n# aws_region = us-east-1\n\n# S3-compatible services (MinIO, SeaweedFS, ...): set a custom endpoint\n# and force path-style URLs (bucket in the path).\n# aws_s3_endpoint = http://localhost:9000\n# aws_s3_force_path_style = true\n\n# YouTube API (for video search)\n\n# youtube_api_key = your-youtube-api-key\n\n# Google Custom Search (for image search)\n\n# google_api_key = your-google-api-key\n# google_cse_id = your-custom-search-engine-id\n\n# Hugo Blog Posts\n\n# Path style: dated = YYYY/MM/DD/slug/index.md (default)\n#             flat  = slug.md (in current folder)\n# hugo_path_style = dated\n\n# Custom frontmatter: create a .hugo_template.md file at the notes root\n# to override the generated frontmatter. Placeholders {{title}}, {{slug}}\n# and {{date}} are substituted. Leave unset to use the built-in template.\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+        "fed_equals_template": true,
+        "file_values": {},
+        "resolved_sample": {
+          "theme": null,
+          "locale": "en",
+          "editor_font": "cascadia-code",
+          "images_path": null,
+          "aws_s3_force_path_style": false
+        },
+        "tree_after": {
+          ".fed": "<TEMPLATE>",
+          ".frankmd-config.lock": "",
+          ".hidden/": null,
+          "a.md": "# A\n",
+          "sub/": null,
+          "sub/b.md": "b"
+        },
+        "modes": {
+          ".fed": "600",
+          ".frankmd-config.lock": "600",
+          ".hidden": "755",
+          "a.md": "644",
+          "sub": "755",
+          "sub/b.md": "644"
+        },
+        "log": [
+          "WARN: [Config] .fed not found at <ROOT>/.fed, creating template...",
+          "WARN: [Config] Writing .fed config to: <ROOT>/.fed",
+          "WARN: [Config] Successfully created .fed config"
+        ]
+      }
+    },
+    {
+      "name": "nested non-existent base path is created",
+      "fn": "Config.new (template creation)",
+      "input": {
+        "env": {},
+        "tree": {},
+        "base_path": "<ROOT>/nested/deeply/path",
+        "notes_path_env": null,
+        "cwd": null,
+        "readonly_root": false
+      },
+      "expected": {
+        "config_file_path": "<ROOT>/nested/deeply/path/.fed",
+        "fed_content": "# FrankMD Configuration\n# Uncomment and modify values as needed.\n# Environment variables are used as defaults if not specified here.\n\n# UI Settings\n\n# Theme: light, dark, gruvbox, tokyo-night, solarized-dark,\n#        solarized-light, nord, cappuccino, osaka, hackerman\n# theme = dark\n\n# Editor font: cascadia-code, jetbrains-mono, fira-code,\n#              source-code-pro, ubuntu-mono, roboto-mono, hack\n# editor_font = cascadia-code\n\n# editor_font_size = 14\n# preview_zoom = 100\n# sidebar_visible = true\n# typewriter_mode = false\n# cursor_recenter_on_click = false\n# show_stats = false\n\n# Vim mode: hjkl navigation, modal editing, and : ex-commands (default: false)\n# vim_mode = false\n\n# Editor indent: 0 = tab, 1-6 = spaces (default: 2)\n# editor_indent = 2\n\n# Editor width in characters (default: 72, minimum: 72)\n# Increase for wider text area, e.g., 100, 120, or 150\n# editor_width = 72\n\n# Local Images\n\n# images_path = /path/to/images\n\n# Media Uploads (drag-and-drop)\n\n# Destination for new media: local or s3 (requires AWS S3 configuration).\n# media_storage_provider = local\n\n# Comma-separated file extensions accepted by the image/video drop tabs.\n# image_upload_extensions = .jpg,.jpeg,.png,.gif,.webp,.bmp\n# video_upload_extensions = .mp4,.webm,.mkv,.mov,.avi,.m4v,.ogv\n\n# AWS S3 (for image uploads)\n\n# aws_access_key_id = your-access-key\n# aws_secret_access_key = your-secret-key\n# aws_s3_bucket = your-bucket-name\n# aws_region = us-east-1\n\n# S3-compatible services (MinIO, SeaweedFS, ...): set a custom endpoint\n# and force path-style URLs (bucket in the path).\n# aws_s3_endpoint = http://localhost:9000\n# aws_s3_force_path_style = true\n\n# YouTube API (for video search)\n\n# youtube_api_key = your-youtube-api-key\n\n# Google Custom Search (for image search)\n\n# google_api_key = your-google-api-key\n# google_cse_id = your-custom-search-engine-id\n\n# Hugo Blog Posts\n\n# Path style: dated = YYYY/MM/DD/slug/index.md (default)\n#             flat  = slug.md (in current folder)\n# hugo_path_style = dated\n\n# Custom frontmatter: create a .hugo_template.md file at the notes root\n# to override the generated frontmatter. Placeholders {{title}}, {{slug}}\n# and {{date}} are substituted. Leave unset to use the built-in template.\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+        "fed_equals_template": true,
+        "file_values": {},
+        "resolved_sample": {
+          "theme": null,
+          "locale": "en",
+          "editor_font": "cascadia-code",
+          "images_path": null,
+          "aws_s3_force_path_style": false
+        },
+        "tree_after": {
+          "nested/": null,
+          "nested/deeply/": null,
+          "nested/deeply/path/": null,
+          "nested/deeply/path/.fed": "<TEMPLATE>",
+          "nested/deeply/path/.frankmd-config.lock": ""
+        },
+        "modes": {
+          "nested": "755",
+          "nested/deeply": "755",
+          "nested/deeply/path": "755",
+          "nested/deeply/path/.fed": "600",
+          "nested/deeply/path/.frankmd-config.lock": "600"
+        },
+        "log": [
+          "WARN: [Config] .fed not found at <ROOT>/nested/deeply/path/.fed, creating template...",
+          "WARN: [Config] Writing .fed config to: <ROOT>/nested/deeply/path/.fed",
+          "WARN: [Config] Successfully created .fed config"
+        ]
+      }
+    },
+    {
+      "name": "base_path nil uses NOTES_PATH env",
+      "fn": "Config.new (template creation)",
+      "input": {
+        "env": {},
+        "tree": {},
+        "base_path": null,
+        "notes_path_env": "<ROOT>",
+        "cwd": null,
+        "readonly_root": false
+      },
+      "expected": {
+        "config_file_path": "<ROOT>/.fed",
+        "fed_content": "# FrankMD Configuration\n# Uncomment and modify values as needed.\n# Environment variables are used as defaults if not specified here.\n\n# UI Settings\n\n# Theme: light, dark, gruvbox, tokyo-night, solarized-dark,\n#        solarized-light, nord, cappuccino, osaka, hackerman\n# theme = dark\n\n# Editor font: cascadia-code, jetbrains-mono, fira-code,\n#              source-code-pro, ubuntu-mono, roboto-mono, hack\n# editor_font = cascadia-code\n\n# editor_font_size = 14\n# preview_zoom = 100\n# sidebar_visible = true\n# typewriter_mode = false\n# cursor_recenter_on_click = false\n# show_stats = false\n\n# Vim mode: hjkl navigation, modal editing, and : ex-commands (default: false)\n# vim_mode = false\n\n# Editor indent: 0 = tab, 1-6 = spaces (default: 2)\n# editor_indent = 2\n\n# Editor width in characters (default: 72, minimum: 72)\n# Increase for wider text area, e.g., 100, 120, or 150\n# editor_width = 72\n\n# Local Images\n\n# images_path = /path/to/images\n\n# Media Uploads (drag-and-drop)\n\n# Destination for new media: local or s3 (requires AWS S3 configuration).\n# media_storage_provider = local\n\n# Comma-separated file extensions accepted by the image/video drop tabs.\n# image_upload_extensions = .jpg,.jpeg,.png,.gif,.webp,.bmp\n# video_upload_extensions = .mp4,.webm,.mkv,.mov,.avi,.m4v,.ogv\n\n# AWS S3 (for image uploads)\n\n# aws_access_key_id = your-access-key\n# aws_secret_access_key = your-secret-key\n# aws_s3_bucket = your-bucket-name\n# aws_region = us-east-1\n\n# S3-compatible services (MinIO, SeaweedFS, ...): set a custom endpoint\n# and force path-style URLs (bucket in the path).\n# aws_s3_endpoint = http://localhost:9000\n# aws_s3_force_path_style = true\n\n# YouTube API (for video search)\n\n# youtube_api_key = your-youtube-api-key\n\n# Google Custom Search (for image search)\n\n# google_api_key = your-google-api-key\n# google_cse_id = your-custom-search-engine-id\n\n# Hugo Blog Posts\n\n# Path style: dated = YYYY/MM/DD/slug/index.md (default)\n#             flat  = slug.md (in current folder)\n# hugo_path_style = dated\n\n# Custom frontmatter: create a .hugo_template.md file at the notes root\n# to override the generated frontmatter. Placeholders {{title}}, {{slug}}\n# and {{date}} are substituted. Leave unset to use the built-in template.\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+        "fed_equals_template": true,
+        "file_values": {},
+        "resolved_sample": {
+          "theme": null,
+          "locale": "en",
+          "editor_font": "cascadia-code",
+          "images_path": null,
+          "aws_s3_force_path_style": false
+        },
+        "tree_after": {
+          ".fed": "<TEMPLATE>",
+          ".frankmd-config.lock": ""
+        },
+        "modes": {
+          ".fed": "600",
+          ".frankmd-config.lock": "600"
+        },
+        "log": [
+          "WARN: [Config] .fed not found at <ROOT>/.fed, creating template...",
+          "WARN: [Config] Writing .fed config to: <ROOT>/.fed",
+          "WARN: [Config] Successfully created .fed config"
+        ]
+      }
+    },
+    {
+      "name": "NOTES_PATH set to empty string resolves relative to cwd",
+      "fn": "Config.new (template creation)",
+      "input": {
+        "env": {},
+        "tree": {},
+        "base_path": "",
+        "notes_path_env": "",
+        "cwd": "<ROOT>",
+        "readonly_root": false
+      },
+      "expected": {
+        "config_file_path": ".fed",
+        "fed_content": null,
+        "fed_equals_template": false,
+        "file_values": {},
+        "resolved_sample": {
+          "theme": null,
+          "locale": "en",
+          "editor_font": "cascadia-code",
+          "images_path": null,
+          "aws_s3_force_path_style": false
+        },
+        "tree_after": {},
+        "modes": {},
+        "log": [
+          "WARN: Cannot prepare .fed config: No such file or directory @ dir_s_mkdir - "
+        ]
+      }
+    },
+    {
+      "name": ".fed is a directory (no template written)",
+      "fn": "Config.new (template creation)",
+      "input": {
+        "env": {},
+        "tree": {
+          ".fed/": null
+        },
+        "base_path": "<ROOT>",
+        "notes_path_env": null,
+        "cwd": null,
+        "readonly_root": false
+      },
+      "expected": {
+        "config_file_path": "<ROOT>/.fed",
+        "fed_content": null,
+        "fed_equals_template": false,
+        "file_values": {},
+        "resolved_sample": {
+          "theme": null,
+          "locale": "en",
+          "editor_font": "cascadia-code",
+          "images_path": null,
+          "aws_s3_force_path_style": false
+        },
+        "tree_after": {
+          ".fed/": null,
+          ".frankmd-config.lock": ""
+        },
+        "modes": {
+          ".fed": "755",
+          ".frankmd-config.lock": "600"
+        },
+        "log": [
+          "WARN: Failed to upgrade .fed config: Is a directory @ io_fread - <ROOT>/.fed",
+          "ERROR: Failed to load .fed config: Errno::EISDIR - Is a directory @ io_fread - <ROOT>/.fed"
+        ]
+      }
+    },
+    {
+      "name": ".fed is a dangling symlink (replaced by regular file)",
+      "fn": "Config.new (template creation)",
+      "input": {
+        "env": {},
+        "tree": {
+          ".fed": {
+            "symlink": "missing-target.fed"
+          }
+        },
+        "base_path": "<ROOT>",
+        "notes_path_env": null,
+        "cwd": null,
+        "readonly_root": false
+      },
+      "expected": {
+        "config_file_path": "<ROOT>/.fed",
+        "fed_content": "# FrankMD Configuration\n# Uncomment and modify values as needed.\n# Environment variables are used as defaults if not specified here.\n\n# UI Settings\n\n# Theme: light, dark, gruvbox, tokyo-night, solarized-dark,\n#        solarized-light, nord, cappuccino, osaka, hackerman\n# theme = dark\n\n# Editor font: cascadia-code, jetbrains-mono, fira-code,\n#              source-code-pro, ubuntu-mono, roboto-mono, hack\n# editor_font = cascadia-code\n\n# editor_font_size = 14\n# preview_zoom = 100\n# sidebar_visible = true\n# typewriter_mode = false\n# cursor_recenter_on_click = false\n# show_stats = false\n\n# Vim mode: hjkl navigation, modal editing, and : ex-commands (default: false)\n# vim_mode = false\n\n# Editor indent: 0 = tab, 1-6 = spaces (default: 2)\n# editor_indent = 2\n\n# Editor width in characters (default: 72, minimum: 72)\n# Increase for wider text area, e.g., 100, 120, or 150\n# editor_width = 72\n\n# Local Images\n\n# images_path = /path/to/images\n\n# Media Uploads (drag-and-drop)\n\n# Destination for new media: local or s3 (requires AWS S3 configuration).\n# media_storage_provider = local\n\n# Comma-separated file extensions accepted by the image/video drop tabs.\n# image_upload_extensions = .jpg,.jpeg,.png,.gif,.webp,.bmp\n# video_upload_extensions = .mp4,.webm,.mkv,.mov,.avi,.m4v,.ogv\n\n# AWS S3 (for image uploads)\n\n# aws_access_key_id = your-access-key\n# aws_secret_access_key = your-secret-key\n# aws_s3_bucket = your-bucket-name\n# aws_region = us-east-1\n\n# S3-compatible services (MinIO, SeaweedFS, ...): set a custom endpoint\n# and force path-style URLs (bucket in the path).\n# aws_s3_endpoint = http://localhost:9000\n# aws_s3_force_path_style = true\n\n# YouTube API (for video search)\n\n# youtube_api_key = your-youtube-api-key\n\n# Google Custom Search (for image search)\n\n# google_api_key = your-google-api-key\n# google_cse_id = your-custom-search-engine-id\n\n# Hugo Blog Posts\n\n# Path style: dated = YYYY/MM/DD/slug/index.md (default)\n#             flat  = slug.md (in current folder)\n# hugo_path_style = dated\n\n# Custom frontmatter: create a .hugo_template.md file at the notes root\n# to override the generated frontmatter. Placeholders {{title}}, {{slug}}\n# and {{date}} are substituted. Leave unset to use the built-in template.\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+        "fed_equals_template": true,
+        "file_values": {},
+        "resolved_sample": {
+          "theme": null,
+          "locale": "en",
+          "editor_font": "cascadia-code",
+          "images_path": null,
+          "aws_s3_force_path_style": false
+        },
+        "tree_after": {
+          ".fed": "<TEMPLATE>",
+          ".frankmd-config.lock": ""
+        },
+        "modes": {
+          ".fed": "600",
+          ".frankmd-config.lock": "600"
+        },
+        "log": [
+          "WARN: [Config] .fed not found at <ROOT>/.fed, creating template...",
+          "WARN: [Config] Writing .fed config to: <ROOT>/.fed",
+          "WARN: [Config] Successfully created .fed config"
+        ]
+      }
+    },
+    {
+      "name": ".fed is a symlink to an existing file outside (read through; upgrade rewrites as regular file)",
+      "fn": "Config.new (template creation)",
+      "input": {
+        "env": {},
+        "tree": {
+          "real/config.txt": "theme = dark\n",
+          ".fed": {
+            "symlink": "real/config.txt"
+          }
+        },
+        "base_path": "<ROOT>",
+        "notes_path_env": null,
+        "cwd": null,
+        "readonly_root": false
+      },
+      "expected": {
+        "config_file_path": "<ROOT>/.fed",
+        "fed_content": "theme = dark\n\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+        "fed_equals_template": false,
+        "file_values": {
+          "theme": "dark"
+        },
+        "resolved_sample": {
+          "theme": "dark",
+          "locale": "en",
+          "editor_font": "cascadia-code",
+          "images_path": null,
+          "aws_s3_force_path_style": false
+        },
+        "tree_after": {
+          ".fed": "theme = dark\n\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+          ".frankmd-config.lock": "",
+          "real/": null,
+          "real/config.txt": "theme = dark\n"
+        },
+        "modes": {
+          ".fed": "600",
+          ".frankmd-config.lock": "600",
+          "real": "755",
+          "real/config.txt": "644"
+        },
+        "log": [
+          "INFO: Upgraded .fed config with AI/LLM section"
+        ]
+      }
+    },
+    {
+      "name": "read-only notes dir (cannot create .fed or lock)",
+      "fn": "Config.new (template creation)",
+      "input": {
+        "env": {},
+        "tree": {},
+        "base_path": "<ROOT>",
+        "notes_path_env": null,
+        "cwd": null,
+        "readonly_root": true
+      },
+      "expected": {
+        "config_file_path": "<ROOT>/.fed",
+        "fed_content": null,
+        "fed_equals_template": false,
+        "file_values": {},
+        "resolved_sample": {
+          "theme": null,
+          "locale": "en",
+          "editor_font": "cascadia-code",
+          "images_path": null,
+          "aws_s3_force_path_style": false
+        },
+        "tree_after": {},
+        "modes": {},
+        "log": [
+          "WARN: Cannot prepare .fed config: Permission denied @ rb_sysopen - <ROOT>/.frankmd-config.lock"
+        ]
+      }
+    },
+    {
+      "name": "lock file path is a symlink (NOFOLLOW -> ELOOP)",
+      "fn": "Config.new (template creation)",
+      "input": {
+        "env": {},
+        "tree": {
+          "elsewhere.lock": "",
+          ".frankmd-config.lock": {
+            "symlink": "elsewhere.lock"
+          }
+        },
+        "base_path": "<ROOT>",
+        "notes_path_env": null,
+        "cwd": null,
+        "readonly_root": false
+      },
+      "expected": {
+        "config_file_path": "<ROOT>/.fed",
+        "fed_content": null,
+        "fed_equals_template": false,
+        "file_values": {},
+        "resolved_sample": {
+          "theme": null,
+          "locale": "en",
+          "editor_font": "cascadia-code",
+          "images_path": null,
+          "aws_s3_force_path_style": false
+        },
+        "tree_after": {
+          ".frankmd-config.lock": {
+            "symlink": "elsewhere.lock"
+          },
+          "elsewhere.lock": ""
+        },
+        "modes": {
+          "elsewhere.lock": "644"
+        },
+        "log": [
+          "WARN: Cannot prepare .fed config: Too many levels of symbolic links @ rb_sysopen - <ROOT>/.frankmd-config.lock"
+        ]
+      }
+    },
+    {
+      "name": "upgrade: old config without AI section (from test)",
+      "fn": "upgrade_config_file (via Config.new)",
+      "input": {
+        "fed": "# FrankMD Configuration\ntheme = gruvbox\neditor_font_size = 16\n\n# Local Images\n# images_path = /path/to/images\n",
+        "fed_mode": "644"
+      },
+      "expected": {
+        "fed_after": "# FrankMD Configuration\ntheme = gruvbox\neditor_font_size = 16\n\n# Local Images\n# images_path = /path/to/images\n\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+        "changed": true,
+        "appended": "\n\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+        "fed_mode_after": "600",
+        "file_values": {
+          "theme": "gruvbox",
+          "editor_font_size": 16
+        },
+        "log": [
+          "INFO: Upgraded .fed config with AI/LLM section"
+        ]
+      }
+    },
+    {
+      "name": "upgrade: custom comments preserved (from test)",
+      "fn": "upgrade_config_file (via Config.new)",
+      "input": {
+        "fed": "# My custom header comment\ntheme = tokyo-night\n\n# My custom comment about images\nimages_path = /my/images\n",
+        "fed_mode": "644"
+      },
+      "expected": {
+        "fed_after": "# My custom header comment\ntheme = tokyo-night\n\n# My custom comment about images\nimages_path = /my/images\n\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+        "changed": true,
+        "appended": "\n\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+        "fed_mode_after": "600",
+        "file_values": {
+          "theme": "tokyo-night",
+          "images_path": "/my/images"
+        },
+        "log": [
+          "INFO: Upgraded .fed config with AI/LLM section"
+        ]
+      }
+    },
+    {
+      "name": "upgrade: AI marker present (from test)",
+      "fn": "upgrade_config_file (via Config.new)",
+      "input": {
+        "fed": "# FrankMD Configuration\ntheme = dark\n\n# AI/LLM (for grammar checking)\nopenai_api_key = sk-existing\n",
+        "fed_mode": "644"
+      },
+      "expected": {
+        "fed_after": "# FrankMD Configuration\ntheme = dark\n\n# AI/LLM (for grammar checking)\nopenai_api_key = sk-existing\n",
+        "changed": false,
+        "appended": null,
+        "fed_mode_after": "644",
+        "file_values": {
+          "theme": "dark",
+          "openai_api_key": "sk-existing"
+        },
+        "log": []
+      }
+    },
+    {
+      "name": "upgrade: empty file",
+      "fn": "upgrade_config_file (via Config.new)",
+      "input": {
+        "fed": "",
+        "fed_mode": "644"
+      },
+      "expected": {
+        "fed_after": "\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+        "changed": true,
+        "appended": "\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+        "fed_mode_after": "600",
+        "file_values": {},
+        "log": [
+          "INFO: Upgraded .fed config with AI/LLM section"
+        ]
+      }
+    },
+    {
+      "name": "upgrade: only newline",
+      "fn": "upgrade_config_file (via Config.new)",
+      "input": {
+        "fed": "\n",
+        "fed_mode": "644"
+      },
+      "expected": {
+        "fed_after": "\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+        "changed": true,
+        "appended": "\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+        "fed_mode_after": "600",
+        "file_values": {},
+        "log": [
+          "INFO: Upgraded .fed config with AI/LLM section"
+        ]
+      }
+    },
+    {
+      "name": "upgrade: only blank lines",
+      "fn": "upgrade_config_file (via Config.new)",
+      "input": {
+        "fed": "\n\n\n",
+        "fed_mode": "644"
+      },
+      "expected": {
+        "fed_after": "\n\n\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+        "changed": true,
+        "appended": "\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+        "fed_mode_after": "600",
+        "file_values": {},
+        "log": [
+          "INFO: Upgraded .fed config with AI/LLM section"
+        ]
+      }
+    },
+    {
+      "name": "upgrade: no trailing newline",
+      "fn": "upgrade_config_file (via Config.new)",
+      "input": {
+        "fed": "theme = dark",
+        "fed_mode": "644"
+      },
+      "expected": {
+        "fed_after": "theme = dark\n\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+        "changed": true,
+        "appended": "\n\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+        "fed_mode_after": "600",
+        "file_values": {
+          "theme": "dark"
+        },
+        "log": [
+          "INFO: Upgraded .fed config with AI/LLM section"
+        ]
+      }
+    },
+    {
+      "name": "upgrade: trailing blank line already",
+      "fn": "upgrade_config_file (via Config.new)",
+      "input": {
+        "fed": "theme = dark\n\n",
+        "fed_mode": "644"
+      },
+      "expected": {
+        "fed_after": "theme = dark\n\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+        "changed": true,
+        "appended": "\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+        "fed_mode_after": "600",
+        "file_values": {
+          "theme": "dark"
+        },
+        "log": [
+          "INFO: Upgraded .fed config with AI/LLM section"
+        ]
+      }
+    },
+    {
+      "name": "upgrade: trailing whitespace-only last line",
+      "fn": "upgrade_config_file (via Config.new)",
+      "input": {
+        "fed": "theme = dark\n   ",
+        "fed_mode": "644"
+      },
+      "expected": {
+        "fed_after": "theme = dark\n   \n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+        "changed": true,
+        "appended": "\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+        "fed_mode_after": "600",
+        "file_values": {
+          "theme": "dark"
+        },
+        "log": [
+          "INFO: Upgraded .fed config with AI/LLM section"
+        ]
+      }
+    },
+    {
+      "name": "upgrade: CRLF file without AI",
+      "fn": "upgrade_config_file (via Config.new)",
+      "input": {
+        "fed": "theme = dark\r\nvim_mode = true\r\n",
+        "fed_mode": "644"
+      },
+      "expected": {
+        "fed_after": "theme = dark\nvim_mode = true\n\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+        "changed": true,
+        "appended": "\n\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+        "fed_mode_after": "600",
+        "file_values": {
+          "theme": "dark",
+          "vim_mode": true
+        },
+        "log": [
+          "INFO: Upgraded .fed config with AI/LLM section"
+        ]
+      }
+    },
+    {
+      "name": "upgrade: CRLF file with AI key",
+      "fn": "upgrade_config_file (via Config.new)",
+      "input": {
+        "fed": "theme = dark\r\nai_model = x\r\n",
+        "fed_mode": "644"
+      },
+      "expected": {
+        "fed_after": "theme = dark\r\nai_model = x\r\n",
+        "changed": false,
+        "appended": null,
+        "fed_mode_after": "644",
+        "file_values": {
+          "theme": "dark",
+          "ai_model": "x"
+        },
+        "log": []
+      }
+    },
+    {
+      "name": "upgrade: commented ai_model placeholder suppresses upgrade",
+      "fn": "upgrade_config_file (via Config.new)",
+      "input": {
+        "fed": "theme = dark\n# ai_model = placeholder\n",
+        "fed_mode": "644"
+      },
+      "expected": {
+        "fed_after": "theme = dark\n# ai_model = placeholder\n",
+        "changed": false,
+        "appended": null,
+        "fed_mode_after": "644",
+        "file_values": {
+          "theme": "dark"
+        },
+        "log": []
+      }
+    },
+    {
+      "name": "upgrade: commented without space #ai_provider",
+      "fn": "upgrade_config_file (via Config.new)",
+      "input": {
+        "fed": "#ai_provider=auto\n",
+        "fed_mode": "644"
+      },
+      "expected": {
+        "fed_after": "#ai_provider=auto\n",
+        "changed": false,
+        "appended": null,
+        "fed_mode_after": "644",
+        "file_values": {},
+        "log": []
+      }
+    },
+    {
+      "name": "upgrade: double hash ## ai_model does not count",
+      "fn": "upgrade_config_file (via Config.new)",
+      "input": {
+        "fed": "## ai_model = x\n",
+        "fed_mode": "644"
+      },
+      "expected": {
+        "fed_after": "## ai_model = x\n\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+        "changed": true,
+        "appended": "\n\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+        "fed_mode_after": "600",
+        "file_values": {},
+        "log": [
+          "INFO: Upgraded .fed config with AI/LLM section"
+        ]
+      }
+    },
+    {
+      "name": "upgrade: indented ai key counts",
+      "fn": "upgrade_config_file (via Config.new)",
+      "input": {
+        "fed": "   ai_model = x\n",
+        "fed_mode": "644"
+      },
+      "expected": {
+        "fed_after": "   ai_model = x\n",
+        "changed": false,
+        "appended": null,
+        "fed_mode_after": "644",
+        "file_values": {
+          "ai_model": "x"
+        },
+        "log": []
+      }
+    },
+    {
+      "name": "upgrade: indented comment '  # ai_model' does not count",
+      "fn": "upgrade_config_file (via Config.new)",
+      "input": {
+        "fed": "  # ai_model = x\n",
+        "fed_mode": "644"
+      },
+      "expected": {
+        "fed_after": "  # ai_model = x\n\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+        "changed": true,
+        "appended": "\n\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+        "fed_mode_after": "600",
+        "file_values": {},
+        "log": [
+          "INFO: Upgraded .fed config with AI/LLM section"
+        ]
+      }
+    },
+    {
+      "name": "upgrade: uppercase AI key counts",
+      "fn": "upgrade_config_file (via Config.new)",
+      "input": {
+        "fed": "OPENAI_API_KEY = sk\n",
+        "fed_mode": "644"
+      },
+      "expected": {
+        "fed_after": "OPENAI_API_KEY = sk\n",
+        "changed": false,
+        "appended": null,
+        "fed_mode_after": "644",
+        "file_values": {
+          "openai_api_key": "sk"
+        },
+        "log": []
+      }
+    },
+    {
+      "name": "upgrade: image_generation_model is not an AI marker",
+      "fn": "upgrade_config_file (via Config.new)",
+      "input": {
+        "fed": "image_generation_model = foo\n",
+        "fed_mode": "644"
+      },
+      "expected": {
+        "fed_after": "image_generation_model = foo\n\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+        "changed": true,
+        "appended": "\n\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+        "fed_mode_after": "600",
+        "file_values": {
+          "image_generation_model": "foo"
+        },
+        "log": [
+          "INFO: Upgraded .fed config with AI/LLM section"
+        ]
+      }
+    },
+    {
+      "name": "upgrade: openai_model counts",
+      "fn": "upgrade_config_file (via Config.new)",
+      "input": {
+        "fed": "openai_model = gpt\n",
+        "fed_mode": "644"
+      },
+      "expected": {
+        "fed_after": "openai_model = gpt\n",
+        "changed": false,
+        "appended": null,
+        "fed_mode_after": "644",
+        "file_values": {
+          "openai_model": "gpt"
+        },
+        "log": []
+      }
+    },
+    {
+      "name": "upgrade: marker text anywhere in line counts",
+      "fn": "upgrade_config_file (via Config.new)",
+      "input": {
+        "fed": "theme = dark # AI/LLM\n",
+        "fed_mode": "644"
+      },
+      "expected": {
+        "fed_after": "theme = dark # AI/LLM\n",
+        "changed": false,
+        "appended": null,
+        "fed_mode_after": "644",
+        "file_values": {
+          "theme": "dark # AI/LLM"
+        },
+        "log": []
+      }
+    },
+    {
+      "name": "upgrade: ai_model without = does not count",
+      "fn": "upgrade_config_file (via Config.new)",
+      "input": {
+        "fed": "# ai_model\n",
+        "fed_mode": "644"
+      },
+      "expected": {
+        "fed_after": "# ai_model\n\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+        "changed": true,
+        "appended": "\n\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+        "fed_mode_after": "600",
+        "file_values": {},
+        "log": [
+          "INFO: Upgraded .fed config with AI/LLM section"
+        ]
+      }
+    },
+    {
+      "name": "upgrade: ai key prefix ai_models does not count",
+      "fn": "upgrade_config_file (via Config.new)",
+      "input": {
+        "fed": "ai_models = x\n",
+        "fed_mode": "644"
+      },
+      "expected": {
+        "fed_after": "ai_models = x\n\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+        "changed": true,
+        "appended": "\n\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+        "fed_mode_after": "600",
+        "file_values": {},
+        "log": [
+          "INFO: Upgraded .fed config with AI/LLM section"
+        ]
+      }
+    },
+    {
+      "name": "upgrade: full template is unchanged",
+      "fn": "upgrade_config_file (via Config.new)",
+      "input": {
+        "fed": "# FrankMD Configuration\n# Uncomment and modify values as needed.\n# Environment variables are used as defaults if not specified here.\n\n# UI Settings\n\n# Theme: light, dark, gruvbox, tokyo-night, solarized-dark,\n#        solarized-light, nord, cappuccino, osaka, hackerman\n# theme = dark\n\n# Editor font: cascadia-code, jetbrains-mono, fira-code,\n#              source-code-pro, ubuntu-mono, roboto-mono, hack\n# editor_font = cascadia-code\n\n# editor_font_size = 14\n# preview_zoom = 100\n# sidebar_visible = true\n# typewriter_mode = false\n# cursor_recenter_on_click = false\n# show_stats = false\n\n# Vim mode: hjkl navigation, modal editing, and : ex-commands (default: false)\n# vim_mode = false\n\n# Editor indent: 0 = tab, 1-6 = spaces (default: 2)\n# editor_indent = 2\n\n# Editor width in characters (default: 72, minimum: 72)\n# Increase for wider text area, e.g., 100, 120, or 150\n# editor_width = 72\n\n# Local Images\n\n# images_path = /path/to/images\n\n# Media Uploads (drag-and-drop)\n\n# Destination for new media: local or s3 (requires AWS S3 configuration).\n# media_storage_provider = local\n\n# Comma-separated file extensions accepted by the image/video drop tabs.\n# image_upload_extensions = .jpg,.jpeg,.png,.gif,.webp,.bmp\n# video_upload_extensions = .mp4,.webm,.mkv,.mov,.avi,.m4v,.ogv\n\n# AWS S3 (for image uploads)\n\n# aws_access_key_id = your-access-key\n# aws_secret_access_key = your-secret-key\n# aws_s3_bucket = your-bucket-name\n# aws_region = us-east-1\n\n# S3-compatible services (MinIO, SeaweedFS, ...): set a custom endpoint\n# and force path-style URLs (bucket in the path).\n# aws_s3_endpoint = http://localhost:9000\n# aws_s3_force_path_style = true\n\n# YouTube API (for video search)\n\n# youtube_api_key = your-youtube-api-key\n\n# Google Custom Search (for image search)\n\n# google_api_key = your-google-api-key\n# google_cse_id = your-custom-search-engine-id\n\n# Hugo Blog Posts\n\n# Path style: dated = YYYY/MM/DD/slug/index.md (default)\n#             flat  = slug.md (in current folder)\n# hugo_path_style = dated\n\n# Custom frontmatter: create a .hugo_template.md file at the notes root\n# to override the generated frontmatter. Placeholders {{title}}, {{slug}}\n# and {{date}} are substituted. Leave unset to use the built-in template.\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+        "fed_mode": "644"
+      },
+      "expected": {
+        "fed_after": "# FrankMD Configuration\n# Uncomment and modify values as needed.\n# Environment variables are used as defaults if not specified here.\n\n# UI Settings\n\n# Theme: light, dark, gruvbox, tokyo-night, solarized-dark,\n#        solarized-light, nord, cappuccino, osaka, hackerman\n# theme = dark\n\n# Editor font: cascadia-code, jetbrains-mono, fira-code,\n#              source-code-pro, ubuntu-mono, roboto-mono, hack\n# editor_font = cascadia-code\n\n# editor_font_size = 14\n# preview_zoom = 100\n# sidebar_visible = true\n# typewriter_mode = false\n# cursor_recenter_on_click = false\n# show_stats = false\n\n# Vim mode: hjkl navigation, modal editing, and : ex-commands (default: false)\n# vim_mode = false\n\n# Editor indent: 0 = tab, 1-6 = spaces (default: 2)\n# editor_indent = 2\n\n# Editor width in characters (default: 72, minimum: 72)\n# Increase for wider text area, e.g., 100, 120, or 150\n# editor_width = 72\n\n# Local Images\n\n# images_path = /path/to/images\n\n# Media Uploads (drag-and-drop)\n\n# Destination for new media: local or s3 (requires AWS S3 configuration).\n# media_storage_provider = local\n\n# Comma-separated file extensions accepted by the image/video drop tabs.\n# image_upload_extensions = .jpg,.jpeg,.png,.gif,.webp,.bmp\n# video_upload_extensions = .mp4,.webm,.mkv,.mov,.avi,.m4v,.ogv\n\n# AWS S3 (for image uploads)\n\n# aws_access_key_id = your-access-key\n# aws_secret_access_key = your-secret-key\n# aws_s3_bucket = your-bucket-name\n# aws_region = us-east-1\n\n# S3-compatible services (MinIO, SeaweedFS, ...): set a custom endpoint\n# and force path-style URLs (bucket in the path).\n# aws_s3_endpoint = http://localhost:9000\n# aws_s3_force_path_style = true\n\n# YouTube API (for video search)\n\n# youtube_api_key = your-youtube-api-key\n\n# Google Custom Search (for image search)\n\n# google_api_key = your-google-api-key\n# google_cse_id = your-custom-search-engine-id\n\n# Hugo Blog Posts\n\n# Path style: dated = YYYY/MM/DD/slug/index.md (default)\n#             flat  = slug.md (in current folder)\n# hugo_path_style = dated\n\n# Custom frontmatter: create a .hugo_template.md file at the notes root\n# to override the generated frontmatter. Placeholders {{title}}, {{slug}}\n# and {{date}} are substituted. Leave unset to use the built-in template.\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+        "changed": false,
+        "appended": null,
+        "fed_mode_after": "644",
+        "file_values": {},
+        "log": []
+      }
+    },
+    {
+      "name": "upgrade: template minus AI section gets it back",
+      "fn": "upgrade_config_file (via Config.new)",
+      "input": {
+        "fed": "# FrankMD Configuration\n# Uncomment and modify values as needed.\n# Environment variables are used as defaults if not specified here.\n\n# UI Settings\n\n# Theme: light, dark, gruvbox, tokyo-night, solarized-dark,\n#        solarized-light, nord, cappuccino, osaka, hackerman\n# theme = dark\n\n# Editor font: cascadia-code, jetbrains-mono, fira-code,\n#              source-code-pro, ubuntu-mono, roboto-mono, hack\n# editor_font = cascadia-code\n\n# editor_font_size = 14\n# preview_zoom = 100\n# sidebar_visible = true\n# typewriter_mode = false\n# cursor_recenter_on_click = false\n# show_stats = false\n\n# Vim mode: hjkl navigation, modal editing, and : ex-commands (default: false)\n# vim_mode = false\n\n# Editor indent: 0 = tab, 1-6 = spaces (default: 2)\n# editor_indent = 2\n\n# Editor width in characters (default: 72, minimum: 72)\n# Increase for wider text area, e.g., 100, 120, or 150\n# editor_width = 72\n\n# Local Images\n\n# images_path = /path/to/images\n\n# Media Uploads (drag-and-drop)\n\n# Destination for new media: local or s3 (requires AWS S3 configuration).\n# media_storage_provider = local\n\n# Comma-separated file extensions accepted by the image/video drop tabs.\n# image_upload_extensions = .jpg,.jpeg,.png,.gif,.webp,.bmp\n# video_upload_extensions = .mp4,.webm,.mkv,.mov,.avi,.m4v,.ogv\n\n# AWS S3 (for image uploads)\n\n# aws_access_key_id = your-access-key\n# aws_secret_access_key = your-secret-key\n# aws_s3_bucket = your-bucket-name\n# aws_region = us-east-1\n\n# S3-compatible services (MinIO, SeaweedFS, ...): set a custom endpoint\n# and force path-style URLs (bucket in the path).\n# aws_s3_endpoint = http://localhost:9000\n# aws_s3_force_path_style = true\n\n# YouTube API (for video search)\n\n# youtube_api_key = your-youtube-api-key\n\n# Google Custom Search (for image search)\n\n# google_api_key = your-google-api-key\n# google_cse_id = your-custom-search-engine-id\n\n# Hugo Blog Posts\n\n# Path style: dated = YYYY/MM/DD/slug/index.md (default)\n#             flat  = slug.md (in current folder)\n# hugo_path_style = dated\n\n# Custom frontmatter: create a .hugo_template.md file at the notes root\n# to override the generated frontmatter. Placeholders {{title}}, {{slug}}\n# and {{date}} are substituted. Leave unset to use the built-in template.\n",
+        "fed_mode": "644"
+      },
+      "expected": {
+        "fed_after": "# FrankMD Configuration\n# Uncomment and modify values as needed.\n# Environment variables are used as defaults if not specified here.\n\n# UI Settings\n\n# Theme: light, dark, gruvbox, tokyo-night, solarized-dark,\n#        solarized-light, nord, cappuccino, osaka, hackerman\n# theme = dark\n\n# Editor font: cascadia-code, jetbrains-mono, fira-code,\n#              source-code-pro, ubuntu-mono, roboto-mono, hack\n# editor_font = cascadia-code\n\n# editor_font_size = 14\n# preview_zoom = 100\n# sidebar_visible = true\n# typewriter_mode = false\n# cursor_recenter_on_click = false\n# show_stats = false\n\n# Vim mode: hjkl navigation, modal editing, and : ex-commands (default: false)\n# vim_mode = false\n\n# Editor indent: 0 = tab, 1-6 = spaces (default: 2)\n# editor_indent = 2\n\n# Editor width in characters (default: 72, minimum: 72)\n# Increase for wider text area, e.g., 100, 120, or 150\n# editor_width = 72\n\n# Local Images\n\n# images_path = /path/to/images\n\n# Media Uploads (drag-and-drop)\n\n# Destination for new media: local or s3 (requires AWS S3 configuration).\n# media_storage_provider = local\n\n# Comma-separated file extensions accepted by the image/video drop tabs.\n# image_upload_extensions = .jpg,.jpeg,.png,.gif,.webp,.bmp\n# video_upload_extensions = .mp4,.webm,.mkv,.mov,.avi,.m4v,.ogv\n\n# AWS S3 (for image uploads)\n\n# aws_access_key_id = your-access-key\n# aws_secret_access_key = your-secret-key\n# aws_s3_bucket = your-bucket-name\n# aws_region = us-east-1\n\n# S3-compatible services (MinIO, SeaweedFS, ...): set a custom endpoint\n# and force path-style URLs (bucket in the path).\n# aws_s3_endpoint = http://localhost:9000\n# aws_s3_force_path_style = true\n\n# YouTube API (for video search)\n\n# youtube_api_key = your-youtube-api-key\n\n# Google Custom Search (for image search)\n\n# google_api_key = your-google-api-key\n# google_cse_id = your-custom-search-engine-id\n\n# Hugo Blog Posts\n\n# Path style: dated = YYYY/MM/DD/slug/index.md (default)\n#             flat  = slug.md (in current folder)\n# hugo_path_style = dated\n\n# Custom frontmatter: create a .hugo_template.md file at the notes root\n# to override the generated frontmatter. Placeholders {{title}}, {{slug}}\n# and {{date}} are substituted. Leave unset to use the built-in template.\n\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+        "changed": true,
+        "appended": "\n\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+        "fed_mode_after": "600",
+        "file_values": {},
+        "log": [
+          "INFO: Upgraded .fed config with AI/LLM section"
+        ]
+      }
+    },
+    {
+      "name": "upgrade: lone CR line endings",
+      "fn": "upgrade_config_file (via Config.new)",
+      "input": {
+        "fed": "theme = dark\rvim_mode = true\r",
+        "fed_mode": "644"
+      },
+      "expected": {
+        "fed_after": "theme = dark\rvim_mode = true\n\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+        "changed": true,
+        "appended": "\n\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+        "fed_mode_after": "600",
+        "file_values": {
+          "theme": "dark\rvim_mode = true"
+        },
+        "log": [
+          "INFO: Upgraded .fed config with AI/LLM section"
+        ]
+      }
+    },
+    {
+      "name": "upgrade: unicode content",
+      "fn": "upgrade_config_file (via Config.new)",
+      "input": {
+        "fed": "# Configuração 日本語 שלום 👨‍👩‍👧\ntheme = ção\n",
+        "fed_mode": "644"
+      },
+      "expected": {
+        "fed_after": "# Configuração 日本語 שלום 👨‍👩‍👧\ntheme = ção\n\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+        "changed": true,
+        "appended": "\n\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+        "fed_mode_after": "600",
+        "file_values": {
+          "theme": "ção"
+        },
+        "log": [
+          "INFO: Upgraded .fed config with AI/LLM section"
+        ]
+      }
+    }
+  ]
+}

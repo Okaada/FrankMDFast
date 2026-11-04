@@ -1,0 +1,2334 @@
+{
+  "source": "app/services/notes_service.rb#list_tree/build_tree, app/models/folder.rb#children @ d47a89e92d89f807878d318182fa5dcea0329ec4",
+  "frankmd_sha": "d47a89e92d89f807878d318182fa5dcea0329ec4",
+  "generator": "tools/golden/ruby/notes_tree.rb",
+  "notes": "Tree items: folder {name,path,type:'folder',children} / file {name (basename minus .md),path,type:'file',file_type:'markdown',mtime (Integer epoch seconds, truncated)}. Order per directory: folders first sorted by basename.downcase (Ruby Unicode downcase, then byte-wise String <=>), then files by mtime DESC. mtimes pinned via File.utime: explicit {content,mtime} entries use their mtime, others get 1700000000 - 100*i in spec order of files (i counts files only, per tree spec incl. outside spec separately). Symlinks (files or dirs, inside or outside root, broken) are always skipped (lstat). list_tree creates <ROOT>/.frankmd-filesystem.lock (visible in tree_after). Ties (equal mtime, equal downcased folder names) are not ordered deterministically by the original.",
+  "fed_template": "# FrankMD Configuration\n# Uncomment and modify values as needed.\n# Environment variables are used as defaults if not specified here.\n\n# UI Settings\n\n# Theme: light, dark, gruvbox, tokyo-night, solarized-dark,\n#        solarized-light, nord, cappuccino, osaka, hackerman\n# theme = dark\n\n# Editor font: cascadia-code, jetbrains-mono, fira-code,\n#              source-code-pro, ubuntu-mono, roboto-mono, hack\n# editor_font = cascadia-code\n\n# editor_font_size = 14\n# preview_zoom = 100\n# sidebar_visible = true\n# typewriter_mode = false\n# cursor_recenter_on_click = false\n# show_stats = false\n\n# Vim mode: hjkl navigation, modal editing, and : ex-commands (default: false)\n# vim_mode = false\n\n# Editor indent: 0 = tab, 1-6 = spaces (default: 2)\n# editor_indent = 2\n\n# Editor width in characters (default: 72, minimum: 72)\n# Increase for wider text area, e.g., 100, 120, or 150\n# editor_width = 72\n\n# Local Images\n\n# images_path = /path/to/images\n\n# Media Uploads (drag-and-drop)\n\n# Destination for new media: local or s3 (requires AWS S3 configuration).\n# media_storage_provider = local\n\n# Comma-separated file extensions accepted by the image/video drop tabs.\n# image_upload_extensions = .jpg,.jpeg,.png,.gif,.webp,.bmp\n# video_upload_extensions = .mp4,.webm,.mkv,.mov,.avi,.m4v,.ogv\n\n# AWS S3 (for image uploads)\n\n# aws_access_key_id = your-access-key\n# aws_secret_access_key = your-secret-key\n# aws_s3_bucket = your-bucket-name\n# aws_region = us-east-1\n\n# S3-compatible services (MinIO, SeaweedFS, ...): set a custom endpoint\n# and force path-style URLs (bucket in the path).\n# aws_s3_endpoint = http://localhost:9000\n# aws_s3_force_path_style = true\n\n# YouTube API (for video search)\n\n# youtube_api_key = your-youtube-api-key\n\n# Google Custom Search (for image search)\n\n# google_api_key = your-google-api-key\n# google_cse_id = your-custom-search-engine-id\n\n# Hugo Blog Posts\n\n# Path style: dated = YYYY/MM/DD/slug/index.md (default)\n#             flat  = slug.md (in current folder)\n# hugo_path_style = dated\n\n# Custom frontmatter: create a .hugo_template.md file at the notes root\n# to override the generated frontmatter. Placeholders {{title}}, {{slug}}\n# and {{date}} are substituted. Leave unset to use the built-in template.\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+  "cases": [
+    {
+      "name": "empty directory",
+      "fn": "NotesService#list_tree",
+      "input": {
+        "tree": {},
+        "outside": {}
+      },
+      "expected": {
+        "tree": [],
+        "tree_after": {
+          ".frankmd-filesystem.lock": ""
+        }
+      }
+    },
+    {
+      "name": "two files (newest first)",
+      "fn": "NotesService#list_tree",
+      "input": {
+        "tree": {
+          "note1.md": "# Test\n\nContent",
+          "note2.md": "# Test\n\nContent"
+        },
+        "outside": {}
+      },
+      "expected": {
+        "tree": [
+          {
+            "name": "note1",
+            "path": "note1.md",
+            "type": "file",
+            "file_type": "markdown",
+            "mtime": 1700000000
+          },
+          {
+            "name": "note2",
+            "path": "note2.md",
+            "type": "file",
+            "file_type": "markdown",
+            "mtime": 1699999900
+          }
+        ],
+        "tree_after": {
+          ".frankmd-filesystem.lock": "",
+          "note1.md": "# Test\n\nContent",
+          "note2.md": "# Test\n\nContent"
+        }
+      }
+    },
+    {
+      "name": "files sorted by mtime desc regardless of name",
+      "fn": "NotesService#list_tree",
+      "input": {
+        "tree": {
+          "a.md": {
+            "content": "a",
+            "mtime": 1699999500
+          },
+          "b.md": {
+            "content": "b",
+            "mtime": 1700000000
+          },
+          "c.md": {
+            "content": "c",
+            "mtime": 1699999900
+          },
+          "z.md": {
+            "content": "z",
+            "mtime": 1700000050
+          }
+        },
+        "outside": {}
+      },
+      "expected": {
+        "tree": [
+          {
+            "name": "z",
+            "path": "z.md",
+            "type": "file",
+            "file_type": "markdown",
+            "mtime": 1700000050
+          },
+          {
+            "name": "b",
+            "path": "b.md",
+            "type": "file",
+            "file_type": "markdown",
+            "mtime": 1700000000
+          },
+          {
+            "name": "c",
+            "path": "c.md",
+            "type": "file",
+            "file_type": "markdown",
+            "mtime": 1699999900
+          },
+          {
+            "name": "a",
+            "path": "a.md",
+            "type": "file",
+            "file_type": "markdown",
+            "mtime": 1699999500
+          }
+        ],
+        "tree_after": {
+          ".frankmd-filesystem.lock": "",
+          "a.md": "a",
+          "b.md": "b",
+          "c.md": "c",
+          "z.md": "z"
+        }
+      }
+    },
+    {
+      "name": "nested folder with child",
+      "fn": "NotesService#list_tree",
+      "input": {
+        "tree": {
+          "folder1/": null,
+          "folder1/nested.md": "x"
+        },
+        "outside": {}
+      },
+      "expected": {
+        "tree": [
+          {
+            "name": "folder1",
+            "path": "folder1",
+            "type": "folder",
+            "children": [
+              {
+                "name": "nested",
+                "path": "folder1/nested.md",
+                "type": "file",
+                "file_type": "markdown",
+                "mtime": 1700000000
+              }
+            ]
+          }
+        ],
+        "tree_after": {
+          ".frankmd-filesystem.lock": "",
+          "folder1/": null,
+          "folder1/nested.md": "x"
+        }
+      }
+    },
+    {
+      "name": "root images/videos stay visible when they contain markdown",
+      "fn": "NotesService#list_tree",
+      "input": {
+        "tree": {
+          "images/photo.png": "media",
+          "images/notes/guide.md": "g",
+          "videos/clip.mp4": "media"
+        },
+        "outside": {}
+      },
+      "expected": {
+        "tree": [
+          {
+            "name": "images",
+            "path": "images",
+            "type": "folder",
+            "children": [
+              {
+                "name": "notes",
+                "path": "images/notes",
+                "type": "folder",
+                "children": [
+                  {
+                    "name": "guide",
+                    "path": "images/notes/guide.md",
+                    "type": "file",
+                    "file_type": "markdown",
+                    "mtime": 1699999900
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "tree_after": {
+          ".frankmd-filesystem.lock": "",
+          "images/": null,
+          "images/notes/": null,
+          "images/notes/guide.md": "g",
+          "images/photo.png": "media",
+          "videos/": null,
+          "videos/clip.mp4": "media"
+        }
+      }
+    },
+    {
+      "name": "only root managed media folders are hidden",
+      "fn": "NotesService#list_tree",
+      "input": {
+        "tree": {
+          "images/photo.png": "media",
+          "videos/clip.mp4": "media",
+          "images-old/note.md": "n",
+          "archive/images/note.md": "n",
+          "archive/videos/note.md": "n"
+        },
+        "outside": {}
+      },
+      "expected": {
+        "tree": [
+          {
+            "name": "archive",
+            "path": "archive",
+            "type": "folder",
+            "children": [
+              {
+                "name": "images",
+                "path": "archive/images",
+                "type": "folder",
+                "children": [
+                  {
+                    "name": "note",
+                    "path": "archive/images/note.md",
+                    "type": "file",
+                    "file_type": "markdown",
+                    "mtime": 1699999700
+                  }
+                ]
+              },
+              {
+                "name": "videos",
+                "path": "archive/videos",
+                "type": "folder",
+                "children": [
+                  {
+                    "name": "note",
+                    "path": "archive/videos/note.md",
+                    "type": "file",
+                    "file_type": "markdown",
+                    "mtime": 1699999600
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "images-old",
+            "path": "images-old",
+            "type": "folder",
+            "children": [
+              {
+                "name": "note",
+                "path": "images-old/note.md",
+                "type": "file",
+                "file_type": "markdown",
+                "mtime": 1699999800
+              }
+            ]
+          }
+        ],
+        "tree_after": {
+          ".frankmd-filesystem.lock": "",
+          "archive/": null,
+          "archive/images/": null,
+          "archive/images/note.md": "n",
+          "archive/videos/": null,
+          "archive/videos/note.md": "n",
+          "images/": null,
+          "images-old/": null,
+          "images-old/note.md": "n",
+          "images/photo.png": "media",
+          "videos/": null,
+          "videos/clip.mp4": "media"
+        }
+      }
+    },
+    {
+      "name": "empty root images/ and videos/ hidden; Images/ (case) kept",
+      "fn": "NotesService#list_tree",
+      "input": {
+        "tree": {
+          "images/": null,
+          "videos/": null,
+          "Images/": null,
+          "VIDEOS/x.png": "p"
+        },
+        "outside": {}
+      },
+      "expected": {
+        "tree": [
+          {
+            "name": "Images",
+            "path": "Images",
+            "type": "folder",
+            "children": []
+          },
+          {
+            "name": "VIDEOS",
+            "path": "VIDEOS",
+            "type": "folder",
+            "children": []
+          }
+        ],
+        "tree_after": {
+          ".frankmd-filesystem.lock": "",
+          "Images/": null,
+          "VIDEOS/": null,
+          "VIDEOS/x.png": "p",
+          "images/": null,
+          "videos/": null
+        }
+      }
+    },
+    {
+      "name": "root images/ with only a hidden .md stays hidden (glob skips dotfiles)",
+      "fn": "NotesService#list_tree",
+      "input": {
+        "tree": {
+          "images/.secret.md": "s",
+          "images/a.png": "p"
+        },
+        "outside": {}
+      },
+      "expected": {
+        "tree": [],
+        "tree_after": {
+          ".frankmd-filesystem.lock": "",
+          "images/": null,
+          "images/.secret.md": "s",
+          "images/a.png": "p"
+        }
+      }
+    },
+    {
+      "name": "root images/ with deeply nested md stays visible",
+      "fn": "NotesService#list_tree",
+      "input": {
+        "tree": {
+          "images/a/b/c/d.md": "d",
+          "images/x.png": "p"
+        },
+        "outside": {}
+      },
+      "expected": {
+        "tree": [
+          {
+            "name": "images",
+            "path": "images",
+            "type": "folder",
+            "children": [
+              {
+                "name": "a",
+                "path": "images/a",
+                "type": "folder",
+                "children": [
+                  {
+                    "name": "b",
+                    "path": "images/a/b",
+                    "type": "folder",
+                    "children": [
+                      {
+                        "name": "c",
+                        "path": "images/a/b/c",
+                        "type": "folder",
+                        "children": [
+                          {
+                            "name": "d",
+                            "path": "images/a/b/c/d.md",
+                            "type": "file",
+                            "file_type": "markdown",
+                            "mtime": 1700000000
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "tree_after": {
+          ".frankmd-filesystem.lock": "",
+          "images/": null,
+          "images/a/": null,
+          "images/a/b/": null,
+          "images/a/b/c/": null,
+          "images/a/b/c/d.md": "d",
+          "images/x.png": "p"
+        }
+      }
+    },
+    {
+      "name": "root images/ containing a .MD (uppercase) file is hidden",
+      "fn": "NotesService#list_tree",
+      "input": {
+        "tree": {
+          "images/UP.MD": "u"
+        },
+        "outside": {}
+      },
+      "expected": {
+        "tree": [],
+        "tree_after": {
+          ".frankmd-filesystem.lock": "",
+          "images/": null,
+          "images/UP.MD": "u"
+        }
+      }
+    },
+    {
+      "name": "root images symlink is skipped",
+      "fn": "NotesService#list_tree",
+      "input": {
+        "tree": {
+          "real/x.md": "x",
+          "images": {
+            "symlink": "real"
+          }
+        },
+        "outside": {}
+      },
+      "expected": {
+        "tree": [
+          {
+            "name": "real",
+            "path": "real",
+            "type": "folder",
+            "children": [
+              {
+                "name": "x",
+                "path": "real/x.md",
+                "type": "file",
+                "file_type": "markdown",
+                "mtime": 1700000000
+              }
+            ]
+          }
+        ],
+        "tree_after": {
+          ".frankmd-filesystem.lock": "",
+          "images": {
+            "symlink": "real"
+          },
+          "real/": null,
+          "real/x.md": "x"
+        }
+      }
+    },
+    {
+      "name": "folders before files",
+      "fn": "NotesService#list_tree",
+      "input": {
+        "tree": {
+          "zebra.md": "z",
+          "alpha/": null
+        },
+        "outside": {}
+      },
+      "expected": {
+        "tree": [
+          {
+            "name": "alpha",
+            "path": "alpha",
+            "type": "folder",
+            "children": []
+          },
+          {
+            "name": "zebra",
+            "path": "zebra.md",
+            "type": "file",
+            "file_type": "markdown",
+            "mtime": 1700000000
+          }
+        ],
+        "tree_after": {
+          ".frankmd-filesystem.lock": "",
+          "alpha/": null,
+          "zebra.md": "z"
+        }
+      }
+    },
+    {
+      "name": "folder order stable regardless of folder mtime",
+      "fn": "NotesService#list_tree",
+      "input": {
+        "tree": {
+          "alpha/": null,
+          "beta/": null,
+          "note.md": "n"
+        },
+        "outside": {}
+      },
+      "expected": {
+        "tree": [
+          {
+            "name": "alpha",
+            "path": "alpha",
+            "type": "folder",
+            "children": []
+          },
+          {
+            "name": "beta",
+            "path": "beta",
+            "type": "folder",
+            "children": []
+          },
+          {
+            "name": "note",
+            "path": "note.md",
+            "type": "file",
+            "file_type": "markdown",
+            "mtime": 1700000000
+          }
+        ],
+        "tree_after": {
+          ".frankmd-filesystem.lock": "",
+          "alpha/": null,
+          "beta/": null,
+          "note.md": "n"
+        }
+      }
+    },
+    {
+      "name": "broken symlink skipped",
+      "fn": "NotesService#list_tree",
+      "input": {
+        "tree": {
+          "real.md": "r",
+          "broken_link.md": {
+            "symlink": "/nonexistent/target.md"
+          }
+        },
+        "outside": {}
+      },
+      "expected": {
+        "tree": [
+          {
+            "name": "real",
+            "path": "real.md",
+            "type": "file",
+            "file_type": "markdown",
+            "mtime": 1700000000
+          }
+        ],
+        "tree_after": {
+          ".frankmd-filesystem.lock": "",
+          "broken_link.md": {
+            "symlink": "/nonexistent/target.md"
+          },
+          "real.md": "r"
+        }
+      }
+    },
+    {
+      "name": "symlinked directory (outside) skipped",
+      "fn": "NotesService#list_tree",
+      "input": {
+        "tree": {
+          "a.md": "a",
+          "external": {
+            "symlink": "<OUTSIDE>"
+          }
+        },
+        "outside": {
+          "external.md": "findme"
+        }
+      },
+      "expected": {
+        "tree": [
+          {
+            "name": "a",
+            "path": "a.md",
+            "type": "file",
+            "file_type": "markdown",
+            "mtime": 1700000000
+          }
+        ],
+        "tree_after": {
+          ".frankmd-filesystem.lock": "",
+          "a.md": "a",
+          "external": {
+            "symlink": "<OUTSIDE>"
+          }
+        }
+      }
+    },
+    {
+      "name": "symlinked directory (inside) skipped",
+      "fn": "NotesService#list_tree",
+      "input": {
+        "tree": {
+          "sub/n.md": "n",
+          "alias": {
+            "symlink": "sub"
+          }
+        },
+        "outside": {}
+      },
+      "expected": {
+        "tree": [
+          {
+            "name": "sub",
+            "path": "sub",
+            "type": "folder",
+            "children": [
+              {
+                "name": "n",
+                "path": "sub/n.md",
+                "type": "file",
+                "file_type": "markdown",
+                "mtime": 1700000000
+              }
+            ]
+          }
+        ],
+        "tree_after": {
+          ".frankmd-filesystem.lock": "",
+          "alias": {
+            "symlink": "sub"
+          },
+          "sub/": null,
+          "sub/n.md": "n"
+        }
+      }
+    },
+    {
+      "name": "symlinked md file (inside and outside) skipped",
+      "fn": "NotesService#list_tree",
+      "input": {
+        "tree": {
+          "real.md": "r",
+          "alias.md": {
+            "symlink": "real.md"
+          },
+          "out.md": {
+            "symlink": "<OUTSIDE>/o.md"
+          }
+        },
+        "outside": {
+          "o.md": "o"
+        }
+      },
+      "expected": {
+        "tree": [
+          {
+            "name": "real",
+            "path": "real.md",
+            "type": "file",
+            "file_type": "markdown",
+            "mtime": 1700000000
+          }
+        ],
+        "tree_after": {
+          ".frankmd-filesystem.lock": "",
+          "alias.md": {
+            "symlink": "real.md"
+          },
+          "out.md": {
+            "symlink": "<OUTSIDE>/o.md"
+          },
+          "real.md": "r"
+        }
+      }
+    },
+    {
+      "name": "hidden files and dirs ignored",
+      "fn": "NotesService#list_tree",
+      "input": {
+        "tree": {
+          ".hidden.md": "h",
+          "visible.md": "v",
+          ".git/config": "x",
+          ".obsidian/a.md": "a",
+          "sub/.dot.md": "d",
+          "sub/ok.md": "o"
+        },
+        "outside": {}
+      },
+      "expected": {
+        "tree": [
+          {
+            "name": "sub",
+            "path": "sub",
+            "type": "folder",
+            "children": [
+              {
+                "name": "ok",
+                "path": "sub/ok.md",
+                "type": "file",
+                "file_type": "markdown",
+                "mtime": 1699999500
+              }
+            ]
+          },
+          {
+            "name": "visible",
+            "path": "visible.md",
+            "type": "file",
+            "file_type": "markdown",
+            "mtime": 1699999900
+          }
+        ],
+        "tree_after": {
+          ".frankmd-filesystem.lock": "",
+          ".git/": null,
+          ".git/config": "x",
+          ".hidden.md": "h",
+          ".obsidian/": null,
+          ".obsidian/a.md": "a",
+          "sub/": null,
+          "sub/.dot.md": "d",
+          "sub/ok.md": "o",
+          "visible.md": "v"
+        }
+      }
+    },
+    {
+      "name": ".fed omitted at root and in subfolders",
+      "fn": "NotesService#list_tree",
+      "input": {
+        "tree": {
+          ".fed": "theme = dark",
+          "note.md": "n",
+          "subfolder/.fed": "theme = dark",
+          "subfolder/note.md": "n"
+        },
+        "outside": {}
+      },
+      "expected": {
+        "tree": [
+          {
+            "name": "subfolder",
+            "path": "subfolder",
+            "type": "folder",
+            "children": [
+              {
+                "name": "note",
+                "path": "subfolder/note.md",
+                "type": "file",
+                "file_type": "markdown",
+                "mtime": 1699999700
+              }
+            ]
+          },
+          {
+            "name": "note",
+            "path": "note.md",
+            "type": "file",
+            "file_type": "markdown",
+            "mtime": 1699999900
+          }
+        ],
+        "tree_after": {
+          ".fed": "theme = dark",
+          ".frankmd-filesystem.lock": "",
+          "note.md": "n",
+          "subfolder/": null,
+          "subfolder/.fed": "theme = dark",
+          "subfolder/note.md": "n"
+        }
+      }
+    },
+    {
+      "name": "hidden temp/lock files ignored",
+      "fn": "NotesService#list_tree",
+      "input": {
+        "tree": {
+          ".fed.abc123.tmp": "",
+          ".frankmd-filesystem.lock": "",
+          ".frankmd-config.lock": "",
+          ".n.md.0a1b2c.tmp": "",
+          "n.md": "n"
+        },
+        "outside": {}
+      },
+      "expected": {
+        "tree": [
+          {
+            "name": "n",
+            "path": "n.md",
+            "type": "file",
+            "file_type": "markdown",
+            "mtime": 1699999600
+          }
+        ],
+        "tree_after": {
+          ".fed.abc123.tmp": "",
+          ".frankmd-config.lock": "",
+          ".frankmd-filesystem.lock": "",
+          ".n.md.0a1b2c.tmp": "",
+          "n.md": "n"
+        }
+      }
+    },
+    {
+      "name": "non-markdown files excluded (extension is case-sensitive .md)",
+      "fn": "NotesService#list_tree",
+      "input": {
+        "tree": {
+          "a.txt": "t",
+          "b.markdown": "m",
+          "c.MD": "C",
+          "d.Md": "d",
+          "e": "noext",
+          "f.md.bak": "b",
+          "g.png": "p",
+          "h.pdf": "p",
+          "i.md": "i",
+          ".md": "dotmd",
+          "j..md": "jj",
+          "k.md ": "space",
+          "folder.md/inner.md": "dir named .md",
+          "empty.md": ""
+        },
+        "outside": {}
+      },
+      "expected": {
+        "tree": [
+          {
+            "name": "folder.md",
+            "path": "folder.md",
+            "type": "folder",
+            "children": [
+              {
+                "name": "inner",
+                "path": "folder.md/inner.md",
+                "type": "file",
+                "file_type": "markdown",
+                "mtime": 1699998800
+              }
+            ]
+          },
+          {
+            "name": "i",
+            "path": "i.md",
+            "type": "file",
+            "file_type": "markdown",
+            "mtime": 1699999200
+          },
+          {
+            "name": "j.",
+            "path": "j..md",
+            "type": "file",
+            "file_type": "markdown",
+            "mtime": 1699999000
+          },
+          {
+            "name": "empty",
+            "path": "empty.md",
+            "type": "file",
+            "file_type": "markdown",
+            "mtime": 1699998700
+          }
+        ],
+        "tree_after": {
+          ".frankmd-filesystem.lock": "",
+          ".md": "dotmd",
+          "a.txt": "t",
+          "b.markdown": "m",
+          "c.MD": "C",
+          "d.Md": "d",
+          "e": "noext",
+          "empty.md": "",
+          "f.md.bak": "b",
+          "folder.md/": null,
+          "folder.md/inner.md": "dir named .md",
+          "g.png": "p",
+          "h.pdf": "p",
+          "i.md": "i",
+          "j..md": "jj",
+          "k.md ": "space"
+        }
+      }
+    },
+    {
+      "name": "empty directories included with empty children",
+      "fn": "NotesService#list_tree",
+      "input": {
+        "tree": {
+          "empty/": null,
+          "outer/inner/": null,
+          "outer/only_txt/x.txt": "t"
+        },
+        "outside": {}
+      },
+      "expected": {
+        "tree": [
+          {
+            "name": "empty",
+            "path": "empty",
+            "type": "folder",
+            "children": []
+          },
+          {
+            "name": "outer",
+            "path": "outer",
+            "type": "folder",
+            "children": [
+              {
+                "name": "inner",
+                "path": "outer/inner",
+                "type": "folder",
+                "children": []
+              },
+              {
+                "name": "only_txt",
+                "path": "outer/only_txt",
+                "type": "folder",
+                "children": []
+              }
+            ]
+          }
+        ],
+        "tree_after": {
+          ".frankmd-filesystem.lock": "",
+          "empty/": null,
+          "outer/": null,
+          "outer/inner/": null,
+          "outer/only_txt/": null,
+          "outer/only_txt/x.txt": "t"
+        }
+      }
+    },
+    {
+      "name": "deeply nested 10 levels",
+      "fn": "NotesService#list_tree",
+      "input": {
+        "tree": {
+          "l1/l2/l3/l4/l5/l6/l7/l8/l9/l10/leaf.md": "leaf",
+          "l1/top.md": "top",
+          "l1/l2/l3/l4/l5/l6/l7/l8/l9/l10/l11/": null
+        },
+        "outside": {}
+      },
+      "expected": {
+        "tree": [
+          {
+            "name": "l1",
+            "path": "l1",
+            "type": "folder",
+            "children": [
+              {
+                "name": "l2",
+                "path": "l1/l2",
+                "type": "folder",
+                "children": [
+                  {
+                    "name": "l3",
+                    "path": "l1/l2/l3",
+                    "type": "folder",
+                    "children": [
+                      {
+                        "name": "l4",
+                        "path": "l1/l2/l3/l4",
+                        "type": "folder",
+                        "children": [
+                          {
+                            "name": "l5",
+                            "path": "l1/l2/l3/l4/l5",
+                            "type": "folder",
+                            "children": [
+                              {
+                                "name": "l6",
+                                "path": "l1/l2/l3/l4/l5/l6",
+                                "type": "folder",
+                                "children": [
+                                  {
+                                    "name": "l7",
+                                    "path": "l1/l2/l3/l4/l5/l6/l7",
+                                    "type": "folder",
+                                    "children": [
+                                      {
+                                        "name": "l8",
+                                        "path": "l1/l2/l3/l4/l5/l6/l7/l8",
+                                        "type": "folder",
+                                        "children": [
+                                          {
+                                            "name": "l9",
+                                            "path": "l1/l2/l3/l4/l5/l6/l7/l8/l9",
+                                            "type": "folder",
+                                            "children": [
+                                              {
+                                                "name": "l10",
+                                                "path": "l1/l2/l3/l4/l5/l6/l7/l8/l9/l10",
+                                                "type": "folder",
+                                                "children": [
+                                                  {
+                                                    "name": "l11",
+                                                    "path": "l1/l2/l3/l4/l5/l6/l7/l8/l9/l10/l11",
+                                                    "type": "folder",
+                                                    "children": []
+                                                  },
+                                                  {
+                                                    "name": "leaf",
+                                                    "path": "l1/l2/l3/l4/l5/l6/l7/l8/l9/l10/leaf.md",
+                                                    "type": "file",
+                                                    "file_type": "markdown",
+                                                    "mtime": 1700000000
+                                                  }
+                                                ]
+                                              }
+                                            ]
+                                          }
+                                        ]
+                                      }
+                                    ]
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "top",
+                "path": "l1/top.md",
+                "type": "file",
+                "file_type": "markdown",
+                "mtime": 1699999900
+              }
+            ]
+          }
+        ],
+        "tree_after": {
+          ".frankmd-filesystem.lock": "",
+          "l1/": null,
+          "l1/l2/": null,
+          "l1/l2/l3/": null,
+          "l1/l2/l3/l4/": null,
+          "l1/l2/l3/l4/l5/": null,
+          "l1/l2/l3/l4/l5/l6/": null,
+          "l1/l2/l3/l4/l5/l6/l7/": null,
+          "l1/l2/l3/l4/l5/l6/l7/l8/": null,
+          "l1/l2/l3/l4/l5/l6/l7/l8/l9/": null,
+          "l1/l2/l3/l4/l5/l6/l7/l8/l9/l10/": null,
+          "l1/l2/l3/l4/l5/l6/l7/l8/l9/l10/l11/": null,
+          "l1/l2/l3/l4/l5/l6/l7/l8/l9/l10/leaf.md": "leaf",
+          "l1/top.md": "top"
+        }
+      }
+    },
+    {
+      "name": "folder sort: case-insensitive by downcase, then byte order",
+      "fn": "NotesService#list_tree",
+      "input": {
+        "tree": {
+          "beta/": null,
+          "Alpha/": null,
+          "charlie/": null,
+          "Delta/": null,
+          "_under/": null,
+          "10/": null,
+          "2/": null,
+          "a b/": null,
+          "a-b/": null,
+          "a_b/": null,
+          "ab/": null,
+          "A.B/": null,
+          "~tilde/": null,
+          "x.md": "x"
+        },
+        "outside": {}
+      },
+      "expected": {
+        "tree": [
+          {
+            "name": "10",
+            "path": "10",
+            "type": "folder",
+            "children": []
+          },
+          {
+            "name": "2",
+            "path": "2",
+            "type": "folder",
+            "children": []
+          },
+          {
+            "name": "_under",
+            "path": "_under",
+            "type": "folder",
+            "children": []
+          },
+          {
+            "name": "a b",
+            "path": "a b",
+            "type": "folder",
+            "children": []
+          },
+          {
+            "name": "a-b",
+            "path": "a-b",
+            "type": "folder",
+            "children": []
+          },
+          {
+            "name": "A.B",
+            "path": "A.B",
+            "type": "folder",
+            "children": []
+          },
+          {
+            "name": "a_b",
+            "path": "a_b",
+            "type": "folder",
+            "children": []
+          },
+          {
+            "name": "ab",
+            "path": "ab",
+            "type": "folder",
+            "children": []
+          },
+          {
+            "name": "Alpha",
+            "path": "Alpha",
+            "type": "folder",
+            "children": []
+          },
+          {
+            "name": "beta",
+            "path": "beta",
+            "type": "folder",
+            "children": []
+          },
+          {
+            "name": "charlie",
+            "path": "charlie",
+            "type": "folder",
+            "children": []
+          },
+          {
+            "name": "Delta",
+            "path": "Delta",
+            "type": "folder",
+            "children": []
+          },
+          {
+            "name": "~tilde",
+            "path": "~tilde",
+            "type": "folder",
+            "children": []
+          },
+          {
+            "name": "x",
+            "path": "x.md",
+            "type": "file",
+            "file_type": "markdown",
+            "mtime": 1700000000
+          }
+        ],
+        "tree_after": {
+          ".frankmd-filesystem.lock": "",
+          "10/": null,
+          "2/": null,
+          "A.B/": null,
+          "Alpha/": null,
+          "Delta/": null,
+          "_under/": null,
+          "a b/": null,
+          "a-b/": null,
+          "a_b/": null,
+          "ab/": null,
+          "beta/": null,
+          "charlie/": null,
+          "x.md": "x",
+          "~tilde/": null
+        }
+      }
+    },
+    {
+      "name": "folder sort: unicode names (downcase is Unicode-aware, compare by bytes)",
+      "fn": "NotesService#list_tree",
+      "input": {
+        "tree": {
+          "Éclair/": null,
+          "zeta/": null,
+          "eclair/": null,
+          "Ångström/": null,
+          "日本語/": null,
+          "שלום/": null,
+          "😀 emoji/": null,
+          "👨‍👩‍👧 family/": null,
+          "étude/": null,
+          "étude2/": null,
+          "ẞig/": null,
+          "İstanbul/": null,
+          "Ölçü/": null,
+          "Zulu/": null,
+          "ção/": null,
+          "Ça va/": null,
+          " nbsp/": null
+        },
+        "outside": {}
+      },
+      "expected": {
+        "tree": [
+          {
+            "name": "eclair",
+            "path": "eclair",
+            "type": "folder",
+            "children": []
+          },
+          {
+            "name": "étude",
+            "path": "étude",
+            "type": "folder",
+            "children": []
+          },
+          {
+            "name": "İstanbul",
+            "path": "İstanbul",
+            "type": "folder",
+            "children": []
+          },
+          {
+            "name": "zeta",
+            "path": "zeta",
+            "type": "folder",
+            "children": []
+          },
+          {
+            "name": "Zulu",
+            "path": "Zulu",
+            "type": "folder",
+            "children": []
+          },
+          {
+            "name": " nbsp",
+            "path": " nbsp",
+            "type": "folder",
+            "children": []
+          },
+          {
+            "name": "ẞig",
+            "path": "ẞig",
+            "type": "folder",
+            "children": []
+          },
+          {
+            "name": "Ångström",
+            "path": "Ångström",
+            "type": "folder",
+            "children": []
+          },
+          {
+            "name": "Ça va",
+            "path": "Ça va",
+            "type": "folder",
+            "children": []
+          },
+          {
+            "name": "ção",
+            "path": "ção",
+            "type": "folder",
+            "children": []
+          },
+          {
+            "name": "Éclair",
+            "path": "Éclair",
+            "type": "folder",
+            "children": []
+          },
+          {
+            "name": "étude2",
+            "path": "étude2",
+            "type": "folder",
+            "children": []
+          },
+          {
+            "name": "Ölçü",
+            "path": "Ölçü",
+            "type": "folder",
+            "children": []
+          },
+          {
+            "name": "שלום",
+            "path": "שלום",
+            "type": "folder",
+            "children": []
+          },
+          {
+            "name": "日本語",
+            "path": "日本語",
+            "type": "folder",
+            "children": []
+          },
+          {
+            "name": "👨‍👩‍👧 family",
+            "path": "👨‍👩‍👧 family",
+            "type": "folder",
+            "children": []
+          },
+          {
+            "name": "😀 emoji",
+            "path": "😀 emoji",
+            "type": "folder",
+            "children": []
+          }
+        ],
+        "tree_after": {
+          ".frankmd-filesystem.lock": "",
+          "Zulu/": null,
+          "eclair/": null,
+          "étude/": null,
+          "zeta/": null,
+          " nbsp/": null,
+          "Ångström/": null,
+          "Ça va/": null,
+          "Éclair/": null,
+          "Ölçü/": null,
+          "ção/": null,
+          "étude2/": null,
+          "İstanbul/": null,
+          "שלום/": null,
+          "ẞig/": null,
+          "日本語/": null,
+          "👨‍👩‍👧 family/": null,
+          "😀 emoji/": null
+        }
+      }
+    },
+    {
+      "name": "unicode / CJK / Hebrew / emoji / spaces in file names",
+      "fn": "NotesService#list_tree",
+      "input": {
+        "tree": {
+          "日本語/ノート.md": "j",
+          "שלום.md": "h",
+          "👨‍👩‍👧 family.md": "e",
+          "café com leite.md": "c",
+          "é.md": "comb",
+          "  spaced  .md": "s",
+          "tab\tname.md": "t",
+          "über/ünïcödé.md": "u"
+        },
+        "outside": {}
+      },
+      "expected": {
+        "tree": [
+          {
+            "name": "über",
+            "path": "über",
+            "type": "folder",
+            "children": [
+              {
+                "name": "ünïcödé",
+                "path": "über/ünïcödé.md",
+                "type": "file",
+                "file_type": "markdown",
+                "mtime": 1699999300
+              }
+            ]
+          },
+          {
+            "name": "日本語",
+            "path": "日本語",
+            "type": "folder",
+            "children": [
+              {
+                "name": "ノート",
+                "path": "日本語/ノート.md",
+                "type": "file",
+                "file_type": "markdown",
+                "mtime": 1700000000
+              }
+            ]
+          },
+          {
+            "name": "שלום",
+            "path": "שלום.md",
+            "type": "file",
+            "file_type": "markdown",
+            "mtime": 1699999900
+          },
+          {
+            "name": "👨‍👩‍👧 family",
+            "path": "👨‍👩‍👧 family.md",
+            "type": "file",
+            "file_type": "markdown",
+            "mtime": 1699999800
+          },
+          {
+            "name": "café com leite",
+            "path": "café com leite.md",
+            "type": "file",
+            "file_type": "markdown",
+            "mtime": 1699999700
+          },
+          {
+            "name": "é",
+            "path": "é.md",
+            "type": "file",
+            "file_type": "markdown",
+            "mtime": 1699999600
+          },
+          {
+            "name": "  spaced  ",
+            "path": "  spaced  .md",
+            "type": "file",
+            "file_type": "markdown",
+            "mtime": 1699999500
+          },
+          {
+            "name": "tab\tname",
+            "path": "tab\tname.md",
+            "type": "file",
+            "file_type": "markdown",
+            "mtime": 1699999400
+          }
+        ],
+        "tree_after": {
+          "  spaced  .md": "s",
+          ".frankmd-filesystem.lock": "",
+          "café com leite.md": "c",
+          "é.md": "comb",
+          "tab\tname.md": "t",
+          "über/": null,
+          "über/ünïcödé.md": "u",
+          "שלום.md": "h",
+          "日本語/": null,
+          "日本語/ノート.md": "j",
+          "👨‍👩‍👧 family.md": "e"
+        }
+      }
+    },
+    {
+      "name": "names with leading dashes, dots in middle, multiple extensions",
+      "fn": "NotesService#list_tree",
+      "input": {
+        "tree": {
+          "-dash.md": "d",
+          "notes..v2.md": "v",
+          "a.b.c.md": "abc",
+          "x.md.md": "xx",
+          "-dir-/y.md": "y"
+        },
+        "outside": {}
+      },
+      "expected": {
+        "tree": [
+          {
+            "name": "-dir-",
+            "path": "-dir-",
+            "type": "folder",
+            "children": [
+              {
+                "name": "y",
+                "path": "-dir-/y.md",
+                "type": "file",
+                "file_type": "markdown",
+                "mtime": 1699999600
+              }
+            ]
+          },
+          {
+            "name": "-dash",
+            "path": "-dash.md",
+            "type": "file",
+            "file_type": "markdown",
+            "mtime": 1700000000
+          },
+          {
+            "name": "notes..v2",
+            "path": "notes..v2.md",
+            "type": "file",
+            "file_type": "markdown",
+            "mtime": 1699999900
+          },
+          {
+            "name": "a.b.c",
+            "path": "a.b.c.md",
+            "type": "file",
+            "file_type": "markdown",
+            "mtime": 1699999800
+          },
+          {
+            "name": "x.md",
+            "path": "x.md.md",
+            "type": "file",
+            "file_type": "markdown",
+            "mtime": 1699999700
+          }
+        ],
+        "tree_after": {
+          "-dash.md": "d",
+          "-dir-/": null,
+          "-dir-/y.md": "y",
+          ".frankmd-filesystem.lock": "",
+          "a.b.c.md": "abc",
+          "notes..v2.md": "v",
+          "x.md.md": "xx"
+        }
+      }
+    },
+    {
+      "name": "mtime truncation (fractional), negative and future mtimes",
+      "fn": "NotesService#list_tree",
+      "input": {
+        "tree": {
+          "frac.md": {
+            "content": "f",
+            "mtime": 1700000000.9
+          },
+          "neg.md": {
+            "content": "n",
+            "mtime": -100
+          },
+          "future.md": {
+            "content": "fu",
+            "mtime": 4102444800
+          },
+          "zero.md": {
+            "content": "z",
+            "mtime": 0
+          }
+        },
+        "outside": {}
+      },
+      "expected": {
+        "tree": [
+          {
+            "name": "future",
+            "path": "future.md",
+            "type": "file",
+            "file_type": "markdown",
+            "mtime": 4102444800
+          },
+          {
+            "name": "frac",
+            "path": "frac.md",
+            "type": "file",
+            "file_type": "markdown",
+            "mtime": 1700000000
+          },
+          {
+            "name": "zero",
+            "path": "zero.md",
+            "type": "file",
+            "file_type": "markdown",
+            "mtime": 0
+          },
+          {
+            "name": "neg",
+            "path": "neg.md",
+            "type": "file",
+            "file_type": "markdown",
+            "mtime": -100
+          }
+        ],
+        "tree_after": {
+          ".frankmd-filesystem.lock": "",
+          "frac.md": "f",
+          "future.md": "fu",
+          "neg.md": "n",
+          "zero.md": "z"
+        }
+      }
+    },
+    {
+      "name": "files with equal mtime (tie: order follows Ruby sort_by on readdir order; not guaranteed)",
+      "fn": "NotesService#list_tree",
+      "input": {
+        "tree": {
+          "tie_a.md": {
+            "content": "a",
+            "mtime": 1700000000
+          },
+          "tie_b.md": {
+            "content": "b",
+            "mtime": 1700000000
+          },
+          "newer.md": {
+            "content": "n",
+            "mtime": 1700000001
+          }
+        },
+        "outside": {}
+      },
+      "expected": {
+        "tree": [
+          {
+            "name": "newer",
+            "path": "newer.md",
+            "type": "file",
+            "file_type": "markdown",
+            "mtime": 1700000001
+          },
+          {
+            "name": "tie_a",
+            "path": "tie_a.md",
+            "type": "file",
+            "file_type": "markdown",
+            "mtime": 1700000000
+          },
+          {
+            "name": "tie_b",
+            "path": "tie_b.md",
+            "type": "file",
+            "file_type": "markdown",
+            "mtime": 1700000000
+          }
+        ],
+        "tree_after": {
+          ".frankmd-filesystem.lock": "",
+          "newer.md": "n",
+          "tie_a.md": "a",
+          "tie_b.md": "b"
+        }
+      },
+      "notes": "Tie order is implementation-defined (unstable sort over Dir.children order). Do not rely on it."
+    },
+    {
+      "name": "folder names equal after downcase (tie)",
+      "fn": "NotesService#list_tree",
+      "input": {
+        "tree": {
+          "Same/a.md": "a",
+          "same/b.md": "b",
+          "SAME/": null
+        },
+        "outside": {}
+      },
+      "expected": {
+        "tree": [
+          {
+            "name": "SAME",
+            "path": "SAME",
+            "type": "folder",
+            "children": []
+          },
+          {
+            "name": "same",
+            "path": "same",
+            "type": "folder",
+            "children": [
+              {
+                "name": "b",
+                "path": "same/b.md",
+                "type": "file",
+                "file_type": "markdown",
+                "mtime": 1699999900
+              }
+            ]
+          },
+          {
+            "name": "Same",
+            "path": "Same",
+            "type": "folder",
+            "children": [
+              {
+                "name": "a",
+                "path": "Same/a.md",
+                "type": "file",
+                "file_type": "markdown",
+                "mtime": 1700000000
+              }
+            ]
+          }
+        ],
+        "tree_after": {
+          ".frankmd-filesystem.lock": "",
+          "SAME/": null,
+          "Same/": null,
+          "Same/a.md": "a",
+          "same/": null,
+          "same/b.md": "b"
+        }
+      },
+      "notes": "Ties after downcase keep implementation-defined order (unstable sort_by over readdir)."
+    },
+    {
+      "name": "non-UTF8-safe content does not matter for tree",
+      "fn": "NotesService#list_tree",
+      "input": {
+        "tree": {
+          "bin.md": {
+            "base64": "//4AeA=="
+          }
+        },
+        "outside": {}
+      },
+      "expected": {
+        "tree": [
+          {
+            "name": "bin",
+            "path": "bin.md",
+            "type": "file",
+            "file_type": "markdown",
+            "mtime": 1700000000
+          }
+        ],
+        "tree_after": {
+          ".frankmd-filesystem.lock": "",
+          "bin.md": {
+            "base64": "//4AeA=="
+          }
+        }
+      }
+    },
+    {
+      "name": "mixed realistic tree",
+      "fn": "NotesService#list_tree",
+      "input": {
+        "tree": {
+          "Inbox/todo.md": {
+            "content": "t",
+            "mtime": 1699999990
+          },
+          "Inbox/ideas.md": {
+            "content": "i",
+            "mtime": 1699999995
+          },
+          "Projects/frankmd/spec.md": {
+            "content": "s",
+            "mtime": 1700000000
+          },
+          "Projects/frankmd/assets/logo.png": "p",
+          "Projects/Alpha/readme.md": {
+            "content": "r",
+            "mtime": 1699999999
+          },
+          "journal.md": {
+            "content": "j",
+            "mtime": 1699999998
+          },
+          "README.md": {
+            "content": "R",
+            "mtime": 1699999997
+          },
+          "images/logo.png": "p",
+          ".fed": "theme = dark\n",
+          "archive/": null
+        },
+        "outside": {}
+      },
+      "expected": {
+        "tree": [
+          {
+            "name": "archive",
+            "path": "archive",
+            "type": "folder",
+            "children": []
+          },
+          {
+            "name": "Inbox",
+            "path": "Inbox",
+            "type": "folder",
+            "children": [
+              {
+                "name": "ideas",
+                "path": "Inbox/ideas.md",
+                "type": "file",
+                "file_type": "markdown",
+                "mtime": 1699999995
+              },
+              {
+                "name": "todo",
+                "path": "Inbox/todo.md",
+                "type": "file",
+                "file_type": "markdown",
+                "mtime": 1699999990
+              }
+            ]
+          },
+          {
+            "name": "Projects",
+            "path": "Projects",
+            "type": "folder",
+            "children": [
+              {
+                "name": "Alpha",
+                "path": "Projects/Alpha",
+                "type": "folder",
+                "children": [
+                  {
+                    "name": "readme",
+                    "path": "Projects/Alpha/readme.md",
+                    "type": "file",
+                    "file_type": "markdown",
+                    "mtime": 1699999999
+                  }
+                ]
+              },
+              {
+                "name": "frankmd",
+                "path": "Projects/frankmd",
+                "type": "folder",
+                "children": [
+                  {
+                    "name": "assets",
+                    "path": "Projects/frankmd/assets",
+                    "type": "folder",
+                    "children": []
+                  },
+                  {
+                    "name": "spec",
+                    "path": "Projects/frankmd/spec.md",
+                    "type": "file",
+                    "file_type": "markdown",
+                    "mtime": 1700000000
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "journal",
+            "path": "journal.md",
+            "type": "file",
+            "file_type": "markdown",
+            "mtime": 1699999998
+          },
+          {
+            "name": "README",
+            "path": "README.md",
+            "type": "file",
+            "file_type": "markdown",
+            "mtime": 1699999997
+          }
+        ],
+        "tree_after": {
+          ".fed": "theme = dark\n",
+          ".frankmd-filesystem.lock": "",
+          "Inbox/": null,
+          "Inbox/ideas.md": "i",
+          "Inbox/todo.md": "t",
+          "Projects/": null,
+          "Projects/Alpha/": null,
+          "Projects/Alpha/readme.md": "r",
+          "Projects/frankmd/": null,
+          "Projects/frankmd/assets/": null,
+          "Projects/frankmd/assets/logo.png": "p",
+          "Projects/frankmd/spec.md": "s",
+          "README.md": "R",
+          "archive/": null,
+          "images/": null,
+          "images/logo.png": "p",
+          "journal.md": "j"
+        }
+      }
+    },
+    {
+      "name": "Folder#children \"a\"",
+      "fn": "Folder#children",
+      "input": {
+        "tree": {
+          "a/b/c.md": "c",
+          "a/d.md": "d",
+          "a/empty/": null,
+          "x.md": "x",
+          "日本/語.md": "j"
+        },
+        "path": "a"
+      },
+      "expected": [
+        {
+          "name": "b",
+          "path": "a/b",
+          "type": "folder",
+          "children": [
+            {
+              "name": "c",
+              "path": "a/b/c.md",
+              "type": "file",
+              "file_type": "markdown",
+              "mtime": 1700000000
+            }
+          ]
+        },
+        {
+          "name": "empty",
+          "path": "a/empty",
+          "type": "folder",
+          "children": []
+        },
+        {
+          "name": "d",
+          "path": "a/d.md",
+          "type": "file",
+          "file_type": "markdown",
+          "mtime": 1699999900
+        }
+      ]
+    },
+    {
+      "name": "Folder#children \"a/b\"",
+      "fn": "Folder#children",
+      "input": {
+        "tree": {
+          "a/b/c.md": "c",
+          "a/d.md": "d",
+          "a/empty/": null,
+          "x.md": "x",
+          "日本/語.md": "j"
+        },
+        "path": "a/b"
+      },
+      "expected": [
+        {
+          "name": "c",
+          "path": "a/b/c.md",
+          "type": "file",
+          "file_type": "markdown",
+          "mtime": 1700000000
+        }
+      ]
+    },
+    {
+      "name": "Folder#children \"a/empty\"",
+      "fn": "Folder#children",
+      "input": {
+        "tree": {
+          "a/b/c.md": "c",
+          "a/d.md": "d",
+          "a/empty/": null,
+          "x.md": "x",
+          "日本/語.md": "j"
+        },
+        "path": "a/empty"
+      },
+      "expected": []
+    },
+    {
+      "name": "Folder#children \"missing\"",
+      "fn": "Folder#children",
+      "input": {
+        "tree": {
+          "a/b/c.md": "c",
+          "a/d.md": "d",
+          "a/empty/": null,
+          "x.md": "x",
+          "日本/語.md": "j"
+        },
+        "path": "missing"
+      },
+      "expected": []
+    },
+    {
+      "name": "Folder#children \"x.md\"",
+      "fn": "Folder#children",
+      "input": {
+        "tree": {
+          "a/b/c.md": "c",
+          "a/d.md": "d",
+          "a/empty/": null,
+          "x.md": "x",
+          "日本/語.md": "j"
+        },
+        "path": "x.md"
+      },
+      "expected": []
+    },
+    {
+      "name": "Folder#children \"\"",
+      "fn": "Folder#children",
+      "input": {
+        "tree": {
+          "a/b/c.md": "c",
+          "a/d.md": "d",
+          "a/empty/": null,
+          "x.md": "x",
+          "日本/語.md": "j"
+        },
+        "path": ""
+      },
+      "expected": []
+    },
+    {
+      "name": "Folder#children \"a/\"",
+      "fn": "Folder#children",
+      "input": {
+        "tree": {
+          "a/b/c.md": "c",
+          "a/d.md": "d",
+          "a/empty/": null,
+          "x.md": "x",
+          "日本/語.md": "j"
+        },
+        "path": "a/"
+      },
+      "expected": []
+    },
+    {
+      "name": "Folder#children \"日本\"",
+      "fn": "Folder#children",
+      "input": {
+        "tree": {
+          "a/b/c.md": "c",
+          "a/d.md": "d",
+          "a/empty/": null,
+          "x.md": "x",
+          "日本/語.md": "j"
+        },
+        "path": "日本"
+      },
+      "expected": [
+        {
+          "name": "語",
+          "path": "日本/語.md",
+          "type": "file",
+          "file_type": "markdown",
+          "mtime": 1699999700
+        }
+      ]
+    },
+    {
+      "name": "Note.all uses NOTES_PATH",
+      "fn": "Note.all",
+      "input": {
+        "tree": {
+          "a/b/c.md": "c",
+          "a/d.md": "d",
+          "a/empty/": null,
+          "x.md": "x",
+          "日本/語.md": "j"
+        }
+      },
+      "expected": [
+        {
+          "name": "a",
+          "path": "a",
+          "type": "folder",
+          "children": [
+            {
+              "name": "b",
+              "path": "a/b",
+              "type": "folder",
+              "children": [
+                {
+                  "name": "c",
+                  "path": "a/b/c.md",
+                  "type": "file",
+                  "file_type": "markdown",
+                  "mtime": 1700000000
+                }
+              ]
+            },
+            {
+              "name": "empty",
+              "path": "a/empty",
+              "type": "folder",
+              "children": []
+            },
+            {
+              "name": "d",
+              "path": "a/d.md",
+              "type": "file",
+              "file_type": "markdown",
+              "mtime": 1699999900
+            }
+          ]
+        },
+        {
+          "name": "日本",
+          "path": "日本",
+          "type": "folder",
+          "children": [
+            {
+              "name": "語",
+              "path": "日本/語.md",
+              "type": "file",
+              "file_type": "markdown",
+              "mtime": 1699999700
+            }
+          ]
+        },
+        {
+          "name": "x",
+          "path": "x.md",
+          "type": "file",
+          "file_type": "markdown",
+          "mtime": 1699999800
+        }
+      ]
+    },
+    {
+      "name": "Folder.find \"a\"",
+      "fn": "Folder.find",
+      "input": {
+        "tree": {
+          "a/b/c.md": "c",
+          "a/d.md": "d",
+          "a/empty/": null,
+          "x.md": "x",
+          "日本/語.md": "j"
+        },
+        "path": "a"
+      },
+      "expected": {
+        "path": "a",
+        "name": "a",
+        "parent_path": null,
+        "persisted": true
+      }
+    },
+    {
+      "name": "Folder.find \"a/b\"",
+      "fn": "Folder.find",
+      "input": {
+        "tree": {
+          "a/b/c.md": "c",
+          "a/d.md": "d",
+          "a/empty/": null,
+          "x.md": "x",
+          "日本/語.md": "j"
+        },
+        "path": "a/b"
+      },
+      "expected": {
+        "path": "a/b",
+        "name": "b",
+        "parent_path": "a",
+        "persisted": true
+      }
+    },
+    {
+      "name": "Folder.find \"x.md\"",
+      "fn": "Folder.find",
+      "input": {
+        "tree": {
+          "a/b/c.md": "c",
+          "a/d.md": "d",
+          "a/empty/": null,
+          "x.md": "x",
+          "日本/語.md": "j"
+        },
+        "path": "x.md"
+      },
+      "expected": {
+        "error": "NotesService::NotFoundError",
+        "message": "Folder not found: x.md"
+      }
+    },
+    {
+      "name": "Folder.find \"missing\"",
+      "fn": "Folder.find",
+      "input": {
+        "tree": {
+          "a/b/c.md": "c",
+          "a/d.md": "d",
+          "a/empty/": null,
+          "x.md": "x",
+          "日本/語.md": "j"
+        },
+        "path": "missing"
+      },
+      "expected": {
+        "error": "NotesService::NotFoundError",
+        "message": "Folder not found: missing"
+      }
+    },
+    {
+      "name": "Folder.find \"\"",
+      "fn": "Folder.find",
+      "input": {
+        "tree": {
+          "a/b/c.md": "c",
+          "a/d.md": "d",
+          "a/empty/": null,
+          "x.md": "x",
+          "日本/語.md": "j"
+        },
+        "path": ""
+      },
+      "expected": {
+        "error": "NotesService::NotFoundError",
+        "message": "Folder not found: "
+      }
+    },
+    {
+      "name": "Folder.find nil",
+      "fn": "Folder.find",
+      "input": {
+        "tree": {
+          "a/b/c.md": "c",
+          "a/d.md": "d",
+          "a/empty/": null,
+          "x.md": "x",
+          "日本/語.md": "j"
+        },
+        "path": null
+      },
+      "expected": {
+        "error": "NotesService::NotFoundError",
+        "message": "Folder not found: "
+      }
+    },
+    {
+      "name": "Folder.find \"../x\"",
+      "fn": "Folder.find",
+      "input": {
+        "tree": {
+          "a/b/c.md": "c",
+          "a/d.md": "d",
+          "a/empty/": null,
+          "x.md": "x",
+          "日本/語.md": "j"
+        },
+        "path": "../x"
+      },
+      "expected": {
+        "error": "NotesService::InvalidPathError",
+        "message": "Invalid path: ../x"
+      }
+    },
+    {
+      "name": "GET /notes/tree null",
+      "fn": "http",
+      "input": {
+        "tree": {
+          "folder1/note.md": {
+            "content": "n",
+            "mtime": 1700000000
+          },
+          "folder1/sub/deep.md": {
+            "content": "d",
+            "mtime": 1699999999
+          },
+          "top.md": {
+            "content": "t",
+            "mtime": 1699999998
+          },
+          "e/": null
+        },
+        "params": null
+      },
+      "expected": {
+        "status": 200,
+        "body": "<div class=\"tree-folder\" data-path=\"e\"><div class=\"tree-item drop-target\" draggable=\"true\" tabindex=\"0\" data-action=\"pointerdown-&gt;app#onExplorerItemPointerDown click-&gt;app#toggleFolder focus-&gt;app#onExplorerItemFocus keydown-&gt;app#deleteSelectedExplorerItem keydown-&gt;app#renameSelectedExplorerItem contextmenu-&gt;app#showContextMenu dragstart-&gt;drag-drop#onDragStart dragover-&gt;drag-drop#onDragOver drop-&gt;drag-drop#onDrop dragend-&gt;drag-drop#onDragEnd\" data-path=\"e\" data-drop-id=\"e\" data-type=\"folder\"><svg class=\"tree-chevron\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M9 5l7 7-7 7\"></path></svg><svg class=\"tree-icon text-[var(--theme-folder-icon)]\" fill=\"currentColor\" viewBox=\"0 0 20 20\"><path d=\"M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z\"></path></svg><span class=\"truncate\">e</span></div><div class=\"tree-children hidden\"></div></div><div class=\"tree-folder\" data-path=\"folder1\"><div class=\"tree-item drop-target\" draggable=\"true\" tabindex=\"0\" data-action=\"pointerdown-&gt;app#onExplorerItemPointerDown click-&gt;app#toggleFolder focus-&gt;app#onExplorerItemFocus keydown-&gt;app#deleteSelectedExplorerItem keydown-&gt;app#renameSelectedExplorerItem contextmenu-&gt;app#showContextMenu dragstart-&gt;drag-drop#onDragStart dragover-&gt;drag-drop#onDragOver drop-&gt;drag-drop#onDrop dragend-&gt;drag-drop#onDragEnd\" data-path=\"folder1\" data-drop-id=\"folder1\" data-type=\"folder\"><svg class=\"tree-chevron\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M9 5l7 7-7 7\"></path></svg><svg class=\"tree-icon text-[var(--theme-folder-icon)]\" fill=\"currentColor\" viewBox=\"0 0 20 20\"><path d=\"M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z\"></path></svg><span class=\"truncate\">folder1</span></div><div class=\"tree-children hidden\"><div class=\"tree-folder\" data-path=\"folder1/sub\"><div class=\"tree-item drop-target\" draggable=\"true\" tabindex=\"0\" data-action=\"pointerdown-&gt;app#onExplorerItemPointerDown click-&gt;app#toggleFolder focus-&gt;app#onExplorerItemFocus keydown-&gt;app#deleteSelectedExplorerItem keydown-&gt;app#renameSelectedExplorerItem contextmenu-&gt;app#showContextMenu dragstart-&gt;drag-drop#onDragStart dragover-&gt;drag-drop#onDragOver drop-&gt;drag-drop#onDrop dragend-&gt;drag-drop#onDragEnd\" data-path=\"folder1/sub\" data-drop-id=\"folder1/sub\" data-type=\"folder\"><svg class=\"tree-chevron\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M9 5l7 7-7 7\"></path></svg><svg class=\"tree-icon text-[var(--theme-folder-icon)]\" fill=\"currentColor\" viewBox=\"0 0 20 20\"><path d=\"M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z\"></path></svg><span class=\"truncate\">sub</span></div><div class=\"tree-children hidden\"><div class=\"tree-item\" draggable=\"true\" tabindex=\"0\" data-action=\"pointerdown-&gt;app#onExplorerItemPointerDown click-&gt;app#selectFile focus-&gt;app#onExplorerItemFocus keydown-&gt;app#deleteSelectedExplorerItem keydown-&gt;app#renameSelectedExplorerItem contextmenu-&gt;app#showContextMenu dragstart-&gt;drag-drop#onDragStart dragend-&gt;drag-drop#onDragEnd\" data-path=\"folder1/sub/deep.md\" data-type=\"file\" data-file-type=\"markdown\" data-mtime=\"1699999999\"><svg class=\"tree-icon text-[var(--theme-file-icon)]\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z\"></path></svg><span class=\"truncate\">deep</span></div></div></div><div class=\"tree-item\" draggable=\"true\" tabindex=\"0\" data-action=\"pointerdown-&gt;app#onExplorerItemPointerDown click-&gt;app#selectFile focus-&gt;app#onExplorerItemFocus keydown-&gt;app#deleteSelectedExplorerItem keydown-&gt;app#renameSelectedExplorerItem contextmenu-&gt;app#showContextMenu dragstart-&gt;drag-drop#onDragStart dragend-&gt;drag-drop#onDragEnd\" data-path=\"folder1/note.md\" data-type=\"file\" data-file-type=\"markdown\" data-mtime=\"1700000000\"><svg class=\"tree-icon text-[var(--theme-file-icon)]\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z\"></path></svg><span class=\"truncate\">note</span></div></div></div><div class=\"tree-item\" draggable=\"true\" tabindex=\"0\" data-action=\"pointerdown-&gt;app#onExplorerItemPointerDown click-&gt;app#selectFile focus-&gt;app#onExplorerItemFocus keydown-&gt;app#deleteSelectedExplorerItem keydown-&gt;app#renameSelectedExplorerItem contextmenu-&gt;app#showContextMenu dragstart-&gt;drag-drop#onDragStart dragend-&gt;drag-drop#onDragEnd\" data-path=\"top.md\" data-type=\"file\" data-file-type=\"markdown\" data-mtime=\"1699999998\"><svg class=\"tree-icon text-[var(--theme-file-icon)]\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z\"></path></svg><span class=\"truncate\">top</span></div>\n",
+        "tree_after": {
+          ".fed": "<FED_TEMPLATE>",
+          ".frankmd-config.lock": "",
+          ".frankmd-filesystem.lock": "",
+          "e/": null,
+          "folder1/": null,
+          "folder1/note.md": "n",
+          "folder1/sub/": null,
+          "folder1/sub/deep.md": "d",
+          "top.md": "t"
+        }
+      }
+    },
+    {
+      "name": "GET /notes/tree {\"expanded\":\"folder1\",\"selected\":\"folder1/note.md\"}",
+      "fn": "http",
+      "input": {
+        "tree": {
+          "folder1/note.md": {
+            "content": "n",
+            "mtime": 1700000000
+          },
+          "folder1/sub/deep.md": {
+            "content": "d",
+            "mtime": 1699999999
+          },
+          "top.md": {
+            "content": "t",
+            "mtime": 1699999998
+          },
+          "e/": null
+        },
+        "params": {
+          "expanded": "folder1",
+          "selected": "folder1/note.md"
+        }
+      },
+      "expected": {
+        "status": 200,
+        "body": "<div class=\"tree-folder\" data-path=\"e\"><div class=\"tree-item drop-target\" draggable=\"true\" tabindex=\"0\" data-action=\"pointerdown-&gt;app#onExplorerItemPointerDown click-&gt;app#toggleFolder focus-&gt;app#onExplorerItemFocus keydown-&gt;app#deleteSelectedExplorerItem keydown-&gt;app#renameSelectedExplorerItem contextmenu-&gt;app#showContextMenu dragstart-&gt;drag-drop#onDragStart dragover-&gt;drag-drop#onDragOver drop-&gt;drag-drop#onDrop dragend-&gt;drag-drop#onDragEnd\" data-path=\"e\" data-drop-id=\"e\" data-type=\"folder\"><svg class=\"tree-chevron\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M9 5l7 7-7 7\"></path></svg><svg class=\"tree-icon text-[var(--theme-folder-icon)]\" fill=\"currentColor\" viewBox=\"0 0 20 20\"><path d=\"M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z\"></path></svg><span class=\"truncate\">e</span></div><div class=\"tree-children hidden\"></div></div><div class=\"tree-folder\" data-path=\"folder1\"><div class=\"tree-item drop-target\" draggable=\"true\" tabindex=\"0\" data-action=\"pointerdown-&gt;app#onExplorerItemPointerDown click-&gt;app#toggleFolder focus-&gt;app#onExplorerItemFocus keydown-&gt;app#deleteSelectedExplorerItem keydown-&gt;app#renameSelectedExplorerItem contextmenu-&gt;app#showContextMenu dragstart-&gt;drag-drop#onDragStart dragover-&gt;drag-drop#onDragOver drop-&gt;drag-drop#onDrop dragend-&gt;drag-drop#onDragEnd\" data-path=\"folder1\" data-drop-id=\"folder1\" data-type=\"folder\"><svg class=\"tree-chevron expanded\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M9 5l7 7-7 7\"></path></svg><svg class=\"tree-icon text-[var(--theme-folder-icon)]\" fill=\"currentColor\" viewBox=\"0 0 20 20\"><path d=\"M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z\"></path></svg><span class=\"truncate\">folder1</span></div><div class=\"tree-children\"><div class=\"tree-folder\" data-path=\"folder1/sub\"><div class=\"tree-item drop-target\" draggable=\"true\" tabindex=\"0\" data-action=\"pointerdown-&gt;app#onExplorerItemPointerDown click-&gt;app#toggleFolder focus-&gt;app#onExplorerItemFocus keydown-&gt;app#deleteSelectedExplorerItem keydown-&gt;app#renameSelectedExplorerItem contextmenu-&gt;app#showContextMenu dragstart-&gt;drag-drop#onDragStart dragover-&gt;drag-drop#onDragOver drop-&gt;drag-drop#onDrop dragend-&gt;drag-drop#onDragEnd\" data-path=\"folder1/sub\" data-drop-id=\"folder1/sub\" data-type=\"folder\"><svg class=\"tree-chevron\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M9 5l7 7-7 7\"></path></svg><svg class=\"tree-icon text-[var(--theme-folder-icon)]\" fill=\"currentColor\" viewBox=\"0 0 20 20\"><path d=\"M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z\"></path></svg><span class=\"truncate\">sub</span></div><div class=\"tree-children hidden\"><div class=\"tree-item\" draggable=\"true\" tabindex=\"0\" data-action=\"pointerdown-&gt;app#onExplorerItemPointerDown click-&gt;app#selectFile focus-&gt;app#onExplorerItemFocus keydown-&gt;app#deleteSelectedExplorerItem keydown-&gt;app#renameSelectedExplorerItem contextmenu-&gt;app#showContextMenu dragstart-&gt;drag-drop#onDragStart dragend-&gt;drag-drop#onDragEnd\" data-path=\"folder1/sub/deep.md\" data-type=\"file\" data-file-type=\"markdown\" data-mtime=\"1699999999\"><svg class=\"tree-icon text-[var(--theme-file-icon)]\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z\"></path></svg><span class=\"truncate\">deep</span></div></div></div><div class=\"tree-item selected\" draggable=\"true\" tabindex=\"0\" data-action=\"pointerdown-&gt;app#onExplorerItemPointerDown click-&gt;app#selectFile focus-&gt;app#onExplorerItemFocus keydown-&gt;app#deleteSelectedExplorerItem keydown-&gt;app#renameSelectedExplorerItem contextmenu-&gt;app#showContextMenu dragstart-&gt;drag-drop#onDragStart dragend-&gt;drag-drop#onDragEnd\" data-path=\"folder1/note.md\" data-type=\"file\" data-file-type=\"markdown\" data-mtime=\"1700000000\"><svg class=\"tree-icon text-[var(--theme-file-icon)]\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z\"></path></svg><span class=\"truncate\">note</span></div></div></div><div class=\"tree-item\" draggable=\"true\" tabindex=\"0\" data-action=\"pointerdown-&gt;app#onExplorerItemPointerDown click-&gt;app#selectFile focus-&gt;app#onExplorerItemFocus keydown-&gt;app#deleteSelectedExplorerItem keydown-&gt;app#renameSelectedExplorerItem contextmenu-&gt;app#showContextMenu dragstart-&gt;drag-drop#onDragStart dragend-&gt;drag-drop#onDragEnd\" data-path=\"top.md\" data-type=\"file\" data-file-type=\"markdown\" data-mtime=\"1699999998\"><svg class=\"tree-icon text-[var(--theme-file-icon)]\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z\"></path></svg><span class=\"truncate\">top</span></div>\n",
+        "tree_after": {
+          ".fed": "<FED_TEMPLATE>",
+          ".frankmd-config.lock": "",
+          ".frankmd-filesystem.lock": "",
+          "e/": null,
+          "folder1/": null,
+          "folder1/note.md": "n",
+          "folder1/sub/": null,
+          "folder1/sub/deep.md": "d",
+          "top.md": "t"
+        }
+      }
+    },
+    {
+      "name": "GET /notes/tree {\"expanded\":\"folder1,folder1/sub\",\"selected\":\"top.md\"}",
+      "fn": "http",
+      "input": {
+        "tree": {
+          "folder1/note.md": {
+            "content": "n",
+            "mtime": 1700000000
+          },
+          "folder1/sub/deep.md": {
+            "content": "d",
+            "mtime": 1699999999
+          },
+          "top.md": {
+            "content": "t",
+            "mtime": 1699999998
+          },
+          "e/": null
+        },
+        "params": {
+          "expanded": "folder1,folder1/sub",
+          "selected": "top.md"
+        }
+      },
+      "expected": {
+        "status": 200,
+        "body": "<div class=\"tree-folder\" data-path=\"e\"><div class=\"tree-item drop-target\" draggable=\"true\" tabindex=\"0\" data-action=\"pointerdown-&gt;app#onExplorerItemPointerDown click-&gt;app#toggleFolder focus-&gt;app#onExplorerItemFocus keydown-&gt;app#deleteSelectedExplorerItem keydown-&gt;app#renameSelectedExplorerItem contextmenu-&gt;app#showContextMenu dragstart-&gt;drag-drop#onDragStart dragover-&gt;drag-drop#onDragOver drop-&gt;drag-drop#onDrop dragend-&gt;drag-drop#onDragEnd\" data-path=\"e\" data-drop-id=\"e\" data-type=\"folder\"><svg class=\"tree-chevron\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M9 5l7 7-7 7\"></path></svg><svg class=\"tree-icon text-[var(--theme-folder-icon)]\" fill=\"currentColor\" viewBox=\"0 0 20 20\"><path d=\"M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z\"></path></svg><span class=\"truncate\">e</span></div><div class=\"tree-children hidden\"></div></div><div class=\"tree-folder\" data-path=\"folder1\"><div class=\"tree-item drop-target\" draggable=\"true\" tabindex=\"0\" data-action=\"pointerdown-&gt;app#onExplorerItemPointerDown click-&gt;app#toggleFolder focus-&gt;app#onExplorerItemFocus keydown-&gt;app#deleteSelectedExplorerItem keydown-&gt;app#renameSelectedExplorerItem contextmenu-&gt;app#showContextMenu dragstart-&gt;drag-drop#onDragStart dragover-&gt;drag-drop#onDragOver drop-&gt;drag-drop#onDrop dragend-&gt;drag-drop#onDragEnd\" data-path=\"folder1\" data-drop-id=\"folder1\" data-type=\"folder\"><svg class=\"tree-chevron expanded\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M9 5l7 7-7 7\"></path></svg><svg class=\"tree-icon text-[var(--theme-folder-icon)]\" fill=\"currentColor\" viewBox=\"0 0 20 20\"><path d=\"M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z\"></path></svg><span class=\"truncate\">folder1</span></div><div class=\"tree-children\"><div class=\"tree-folder\" data-path=\"folder1/sub\"><div class=\"tree-item drop-target\" draggable=\"true\" tabindex=\"0\" data-action=\"pointerdown-&gt;app#onExplorerItemPointerDown click-&gt;app#toggleFolder focus-&gt;app#onExplorerItemFocus keydown-&gt;app#deleteSelectedExplorerItem keydown-&gt;app#renameSelectedExplorerItem contextmenu-&gt;app#showContextMenu dragstart-&gt;drag-drop#onDragStart dragover-&gt;drag-drop#onDragOver drop-&gt;drag-drop#onDrop dragend-&gt;drag-drop#onDragEnd\" data-path=\"folder1/sub\" data-drop-id=\"folder1/sub\" data-type=\"folder\"><svg class=\"tree-chevron expanded\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M9 5l7 7-7 7\"></path></svg><svg class=\"tree-icon text-[var(--theme-folder-icon)]\" fill=\"currentColor\" viewBox=\"0 0 20 20\"><path d=\"M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z\"></path></svg><span class=\"truncate\">sub</span></div><div class=\"tree-children\"><div class=\"tree-item\" draggable=\"true\" tabindex=\"0\" data-action=\"pointerdown-&gt;app#onExplorerItemPointerDown click-&gt;app#selectFile focus-&gt;app#onExplorerItemFocus keydown-&gt;app#deleteSelectedExplorerItem keydown-&gt;app#renameSelectedExplorerItem contextmenu-&gt;app#showContextMenu dragstart-&gt;drag-drop#onDragStart dragend-&gt;drag-drop#onDragEnd\" data-path=\"folder1/sub/deep.md\" data-type=\"file\" data-file-type=\"markdown\" data-mtime=\"1699999999\"><svg class=\"tree-icon text-[var(--theme-file-icon)]\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z\"></path></svg><span class=\"truncate\">deep</span></div></div></div><div class=\"tree-item\" draggable=\"true\" tabindex=\"0\" data-action=\"pointerdown-&gt;app#onExplorerItemPointerDown click-&gt;app#selectFile focus-&gt;app#onExplorerItemFocus keydown-&gt;app#deleteSelectedExplorerItem keydown-&gt;app#renameSelectedExplorerItem contextmenu-&gt;app#showContextMenu dragstart-&gt;drag-drop#onDragStart dragend-&gt;drag-drop#onDragEnd\" data-path=\"folder1/note.md\" data-type=\"file\" data-file-type=\"markdown\" data-mtime=\"1700000000\"><svg class=\"tree-icon text-[var(--theme-file-icon)]\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z\"></path></svg><span class=\"truncate\">note</span></div></div></div><div class=\"tree-item selected\" draggable=\"true\" tabindex=\"0\" data-action=\"pointerdown-&gt;app#onExplorerItemPointerDown click-&gt;app#selectFile focus-&gt;app#onExplorerItemFocus keydown-&gt;app#deleteSelectedExplorerItem keydown-&gt;app#renameSelectedExplorerItem contextmenu-&gt;app#showContextMenu dragstart-&gt;drag-drop#onDragStart dragend-&gt;drag-drop#onDragEnd\" data-path=\"top.md\" data-type=\"file\" data-file-type=\"markdown\" data-mtime=\"1699999998\"><svg class=\"tree-icon text-[var(--theme-file-icon)]\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z\"></path></svg><span class=\"truncate\">top</span></div>\n",
+        "tree_after": {
+          ".fed": "<FED_TEMPLATE>",
+          ".frankmd-config.lock": "",
+          ".frankmd-filesystem.lock": "",
+          "e/": null,
+          "folder1/": null,
+          "folder1/note.md": "n",
+          "folder1/sub/": null,
+          "folder1/sub/deep.md": "d",
+          "top.md": "t"
+        }
+      }
+    }
+  ]
+}

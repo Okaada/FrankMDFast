@@ -1,0 +1,1168 @@
+{
+  "source": "app/javascript/lib/indent_utils.js @ d47a89e92d89f807878d318182fa5dcea0329ec4",
+  "frankmd_sha": "d47a89e92d89f807878d318182fa5dcea0329ec4",
+  "generator": "tools/golden/js/utils.mjs",
+  "notes": "input = encoded argument array (decode with golden.mjs decode: {$undefined}, {$number}, {$date}, {$regexp}, {$utf16}); expected = encoded return value, or {$error:{name,message}}. JS strings are UTF-16: all positions/lengths/indices in inputs and outputs are UTF-16 code-unit offsets; cases with non-BMP/multi-unit strings carry a `utf16` array (utf16_len/scalar_len/utf8_len per such string arg). TZ pinned to UTC for date-based helpers.",
+  "functions": [
+    "indentLines",
+    "parseIndentSetting",
+    "unindentLines"
+  ],
+  "cases": [
+    {
+      "name": "indentLines #1 (from FrankMD vitest suite)",
+      "fn": "indentLines",
+      "input": [
+        "hello",
+        "  "
+      ],
+      "expected": "  hello"
+    },
+    {
+      "name": "indentLines #2 (from FrankMD vitest suite)",
+      "fn": "indentLines",
+      "input": [
+        "code",
+        "    "
+      ],
+      "expected": "    code"
+    },
+    {
+      "name": "indentLines #3 (from FrankMD vitest suite)",
+      "fn": "indentLines",
+      "input": [
+        "line1\nline2\nline3",
+        "  "
+      ],
+      "expected": "  line1\n  line2\n  line3"
+    },
+    {
+      "name": "indentLines #4 (from FrankMD vitest suite)",
+      "fn": "indentLines",
+      "input": [
+        "hello\nworld",
+        "\t"
+      ],
+      "expected": "\thello\n\tworld"
+    },
+    {
+      "name": "indentLines #5 (from FrankMD vitest suite)",
+      "fn": "indentLines",
+      "input": [
+        "code\nmore code",
+        "\t"
+      ],
+      "expected": "\tcode\n\tmore code"
+    },
+    {
+      "name": "indentLines #6 (from FrankMD vitest suite)",
+      "fn": "indentLines",
+      "input": [
+        "line1\n\nline3",
+        "  "
+      ],
+      "expected": "  line1\n  \n  line3"
+    },
+    {
+      "name": "indentLines #7 (from FrankMD vitest suite)",
+      "fn": "indentLines",
+      "input": [
+        "  already indented\n    more indented",
+        "  "
+      ],
+      "expected": "    already indented\n      more indented"
+    },
+    {
+      "name": "parseIndentSetting #1 (from FrankMD vitest suite)",
+      "fn": "parseIndentSetting",
+      "input": [
+        -1
+      ],
+      "expected": "  "
+    },
+    {
+      "name": "parseIndentSetting #2 (from FrankMD vitest suite)",
+      "fn": "parseIndentSetting",
+      "input": [
+        "abc"
+      ],
+      "expected": "  "
+    },
+    {
+      "name": "parseIndentSetting #3 (from FrankMD vitest suite)",
+      "fn": "parseIndentSetting",
+      "input": [
+        ""
+      ],
+      "expected": "  "
+    },
+    {
+      "name": "parseIndentSetting #4 (from FrankMD vitest suite)",
+      "fn": "parseIndentSetting",
+      "input": [
+        100
+      ],
+      "expected": "      "
+    },
+    {
+      "name": "parseIndentSetting #5 (from FrankMD vitest suite)",
+      "fn": "parseIndentSetting",
+      "input": [
+        "0"
+      ],
+      "expected": "\t"
+    },
+    {
+      "name": "parseIndentSetting #6 (from FrankMD vitest suite)",
+      "fn": "parseIndentSetting",
+      "input": [
+        "1"
+      ],
+      "expected": " "
+    },
+    {
+      "name": "parseIndentSetting #7 (from FrankMD vitest suite)",
+      "fn": "parseIndentSetting",
+      "input": [
+        -5
+      ],
+      "expected": "  "
+    },
+    {
+      "name": "parseIndentSetting #8 (from FrankMD vitest suite)",
+      "fn": "parseIndentSetting",
+      "input": [
+        1
+      ],
+      "expected": " "
+    },
+    {
+      "name": "parseIndentSetting #9 (from FrankMD vitest suite)",
+      "fn": "parseIndentSetting",
+      "input": [
+        6
+      ],
+      "expected": "      "
+    },
+    {
+      "name": "parseIndentSetting #10 (from FrankMD vitest suite)",
+      "fn": "parseIndentSetting",
+      "input": [
+        "2"
+      ],
+      "expected": "  "
+    },
+    {
+      "name": "parseIndentSetting #11 (from FrankMD vitest suite)",
+      "fn": "parseIndentSetting",
+      "input": [
+        "4"
+      ],
+      "expected": "    "
+    },
+    {
+      "name": "parseIndentSetting #12 (from FrankMD vitest suite)",
+      "fn": "parseIndentSetting",
+      "input": [
+        10
+      ],
+      "expected": "      "
+    },
+    {
+      "name": "parseIndentSetting #13 (from FrankMD vitest suite)",
+      "fn": "parseIndentSetting",
+      "input": [
+        "foo"
+      ],
+      "expected": "  "
+    },
+    {
+      "name": "parseIndentSetting #14 (from FrankMD vitest suite)",
+      "fn": "parseIndentSetting",
+      "input": [
+        7
+      ],
+      "expected": "      "
+    },
+    {
+      "name": "parseIndentSetting #15 (from FrankMD vitest suite)",
+      "fn": "parseIndentSetting",
+      "input": [
+        4
+      ],
+      "expected": "    "
+    },
+    {
+      "name": "parseIndentSetting #16 (from FrankMD vitest suite)",
+      "fn": "parseIndentSetting",
+      "input": [
+        "6"
+      ],
+      "expected": "      "
+    },
+    {
+      "name": "parseIndentSetting #17 (from FrankMD vitest suite)",
+      "fn": "parseIndentSetting",
+      "input": [
+        null
+      ],
+      "expected": "  "
+    },
+    {
+      "name": "parseIndentSetting #18 (from FrankMD vitest suite)",
+      "fn": "parseIndentSetting",
+      "input": [
+        0
+      ],
+      "expected": "\t"
+    },
+    {
+      "name": "parseIndentSetting #19 (from FrankMD vitest suite)",
+      "fn": "parseIndentSetting",
+      "input": [
+        2
+      ],
+      "expected": "  "
+    },
+    {
+      "name": "parseIndentSetting #20 (from FrankMD vitest suite)",
+      "fn": "parseIndentSetting",
+      "input": [
+        {
+          "$undefined": true
+        }
+      ],
+      "expected": "  "
+    },
+    {
+      "name": "unindentLines #1 (from FrankMD vitest suite)",
+      "fn": "unindentLines",
+      "input": [
+        "   hello",
+        "    "
+      ],
+      "expected": "hello"
+    },
+    {
+      "name": "unindentLines #2 (from FrankMD vitest suite)",
+      "fn": "unindentLines",
+      "input": [
+        "    already indented\n      more indented",
+        "  "
+      ],
+      "expected": "  already indented\n    more indented"
+    },
+    {
+      "name": "unindentLines #3 (from FrankMD vitest suite)",
+      "fn": "unindentLines",
+      "input": [
+        "\tcode\n\tmore code",
+        "\t"
+      ],
+      "expected": "code\nmore code"
+    },
+    {
+      "name": "unindentLines #4 (from FrankMD vitest suite)",
+      "fn": "unindentLines",
+      "input": [
+        "  line1\n    line2\nline3",
+        "  "
+      ],
+      "expected": "line1\n  line2\nline3"
+    },
+    {
+      "name": "unindentLines #5 (from FrankMD vitest suite)",
+      "fn": "unindentLines",
+      "input": [
+        "  hello",
+        "  "
+      ],
+      "expected": "hello"
+    },
+    {
+      "name": "unindentLines #6 (from FrankMD vitest suite)",
+      "fn": "unindentLines",
+      "input": [
+        "xhello",
+        "  "
+      ],
+      "expected": "xhello"
+    },
+    {
+      "name": "unindentLines #7 (from FrankMD vitest suite)",
+      "fn": "unindentLines",
+      "input": [
+        "  line1\n  line2\n  line3",
+        "  "
+      ],
+      "expected": "line1\nline2\nline3"
+    },
+    {
+      "name": "unindentLines #8 (from FrankMD vitest suite)",
+      "fn": "unindentLines",
+      "input": [
+        "  hello",
+        "    "
+      ],
+      "expected": "hello"
+    },
+    {
+      "name": "unindentLines #9 (from FrankMD vitest suite)",
+      "fn": "unindentLines",
+      "input": [
+        "\thello\n\tworld",
+        "\t"
+      ],
+      "expected": "hello\nworld"
+    },
+    {
+      "name": "unindentLines #10 (from FrankMD vitest suite)",
+      "fn": "unindentLines",
+      "input": [
+        "  line1\n\n  line3",
+        "  "
+      ],
+      "expected": "line1\n\nline3"
+    },
+    {
+      "name": "unindentLines #11 (from FrankMD vitest suite)",
+      "fn": "unindentLines",
+      "input": [
+        "\thello",
+        "  "
+      ],
+      "expected": "hello"
+    },
+    {
+      "name": "unindentLines #12 (from FrankMD vitest suite)",
+      "fn": "unindentLines",
+      "input": [
+        " hello",
+        "    "
+      ],
+      "expected": "hello"
+    },
+    {
+      "name": "unindentLines #13 (from FrankMD vitest suite)",
+      "fn": "unindentLines",
+      "input": [
+        "hello",
+        "  "
+      ],
+      "expected": "hello"
+    },
+    {
+      "name": "parseIndentSetting #21 (edge corpus)",
+      "fn": "parseIndentSetting",
+      "input": [
+        "7"
+      ],
+      "expected": "      "
+    },
+    {
+      "name": "parseIndentSetting #22 (edge corpus)",
+      "fn": "parseIndentSetting",
+      "input": [
+        "-3"
+      ],
+      "expected": "  "
+    },
+    {
+      "name": "parseIndentSetting #23 (edge corpus)",
+      "fn": "parseIndentSetting",
+      "input": [
+        "3abc"
+      ],
+      "expected": "   "
+    },
+    {
+      "name": "parseIndentSetting #24 (edge corpus)",
+      "fn": "parseIndentSetting",
+      "input": [
+        " 3 "
+      ],
+      "expected": "   "
+    },
+    {
+      "name": "parseIndentSetting #25 (edge corpus)",
+      "fn": "parseIndentSetting",
+      "input": [
+        2.7
+      ],
+      "expected": "  "
+    },
+    {
+      "name": "parseIndentSetting #26 (edge corpus)",
+      "fn": "parseIndentSetting",
+      "input": [
+        "2.9"
+      ],
+      "expected": "  "
+    },
+    {
+      "name": "parseIndentSetting #27 (edge corpus)",
+      "fn": "parseIndentSetting",
+      "input": [
+        "0x4"
+      ],
+      "expected": "\t"
+    },
+    {
+      "name": "parseIndentSetting #28 (edge corpus)",
+      "fn": "parseIndentSetting",
+      "input": [
+        true
+      ],
+      "expected": "  "
+    },
+    {
+      "name": "parseIndentSetting #29 (edge corpus)",
+      "fn": "parseIndentSetting",
+      "input": [
+        {
+          "$number": "NaN"
+        }
+      ],
+      "expected": "  "
+    },
+    {
+      "name": "parseIndentSetting #30 (edge corpus)",
+      "fn": "parseIndentSetting",
+      "input": [
+        "\t"
+      ],
+      "expected": "  "
+    },
+    {
+      "name": "indentLines #8 (edge corpus)",
+      "fn": "indentLines",
+      "input": [
+        "a\nb",
+        "  "
+      ],
+      "expected": "  a\n  b"
+    },
+    {
+      "name": "unindentLines #14 (edge corpus)",
+      "fn": "unindentLines",
+      "input": [
+        "a\nb",
+        "  "
+      ],
+      "expected": "a\nb"
+    },
+    {
+      "name": "indentLines #9 (edge corpus)",
+      "fn": "indentLines",
+      "input": [
+        "a\nb",
+        "\t"
+      ],
+      "expected": "\ta\n\tb"
+    },
+    {
+      "name": "unindentLines #15 (edge corpus)",
+      "fn": "unindentLines",
+      "input": [
+        "a\nb",
+        "\t"
+      ],
+      "expected": "a\nb"
+    },
+    {
+      "name": "indentLines #10 (edge corpus)",
+      "fn": "indentLines",
+      "input": [
+        "a\nb",
+        "    "
+      ],
+      "expected": "    a\n    b"
+    },
+    {
+      "name": "unindentLines #16 (edge corpus)",
+      "fn": "unindentLines",
+      "input": [
+        "a\nb",
+        "    "
+      ],
+      "expected": "a\nb"
+    },
+    {
+      "name": "indentLines #11 (edge corpus)",
+      "fn": "indentLines",
+      "input": [
+        "a\nb",
+        " "
+      ],
+      "expected": " a\n b"
+    },
+    {
+      "name": "unindentLines #17 (edge corpus)",
+      "fn": "unindentLines",
+      "input": [
+        "a\nb",
+        " "
+      ],
+      "expected": "a\nb"
+    },
+    {
+      "name": "indentLines #12 (edge corpus)",
+      "fn": "indentLines",
+      "input": [
+        "",
+        "  "
+      ],
+      "expected": "  "
+    },
+    {
+      "name": "unindentLines #18 (edge corpus)",
+      "fn": "unindentLines",
+      "input": [
+        "",
+        "  "
+      ],
+      "expected": ""
+    },
+    {
+      "name": "indentLines #13 (edge corpus)",
+      "fn": "indentLines",
+      "input": [
+        "",
+        "\t"
+      ],
+      "expected": "\t"
+    },
+    {
+      "name": "unindentLines #19 (edge corpus)",
+      "fn": "unindentLines",
+      "input": [
+        "",
+        "\t"
+      ],
+      "expected": ""
+    },
+    {
+      "name": "indentLines #14 (edge corpus)",
+      "fn": "indentLines",
+      "input": [
+        "",
+        "    "
+      ],
+      "expected": "    "
+    },
+    {
+      "name": "unindentLines #20 (edge corpus)",
+      "fn": "unindentLines",
+      "input": [
+        "",
+        "    "
+      ],
+      "expected": ""
+    },
+    {
+      "name": "indentLines #15 (edge corpus)",
+      "fn": "indentLines",
+      "input": [
+        "",
+        " "
+      ],
+      "expected": " "
+    },
+    {
+      "name": "unindentLines #21 (edge corpus)",
+      "fn": "unindentLines",
+      "input": [
+        "",
+        " "
+      ],
+      "expected": ""
+    },
+    {
+      "name": "indentLines #16 (edge corpus)",
+      "fn": "indentLines",
+      "input": [
+        "\n",
+        "  "
+      ],
+      "expected": "  \n  "
+    },
+    {
+      "name": "unindentLines #22 (edge corpus)",
+      "fn": "unindentLines",
+      "input": [
+        "\n",
+        "  "
+      ],
+      "expected": "\n"
+    },
+    {
+      "name": "indentLines #17 (edge corpus)",
+      "fn": "indentLines",
+      "input": [
+        "\n",
+        "\t"
+      ],
+      "expected": "\t\n\t"
+    },
+    {
+      "name": "unindentLines #23 (edge corpus)",
+      "fn": "unindentLines",
+      "input": [
+        "\n",
+        "\t"
+      ],
+      "expected": "\n"
+    },
+    {
+      "name": "indentLines #18 (edge corpus)",
+      "fn": "indentLines",
+      "input": [
+        "\n",
+        "    "
+      ],
+      "expected": "    \n    "
+    },
+    {
+      "name": "unindentLines #24 (edge corpus)",
+      "fn": "unindentLines",
+      "input": [
+        "\n",
+        "    "
+      ],
+      "expected": "\n"
+    },
+    {
+      "name": "indentLines #19 (edge corpus)",
+      "fn": "indentLines",
+      "input": [
+        "\n",
+        " "
+      ],
+      "expected": " \n "
+    },
+    {
+      "name": "unindentLines #25 (edge corpus)",
+      "fn": "unindentLines",
+      "input": [
+        "\n",
+        " "
+      ],
+      "expected": "\n"
+    },
+    {
+      "name": "indentLines #20 (edge corpus)",
+      "fn": "indentLines",
+      "input": [
+        "  a\n    b\n\tc\n d",
+        "  "
+      ],
+      "expected": "    a\n      b\n  \tc\n   d"
+    },
+    {
+      "name": "unindentLines #26 (edge corpus)",
+      "fn": "unindentLines",
+      "input": [
+        "  a\n    b\n\tc\n d",
+        "  "
+      ],
+      "expected": "a\n  b\nc\nd"
+    },
+    {
+      "name": "indentLines #21 (edge corpus)",
+      "fn": "indentLines",
+      "input": [
+        "  a\n    b\n\tc\n d",
+        "\t"
+      ],
+      "expected": "\t  a\n\t    b\n\t\tc\n\t d"
+    },
+    {
+      "name": "unindentLines #27 (edge corpus)",
+      "fn": "unindentLines",
+      "input": [
+        "  a\n    b\n\tc\n d",
+        "\t"
+      ],
+      "expected": "  a\n    b\nc\n d"
+    },
+    {
+      "name": "indentLines #22 (edge corpus)",
+      "fn": "indentLines",
+      "input": [
+        "  a\n    b\n\tc\n d",
+        "    "
+      ],
+      "expected": "      a\n        b\n    \tc\n     d"
+    },
+    {
+      "name": "unindentLines #28 (edge corpus)",
+      "fn": "unindentLines",
+      "input": [
+        "  a\n    b\n\tc\n d",
+        "    "
+      ],
+      "expected": "a\nb\nc\nd"
+    },
+    {
+      "name": "indentLines #23 (edge corpus)",
+      "fn": "indentLines",
+      "input": [
+        "  a\n    b\n\tc\n d",
+        " "
+      ],
+      "expected": "   a\n     b\n \tc\n  d"
+    },
+    {
+      "name": "unindentLines #29 (edge corpus)",
+      "fn": "unindentLines",
+      "input": [
+        "  a\n    b\n\tc\n d",
+        " "
+      ],
+      "expected": " a\n   b\nc\nd"
+    },
+    {
+      "name": "indentLines #24 (edge corpus)",
+      "fn": "indentLines",
+      "input": [
+        "a\r\nb",
+        "  "
+      ],
+      "expected": "  a\r\n  b"
+    },
+    {
+      "name": "unindentLines #30 (edge corpus)",
+      "fn": "unindentLines",
+      "input": [
+        "a\r\nb",
+        "  "
+      ],
+      "expected": "a\r\nb"
+    },
+    {
+      "name": "indentLines #25 (edge corpus)",
+      "fn": "indentLines",
+      "input": [
+        "a\r\nb",
+        "\t"
+      ],
+      "expected": "\ta\r\n\tb"
+    },
+    {
+      "name": "unindentLines #31 (edge corpus)",
+      "fn": "unindentLines",
+      "input": [
+        "a\r\nb",
+        "\t"
+      ],
+      "expected": "a\r\nb"
+    },
+    {
+      "name": "indentLines #26 (edge corpus)",
+      "fn": "indentLines",
+      "input": [
+        "a\r\nb",
+        "    "
+      ],
+      "expected": "    a\r\n    b"
+    },
+    {
+      "name": "unindentLines #32 (edge corpus)",
+      "fn": "unindentLines",
+      "input": [
+        "a\r\nb",
+        "    "
+      ],
+      "expected": "a\r\nb"
+    },
+    {
+      "name": "indentLines #27 (edge corpus)",
+      "fn": "indentLines",
+      "input": [
+        "a\r\nb",
+        " "
+      ],
+      "expected": " a\r\n b"
+    },
+    {
+      "name": "unindentLines #33 (edge corpus)",
+      "fn": "unindentLines",
+      "input": [
+        "a\r\nb",
+        " "
+      ],
+      "expected": "a\r\nb"
+    },
+    {
+      "name": "indentLines #28 (edge corpus)",
+      "fn": "indentLines",
+      "input": [
+        "日本\n👋",
+        "  "
+      ],
+      "expected": "  日本\n  👋",
+      "utf16": [
+        {
+          "utf16_len": 5,
+          "scalar_len": 4,
+          "utf8_len": 11
+        }
+      ]
+    },
+    {
+      "name": "unindentLines #34 (edge corpus)",
+      "fn": "unindentLines",
+      "input": [
+        "日本\n👋",
+        "  "
+      ],
+      "expected": "日本\n👋",
+      "utf16": [
+        {
+          "utf16_len": 5,
+          "scalar_len": 4,
+          "utf8_len": 11
+        }
+      ]
+    },
+    {
+      "name": "indentLines #29 (edge corpus)",
+      "fn": "indentLines",
+      "input": [
+        "日本\n👋",
+        "\t"
+      ],
+      "expected": "\t日本\n\t👋",
+      "utf16": [
+        {
+          "utf16_len": 5,
+          "scalar_len": 4,
+          "utf8_len": 11
+        }
+      ]
+    },
+    {
+      "name": "unindentLines #35 (edge corpus)",
+      "fn": "unindentLines",
+      "input": [
+        "日本\n👋",
+        "\t"
+      ],
+      "expected": "日本\n👋",
+      "utf16": [
+        {
+          "utf16_len": 5,
+          "scalar_len": 4,
+          "utf8_len": 11
+        }
+      ]
+    },
+    {
+      "name": "indentLines #30 (edge corpus)",
+      "fn": "indentLines",
+      "input": [
+        "日本\n👋",
+        "    "
+      ],
+      "expected": "    日本\n    👋",
+      "utf16": [
+        {
+          "utf16_len": 5,
+          "scalar_len": 4,
+          "utf8_len": 11
+        }
+      ]
+    },
+    {
+      "name": "unindentLines #36 (edge corpus)",
+      "fn": "unindentLines",
+      "input": [
+        "日本\n👋",
+        "    "
+      ],
+      "expected": "日本\n👋",
+      "utf16": [
+        {
+          "utf16_len": 5,
+          "scalar_len": 4,
+          "utf8_len": 11
+        }
+      ]
+    },
+    {
+      "name": "indentLines #31 (edge corpus)",
+      "fn": "indentLines",
+      "input": [
+        "日本\n👋",
+        " "
+      ],
+      "expected": " 日本\n 👋",
+      "utf16": [
+        {
+          "utf16_len": 5,
+          "scalar_len": 4,
+          "utf8_len": 11
+        }
+      ]
+    },
+    {
+      "name": "unindentLines #37 (edge corpus)",
+      "fn": "unindentLines",
+      "input": [
+        "日本\n👋",
+        " "
+      ],
+      "expected": "日本\n👋",
+      "utf16": [
+        {
+          "utf16_len": 5,
+          "scalar_len": 4,
+          "utf8_len": 11
+        }
+      ]
+    },
+    {
+      "name": "indentLines #32 (edge corpus)",
+      "fn": "indentLines",
+      "input": [
+        "\t\ta",
+        "  "
+      ],
+      "expected": "  \t\ta"
+    },
+    {
+      "name": "unindentLines #38 (edge corpus)",
+      "fn": "unindentLines",
+      "input": [
+        "\t\ta",
+        "  "
+      ],
+      "expected": "\ta"
+    },
+    {
+      "name": "indentLines #33 (edge corpus)",
+      "fn": "indentLines",
+      "input": [
+        "\t\ta",
+        "\t"
+      ],
+      "expected": "\t\t\ta"
+    },
+    {
+      "name": "unindentLines #39 (edge corpus)",
+      "fn": "unindentLines",
+      "input": [
+        "\t\ta",
+        "\t"
+      ],
+      "expected": "\ta"
+    },
+    {
+      "name": "indentLines #34 (edge corpus)",
+      "fn": "indentLines",
+      "input": [
+        "\t\ta",
+        "    "
+      ],
+      "expected": "    \t\ta"
+    },
+    {
+      "name": "unindentLines #40 (edge corpus)",
+      "fn": "unindentLines",
+      "input": [
+        "\t\ta",
+        "    "
+      ],
+      "expected": "\ta"
+    },
+    {
+      "name": "indentLines #35 (edge corpus)",
+      "fn": "indentLines",
+      "input": [
+        "\t\ta",
+        " "
+      ],
+      "expected": " \t\ta"
+    },
+    {
+      "name": "unindentLines #41 (edge corpus)",
+      "fn": "unindentLines",
+      "input": [
+        "\t\ta",
+        " "
+      ],
+      "expected": "\ta"
+    },
+    {
+      "name": "indentLines #36 (edge corpus)",
+      "fn": "indentLines",
+      "input": [
+        "   ",
+        "  "
+      ],
+      "expected": "     "
+    },
+    {
+      "name": "unindentLines #42 (edge corpus)",
+      "fn": "unindentLines",
+      "input": [
+        "   ",
+        "  "
+      ],
+      "expected": " "
+    },
+    {
+      "name": "indentLines #37 (edge corpus)",
+      "fn": "indentLines",
+      "input": [
+        "   ",
+        "\t"
+      ],
+      "expected": "\t   "
+    },
+    {
+      "name": "unindentLines #43 (edge corpus)",
+      "fn": "unindentLines",
+      "input": [
+        "   ",
+        "\t"
+      ],
+      "expected": "   "
+    },
+    {
+      "name": "indentLines #38 (edge corpus)",
+      "fn": "indentLines",
+      "input": [
+        "   ",
+        "    "
+      ],
+      "expected": "       "
+    },
+    {
+      "name": "unindentLines #44 (edge corpus)",
+      "fn": "unindentLines",
+      "input": [
+        "   ",
+        "    "
+      ],
+      "expected": ""
+    },
+    {
+      "name": "indentLines #39 (edge corpus)",
+      "fn": "indentLines",
+      "input": [
+        "   ",
+        " "
+      ],
+      "expected": "    "
+    },
+    {
+      "name": "unindentLines #45 (edge corpus)",
+      "fn": "unindentLines",
+      "input": [
+        "   ",
+        " "
+      ],
+      "expected": "  "
+    },
+    {
+      "name": "indentLines #40 (edge corpus)",
+      "fn": "indentLines",
+      "input": [
+        "a\n\n b",
+        "  "
+      ],
+      "expected": "  a\n  \n   b"
+    },
+    {
+      "name": "unindentLines #46 (edge corpus)",
+      "fn": "unindentLines",
+      "input": [
+        "a\n\n b",
+        "  "
+      ],
+      "expected": "a\n\nb"
+    },
+    {
+      "name": "indentLines #41 (edge corpus)",
+      "fn": "indentLines",
+      "input": [
+        "a\n\n b",
+        "\t"
+      ],
+      "expected": "\ta\n\t\n\t b"
+    },
+    {
+      "name": "unindentLines #47 (edge corpus)",
+      "fn": "unindentLines",
+      "input": [
+        "a\n\n b",
+        "\t"
+      ],
+      "expected": "a\n\n b"
+    },
+    {
+      "name": "indentLines #42 (edge corpus)",
+      "fn": "indentLines",
+      "input": [
+        "a\n\n b",
+        "    "
+      ],
+      "expected": "    a\n    \n     b"
+    },
+    {
+      "name": "unindentLines #48 (edge corpus)",
+      "fn": "unindentLines",
+      "input": [
+        "a\n\n b",
+        "    "
+      ],
+      "expected": "a\n\nb"
+    },
+    {
+      "name": "indentLines #43 (edge corpus)",
+      "fn": "indentLines",
+      "input": [
+        "a\n\n b",
+        " "
+      ],
+      "expected": " a\n \n  b"
+    },
+    {
+      "name": "unindentLines #49 (edge corpus)",
+      "fn": "unindentLines",
+      "input": [
+        "a\n\n b",
+        " "
+      ],
+      "expected": "a\n\nb"
+    },
+    {
+      "name": "unindentLines #50 (edge corpus)",
+      "fn": "unindentLines",
+      "input": [
+        "      six\n  two\n\t\ttab",
+        "    "
+      ],
+      "expected": "  six\ntwo\n\ttab"
+    },
+    {
+      "name": "unindentLines #51 (edge corpus)",
+      "fn": "unindentLines",
+      "input": [
+        " \tmixed",
+        "  "
+      ],
+      "expected": "\tmixed"
+    },
+    {
+      "name": "unindentLines #52 (edge corpus)",
+      "fn": "unindentLines",
+      "input": [
+        "\t  x",
+        "\t"
+      ],
+      "expected": "  x"
+    }
+  ]
+}

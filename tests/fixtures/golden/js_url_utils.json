@@ -1,0 +1,783 @@
+{
+  "source": "app/javascript/lib/url_utils.js @ d47a89e92d89f807878d318182fa5dcea0329ec4",
+  "frankmd_sha": "d47a89e92d89f807878d318182fa5dcea0329ec4",
+  "generator": "tools/golden/js/utils.mjs",
+  "notes": "input = encoded argument array (decode with golden.mjs decode: {$undefined}, {$number}, {$date}, {$regexp}, {$utf16}); expected = encoded return value, or {$error:{name,message}}. JS strings are UTF-16: all positions/lengths/indices in inputs and outputs are UTF-16 code-unit offsets; cases with non-BMP/multi-unit strings carry a `utf16` array (utf16_len/scalar_len/utf8_len per such string arg). TZ pinned to UTC for date-based helpers.",
+  "functions": [
+    "encodePath",
+    "extractYouTubeId"
+  ],
+  "cases": [
+    {
+      "name": "encodePath #1 (from FrankMD vitest suite)",
+      "fn": "encodePath",
+      "input": [
+        "file3.md"
+      ],
+      "expected": "file3.md"
+    },
+    {
+      "name": "encodePath #2 (from FrankMD vitest suite)",
+      "fn": "encodePath",
+      "input": [
+        ""
+      ],
+      "expected": ""
+    },
+    {
+      "name": "encodePath #3 (from FrankMD vitest suite)",
+      "fn": "encodePath",
+      "input": [
+        "second.md"
+      ],
+      "expected": "second.md"
+    },
+    {
+      "name": "encodePath #4 (from FrankMD vitest suite)",
+      "fn": "encodePath",
+      "input": [
+        "note1.md"
+      ],
+      "expected": "note1.md"
+    },
+    {
+      "name": "encodePath #5 (from FrankMD vitest suite)",
+      "fn": "encodePath",
+      "input": [
+        "created.md"
+      ],
+      "expected": "created.md"
+    },
+    {
+      "name": "encodePath #6 (from FrankMD vitest suite)",
+      "fn": "encodePath",
+      "input": [
+        "a/b/c/d/e.md"
+      ],
+      "expected": "a/b/c/d/e.md"
+    },
+    {
+      "name": "encodePath #7 (from FrankMD vitest suite)",
+      "fn": "encodePath",
+      "input": [
+        "new.md"
+      ],
+      "expected": "new.md"
+    },
+    {
+      "name": "encodePath #8 (from FrankMD vitest suite)",
+      "fn": "encodePath",
+      "input": [
+        "photos/cat.jpg"
+      ],
+      "expected": "photos/cat.jpg"
+    },
+    {
+      "name": "encodePath #9 (from FrankMD vitest suite)",
+      "fn": "encodePath",
+      "input": [
+        "a/b/c"
+      ],
+      "expected": "a/b/c"
+    },
+    {
+      "name": "encodePath #10 (from FrankMD vitest suite)",
+      "fn": "encodePath",
+      "input": [
+        "root-created.md"
+      ],
+      "expected": "root-created.md"
+    },
+    {
+      "name": "encodePath #11 (from FrankMD vitest suite)",
+      "fn": "encodePath",
+      "input": [
+        "videos/clip.mp4"
+      ],
+      "expected": "videos/clip.mp4"
+    },
+    {
+      "name": "encodePath #12 (from FrankMD vitest suite)",
+      "fn": "encodePath",
+      "input": [
+        {
+          "$undefined": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "encodePath #13 (from FrankMD vitest suite)",
+      "fn": "encodePath",
+      "input": [
+        null
+      ],
+      "expected": ""
+    },
+    {
+      "name": "encodePath #14 (from FrankMD vitest suite)",
+      "fn": "encodePath",
+      "input": [
+        "existing"
+      ],
+      "expected": "existing"
+    },
+    {
+      "name": "encodePath #15 (from FrankMD vitest suite)",
+      "fn": "encodePath",
+      "input": [
+        "nested/original.md"
+      ],
+      "expected": "nested/original.md"
+    },
+    {
+      "name": "encodePath #16 (from FrankMD vitest suite)",
+      "fn": "encodePath",
+      "input": [
+        "file#1.md"
+      ],
+      "expected": "file%231.md"
+    },
+    {
+      "name": "encodePath #17 (from FrankMD vitest suite)",
+      "fn": "encodePath",
+      "input": [
+        "foo.md"
+      ],
+      "expected": "foo.md"
+    },
+    {
+      "name": "encodePath #18 (from FrankMD vitest suite)",
+      "fn": "encodePath",
+      "input": [
+        "docs/nested/test.md"
+      ],
+      "expected": "docs/nested/test.md"
+    },
+    {
+      "name": "encodePath #19 (from FrankMD vitest suite)",
+      "fn": "encodePath",
+      "input": [
+        "broken.md"
+      ],
+      "expected": "broken.md"
+    },
+    {
+      "name": "encodePath #20 (from FrankMD vitest suite)",
+      "fn": "encodePath",
+      "input": [
+        "old.md"
+      ],
+      "expected": "old.md"
+    },
+    {
+      "name": "encodePath #21 (from FrankMD vitest suite)",
+      "fn": "encodePath",
+      "input": [
+        "images/unused.png"
+      ],
+      "expected": "images/unused.png"
+    },
+    {
+      "name": "encodePath #22 (from FrankMD vitest suite)",
+      "fn": "encodePath",
+      "input": [
+        "generated.md"
+      ],
+      "expected": "generated.md"
+    },
+    {
+      "name": "encodePath #23 (from FrankMD vitest suite)",
+      "fn": "encodePath",
+      "input": [
+        "a.md"
+      ],
+      "expected": "a.md"
+    },
+    {
+      "name": "encodePath #24 (from FrankMD vitest suite)",
+      "fn": "encodePath",
+      "input": [
+        "test.jpg"
+      ],
+      "expected": "test.jpg"
+    },
+    {
+      "name": "encodePath #25 (from FrankMD vitest suite)",
+      "fn": "encodePath",
+      "input": [
+        "folder1/file1.md"
+      ],
+      "expected": "folder1/file1.md"
+    },
+    {
+      "name": "encodePath #26 (from FrankMD vitest suite)",
+      "fn": "encodePath",
+      "input": [
+        "images/photo.png"
+      ],
+      "expected": "images/photo.png"
+    },
+    {
+      "name": "encodePath #27 (from FrankMD vitest suite)",
+      "fn": "encodePath",
+      "input": [
+        "photos/dog.jpg"
+      ],
+      "expected": "photos/dog.jpg"
+    },
+    {
+      "name": "encodePath #28 (from FrankMD vitest suite)",
+      "fn": "encodePath",
+      "input": [
+        "c.md"
+      ],
+      "expected": "c.md"
+    },
+    {
+      "name": "encodePath #29 (from FrankMD vitest suite)",
+      "fn": "encodePath",
+      "input": [
+        "folder/cherry.md"
+      ],
+      "expected": "folder/cherry.md"
+    },
+    {
+      "name": "encodePath #30 (from FrankMD vitest suite)",
+      "fn": "encodePath",
+      "input": [
+        "posts/generated.md"
+      ],
+      "expected": "posts/generated.md"
+    },
+    {
+      "name": "encodePath #31 (from FrankMD vitest suite)",
+      "fn": "encodePath",
+      "input": [
+        "newfolder"
+      ],
+      "expected": "newfolder"
+    },
+    {
+      "name": "encodePath #32 (from FrankMD vitest suite)",
+      "fn": "encodePath",
+      "input": [
+        "photos/a.jpg"
+      ],
+      "expected": "photos/a.jpg"
+    },
+    {
+      "name": "encodePath #33 (from FrankMD vitest suite)",
+      "fn": "encodePath",
+      "input": [
+        "docs/nested/sample.md"
+      ],
+      "expected": "docs/nested/sample.md"
+    },
+    {
+      "name": "encodePath #34 (from FrankMD vitest suite)",
+      "fn": "encodePath",
+      "input": [
+        "previous.md"
+      ],
+      "expected": "previous.md"
+    },
+    {
+      "name": "encodePath #35 (from FrankMD vitest suite)",
+      "fn": "encodePath",
+      "input": [
+        "docs/notes/note.md"
+      ],
+      "expected": "docs/notes/note.md"
+    },
+    {
+      "name": "encodePath #36 (from FrankMD vitest suite)",
+      "fn": "encodePath",
+      "input": [
+        "parent/old"
+      ],
+      "expected": "parent/old"
+    },
+    {
+      "name": "encodePath #37 (from FrankMD vitest suite)",
+      "fn": "encodePath",
+      "input": [
+        "images/photo\" onerror=\"alert(1).png"
+      ],
+      "expected": "images/photo%22%20onerror%3D%22alert(1).png"
+    },
+    {
+      "name": "encodePath #38 (from FrankMD vitest suite)",
+      "fn": "encodePath",
+      "input": [
+        "dirty.md"
+      ],
+      "expected": "dirty.md"
+    },
+    {
+      "name": "encodePath #39 (from FrankMD vitest suite)",
+      "fn": "encodePath",
+      "input": [
+        "bar.md"
+      ],
+      "expected": "bar.md"
+    },
+    {
+      "name": "encodePath #40 (from FrankMD vitest suite)",
+      "fn": "encodePath",
+      "input": [
+        "hello world/test file.md"
+      ],
+      "expected": "hello%20world/test%20file.md"
+    },
+    {
+      "name": "extractYouTubeId #1 (from FrankMD vitest suite)",
+      "fn": "extractYouTubeId",
+      "input": [
+        "https://youtube.com/watch?v=dQw4w9WgXcQ"
+      ],
+      "expected": "dQw4w9WgXcQ"
+    },
+    {
+      "name": "extractYouTubeId #2 (from FrankMD vitest suite)",
+      "fn": "extractYouTubeId",
+      "input": [
+        "https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=30s"
+      ],
+      "expected": "dQw4w9WgXcQ"
+    },
+    {
+      "name": "extractYouTubeId #3 (from FrankMD vitest suite)",
+      "fn": "extractYouTubeId",
+      "input": [
+        "https://www.youtube.com/embed/dQw4w9WgXcQ"
+      ],
+      "expected": "dQw4w9WgXcQ"
+    },
+    {
+      "name": "extractYouTubeId #4 (from FrankMD vitest suite)",
+      "fn": "extractYouTubeId",
+      "input": [
+        null
+      ],
+      "expected": null
+    },
+    {
+      "name": "extractYouTubeId #5 (from FrankMD vitest suite)",
+      "fn": "extractYouTubeId",
+      "input": [
+        "https://www.youtube.com/v/dQw4w9WgXcQ"
+      ],
+      "expected": "dQw4w9WgXcQ"
+    },
+    {
+      "name": "extractYouTubeId #6 (from FrankMD vitest suite)",
+      "fn": "extractYouTubeId",
+      "input": [
+        "https://vimeo.com/123456"
+      ],
+      "expected": null
+    },
+    {
+      "name": "extractYouTubeId #7 (from FrankMD vitest suite)",
+      "fn": "extractYouTubeId",
+      "input": [
+        "not a url"
+      ],
+      "expected": null
+    },
+    {
+      "name": "extractYouTubeId #8 (from FrankMD vitest suite)",
+      "fn": "extractYouTubeId",
+      "input": [
+        {
+          "$undefined": true
+        }
+      ],
+      "expected": null
+    },
+    {
+      "name": "extractYouTubeId #9 (from FrankMD vitest suite)",
+      "fn": "extractYouTubeId",
+      "input": [
+        "https://youtu.be/dQw4w9WgXcQ"
+      ],
+      "expected": "dQw4w9WgXcQ"
+    },
+    {
+      "name": "extractYouTubeId #10 (from FrankMD vitest suite)",
+      "fn": "extractYouTubeId",
+      "input": [
+        "https://example.com/video.mp4"
+      ],
+      "expected": null
+    },
+    {
+      "name": "extractYouTubeId #11 (from FrankMD vitest suite)",
+      "fn": "extractYouTubeId",
+      "input": [
+        "https://example.com/video.webm"
+      ],
+      "expected": null
+    },
+    {
+      "name": "extractYouTubeId #12 (from FrankMD vitest suite)",
+      "fn": "extractYouTubeId",
+      "input": [
+        "dQw4w9WgXcQ"
+      ],
+      "expected": "dQw4w9WgXcQ"
+    },
+    {
+      "name": "extractYouTubeId #13 (from FrankMD vitest suite)",
+      "fn": "extractYouTubeId",
+      "input": [
+        ""
+      ],
+      "expected": null
+    },
+    {
+      "name": "extractYouTubeId #14 (from FrankMD vitest suite)",
+      "fn": "extractYouTubeId",
+      "input": [
+        "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+      ],
+      "expected": "dQw4w9WgXcQ"
+    },
+    {
+      "name": "extractYouTubeId #15 (from FrankMD vitest suite)",
+      "fn": "extractYouTubeId",
+      "input": [
+        "https://example.com/page.html"
+      ],
+      "expected": null
+    },
+    {
+      "name": "encodePath #41 (edge corpus)",
+      "fn": "encodePath",
+      "input": [
+        "a/b"
+      ],
+      "expected": "a/b"
+    },
+    {
+      "name": "encodePath #42 (edge corpus)",
+      "fn": "encodePath",
+      "input": [
+        "/abs/path"
+      ],
+      "expected": "/abs/path"
+    },
+    {
+      "name": "encodePath #43 (edge corpus)",
+      "fn": "encodePath",
+      "input": [
+        "trailing/"
+      ],
+      "expected": "trailing/"
+    },
+    {
+      "name": "encodePath #44 (edge corpus)",
+      "fn": "encodePath",
+      "input": [
+        "a//b"
+      ],
+      "expected": "a//b"
+    },
+    {
+      "name": "encodePath #45 (edge corpus)",
+      "fn": "encodePath",
+      "input": [
+        "100%.md"
+      ],
+      "expected": "100%25.md"
+    },
+    {
+      "name": "encodePath #46 (edge corpus)",
+      "fn": "encodePath",
+      "input": [
+        "a+b&c=d.md"
+      ],
+      "expected": "a%2Bb%26c%3Dd.md"
+    },
+    {
+      "name": "encodePath #47 (edge corpus)",
+      "fn": "encodePath",
+      "input": [
+        "#hash?q.md"
+      ],
+      "expected": "%23hash%3Fq.md"
+    },
+    {
+      "name": "encodePath #48 (edge corpus)",
+      "fn": "encodePath",
+      "input": [
+        "café/résumé.md"
+      ],
+      "expected": "caf%C3%A9/r%C3%A9sum%C3%A9.md"
+    },
+    {
+      "name": "encodePath #49 (edge corpus)",
+      "fn": "encodePath",
+      "input": [
+        "日本語/ノート.md"
+      ],
+      "expected": "%E6%97%A5%E6%9C%AC%E8%AA%9E/%E3%83%8E%E3%83%BC%E3%83%88.md"
+    },
+    {
+      "name": "encodePath #50 (edge corpus)",
+      "fn": "encodePath",
+      "input": [
+        "שלום.md"
+      ],
+      "expected": "%D7%A9%D7%9C%D7%95%D7%9D.md"
+    },
+    {
+      "name": "encodePath #51 (edge corpus)",
+      "fn": "encodePath",
+      "input": [
+        "👨‍👩‍👧.md"
+      ],
+      "expected": "%F0%9F%91%A8%E2%80%8D%F0%9F%91%A9%E2%80%8D%F0%9F%91%A7.md",
+      "utf16": [
+        {
+          "utf16_len": 11,
+          "scalar_len": 8,
+          "utf8_len": 21
+        }
+      ]
+    },
+    {
+      "name": "encodePath #52 (edge corpus)",
+      "fn": "encodePath",
+      "input": [
+        "é.md"
+      ],
+      "expected": "e%CC%81.md"
+    },
+    {
+      "name": "encodePath #53 (edge corpus)",
+      "fn": "encodePath",
+      "input": [
+        "a\\b.md"
+      ],
+      "expected": "a%5Cb.md"
+    },
+    {
+      "name": "encodePath #54 (edge corpus)",
+      "fn": "encodePath",
+      "input": [
+        ".."
+      ],
+      "expected": ".."
+    },
+    {
+      "name": "encodePath #55 (edge corpus)",
+      "fn": "encodePath",
+      "input": [
+        "../x"
+      ],
+      "expected": "../x"
+    },
+    {
+      "name": "encodePath #56 (edge corpus)",
+      "fn": "encodePath",
+      "input": [
+        "%2e%2e/x"
+      ],
+      "expected": "%252e%252e/x"
+    },
+    {
+      "name": "encodePath #57 (edge corpus)",
+      "fn": "encodePath",
+      "input": [
+        "!'()*~.md"
+      ],
+      "expected": "!'()*~.md"
+    },
+    {
+      "name": "encodePath #58 (edge corpus)",
+      "fn": "encodePath",
+      "input": [
+        "a;b,c:d@e$.md"
+      ],
+      "expected": "a%3Bb%2Cc%3Ad%40e%24.md"
+    },
+    {
+      "name": "encodePath #59 (edge corpus)",
+      "fn": "encodePath",
+      "input": [
+        "tab\there.md"
+      ],
+      "expected": "tab%09here.md"
+    },
+    {
+      "name": "encodePath #60 (edge corpus)",
+      "fn": "encodePath",
+      "input": [
+        "nl\nhere.md"
+      ],
+      "expected": "nl%0Ahere.md"
+    },
+    {
+      "name": "extractYouTubeId #16 (edge corpus)",
+      "fn": "extractYouTubeId",
+      "input": [
+        "http://youtube.com/watch?v=dQw4w9WgXcQ&t=1"
+      ],
+      "expected": "dQw4w9WgXcQ"
+    },
+    {
+      "name": "extractYouTubeId #17 (edge corpus)",
+      "fn": "extractYouTubeId",
+      "input": [
+        "https://m.youtube.com/watch?v=dQw4w9WgXcQ"
+      ],
+      "expected": "dQw4w9WgXcQ"
+    },
+    {
+      "name": "extractYouTubeId #18 (edge corpus)",
+      "fn": "extractYouTubeId",
+      "input": [
+        "https://www.youtube.com/watch?feature=share&v=dQw4w9WgXcQ"
+      ],
+      "expected": null
+    },
+    {
+      "name": "extractYouTubeId #19 (edge corpus)",
+      "fn": "extractYouTubeId",
+      "input": [
+        "https://youtu.be/dQw4w9WgXcQ?si=abc"
+      ],
+      "expected": "dQw4w9WgXcQ"
+    },
+    {
+      "name": "extractYouTubeId #20 (edge corpus)",
+      "fn": "extractYouTubeId",
+      "input": [
+        "https://www.youtube.com/shorts/dQw4w9WgXcQ"
+      ],
+      "expected": null
+    },
+    {
+      "name": "extractYouTubeId #21 (edge corpus)",
+      "fn": "extractYouTubeId",
+      "input": [
+        "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ"
+      ],
+      "expected": null
+    },
+    {
+      "name": "extractYouTubeId #22 (edge corpus)",
+      "fn": "extractYouTubeId",
+      "input": [
+        "https://youtube.com/embed/dQw4w9WgXcQ?start=3"
+      ],
+      "expected": "dQw4w9WgXcQ"
+    },
+    {
+      "name": "extractYouTubeId #23 (edge corpus)",
+      "fn": "extractYouTubeId",
+      "input": [
+        "https://youtube.com/v/dQw4w9WgXcQ"
+      ],
+      "expected": "dQw4w9WgXcQ"
+    },
+    {
+      "name": "extractYouTubeId #24 (edge corpus)",
+      "fn": "extractYouTubeId",
+      "input": [
+        "https://www.youtube.com/live/dQw4w9WgXcQ"
+      ],
+      "expected": null
+    },
+    {
+      "name": "extractYouTubeId #25 (edge corpus)",
+      "fn": "extractYouTubeId",
+      "input": [
+        "https://youtu.be/short"
+      ],
+      "expected": null
+    },
+    {
+      "name": "extractYouTubeId #26 (edge corpus)",
+      "fn": "extractYouTubeId",
+      "input": [
+        "https://youtu.be/dQw4w9WgXcQextra"
+      ],
+      "expected": "dQw4w9WgXcQ"
+    },
+    {
+      "name": "extractYouTubeId #27 (edge corpus)",
+      "fn": "extractYouTubeId",
+      "input": [
+        " dQw4w9WgXcQ"
+      ],
+      "expected": null
+    },
+    {
+      "name": "extractYouTubeId #28 (edge corpus)",
+      "fn": "extractYouTubeId",
+      "input": [
+        "dQw4w9WgXc"
+      ],
+      "expected": null
+    },
+    {
+      "name": "extractYouTubeId #29 (edge corpus)",
+      "fn": "extractYouTubeId",
+      "input": [
+        "dQw4w9WgXcQQ"
+      ],
+      "expected": null
+    },
+    {
+      "name": "extractYouTubeId #30 (edge corpus)",
+      "fn": "extractYouTubeId",
+      "input": [
+        "a-b_c-d_e-f"
+      ],
+      "expected": "a-b_c-d_e-f"
+    },
+    {
+      "name": "extractYouTubeId #31 (edge corpus)",
+      "fn": "extractYouTubeId",
+      "input": [
+        "!!!!!!!!!!!"
+      ],
+      "expected": null
+    },
+    {
+      "name": "extractYouTubeId #32 (edge corpus)",
+      "fn": "extractYouTubeId",
+      "input": [
+        "https://evil.com/?u=youtube.com/watch?v=dQw4w9WgXcQ"
+      ],
+      "expected": "dQw4w9WgXcQ"
+    },
+    {
+      "name": "extractYouTubeId #33 (edge corpus)",
+      "fn": "extractYouTubeId",
+      "input": [
+        "HTTPS://WWW.YOUTUBE.COM/WATCH?V=dQw4w9WgXcQ"
+      ],
+      "expected": null
+    },
+    {
+      "name": "extractYouTubeId #34 (edge corpus)",
+      "fn": "extractYouTubeId",
+      "input": [
+        "https://www.youtube.com/watch?v=日本語日本語日本語日本"
+      ],
+      "expected": null
+    },
+    {
+      "name": "extractYouTubeId #35 (edge corpus)",
+      "fn": "extractYouTubeId",
+      "input": [
+        "https://vimeo.com/123"
+      ],
+      "expected": null
+    }
+  ]
+}

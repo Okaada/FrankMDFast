@@ -1,0 +1,136 @@
+//! Conformance against `tests/fixtures/golden/egress_policy.json` (220 cases).
+//!
+//! - `blocked_ip?`: `parse_ip` (Ruby `IPAddr.new`) → normalized/family/blocked, or the
+//!   `IPAddr::InvalidAddressError` message.
+//! - `checked_target (resolve stubbed)`: a resolver that answers `resolve_returns`
+//!   for any host and records the hosts it was asked for (Ruby `uri.host`).
+//! - `checked_target (real resolve)` / `resolve (real)`: the system resolver with
+//!   numeric hosts (glibc `inet_aton` forms). `localhost` is machine dependent
+//!   (/etc/hosts order), so for it only the *set* of addresses is compared and any
+//!   loopback answer is accepted for `checked_target`.
+
+use std::net::IpAddr;
+use std::sync::Mutex;
+
+use frankmd_net::NetError;
+use frankmd_net::egress::{
+    HostResolver, SystemResolver, Target, check_target, is_blocked_net, parse_ip,
+};
+use frankmd_testkit::serde_json::{Value, json};
+use frankmd_testkit::{Case, assert_cases, golden};
+
+#[derive(Debug)]
+struct Stub {
+    answer: Vec<IpAddr>,
+    calls: Mutex<Vec<String>>,
+}
+
+impl HostResolver for Stub {
+    fn resolve(&self, host: &str) -> Result<Vec<IpAddr>, NetError> {
+        self.calls.lock().expect("lock").push(host.to_owned());
+        Ok(self.answer.clone())
+    }
+}
+
+fn target_json(t: &Target) -> Value {
+    json!({
+        "uri": t.uri, "scheme": t.scheme, "host": t.host, "hostname": t.hostname,
+        "port": t.port, "path": t.path, "query": t.query, "userinfo": t.userinfo,
+        "fragment": t.fragment, "ip": t.ip.to_string(),
+    })
+}
+
+fn result_json(r: Result<Target, NetError>) -> Value {
+    match r {
+        Ok(t) => target_json(&t),
+        Err(NetError::Blocked(m)) => json!({"error": "EgressPolicy::BlockedError", "message": m}),
+        Err(e) => json!({"error": "unexpected", "message": e.to_string()}),
+    }
+}
+
+fn check_eq(actual: &Value, expected: &Value) -> Result<(), String> {
+    if actual == expected { Ok(()) } else { Err(format!("expected {expected}, got {actual}")) }
+}
+
+#[test]
+fn blocked_ip() {
+    let g = golden("egress_policy");
+    assert_cases("egress_policy blocked_ip?", g.cases_for("blocked_ip?"), |c: &Case| {
+        let input = c.input["ip"].as_str().ok_or("ip not a string")?;
+        let actual = match parse_ip(input) {
+            Ok(net) => json!({
+                "normalized": net.addr().to_string(),
+                "family": if net.addr().is_ipv4() { "ipv4" } else { "ipv6" },
+                "blocked": is_blocked_net(&net),
+            }),
+            // The fixture recorded only the message prefix (no offending input); so must we.
+            Err(NetError::InvalidAddress(m)) => json!({"error": "IPAddr::InvalidAddressError", "message": m}),
+            Err(e) => return Err(format!("unexpected error {e:?}")),
+        };
+        check_eq(&actual, &c.expected)
+    });
+}
+
+#[test]
+fn checked_target_resolve_stubbed() {
+    let g = golden("egress_policy");
+    assert_cases("egress_policy checked_target (stubbed)", g.cases_for("checked_target (resolve stubbed)"), |c| {
+        let answer = c.input["resolve_returns"]
+            .as_array()
+            .ok_or("resolve_returns")?
+            .iter()
+            .map(|v| v.as_str().unwrap_or_default().parse::<IpAddr>().map_err(|e| e.to_string()))
+            .collect::<Result<Vec<_>, _>>()?;
+        let stub = Stub { answer, calls: Mutex::new(Vec::new()) };
+        // `url: null` in Ruby is `nil.to_s` == "".
+        let url = c.input["url"].as_str().unwrap_or("");
+        let result = result_json(check_target(url, &stub));
+        check_eq(&result, &c.expected["result"])?;
+        let calls = json!(stub.calls.lock().expect("lock").clone());
+        check_eq(&calls, &c.expected["resolve_called_with"])
+    });
+}
+
+#[test]
+fn checked_target_real_resolve() {
+    let g = golden("egress_policy");
+    assert_cases("egress_policy checked_target (real)", g.cases_for("checked_target (real resolve)"), |c| {
+        let url = c.input["url"].as_str().ok_or("url")?;
+        let result = result_json(check_target(url, &SystemResolver));
+        if url.contains("localhost") {
+            // Machine dependent: first answer may be 127.0.0.1 or ::1.
+            let msg = result["message"].as_str().unwrap_or_default();
+            return if msg == "Refusing to fetch a non-public address (::1)"
+                || msg == "Refusing to fetch a non-public address (127.0.0.1)"
+            {
+                Ok(())
+            } else {
+                Err(format!("localhost not refused as loopback: {result}"))
+            };
+        }
+        check_eq(&result, &c.expected["result"])
+    });
+}
+
+#[test]
+fn resolve_real() {
+    let g = golden("egress_policy");
+    assert_cases("egress_policy resolve (real)", g.cases_for("resolve (real)"), |c| {
+        let host = c.input["host"].as_str().ok_or("host")?;
+        let mut got: Vec<String> =
+            SystemResolver.resolve(host).map_err(|e| e.to_string())?.iter().map(ToString::to_string).collect();
+        let mut want: Vec<String> = c
+            .expected
+            .as_array()
+            .ok_or("expected array")?
+            .iter()
+            .map(|v| v.as_str().unwrap_or_default().to_owned())
+            .collect();
+        if host == "localhost" {
+            got.sort();
+            got.dedup();
+            want.sort();
+        }
+        if got == want { Ok(()) } else { Err(format!("expected {want:?}, got {got:?}")) }
+    });
+}

@@ -1,0 +1,390 @@
+{
+  "source": "app/javascript/lib/tree_utils.js @ d47a89e92d89f807878d318182fa5dcea0329ec4",
+  "frankmd_sha": "d47a89e92d89f807878d318182fa5dcea0329ec4",
+  "generator": "tools/golden/js/utils.mjs",
+  "notes": "input = encoded argument array (decode with golden.mjs decode: {$undefined}, {$number}, {$date}, {$regexp}, {$utf16}); expected = encoded return value, or {$error:{name,message}}. JS strings are UTF-16: all positions/lengths/indices in inputs and outputs are UTF-16 code-unit offsets; cases with non-BMP/multi-unit strings carry a `utf16` array (utf16_len/scalar_len/utf8_len per such string arg). TZ pinned to UTC for date-based helpers.",
+  "functions": [
+    "flattenTree"
+  ],
+  "cases": [
+    {
+      "name": "flattenTree #1 (from FrankMD vitest suite)",
+      "fn": "flattenTree",
+      "input": [
+        [
+          {
+            "type": "folder",
+            "name": "empty",
+            "path": "empty",
+            "children": []
+          },
+          {
+            "type": "file",
+            "name": "file.md",
+            "path": "file.md"
+          }
+        ]
+      ],
+      "expected": [
+        {
+          "type": "file",
+          "name": "file.md",
+          "path": "file.md"
+        }
+      ]
+    },
+    {
+      "name": "flattenTree #2 (from FrankMD vitest suite)",
+      "fn": "flattenTree",
+      "input": [
+        null
+      ],
+      "expected": []
+    },
+    {
+      "name": "flattenTree #3 (from FrankMD vitest suite)",
+      "fn": "flattenTree",
+      "input": [
+        []
+      ],
+      "expected": []
+    },
+    {
+      "name": "flattenTree #4 (from FrankMD vitest suite)",
+      "fn": "flattenTree",
+      "input": [
+        [
+          {
+            "type": "file",
+            "name": "a.md",
+            "path": "a.md"
+          },
+          {
+            "type": "file",
+            "name": "b.md",
+            "path": "b.md"
+          }
+        ]
+      ],
+      "expected": [
+        {
+          "type": "file",
+          "name": "a.md",
+          "path": "a.md"
+        },
+        {
+          "type": "file",
+          "name": "b.md",
+          "path": "b.md"
+        }
+      ]
+    },
+    {
+      "name": "flattenTree #5 (from FrankMD vitest suite)",
+      "fn": "flattenTree",
+      "input": [
+        [
+          {
+            "type": "folder",
+            "name": "docs",
+            "path": "docs",
+            "children": [
+              {
+                "type": "file",
+                "name": "readme.md",
+                "path": "docs/readme.md"
+              }
+            ]
+          },
+          {
+            "type": "file",
+            "name": "root.md",
+            "path": "root.md"
+          }
+        ]
+      ],
+      "expected": [
+        {
+          "type": "file",
+          "name": "readme.md",
+          "path": "docs/readme.md"
+        },
+        {
+          "type": "file",
+          "name": "root.md",
+          "path": "root.md"
+        }
+      ]
+    },
+    {
+      "name": "flattenTree #6 (from FrankMD vitest suite)",
+      "fn": "flattenTree",
+      "input": [
+        [
+          {
+            "type": "file",
+            "name": "test.md",
+            "path": "test.md",
+            "file_type": "markdown",
+            "size": 1024
+          }
+        ]
+      ],
+      "expected": [
+        {
+          "type": "file",
+          "name": "test.md",
+          "path": "test.md",
+          "file_type": "markdown",
+          "size": 1024
+        }
+      ]
+    },
+    {
+      "name": "flattenTree #7 (from FrankMD vitest suite)",
+      "fn": "flattenTree",
+      "input": [
+        [
+          {
+            "type": "folder",
+            "name": "a",
+            "path": "a",
+            "children": [
+              {
+                "type": "folder",
+                "name": "b",
+                "path": "a/b",
+                "children": [
+                  {
+                    "type": "folder",
+                    "name": "c",
+                    "path": "a/b/c",
+                    "children": [
+                      {
+                        "type": "file",
+                        "name": "deep.md",
+                        "path": "a/b/c/deep.md"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      ],
+      "expected": [
+        {
+          "type": "file",
+          "name": "deep.md",
+          "path": "a/b/c/deep.md"
+        }
+      ]
+    },
+    {
+      "name": "flattenTree #8 (from FrankMD vitest suite)",
+      "fn": "flattenTree",
+      "input": [
+        [
+          {
+            "type": "folder",
+            "name": "no-children",
+            "path": "no-children"
+          },
+          {
+            "type": "file",
+            "name": "file.md",
+            "path": "file.md"
+          }
+        ]
+      ],
+      "expected": [
+        {
+          "type": "file",
+          "name": "file.md",
+          "path": "file.md"
+        }
+      ]
+    },
+    {
+      "name": "flattenTree #9 (from FrankMD vitest suite)",
+      "fn": "flattenTree",
+      "input": [
+        {
+          "$undefined": true
+        }
+      ],
+      "expected": []
+    },
+    {
+      "name": "flattenTree #10 (edge corpus)",
+      "fn": "flattenTree",
+      "input": [
+        [
+          {
+            "type": "folder",
+            "name": "a",
+            "path": "a",
+            "children": [
+              {
+                "type": "file",
+                "name": "x.md",
+                "path": "a/x.md"
+              },
+              {
+                "type": "folder",
+                "name": "b",
+                "path": "a/b",
+                "children": [
+                  {
+                    "type": "file",
+                    "name": "y.md",
+                    "path": "a/b/y.md"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "file",
+            "name": "z.md",
+            "path": "z.md"
+          },
+          {
+            "type": "folder",
+            "name": "empty",
+            "path": "empty",
+            "children": []
+          },
+          {
+            "type": "folder",
+            "name": "nochildren",
+            "path": "nochildren"
+          },
+          {
+            "type": "image",
+            "name": "p.png",
+            "path": "p.png"
+          },
+          {
+            "type": "file",
+            "name": "日本.md",
+            "path": "日本.md"
+          }
+        ]
+      ],
+      "expected": [
+        {
+          "type": "file",
+          "name": "x.md",
+          "path": "a/x.md"
+        },
+        {
+          "type": "file",
+          "name": "y.md",
+          "path": "a/b/y.md"
+        },
+        {
+          "type": "file",
+          "name": "z.md",
+          "path": "z.md"
+        },
+        {
+          "type": "file",
+          "name": "日本.md",
+          "path": "日本.md"
+        }
+      ]
+    },
+    {
+      "name": "flattenTree #11 (edge corpus)",
+      "fn": "flattenTree",
+      "input": [
+        [
+          {
+            "type": "folder",
+            "name": "a",
+            "path": "a",
+            "children": [
+              {
+                "type": "file",
+                "name": "x.md",
+                "path": "a/x.md"
+              },
+              {
+                "type": "folder",
+                "name": "b",
+                "path": "a/b",
+                "children": [
+                  {
+                    "type": "file",
+                    "name": "y.md",
+                    "path": "a/b/y.md"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "file",
+            "name": "z.md",
+            "path": "z.md"
+          },
+          {
+            "type": "folder",
+            "name": "empty",
+            "path": "empty",
+            "children": []
+          },
+          {
+            "type": "folder",
+            "name": "nochildren",
+            "path": "nochildren"
+          },
+          {
+            "type": "image",
+            "name": "p.png",
+            "path": "p.png"
+          },
+          {
+            "type": "file",
+            "name": "日本.md",
+            "path": "日本.md"
+          }
+        ],
+        [
+          {
+            "type": "file",
+            "path": "pre-existing"
+          }
+        ]
+      ],
+      "expected": [
+        {
+          "type": "file",
+          "path": "pre-existing"
+        },
+        {
+          "type": "file",
+          "name": "x.md",
+          "path": "a/x.md"
+        },
+        {
+          "type": "file",
+          "name": "y.md",
+          "path": "a/b/y.md"
+        },
+        {
+          "type": "file",
+          "name": "z.md",
+          "path": "z.md"
+        },
+        {
+          "type": "file",
+          "name": "日本.md",
+          "path": "日本.md"
+        }
+      ]
+    }
+  ]
+}

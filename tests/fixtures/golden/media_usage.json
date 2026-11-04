@@ -1,0 +1,2479 @@
+{
+  "source": "app/services/media_usage_service.rb @ d47a89e92d89f807878d318182fa5dcea0329ec4",
+  "frankmd_sha": "d47a89e92d89f807878d318182fa5dcea0329ec4",
+  "generator": "tools/golden/ruby/media_usage.rb",
+  "notes": "build_index: tree materialized at <ROOT>; symlink targets '<OUTSIDE>/x' point into a sibling dir built from outside_tree. usage_counts = index.transform_values(&:length) (LibraryController#usage JSON). library_paths = MediaLibraryService#list image+video paths with DEFAULT image/video upload extensions; unreferenced_library_paths = library_paths - index keys (derived). Private helpers called via send; regex sources recorded under constants (Ruby Onigmo syntax).",
+  "cases": [
+    {
+      "name": "build_index markdown images, image links, html video sources by distinct note",
+      "fn": "build_index",
+      "input": {
+        "tree": {
+          "projects/guides/guide.md": "![photo](../../images/my%20cat.png)\n[![same photo](../../images/my%20cat.png)](https://example.test/photo)\n![diagram](../../images/diagram%20%28draft%29.png)\n<video controls><source src=\"../../videos/clips/clip%20one.mp4\" type=\"video/mp4\"></video>\n[download video](../../videos/clips/clip%20one.mp4)\n",
+          "index.md": "![photo](images/my%20cat.png)"
+        },
+        "outside_tree": {}
+      },
+      "expected": {
+        "index": {
+          "images/diagram (draft).png": [
+            "projects/guides/guide.md"
+          ],
+          "images/my cat.png": [
+            "index.md",
+            "projects/guides/guide.md"
+          ],
+          "videos/clips/clip one.mp4": [
+            "projects/guides/guide.md"
+          ]
+        },
+        "usage_counts": {
+          "images/diagram (draft).png": 1,
+          "images/my cat.png": 2,
+          "videos/clips/clip one.mp4": 1
+        },
+        "library_paths": [],
+        "unreferenced_library_paths": []
+      }
+    },
+    {
+      "name": "build_index normalizes destinations and html source urls",
+      "fn": "build_index",
+      "input": {
+        "tree": {
+          "docs/media.md": "![cover](../images/cover%20photo.png)\n[open image](/images/cover%20photo.png#full-size)\n<img src=/notes/images/inline%20photo.png>\n[trailer](../videos/trailer.mp4)\n<video src=\"../videos/trailer.mp4\"></video>\n"
+        },
+        "outside_tree": {}
+      },
+      "expected": {
+        "index": {
+          "images/cover photo.png": [
+            "docs/media.md"
+          ],
+          "images/inline photo.png": [
+            "docs/media.md"
+          ],
+          "videos/trailer.mp4": [
+            "docs/media.md"
+          ]
+        },
+        "usage_counts": {
+          "images/cover photo.png": 1,
+          "images/inline photo.png": 1,
+          "videos/trailer.mp4": 1
+        },
+        "library_paths": [],
+        "unreferenced_library_paths": []
+      }
+    },
+    {
+      "name": "build_index unescapes markdown punctuation while retaining containment",
+      "fn": "build_index",
+      "input": {
+        "tree": {
+          "references.md": "![diagram](images/diagram\\(draft\\).png)\n![hash](images/hash\\#name.png)\n![question](images/question\\?name.png)\n![reference][diagram]\n[diagram]: images/diagram\\(draft\\).png\n![outside](images/\\.\\./../../outside.png)\n"
+        },
+        "outside_tree": {}
+      },
+      "expected": {
+        "index": {
+          "images/diagram(draft).png": [
+            "references.md"
+          ],
+          "images/hash#name.png": [
+            "references.md"
+          ],
+          "images/question?name.png": [
+            "references.md"
+          ]
+        },
+        "usage_counts": {
+          "images/diagram(draft).png": 1,
+          "images/hash#name.png": 1,
+          "images/question?name.png": 1
+        },
+        "library_paths": [],
+        "unreferenced_library_paths": []
+      }
+    },
+    {
+      "name": "build_index full, collapsed, shortcut references with normalized labels",
+      "fn": "build_index",
+      "input": {
+        "tree": {
+          "references.md": "![cover][  PHOTO   IMAGE ]\n![video][]\n[shortcut]\n[ photo image ]: images/photo%20one.png\n[video]: videos/clip.mp4\n[shortcut]: images/shortcut.png\n[unused]: images/unused.png\n"
+        },
+        "outside_tree": {}
+      },
+      "expected": {
+        "index": {
+          "images/photo one.png": [
+            "references.md"
+          ],
+          "images/shortcut.png": [
+            "references.md"
+          ],
+          "videos/clip.mp4": [
+            "references.md"
+          ]
+        },
+        "usage_counts": {
+          "images/photo one.png": 1,
+          "images/shortcut.png": 1,
+          "videos/clip.mp4": 1
+        },
+        "library_paths": [],
+        "unreferenced_library_paths": []
+      }
+    },
+    {
+      "name": "build_index unused reference definition",
+      "fn": "build_index",
+      "input": {
+        "tree": {
+          "unused.md": "[photo]: images/photo.png\n"
+        },
+        "outside_tree": {}
+      },
+      "expected": {
+        "index": {},
+        "usage_counts": {},
+        "library_paths": [],
+        "unreferenced_library_paths": []
+      }
+    },
+    {
+      "name": "build_index duplicate reference uses once per note",
+      "fn": "build_index",
+      "input": {
+        "tree": {
+          "duplicates.md": "![first][photo]\n[second][  PHOTO ]\n![photo][]\n[photo]\n[photo]: images/photo.png\n"
+        },
+        "outside_tree": {}
+      },
+      "expected": {
+        "index": {
+          "images/photo.png": [
+            "duplicates.md"
+          ]
+        },
+        "usage_counts": {
+          "images/photo.png": 1
+        },
+        "library_paths": [],
+        "unreferenced_library_paths": []
+      }
+    },
+    {
+      "name": "build_index plain text, unrelated url substrings, code",
+      "fn": "build_index",
+      "input": {
+        "tree": {
+          "examples.md": "Plain mention: images/mentioned.png\n[external](https://example.test/notes/images/external.png)\n[near match](notimages/near.png)\n`![inline](images/inline-code.png)`\n\n```markdown\n![fenced](images/fenced-code.png)\n<source src=\"videos/fenced-code.mp4\">\n![fenced reference][fenced]\n[fenced]: images/fenced-reference.png\n```\n\n<!-- <img src=\"images/commented-out.png\"> -->\n"
+        },
+        "outside_tree": {}
+      },
+      "expected": {
+        "index": {},
+        "usage_counts": {},
+        "library_paths": [],
+        "unreferenced_library_paths": []
+      }
+    },
+    {
+      "name": "build_index note-relative destinations, rejects outside root",
+      "fn": "build_index",
+      "input": {
+        "tree": {
+          "nested/page.md": "![photo](../images/photo.png)\n![outside](../../images/outside.png)\n![wrong root](../notes/images/wrong-root.png)\n"
+        },
+        "outside_tree": {}
+      },
+      "expected": {
+        "index": {
+          "images/photo.png": [
+            "nested/page.md"
+          ]
+        },
+        "usage_counts": {
+          "images/photo.png": 1
+        },
+        "library_paths": [],
+        "unreferenced_library_paths": []
+      }
+    },
+    {
+      "name": "build_index hidden notes and symlinked markdown ignored",
+      "fn": "build_index",
+      "input": {
+        "tree": {
+          ".hidden/hidden.md": "![hidden](images/hidden.png)",
+          "visible.md": "![visible](images/visible.png)",
+          "linked.md": {
+            "symlink": "<OUTSIDE>/outside.md"
+          }
+        },
+        "outside_tree": {
+          "outside.md": "![outside](images/outside.png)"
+        }
+      },
+      "expected": {
+        "index": {
+          "images/visible.png": [
+            "visible.md"
+          ]
+        },
+        "usage_counts": {
+          "images/visible.png": 1
+        },
+        "library_paths": [],
+        "unreferenced_library_paths": []
+      }
+    },
+    {
+      "name": "build_index empty root",
+      "fn": "build_index",
+      "input": {
+        "tree": {},
+        "outside_tree": {}
+      },
+      "expected": {
+        "index": {},
+        "usage_counts": {},
+        "library_paths": [],
+        "unreferenced_library_paths": []
+      }
+    },
+    {
+      "name": "build_index media files present but unreferenced",
+      "fn": "build_index",
+      "input": {
+        "tree": {
+          "images/a.png": "png",
+          "images/sub/b.jpg": "jpg",
+          "videos/c.mp4": "mp4",
+          "images/x.svg": "svg",
+          "note.md": "no refs here"
+        },
+        "outside_tree": {}
+      },
+      "expected": {
+        "index": {},
+        "usage_counts": {},
+        "library_paths": [
+          "images/a.png",
+          "images/sub/b.jpg",
+          "videos/c.mp4"
+        ],
+        "unreferenced_library_paths": [
+          "images/a.png",
+          "images/sub/b.jpg",
+          "videos/c.mp4"
+        ]
+      }
+    },
+    {
+      "name": "build_index mixed corpus with library",
+      "fn": "build_index",
+      "input": {
+        "tree": {
+          "images/used.png": "p",
+          "images/unused.png": "p",
+          "videos/v.webm": "v",
+          "images/My Cat.PNG": "p",
+          "a.md": "![u](images/used.png) ![m](images/My%20Cat.PNG)",
+          "b/c.md": "<video src='../videos/v.webm'></video> ![u](../images/used.png)",
+          "d.markdown": "![ignored ext](images/unused.png)",
+          "e.MD": "![upper ext](images/unused.png)",
+          "f.txt": "![txt](images/unused.png)"
+        },
+        "outside_tree": {}
+      },
+      "expected": {
+        "index": {
+          "images/My Cat.PNG": [
+            "a.md"
+          ],
+          "images/used.png": [
+            "a.md",
+            "b/c.md"
+          ],
+          "videos/v.webm": [
+            "b/c.md"
+          ]
+        },
+        "usage_counts": {
+          "images/My Cat.PNG": 1,
+          "images/used.png": 2,
+          "videos/v.webm": 1
+        },
+        "library_paths": [
+          "images/My Cat.PNG",
+          "images/unused.png",
+          "images/used.png",
+          "videos/v.webm"
+        ],
+        "unreferenced_library_paths": [
+          "images/unused.png"
+        ]
+      }
+    },
+    {
+      "name": "build_index symlinked directory of notes skipped",
+      "fn": "build_index",
+      "input": {
+        "tree": {
+          "real/n.md": "![r](../images/r.png)",
+          "alias": {
+            "symlink": "real"
+          }
+        },
+        "outside_tree": {}
+      },
+      "expected": {
+        "index": {
+          "images/r.png": [
+            "real/n.md"
+          ]
+        },
+        "usage_counts": {
+          "images/r.png": 1
+        },
+        "library_paths": [],
+        "unreferenced_library_paths": []
+      }
+    },
+    {
+      "name": "build_index hidden directories at depth and dotfiles",
+      "fn": "build_index",
+      "input": {
+        "tree": {
+          "a/.git/x.md": "![g](../../images/git.png)",
+          "a/.note.md": "![d](../images/dot.png)",
+          "a/ok.md": "![o](../images/ok.png)"
+        },
+        "outside_tree": {}
+      },
+      "expected": {
+        "index": {
+          "images/ok.png": [
+            "a/ok.md"
+          ]
+        },
+        "usage_counts": {
+          "images/ok.png": 1
+        },
+        "library_paths": [],
+        "unreferenced_library_paths": []
+      }
+    },
+    {
+      "name": "build_index unicode, spaces, encoded names",
+      "fn": "build_index",
+      "input": {
+        "tree": {
+          "日本語/ノート.md": "![猫](../images/%E7%8C%AB.png)\n![raw](../images/猫.png)\n![space](../images/a b.png)\n![<angle>](<../images/a b.png>)",
+          "שלום.md": "![h](images/שלום.png) ![e](images/e%CC%81.png) ![nfc](images/%C3%A9.png)",
+          "emoji 👨‍👩‍👧.md": "![f](images/👨‍👩‍👧.png)"
+        },
+        "outside_tree": {}
+      },
+      "expected": {
+        "index": {
+          "images/a": [
+            "日本語/ノート.md"
+          ],
+          "images/a b.png": [
+            "日本語/ノート.md"
+          ],
+          "images/é.png": [
+            "שלום.md"
+          ],
+          "images/é.png": [
+            "שלום.md"
+          ],
+          "images/שלום.png": [
+            "שלום.md"
+          ],
+          "images/猫.png": [
+            "日本語/ノート.md"
+          ],
+          "images/👨‍👩‍👧.png": [
+            "emoji 👨‍👩‍👧.md"
+          ]
+        },
+        "usage_counts": {
+          "images/a": 1,
+          "images/a b.png": 1,
+          "images/é.png": 1,
+          "images/é.png": 1,
+          "images/שלום.png": 1,
+          "images/猫.png": 1,
+          "images/👨‍👩‍👧.png": 1
+        },
+        "library_paths": [],
+        "unreferenced_library_paths": []
+      }
+    },
+    {
+      "name": "build_index query strings and fragments",
+      "fn": "build_index",
+      "input": {
+        "tree": {
+          "q.md": "![a](images/a.png?raw=1)\n![b](images/b.png#frag)\n![c](images/c.png?x#y)\n<img src=\"images/d.png?w=10\">\n[r]\n\n[r]: images/e.png?v=2\n"
+        },
+        "outside_tree": {}
+      },
+      "expected": {
+        "index": {
+          "images/a.png": [
+            "q.md"
+          ],
+          "images/b.png": [
+            "q.md"
+          ],
+          "images/c.png": [
+            "q.md"
+          ],
+          "images/d.png": [
+            "q.md"
+          ],
+          "images/e.png": [
+            "q.md"
+          ]
+        },
+        "usage_counts": {
+          "images/a.png": 1,
+          "images/b.png": 1,
+          "images/c.png": 1,
+          "images/d.png": 1,
+          "images/e.png": 1
+        },
+        "library_paths": [],
+        "unreferenced_library_paths": []
+      }
+    },
+    {
+      "name": "build_index crlf and lone cr",
+      "fn": "build_index",
+      "input": {
+        "tree": {
+          "crlf.md": "![a](images/crlf.png)\r\n```\r\n![b](images/in-fence.png)\r\n```\r\n![c](images/after.png)\r\n",
+          "cr.md": "![a](images/cr1.png)\r![b](images/cr2.png)\r"
+        },
+        "outside_tree": {}
+      },
+      "expected": {
+        "index": {
+          "images/after.png": [
+            "crlf.md"
+          ],
+          "images/cr1.png": [
+            "cr.md"
+          ],
+          "images/cr2.png": [
+            "cr.md"
+          ],
+          "images/crlf.png": [
+            "crlf.md"
+          ]
+        },
+        "usage_counts": {
+          "images/after.png": 1,
+          "images/cr1.png": 1,
+          "images/cr2.png": 1,
+          "images/crlf.png": 1
+        },
+        "library_paths": [],
+        "unreferenced_library_paths": []
+      }
+    },
+    {
+      "name": "build_index deeply nested relative paths",
+      "fn": "build_index",
+      "input": {
+        "tree": {
+          "a/b/c/d/e.md": "![x](../../../../images/deep.png)\n![y](../../../../../images/too-far.png)\n![z](./../../../../videos/./v.mp4)"
+        },
+        "outside_tree": {}
+      },
+      "expected": {
+        "index": {
+          "images/deep.png": [
+            "a/b/c/d/e.md"
+          ],
+          "videos/v.mp4": [
+            "a/b/c/d/e.md"
+          ]
+        },
+        "usage_counts": {
+          "images/deep.png": 1,
+          "videos/v.mp4": 1
+        },
+        "library_paths": [],
+        "unreferenced_library_paths": []
+      }
+    },
+    {
+      "name": "build_index invalid utf8 note is scrubbed",
+      "fn": "build_index",
+      "input": {
+        "tree": {
+          "bad.md": {
+            "base64": "//4hW3hdKGltYWdlcy9vay5wbmcpww=="
+          }
+        },
+        "outside_tree": {}
+      },
+      "expected": {
+        "index": {
+          "images/ok.png": [
+            "bad.md"
+          ]
+        },
+        "usage_counts": {
+          "images/ok.png": 1
+        },
+        "library_paths": [],
+        "unreferenced_library_paths": []
+      }
+    },
+    {
+      "name": "canonical_media_path \"images/a.png\" from note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "images/a.png",
+        "note_path": "note.md"
+      },
+      "expected": "images/a.png"
+    },
+    {
+      "name": "canonical_media_path \"images/a.png\" from docs/note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "images/a.png",
+        "note_path": "docs/note.md"
+      },
+      "expected": null
+    },
+    {
+      "name": "canonical_media_path \"images/a.png\" from a/b/note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "images/a.png",
+        "note_path": "a/b/note.md"
+      },
+      "expected": null
+    },
+    {
+      "name": "canonical_media_path \"images/a.png\" from images/note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "images/a.png",
+        "note_path": "images/note.md"
+      },
+      "expected": "images/images/a.png"
+    },
+    {
+      "name": "canonical_media_path \"videos/a.mp4\" from note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "videos/a.mp4",
+        "note_path": "note.md"
+      },
+      "expected": "videos/a.mp4"
+    },
+    {
+      "name": "canonical_media_path \"images\" from note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "images",
+        "note_path": "note.md"
+      },
+      "expected": null
+    },
+    {
+      "name": "canonical_media_path \"images/\" from note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "images/",
+        "note_path": "note.md"
+      },
+      "expected": null
+    },
+    {
+      "name": "canonical_media_path \"videos/\" from note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "videos/",
+        "note_path": "note.md"
+      },
+      "expected": null
+    },
+    {
+      "name": "canonical_media_path \"images/sub/x.png\" from note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "images/sub/x.png",
+        "note_path": "note.md"
+      },
+      "expected": "images/sub/x.png"
+    },
+    {
+      "name": "canonical_media_path \"/images/a.png\" from note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "/images/a.png",
+        "note_path": "note.md"
+      },
+      "expected": "images/a.png"
+    },
+    {
+      "name": "canonical_media_path \"/images/a.png\" from docs/note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "/images/a.png",
+        "note_path": "docs/note.md"
+      },
+      "expected": "images/a.png"
+    },
+    {
+      "name": "canonical_media_path \"/images/a.png\" from a/b/note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "/images/a.png",
+        "note_path": "a/b/note.md"
+      },
+      "expected": "images/a.png"
+    },
+    {
+      "name": "canonical_media_path \"/images/a.png\" from images/note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "/images/a.png",
+        "note_path": "images/note.md"
+      },
+      "expected": "images/a.png"
+    },
+    {
+      "name": "canonical_media_path \"/notes/images/a.png\" from note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "/notes/images/a.png",
+        "note_path": "note.md"
+      },
+      "expected": "images/a.png"
+    },
+    {
+      "name": "canonical_media_path \"/notes/images/a.png\" from docs/note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "/notes/images/a.png",
+        "note_path": "docs/note.md"
+      },
+      "expected": "images/a.png"
+    },
+    {
+      "name": "canonical_media_path \"/notes/images/a.png\" from a/b/note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "/notes/images/a.png",
+        "note_path": "a/b/note.md"
+      },
+      "expected": "images/a.png"
+    },
+    {
+      "name": "canonical_media_path \"/notes/images/a.png\" from images/note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "/notes/images/a.png",
+        "note_path": "images/note.md"
+      },
+      "expected": "images/a.png"
+    },
+    {
+      "name": "canonical_media_path \"/notes/notes/images/a.png\" from note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "/notes/notes/images/a.png",
+        "note_path": "note.md"
+      },
+      "expected": null
+    },
+    {
+      "name": "canonical_media_path \"/notes/notes/images/a.png\" from docs/note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "/notes/notes/images/a.png",
+        "note_path": "docs/note.md"
+      },
+      "expected": null
+    },
+    {
+      "name": "canonical_media_path \"/notes/notes/images/a.png\" from a/b/note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "/notes/notes/images/a.png",
+        "note_path": "a/b/note.md"
+      },
+      "expected": null
+    },
+    {
+      "name": "canonical_media_path \"/notes/notes/images/a.png\" from images/note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "/notes/notes/images/a.png",
+        "note_path": "images/note.md"
+      },
+      "expected": null
+    },
+    {
+      "name": "canonical_media_path \"notes/images/a.png\" from note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "notes/images/a.png",
+        "note_path": "note.md"
+      },
+      "expected": null
+    },
+    {
+      "name": "canonical_media_path \"//images/a.png\" from note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "//images/a.png",
+        "note_path": "note.md"
+      },
+      "expected": null
+    },
+    {
+      "name": "canonical_media_path \"//images/a.png\" from docs/note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "//images/a.png",
+        "note_path": "docs/note.md"
+      },
+      "expected": null
+    },
+    {
+      "name": "canonical_media_path \"//images/a.png\" from a/b/note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "//images/a.png",
+        "note_path": "a/b/note.md"
+      },
+      "expected": null
+    },
+    {
+      "name": "canonical_media_path \"//images/a.png\" from images/note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "//images/a.png",
+        "note_path": "images/note.md"
+      },
+      "expected": null
+    },
+    {
+      "name": "canonical_media_path \"///images/a.png\" from note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "///images/a.png",
+        "note_path": "note.md"
+      },
+      "expected": null
+    },
+    {
+      "name": "canonical_media_path \"///images/a.png\" from docs/note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "///images/a.png",
+        "note_path": "docs/note.md"
+      },
+      "expected": null
+    },
+    {
+      "name": "canonical_media_path \"///images/a.png\" from a/b/note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "///images/a.png",
+        "note_path": "a/b/note.md"
+      },
+      "expected": null
+    },
+    {
+      "name": "canonical_media_path \"///images/a.png\" from images/note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "///images/a.png",
+        "note_path": "images/note.md"
+      },
+      "expected": null
+    },
+    {
+      "name": "canonical_media_path \"http://x/images/a.png\" from note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "http://x/images/a.png",
+        "note_path": "note.md"
+      },
+      "expected": null
+    },
+    {
+      "name": "canonical_media_path \"https://example.test/notes/images/a.png\" from note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "https://example.test/notes/images/a.png",
+        "note_path": "note.md"
+      },
+      "expected": null
+    },
+    {
+      "name": "canonical_media_path \"mailto:a@b\" from note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "mailto:a@b",
+        "note_path": "note.md"
+      },
+      "expected": null
+    },
+    {
+      "name": "canonical_media_path \"data:image/png;base64,AAA\" from note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "data:image/png;base64,AAA",
+        "note_path": "note.md"
+      },
+      "expected": null
+    },
+    {
+      "name": "canonical_media_path \"file:///images/a.png\" from note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "file:///images/a.png",
+        "note_path": "note.md"
+      },
+      "expected": null
+    },
+    {
+      "name": "canonical_media_path \"C:/images/a.png\" from note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "C:/images/a.png",
+        "note_path": "note.md"
+      },
+      "expected": null
+    },
+    {
+      "name": "canonical_media_path \"c:images/a.png\" from note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "c:images/a.png",
+        "note_path": "note.md"
+      },
+      "expected": null
+    },
+    {
+      "name": "canonical_media_path \"x+y.z-w:foo\" from note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "x+y.z-w:foo",
+        "note_path": "note.md"
+      },
+      "expected": null
+    },
+    {
+      "name": "canonical_media_path \"1abc:images/a.png\" from note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "1abc:images/a.png",
+        "note_path": "note.md"
+      },
+      "expected": null
+    },
+    {
+      "name": "canonical_media_path \"images/a.png?x=1\" from note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "images/a.png?x=1",
+        "note_path": "note.md"
+      },
+      "expected": "images/a.png"
+    },
+    {
+      "name": "canonical_media_path \"images/a.png#frag\" from note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "images/a.png#frag",
+        "note_path": "note.md"
+      },
+      "expected": "images/a.png"
+    },
+    {
+      "name": "canonical_media_path \"images/a\\\\?b.png\" from note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "images/a\\?b.png",
+        "note_path": "note.md"
+      },
+      "expected": "images/a?b.png"
+    },
+    {
+      "name": "canonical_media_path \"images/a\\\\#b.png\" from note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "images/a\\#b.png",
+        "note_path": "note.md"
+      },
+      "expected": "images/a#b.png"
+    },
+    {
+      "name": "canonical_media_path \"images/a\\\\\\\\?b.png\" from note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "images/a\\\\?b.png",
+        "note_path": "note.md"
+      },
+      "expected": null
+    },
+    {
+      "name": "canonical_media_path \"images/a%20b.png\" from note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "images/a%20b.png",
+        "note_path": "note.md"
+      },
+      "expected": "images/a b.png"
+    },
+    {
+      "name": "canonical_media_path \"images/a%2Fb.png\" from note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "images/a%2Fb.png",
+        "note_path": "note.md"
+      },
+      "expected": null
+    },
+    {
+      "name": "canonical_media_path \"images/a%5Cb.png\" from note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "images/a%5Cb.png",
+        "note_path": "note.md"
+      },
+      "expected": null
+    },
+    {
+      "name": "canonical_media_path \"images/a%2e%2e/x.png\" from note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "images/a%2e%2e/x.png",
+        "note_path": "note.md"
+      },
+      "expected": "images/a../x.png"
+    },
+    {
+      "name": "canonical_media_path \"images/%2e%2e/x.png\" from note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "images/%2e%2e/x.png",
+        "note_path": "note.md"
+      },
+      "expected": null
+    },
+    {
+      "name": "canonical_media_path \"images/%2E/x.png\" from note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "images/%2E/x.png",
+        "note_path": "note.md"
+      },
+      "expected": "images/x.png"
+    },
+    {
+      "name": "canonical_media_path \"images/%zz.png\" from note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "images/%zz.png",
+        "note_path": "note.md"
+      },
+      "expected": "images/%zz.png"
+    },
+    {
+      "name": "canonical_media_path \"images/%E7%8C%AB.png\" from note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "images/%E7%8C%AB.png",
+        "note_path": "note.md"
+      },
+      "expected": "images/猫.png"
+    },
+    {
+      "name": "canonical_media_path \"images/%FF.png\" from note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "images/%FF.png",
+        "note_path": "note.md"
+      },
+      "expected": {
+        "invalid_utf8_base64": "aW1hZ2VzL/8ucG5n"
+      }
+    },
+    {
+      "name": "canonical_media_path \"images/%00.png\" from note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "images/%00.png",
+        "note_path": "note.md"
+      },
+      "expected": "images/\u0000.png"
+    },
+    {
+      "name": "canonical_media_path \"images/./a.png\" from note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "images/./a.png",
+        "note_path": "note.md"
+      },
+      "expected": "images/a.png"
+    },
+    {
+      "name": "canonical_media_path \"images/./a.png\" from docs/note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "images/./a.png",
+        "note_path": "docs/note.md"
+      },
+      "expected": null
+    },
+    {
+      "name": "canonical_media_path \"images/./a.png\" from a/b/note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "images/./a.png",
+        "note_path": "a/b/note.md"
+      },
+      "expected": null
+    },
+    {
+      "name": "canonical_media_path \"images/./a.png\" from images/note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "images/./a.png",
+        "note_path": "images/note.md"
+      },
+      "expected": "images/images/a.png"
+    },
+    {
+      "name": "canonical_media_path \"images/../images/a.png\" from note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "images/../images/a.png",
+        "note_path": "note.md"
+      },
+      "expected": "images/a.png"
+    },
+    {
+      "name": "canonical_media_path \"images/../images/a.png\" from docs/note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "images/../images/a.png",
+        "note_path": "docs/note.md"
+      },
+      "expected": null
+    },
+    {
+      "name": "canonical_media_path \"images/../images/a.png\" from a/b/note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "images/../images/a.png",
+        "note_path": "a/b/note.md"
+      },
+      "expected": null
+    },
+    {
+      "name": "canonical_media_path \"images/../images/a.png\" from images/note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "images/../images/a.png",
+        "note_path": "images/note.md"
+      },
+      "expected": "images/images/a.png"
+    },
+    {
+      "name": "canonical_media_path \"images/../videos/a.mp4\" from note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "images/../videos/a.mp4",
+        "note_path": "note.md"
+      },
+      "expected": "videos/a.mp4"
+    },
+    {
+      "name": "canonical_media_path \"images/../videos/a.mp4\" from docs/note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "images/../videos/a.mp4",
+        "note_path": "docs/note.md"
+      },
+      "expected": null
+    },
+    {
+      "name": "canonical_media_path \"images/../videos/a.mp4\" from a/b/note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "images/../videos/a.mp4",
+        "note_path": "a/b/note.md"
+      },
+      "expected": null
+    },
+    {
+      "name": "canonical_media_path \"images/../videos/a.mp4\" from images/note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "images/../videos/a.mp4",
+        "note_path": "images/note.md"
+      },
+      "expected": "images/videos/a.mp4"
+    },
+    {
+      "name": "canonical_media_path \"images/../a.png\" from note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "images/../a.png",
+        "note_path": "note.md"
+      },
+      "expected": null
+    },
+    {
+      "name": "canonical_media_path \"images/../a.png\" from docs/note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "images/../a.png",
+        "note_path": "docs/note.md"
+      },
+      "expected": null
+    },
+    {
+      "name": "canonical_media_path \"images/../a.png\" from a/b/note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "images/../a.png",
+        "note_path": "a/b/note.md"
+      },
+      "expected": null
+    },
+    {
+      "name": "canonical_media_path \"images/../a.png\" from images/note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "images/../a.png",
+        "note_path": "images/note.md"
+      },
+      "expected": "images/a.png"
+    },
+    {
+      "name": "canonical_media_path \"../images/a.png\" from note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "../images/a.png",
+        "note_path": "note.md"
+      },
+      "expected": null
+    },
+    {
+      "name": "canonical_media_path \"../images/a.png\" from docs/note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "../images/a.png",
+        "note_path": "docs/note.md"
+      },
+      "expected": "images/a.png"
+    },
+    {
+      "name": "canonical_media_path \"../images/a.png\" from a/b/note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "../images/a.png",
+        "note_path": "a/b/note.md"
+      },
+      "expected": null
+    },
+    {
+      "name": "canonical_media_path \"../images/a.png\" from images/note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "../images/a.png",
+        "note_path": "images/note.md"
+      },
+      "expected": "images/a.png"
+    },
+    {
+      "name": "canonical_media_path \"./images/a.png\" from note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "./images/a.png",
+        "note_path": "note.md"
+      },
+      "expected": "images/a.png"
+    },
+    {
+      "name": "canonical_media_path \"./images/a.png\" from docs/note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "./images/a.png",
+        "note_path": "docs/note.md"
+      },
+      "expected": null
+    },
+    {
+      "name": "canonical_media_path \"./images/a.png\" from a/b/note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "./images/a.png",
+        "note_path": "a/b/note.md"
+      },
+      "expected": null
+    },
+    {
+      "name": "canonical_media_path \"./images/a.png\" from images/note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "./images/a.png",
+        "note_path": "images/note.md"
+      },
+      "expected": "images/images/a.png"
+    },
+    {
+      "name": "canonical_media_path \"images//a.png\" from note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "images//a.png",
+        "note_path": "note.md"
+      },
+      "expected": null
+    },
+    {
+      "name": "canonical_media_path \"images/a.png/\" from note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "images/a.png/",
+        "note_path": "note.md"
+      },
+      "expected": "images/a.png"
+    },
+    {
+      "name": "canonical_media_path \"  images/a.png  \" from note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "  images/a.png  ",
+        "note_path": "note.md"
+      },
+      "expected": "images/a.png"
+    },
+    {
+      "name": "canonical_media_path \"\\timages/a.png\" from note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "\timages/a.png",
+        "note_path": "note.md"
+      },
+      "expected": "images/a.png"
+    },
+    {
+      "name": "canonical_media_path \"images/a&amp;b.png\" from note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "images/a&amp;b.png",
+        "note_path": "note.md"
+      },
+      "expected": "images/a&b.png"
+    },
+    {
+      "name": "canonical_media_path \"images/&lt;x&gt;.png\" from note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "images/&lt;x&gt;.png",
+        "note_path": "note.md"
+      },
+      "expected": "images/<x>.png"
+    },
+    {
+      "name": "canonical_media_path \"images/&#x41;.png\" from note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "images/&#x41;.png",
+        "note_path": "note.md"
+      },
+      "expected": "images/A.png"
+    },
+    {
+      "name": "canonical_media_path \"images/\\\\(x\\\\).png\" from note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "images/\\(x\\).png",
+        "note_path": "note.md"
+      },
+      "expected": "images/(x).png"
+    },
+    {
+      "name": "canonical_media_path \"images/\\\\_x\\\\_.png\" from note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "images/\\_x\\_.png",
+        "note_path": "note.md"
+      },
+      "expected": "images/_x_.png"
+    },
+    {
+      "name": "canonical_media_path \"images/\\\\a.png\" from note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "images/\\a.png",
+        "note_path": "note.md"
+      },
+      "expected": null
+    },
+    {
+      "name": "canonical_media_path \"IMAGES/a.png\" from note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "IMAGES/a.png",
+        "note_path": "note.md"
+      },
+      "expected": null
+    },
+    {
+      "name": "canonical_media_path \"Images/a.png\" from note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "Images/a.png",
+        "note_path": "note.md"
+      },
+      "expected": null
+    },
+    {
+      "name": "canonical_media_path \"imagesX/a.png\" from note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "imagesX/a.png",
+        "note_path": "note.md"
+      },
+      "expected": null
+    },
+    {
+      "name": "canonical_media_path \"media/a.png\" from note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "media/a.png",
+        "note_path": "note.md"
+      },
+      "expected": null
+    },
+    {
+      "name": "canonical_media_path \"\" from note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "",
+        "note_path": "note.md"
+      },
+      "expected": null
+    },
+    {
+      "name": "canonical_media_path \" \" from note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": " ",
+        "note_path": "note.md"
+      },
+      "expected": null
+    },
+    {
+      "name": "canonical_media_path \"?\" from note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "?",
+        "note_path": "note.md"
+      },
+      "expected": null
+    },
+    {
+      "name": "canonical_media_path \"#\" from note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "#",
+        "note_path": "note.md"
+      },
+      "expected": null
+    },
+    {
+      "name": "canonical_media_path \"images/日本.png\" from note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "images/日本.png",
+        "note_path": "note.md"
+      },
+      "expected": "images/日本.png"
+    },
+    {
+      "name": "canonical_media_path \"images/é.png\" from note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "images/é.png",
+        "note_path": "note.md"
+      },
+      "expected": "images/é.png"
+    },
+    {
+      "name": "canonical_media_path \"images/a b.png\" from note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "images/a b.png",
+        "note_path": "note.md"
+      },
+      "expected": "images/a b.png"
+    },
+    {
+      "name": "canonical_media_path \"images/a b.png\" from note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "images/a b.png",
+        "note_path": "note.md"
+      },
+      "expected": "images/a b.png"
+    },
+    {
+      "name": "canonical_media_path \"\\\\images\\\\a.png\" from note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "\\images\\a.png",
+        "note_path": "note.md"
+      },
+      "expected": null
+    },
+    {
+      "name": "canonical_media_path \"images/a\\u0000b.png\" from note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "images/a\u0000b.png",
+        "note_path": "note.md"
+      },
+      "expected": "images/a\u0000b.png"
+    },
+    {
+      "name": "canonical_media_path \"/\" from note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "/",
+        "note_path": "note.md"
+      },
+      "expected": null
+    },
+    {
+      "name": "canonical_media_path \"/\" from docs/note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "/",
+        "note_path": "docs/note.md"
+      },
+      "expected": null
+    },
+    {
+      "name": "canonical_media_path \"/\" from a/b/note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "/",
+        "note_path": "a/b/note.md"
+      },
+      "expected": null
+    },
+    {
+      "name": "canonical_media_path \"/\" from images/note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "/",
+        "note_path": "images/note.md"
+      },
+      "expected": null
+    },
+    {
+      "name": "canonical_media_path \"/notes\" from note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "/notes",
+        "note_path": "note.md"
+      },
+      "expected": null
+    },
+    {
+      "name": "canonical_media_path \"/notes\" from docs/note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "/notes",
+        "note_path": "docs/note.md"
+      },
+      "expected": null
+    },
+    {
+      "name": "canonical_media_path \"/notes\" from a/b/note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "/notes",
+        "note_path": "a/b/note.md"
+      },
+      "expected": null
+    },
+    {
+      "name": "canonical_media_path \"/notes\" from images/note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "/notes",
+        "note_path": "images/note.md"
+      },
+      "expected": null
+    },
+    {
+      "name": "canonical_media_path \"/notes/\" from note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "/notes/",
+        "note_path": "note.md"
+      },
+      "expected": null
+    },
+    {
+      "name": "canonical_media_path \"/notes/\" from docs/note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "/notes/",
+        "note_path": "docs/note.md"
+      },
+      "expected": null
+    },
+    {
+      "name": "canonical_media_path \"/notes/\" from a/b/note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "/notes/",
+        "note_path": "a/b/note.md"
+      },
+      "expected": null
+    },
+    {
+      "name": "canonical_media_path \"/notes/\" from images/note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "/notes/",
+        "note_path": "images/note.md"
+      },
+      "expected": null
+    },
+    {
+      "name": "canonical_media_path \"/notes/images\" from note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "/notes/images",
+        "note_path": "note.md"
+      },
+      "expected": null
+    },
+    {
+      "name": "canonical_media_path \"/notes/images\" from docs/note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "/notes/images",
+        "note_path": "docs/note.md"
+      },
+      "expected": null
+    },
+    {
+      "name": "canonical_media_path \"/notes/images\" from a/b/note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "/notes/images",
+        "note_path": "a/b/note.md"
+      },
+      "expected": null
+    },
+    {
+      "name": "canonical_media_path \"/notes/images\" from images/note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "/notes/images",
+        "note_path": "images/note.md"
+      },
+      "expected": null
+    },
+    {
+      "name": "canonical_media_path \"videos/clips/clip%20one.mp4\" from note.md",
+      "fn": "canonical_media_path",
+      "input": {
+        "reference": "videos/clips/clip%20one.mp4",
+        "note_path": "note.md"
+      },
+      "expected": "videos/clips/clip one.mp4"
+    },
+    {
+      "name": "references_in 00 \"![a](x.png)\"",
+      "fn": "references_in",
+      "input": {
+        "content": "![a](x.png)"
+      },
+      "expected": [
+        "x.png"
+      ]
+    },
+    {
+      "name": "references_in 01 \"[a](x.png)\"",
+      "fn": "references_in",
+      "input": {
+        "content": "[a](x.png)"
+      },
+      "expected": [
+        "x.png"
+      ]
+    },
+    {
+      "name": "references_in 02 \"![a]( x.png )\"",
+      "fn": "references_in",
+      "input": {
+        "content": "![a]( x.png )"
+      },
+      "expected": [
+        "x.png"
+      ]
+    },
+    {
+      "name": "references_in 03 \"![a](<x y.png>)\"",
+      "fn": "references_in",
+      "input": {
+        "content": "![a](<x y.png>)"
+      },
+      "expected": [
+        "x y.png"
+      ]
+    },
+    {
+      "name": "references_in 04 \"![a](x.png \\\"title\\\")\"",
+      "fn": "references_in",
+      "input": {
+        "content": "![a](x.png \"title\")"
+      },
+      "expected": [
+        "x.png"
+      ]
+    },
+    {
+      "name": "references_in 05 \"![a](x.png 'title')\"",
+      "fn": "references_in",
+      "input": {
+        "content": "![a](x.png 'title')"
+      },
+      "expected": [
+        "x.png"
+      ]
+    },
+    {
+      "name": "references_in 06 \"\\\\![a](x.png)\"",
+      "fn": "references_in",
+      "input": {
+        "content": "\\![a](x.png)"
+      },
+      "expected": [
+        "x.png"
+      ]
+    },
+    {
+      "name": "references_in 07 \"!\\\\[a](x.png)\"",
+      "fn": "references_in",
+      "input": {
+        "content": "!\\[a](x.png)"
+      },
+      "expected": []
+    },
+    {
+      "name": "references_in 08 \"[a\\\\]b](x.png)\"",
+      "fn": "references_in",
+      "input": {
+        "content": "[a\\]b](x.png)"
+      },
+      "expected": [
+        "x.png"
+      ]
+    },
+    {
+      "name": "references_in 09 \"![a](x\\\\)y.png)\"",
+      "fn": "references_in",
+      "input": {
+        "content": "![a](x\\)y.png)"
+      },
+      "expected": [
+        "x\\)y.png"
+      ]
+    },
+    {
+      "name": "references_in 10 \"![a](x(y).png)\"",
+      "fn": "references_in",
+      "input": {
+        "content": "![a](x(y).png)"
+      },
+      "expected": [
+        "x(y"
+      ]
+    },
+    {
+      "name": "references_in 11 \"![](empty-alt.png)\"",
+      "fn": "references_in",
+      "input": {
+        "content": "![](empty-alt.png)"
+      },
+      "expected": [
+        "empty-alt.png"
+      ]
+    },
+    {
+      "name": "references_in 12 \"![a]()\"",
+      "fn": "references_in",
+      "input": {
+        "content": "![a]()"
+      },
+      "expected": []
+    },
+    {
+      "name": "references_in 13 \"![a](<>)\"",
+      "fn": "references_in",
+      "input": {
+        "content": "![a](<>)"
+      },
+      "expected": [
+        ""
+      ]
+    },
+    {
+      "name": "references_in 14 \"![a]\\n(x.png)\"",
+      "fn": "references_in",
+      "input": {
+        "content": "![a]\n(x.png)"
+      },
+      "expected": []
+    },
+    {
+      "name": "references_in 15 \"![a](\\nx.png)\"",
+      "fn": "references_in",
+      "input": {
+        "content": "![a](\nx.png)"
+      },
+      "expected": []
+    },
+    {
+      "name": "references_in 16 \"[[nested]](x.png)\"",
+      "fn": "references_in",
+      "input": {
+        "content": "[[nested]](x.png)"
+      },
+      "expected": []
+    },
+    {
+      "name": "references_in 17 \"![a](x.png)![b](y.png)\"",
+      "fn": "references_in",
+      "input": {
+        "content": "![a](x.png)![b](y.png)"
+      },
+      "expected": [
+        "x.png",
+        "y.png"
+      ]
+    },
+    {
+      "name": "references_in 18 \"<img src=\\\"a.png\\\">\"",
+      "fn": "references_in",
+      "input": {
+        "content": "<img src=\"a.png\">"
+      },
+      "expected": [
+        "a.png"
+      ]
+    },
+    {
+      "name": "references_in 19 \"<img src='a.png'>\"",
+      "fn": "references_in",
+      "input": {
+        "content": "<img src='a.png'>"
+      },
+      "expected": [
+        "a.png"
+      ]
+    },
+    {
+      "name": "references_in 20 \"<img src=a.png>\"",
+      "fn": "references_in",
+      "input": {
+        "content": "<img src=a.png>"
+      },
+      "expected": [
+        "a.png"
+      ]
+    },
+    {
+      "name": "references_in 21 \"<IMG SRC=\\\"A.png\\\">\"",
+      "fn": "references_in",
+      "input": {
+        "content": "<IMG SRC=\"A.png\">"
+      },
+      "expected": [
+        "A.png"
+      ]
+    },
+    {
+      "name": "references_in 22 \"<img alt=x src=\\\"a.png\\\">\"",
+      "fn": "references_in",
+      "input": {
+        "content": "<img alt=x src=\"a.png\">"
+      },
+      "expected": [
+        "a.png"
+      ]
+    },
+    {
+      "name": "references_in 23 \"<img\\nsrc=\\\"multi.png\\\">\"",
+      "fn": "references_in",
+      "input": {
+        "content": "<img\nsrc=\"multi.png\">"
+      },
+      "expected": [
+        "multi.png"
+      ]
+    },
+    {
+      "name": "references_in 24 \"<video src=\\\"v.mp4\\\" controls>\"",
+      "fn": "references_in",
+      "input": {
+        "content": "<video src=\"v.mp4\" controls>"
+      },
+      "expected": [
+        "v.mp4"
+      ]
+    },
+    {
+      "name": "references_in 25 \"<audio src=\\\"a.mp3\\\">\"",
+      "fn": "references_in",
+      "input": {
+        "content": "<audio src=\"a.mp3\">"
+      },
+      "expected": [
+        "a.mp3"
+      ]
+    },
+    {
+      "name": "references_in 26 \"<source src=\\\"s.webm\\\">\"",
+      "fn": "references_in",
+      "input": {
+        "content": "<source src=\"s.webm\">"
+      },
+      "expected": [
+        "s.webm"
+      ]
+    },
+    {
+      "name": "references_in 27 \"<track src=\\\"t.vtt\\\">\"",
+      "fn": "references_in",
+      "input": {
+        "content": "<track src=\"t.vtt\">"
+      },
+      "expected": [
+        "t.vtt"
+      ]
+    },
+    {
+      "name": "references_in 28 \"<embed src=\\\"e.swf\\\">\"",
+      "fn": "references_in",
+      "input": {
+        "content": "<embed src=\"e.swf\">"
+      },
+      "expected": [
+        "e.swf"
+      ]
+    },
+    {
+      "name": "references_in 29 \"<object src=\\\"o.bin\\\">\"",
+      "fn": "references_in",
+      "input": {
+        "content": "<object src=\"o.bin\">"
+      },
+      "expected": [
+        "o.bin"
+      ]
+    },
+    {
+      "name": "references_in 30 \"<iframe src=\\\"i.html\\\">\"",
+      "fn": "references_in",
+      "input": {
+        "content": "<iframe src=\"i.html\">"
+      },
+      "expected": []
+    },
+    {
+      "name": "references_in 31 \"<img data-src=\\\"lazy.png\\\">\"",
+      "fn": "references_in",
+      "input": {
+        "content": "<img data-src=\"lazy.png\">"
+      },
+      "expected": []
+    },
+    {
+      "name": "references_in 32 \"<img srcset=\\\"a.png 1x\\\">\"",
+      "fn": "references_in",
+      "input": {
+        "content": "<img srcset=\"a.png 1x\">"
+      },
+      "expected": []
+    },
+    {
+      "name": "references_in 33 \"<img src = \\\"spaced.png\\\">\"",
+      "fn": "references_in",
+      "input": {
+        "content": "<img src = \"spaced.png\">"
+      },
+      "expected": [
+        "spaced.png"
+      ]
+    },
+    {
+      "name": "references_in 34 \"<imgx src=\\\"no.png\\\">\"",
+      "fn": "references_in",
+      "input": {
+        "content": "<imgx src=\"no.png\">"
+      },
+      "expected": []
+    },
+    {
+      "name": "references_in 35 \"[r]: a.png\\n![x][r]\"",
+      "fn": "references_in",
+      "input": {
+        "content": "[r]: a.png\n![x][r]"
+      },
+      "expected": [
+        "a.png",
+        "a.png"
+      ]
+    },
+    {
+      "name": "references_in 36 \"[r]: <a b.png>\\n![x][r]\"",
+      "fn": "references_in",
+      "input": {
+        "content": "[r]: <a b.png>\n![x][r]"
+      },
+      "expected": [
+        "a b.png",
+        "a b.png"
+      ]
+    },
+    {
+      "name": "references_in 37 \"   [r]: indented3.png\\n[r]\"",
+      "fn": "references_in",
+      "input": {
+        "content": "   [r]: indented3.png\n[r]"
+      },
+      "expected": [
+        "indented3.png"
+      ]
+    },
+    {
+      "name": "references_in 38 \"    [r]: indented4.png\\n[r]\"",
+      "fn": "references_in",
+      "input": {
+        "content": "    [r]: indented4.png\n[r]"
+      },
+      "expected": []
+    },
+    {
+      "name": "references_in 39 \"[R]: upper.png\\n[r]\"",
+      "fn": "references_in",
+      "input": {
+        "content": "[R]: upper.png\n[r]"
+      },
+      "expected": [
+        "upper.png"
+      ]
+    },
+    {
+      "name": "references_in 40 \"[a &amp; b]: amp.png\\n[a & b]\"",
+      "fn": "references_in",
+      "input": {
+        "content": "[a &amp; b]: amp.png\n[a & b]"
+      },
+      "expected": [
+        "amp.png"
+      ]
+    },
+    {
+      "name": "references_in 41 \"[a\\\\*b]: esc.png\\n[a*b]\"",
+      "fn": "references_in",
+      "input": {
+        "content": "[a\\*b]: esc.png\n[a*b]"
+      },
+      "expected": [
+        "esc.png"
+      ]
+    },
+    {
+      "name": "references_in 42 \"[r]: first.png\\n[r]: second.png\\n[r]\"",
+      "fn": "references_in",
+      "input": {
+        "content": "[r]: first.png\n[r]: second.png\n[r]"
+      },
+      "expected": [
+        "first.png"
+      ]
+    },
+    {
+      "name": "references_in 43 \"[r]: a.png \\\"title\\\"\\n[r]\"",
+      "fn": "references_in",
+      "input": {
+        "content": "[r]: a.png \"title\"\n[r]"
+      },
+      "expected": [
+        "a.png"
+      ]
+    },
+    {
+      "name": "references_in 44 \"[r]:a.png\\n[r]\"",
+      "fn": "references_in",
+      "input": {
+        "content": "[r]:a.png\n[r]"
+      },
+      "expected": [
+        "a.png"
+      ]
+    },
+    {
+      "name": "references_in 45 \"[r]\\n[r]: after.png\"",
+      "fn": "references_in",
+      "input": {
+        "content": "[r]\n[r]: after.png"
+      },
+      "expected": [
+        "after.png"
+      ]
+    },
+    {
+      "name": "references_in 46 \"[r] (paren)\\n[r]: p.png\"",
+      "fn": "references_in",
+      "input": {
+        "content": "[r] (paren)\n[r]: p.png"
+      },
+      "expected": []
+    },
+    {
+      "name": "references_in 47 \"[r](inline.png)\\n[r]: def.png\"",
+      "fn": "references_in",
+      "input": {
+        "content": "[r](inline.png)\n[r]: def.png"
+      },
+      "expected": [
+        "inline.png"
+      ]
+    },
+    {
+      "name": "references_in 48 \"[r][]\\n[r]: c.png\"",
+      "fn": "references_in",
+      "input": {
+        "content": "[r][]\n[r]: c.png"
+      },
+      "expected": [
+        "c.png"
+      ]
+    },
+    {
+      "name": "references_in 49 \"![r][ ]\\n[r]: s.png\"",
+      "fn": "references_in",
+      "input": {
+        "content": "![r][ ]\n[r]: s.png"
+      },
+      "expected": []
+    },
+    {
+      "name": "references_in 50 \"[text][missing]\"",
+      "fn": "references_in",
+      "input": {
+        "content": "[text][missing]"
+      },
+      "expected": []
+    },
+    {
+      "name": "references_in 51 \"`[r]`\\n[r]: code.png\"",
+      "fn": "references_in",
+      "input": {
+        "content": "`[r]`\n[r]: code.png"
+      },
+      "expected": []
+    },
+    {
+      "name": "references_in 52 \"``` \\n![a](fenced.png)\\n```\"",
+      "fn": "references_in",
+      "input": {
+        "content": "``` \n![a](fenced.png)\n```"
+      },
+      "expected": []
+    },
+    {
+      "name": "references_in 53 \"~~~\\n![a](tilde.png)\\n~~~\"",
+      "fn": "references_in",
+      "input": {
+        "content": "~~~\n![a](tilde.png)\n~~~"
+      },
+      "expected": []
+    },
+    {
+      "name": "references_in 54 \"````\\n```\\n![a](inner.png)\\n````\\n![b](after.png)",
+      "fn": "references_in",
+      "input": {
+        "content": "````\n```\n![a](inner.png)\n````\n![b](after.png)"
+      },
+      "expected": [
+        "after.png"
+      ]
+    },
+    {
+      "name": "references_in 55 \"```\\n![a](unclosed.png)\"",
+      "fn": "references_in",
+      "input": {
+        "content": "```\n![a](unclosed.png)"
+      },
+      "expected": []
+    },
+    {
+      "name": "references_in 56 \"   ```\\n![a](indented-fence.png)\\n   ```\"",
+      "fn": "references_in",
+      "input": {
+        "content": "   ```\n![a](indented-fence.png)\n   ```"
+      },
+      "expected": []
+    },
+    {
+      "name": "references_in 57 \"    ```\\n![a](code-indent.png)\"",
+      "fn": "references_in",
+      "input": {
+        "content": "    ```\n![a](code-indent.png)"
+      },
+      "expected": [
+        "code-indent.png"
+      ]
+    },
+    {
+      "name": "references_in 58 \"``` x\\n![a](a.png)\\n~~~\\n![b](b.png)\\n```\\n![c](c",
+      "fn": "references_in",
+      "input": {
+        "content": "``` x\n![a](a.png)\n~~~\n![b](b.png)\n```\n![c](c.png)"
+      },
+      "expected": [
+        "c.png"
+      ]
+    },
+    {
+      "name": "references_in 59 \"`` ![a](dbl.png) ``\"",
+      "fn": "references_in",
+      "input": {
+        "content": "`` ![a](dbl.png) ``"
+      },
+      "expected": []
+    },
+    {
+      "name": "references_in 60 \"`unclosed ![a](x.png)\"",
+      "fn": "references_in",
+      "input": {
+        "content": "`unclosed ![a](x.png)"
+      },
+      "expected": [
+        "x.png"
+      ]
+    },
+    {
+      "name": "references_in 61 \"<!-- ![a](c.png) -->![b](d.png)\"",
+      "fn": "references_in",
+      "input": {
+        "content": "<!-- ![a](c.png) -->![b](d.png)"
+      },
+      "expected": [
+        "d.png"
+      ]
+    },
+    {
+      "name": "references_in 62 \"<!--\\n![a](multi.png)\\n-->\"",
+      "fn": "references_in",
+      "input": {
+        "content": "<!--\n![a](multi.png)\n-->"
+      },
+      "expected": []
+    },
+    {
+      "name": "references_in 63 \"<!-- unclosed ![a](x.png)\"",
+      "fn": "references_in",
+      "input": {
+        "content": "<!-- unclosed ![a](x.png)"
+      },
+      "expected": [
+        "x.png"
+      ]
+    },
+    {
+      "name": "references_in 64 \"\\\\`![a](escaped-tick.png)\\\\`\"",
+      "fn": "references_in",
+      "input": {
+        "content": "\\`![a](escaped-tick.png)\\`"
+      },
+      "expected": [
+        "escaped-tick.png"
+      ]
+    },
+    {
+      "name": "references_in 65 \"text ![a](a.png) `code` ![b](b.png)\"",
+      "fn": "references_in",
+      "input": {
+        "content": "text ![a](a.png) `code` ![b](b.png)"
+      },
+      "expected": [
+        "a.png",
+        "b.png"
+      ]
+    },
+    {
+      "name": "markdown_without_code \"\"",
+      "fn": "markdown_without_code",
+      "input": {
+        "content": ""
+      },
+      "expected": ""
+    },
+    {
+      "name": "markdown_without_code \"a\\nb\"",
+      "fn": "markdown_without_code",
+      "input": {
+        "content": "a\nb"
+      },
+      "expected": "a\nb"
+    },
+    {
+      "name": "markdown_without_code \"```\\nx\\n```\\ny\"",
+      "fn": "markdown_without_code",
+      "input": {
+        "content": "```\nx\n```\ny"
+      },
+      "expected": "   \n \n   \ny"
+    },
+    {
+      "name": "markdown_without_code \"`a` b `c`\"",
+      "fn": "markdown_without_code",
+      "input": {
+        "content": "`a` b `c`"
+      },
+      "expected": "    b    "
+    },
+    {
+      "name": "markdown_without_code \"<!-- x -->y\"",
+      "fn": "markdown_without_code",
+      "input": {
+        "content": "<!-- x -->y"
+      },
+      "expected": "          y"
+    },
+    {
+      "name": "markdown_without_code \"a\\r\\n```\\r\\nb\\r\\n```\\r\\nc\"",
+      "fn": "markdown_without_code",
+      "input": {
+        "content": "a\r\n```\r\nb\r\n```\r\nc"
+      },
+      "expected": "a\r\n   \r\n \r\n   \r\nc"
+    },
+    {
+      "name": "normalize_reference_label \"Photo\"",
+      "fn": "normalize_reference_label",
+      "input": {
+        "label": "Photo"
+      },
+      "expected": "photo"
+    },
+    {
+      "name": "normalize_reference_label \"  PHOTO   IMAGE \"",
+      "fn": "normalize_reference_label",
+      "input": {
+        "label": "  PHOTO   IMAGE "
+      },
+      "expected": "photo image"
+    },
+    {
+      "name": "normalize_reference_label \"a\\\\*b\"",
+      "fn": "normalize_reference_label",
+      "input": {
+        "label": "a\\*b"
+      },
+      "expected": "a*b"
+    },
+    {
+      "name": "normalize_reference_label \"a &amp; b\"",
+      "fn": "normalize_reference_label",
+      "input": {
+        "label": "a &amp; b"
+      },
+      "expected": "a & b"
+    },
+    {
+      "name": "normalize_reference_label \"&lt;x&gt;\"",
+      "fn": "normalize_reference_label",
+      "input": {
+        "label": "&lt;x&gt;"
+      },
+      "expected": "<x>"
+    },
+    {
+      "name": "normalize_reference_label \"Ünïcödé\"",
+      "fn": "normalize_reference_label",
+      "input": {
+        "label": "Ünïcödé"
+      },
+      "expected": "ünïcödé"
+    },
+    {
+      "name": "normalize_reference_label \"ẞ\"",
+      "fn": "normalize_reference_label",
+      "input": {
+        "label": "ẞ"
+      },
+      "expected": "ß"
+    },
+    {
+      "name": "normalize_reference_label \"İ\"",
+      "fn": "normalize_reference_label",
+      "input": {
+        "label": "İ"
+      },
+      "expected": "i̇"
+    },
+    {
+      "name": "normalize_reference_label \"tab\\tsep\"",
+      "fn": "normalize_reference_label",
+      "input": {
+        "label": "tab\tsep"
+      },
+      "expected": "tab sep"
+    },
+    {
+      "name": "normalize_reference_label \"nbsp x\"",
+      "fn": "normalize_reference_label",
+      "input": {
+        "label": "nbsp x"
+      },
+      "expected": "nbsp x"
+    },
+    {
+      "name": "normalize_reference_label \"\"",
+      "fn": "normalize_reference_label",
+      "input": {
+        "label": ""
+      },
+      "expected": ""
+    },
+    {
+      "name": "normalize_reference_label \"\\\\\\\\\"",
+      "fn": "normalize_reference_label",
+      "input": {
+        "label": "\\\\"
+      },
+      "expected": "\\"
+    },
+    {
+      "name": "strip_unescaped_url_suffix \"a.png\"",
+      "fn": "strip_unescaped_url_suffix",
+      "input": {
+        "path": "a.png"
+      },
+      "expected": "a.png"
+    },
+    {
+      "name": "strip_unescaped_url_suffix \"a.png?x\"",
+      "fn": "strip_unescaped_url_suffix",
+      "input": {
+        "path": "a.png?x"
+      },
+      "expected": "a.png"
+    },
+    {
+      "name": "strip_unescaped_url_suffix \"a.png#y\"",
+      "fn": "strip_unescaped_url_suffix",
+      "input": {
+        "path": "a.png#y"
+      },
+      "expected": "a.png"
+    },
+    {
+      "name": "strip_unescaped_url_suffix \"a\\\\?b\"",
+      "fn": "strip_unescaped_url_suffix",
+      "input": {
+        "path": "a\\?b"
+      },
+      "expected": "a\\?b"
+    },
+    {
+      "name": "strip_unescaped_url_suffix \"a\\\\\\\\?b\"",
+      "fn": "strip_unescaped_url_suffix",
+      "input": {
+        "path": "a\\\\?b"
+      },
+      "expected": "a\\\\"
+    },
+    {
+      "name": "strip_unescaped_url_suffix \"a\\\\#b#c\"",
+      "fn": "strip_unescaped_url_suffix",
+      "input": {
+        "path": "a\\#b#c"
+      },
+      "expected": "a\\#b"
+    },
+    {
+      "name": "strip_unescaped_url_suffix \"?start\"",
+      "fn": "strip_unescaped_url_suffix",
+      "input": {
+        "path": "?start"
+      },
+      "expected": ""
+    },
+    {
+      "name": "strip_unescaped_url_suffix \"\"",
+      "fn": "strip_unescaped_url_suffix",
+      "input": {
+        "path": ""
+      },
+      "expected": ""
+    },
+    {
+      "name": "strip_unescaped_url_suffix \"\\\\\"",
+      "fn": "strip_unescaped_url_suffix",
+      "input": {
+        "path": "\\"
+      },
+      "expected": "\\"
+    },
+    {
+      "name": "strip_unescaped_url_suffix \"a\\\\\\\\\\\\?b?c\"",
+      "fn": "strip_unescaped_url_suffix",
+      "input": {
+        "path": "a\\\\\\?b?c"
+      },
+      "expected": "a\\\\\\?b"
+    },
+    {
+      "name": "constants",
+      "fn": "constants",
+      "input": {},
+      "expected": {
+        "MEDIA_ROOTS": [
+          "images",
+          "videos"
+        ],
+        "MAX_CACHED_ROOTS": 8,
+        "MARKDOWN_DESTINATION": "(?<!\\\\)\\[(?:\\\\.|[^\\]\\r\\n])*\\]\\([ \\t]*(?:<([^>\\r\\n]*)>|((?:\\\\.|[^)\\s])+))",
+        "REFERENCE_DEFINITION": "\\A {0,3}\\[([^\\]\\r\\n]+)\\]:[ \\t]*(?:<([^>\\r\\n]*)>|([^\\s]+))",
+        "REFERENCE_USE": "(?<!\\\\)!\\[((?:\\\\.|[^\\]\\r\\n])*)\\](?:\\[([^\\]\\r\\n]*)\\])?|(?<![\\\\!])\\[((?:\\\\.|[^\\]\\r\\n])*)\\](?:\\[([^\\]\\r\\n]*)\\])?",
+        "HTML_SOURCE": "<(?:img|video|audio|source|track|embed|object)\\b[^>]*?\\s+src\\s*=\\s*(?:\"([^\"]*)\"|'([^']*)'|([^\\s>]+))"
+      }
+    }
+  ]
+}

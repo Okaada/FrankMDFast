@@ -1,0 +1,1 @@
+{"items":[{"id":{"videoId":"abc123"},"snippet":{"title":"Test Video Title","channelTitle":"Test Channel","thumbnails":{"medium":{"url":"https://i.ytimg.com/vi/abc123/mqdefault.jpg"}}}},{"id":{"videoId":"def456"},"snippet":{"title":"Another Video","channelTitle":"Another Channel","thumbnails":{"default":{"url":"https://i.ytimg.com/vi/def456/default.jpg"}}}}]}

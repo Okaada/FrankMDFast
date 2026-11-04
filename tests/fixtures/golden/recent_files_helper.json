@@ -1,0 +1,2330 @@
+{
+  "source": "app/helpers/recent_files_helper.rb @ d47a89e92d89f807878d318182fa5dcea0329ec4",
+  "frankmd_sha": "d47a89e92d89f807878d318182fa5dcea0329ec4",
+  "generator": "tools/golden/ruby/helpers.rb",
+  "notes": "recent_file_opened_ago(opened_at) evaluated with Time.current frozen at 2026-01-30T12:34:56.789012Z (travel_to; note travel_to truncates usec so now is 2026-01-30T12:34:56.000000Z) and opened_at = now - seconds_ago. seconds = max(0, (now - opened_at).to_i) (truncation toward zero). Localized via I18n home.opened_ago.* for each available locale. recent_file_opened_at = Time.iso8601(value) or nil on ArgumentError; expected shows the parsed time (original offset), its UTC form and utc_offset (seconds).",
+  "cases": [
+    {
+      "name": "opened_ago en 0s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 0,
+        "locale": "en"
+      },
+      "expected": "Just now"
+    },
+    {
+      "name": "opened_ago en 1s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 1,
+        "locale": "en"
+      },
+      "expected": "1 second ago"
+    },
+    {
+      "name": "opened_ago en 2s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 2,
+        "locale": "en"
+      },
+      "expected": "2 seconds ago"
+    },
+    {
+      "name": "opened_ago en 59s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 59,
+        "locale": "en"
+      },
+      "expected": "59 seconds ago"
+    },
+    {
+      "name": "opened_ago en 60s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 60,
+        "locale": "en"
+      },
+      "expected": "1 minute ago"
+    },
+    {
+      "name": "opened_ago en 61s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 61,
+        "locale": "en"
+      },
+      "expected": "1 minute ago"
+    },
+    {
+      "name": "opened_ago en 119s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 119,
+        "locale": "en"
+      },
+      "expected": "1 minute ago"
+    },
+    {
+      "name": "opened_ago en 120s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 120,
+        "locale": "en"
+      },
+      "expected": "2 minutes ago"
+    },
+    {
+      "name": "opened_ago en 600s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 600,
+        "locale": "en"
+      },
+      "expected": "10 minutes ago"
+    },
+    {
+      "name": "opened_ago en 3599s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 3599,
+        "locale": "en"
+      },
+      "expected": "59 minutes ago"
+    },
+    {
+      "name": "opened_ago en 3600s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 3600,
+        "locale": "en"
+      },
+      "expected": "1 hour ago"
+    },
+    {
+      "name": "opened_ago en 3601s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 3601,
+        "locale": "en"
+      },
+      "expected": "1 hour ago"
+    },
+    {
+      "name": "opened_ago en 7199s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 7199,
+        "locale": "en"
+      },
+      "expected": "1 hour ago"
+    },
+    {
+      "name": "opened_ago en 7200s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 7200,
+        "locale": "en"
+      },
+      "expected": "2 hours ago"
+    },
+    {
+      "name": "opened_ago en 86399s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 86399,
+        "locale": "en"
+      },
+      "expected": "23 hours ago"
+    },
+    {
+      "name": "opened_ago en 86400s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 86400,
+        "locale": "en"
+      },
+      "expected": "1 day ago"
+    },
+    {
+      "name": "opened_ago en 86401s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 86401,
+        "locale": "en"
+      },
+      "expected": "1 day ago"
+    },
+    {
+      "name": "opened_ago en 172799s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 172799,
+        "locale": "en"
+      },
+      "expected": "1 day ago"
+    },
+    {
+      "name": "opened_ago en 172800s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 172800,
+        "locale": "en"
+      },
+      "expected": "2 days ago"
+    },
+    {
+      "name": "opened_ago en 518400s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 518400,
+        "locale": "en"
+      },
+      "expected": "6 days ago"
+    },
+    {
+      "name": "opened_ago en 604799s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 604799,
+        "locale": "en"
+      },
+      "expected": "6 days ago"
+    },
+    {
+      "name": "opened_ago en 604800s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 604800,
+        "locale": "en"
+      },
+      "expected": "7 days ago"
+    },
+    {
+      "name": "opened_ago en 604801s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 604801,
+        "locale": "en"
+      },
+      "expected": "Over a week ago"
+    },
+    {
+      "name": "opened_ago en 2592000s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 2592000,
+        "locale": "en"
+      },
+      "expected": "Over a week ago"
+    },
+    {
+      "name": "opened_ago en -1s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": -1,
+        "locale": "en"
+      },
+      "expected": "Just now"
+    },
+    {
+      "name": "opened_ago en -60s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": -60,
+        "locale": "en"
+      },
+      "expected": "Just now"
+    },
+    {
+      "name": "opened_ago en -86400s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": -86400,
+        "locale": "en"
+      },
+      "expected": "Just now"
+    },
+    {
+      "name": "opened_ago en 0.4s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 0.4,
+        "locale": "en"
+      },
+      "expected": "Just now"
+    },
+    {
+      "name": "opened_ago en 0.999s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 0.999,
+        "locale": "en"
+      },
+      "expected": "Just now"
+    },
+    {
+      "name": "opened_ago en 1.5s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 1.5,
+        "locale": "en"
+      },
+      "expected": "1 second ago"
+    },
+    {
+      "name": "opened_ago en 59.999s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 59.999,
+        "locale": "en"
+      },
+      "expected": "59 seconds ago"
+    },
+    {
+      "name": "opened_ago pt-BR 0s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 0,
+        "locale": "pt-BR"
+      },
+      "expected": "Agora mesmo"
+    },
+    {
+      "name": "opened_ago pt-BR 1s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 1,
+        "locale": "pt-BR"
+      },
+      "expected": "há 1 segundo"
+    },
+    {
+      "name": "opened_ago pt-BR 2s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 2,
+        "locale": "pt-BR"
+      },
+      "expected": "há 2 segundos"
+    },
+    {
+      "name": "opened_ago pt-BR 59s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 59,
+        "locale": "pt-BR"
+      },
+      "expected": "há 59 segundos"
+    },
+    {
+      "name": "opened_ago pt-BR 60s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 60,
+        "locale": "pt-BR"
+      },
+      "expected": "há 1 minuto"
+    },
+    {
+      "name": "opened_ago pt-BR 61s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 61,
+        "locale": "pt-BR"
+      },
+      "expected": "há 1 minuto"
+    },
+    {
+      "name": "opened_ago pt-BR 119s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 119,
+        "locale": "pt-BR"
+      },
+      "expected": "há 1 minuto"
+    },
+    {
+      "name": "opened_ago pt-BR 120s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 120,
+        "locale": "pt-BR"
+      },
+      "expected": "há 2 minutos"
+    },
+    {
+      "name": "opened_ago pt-BR 600s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 600,
+        "locale": "pt-BR"
+      },
+      "expected": "há 10 minutos"
+    },
+    {
+      "name": "opened_ago pt-BR 3599s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 3599,
+        "locale": "pt-BR"
+      },
+      "expected": "há 59 minutos"
+    },
+    {
+      "name": "opened_ago pt-BR 3600s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 3600,
+        "locale": "pt-BR"
+      },
+      "expected": "há 1 hora"
+    },
+    {
+      "name": "opened_ago pt-BR 3601s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 3601,
+        "locale": "pt-BR"
+      },
+      "expected": "há 1 hora"
+    },
+    {
+      "name": "opened_ago pt-BR 7199s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 7199,
+        "locale": "pt-BR"
+      },
+      "expected": "há 1 hora"
+    },
+    {
+      "name": "opened_ago pt-BR 7200s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 7200,
+        "locale": "pt-BR"
+      },
+      "expected": "há 2 horas"
+    },
+    {
+      "name": "opened_ago pt-BR 86399s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 86399,
+        "locale": "pt-BR"
+      },
+      "expected": "há 23 horas"
+    },
+    {
+      "name": "opened_ago pt-BR 86400s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 86400,
+        "locale": "pt-BR"
+      },
+      "expected": "há 1 dia"
+    },
+    {
+      "name": "opened_ago pt-BR 86401s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 86401,
+        "locale": "pt-BR"
+      },
+      "expected": "há 1 dia"
+    },
+    {
+      "name": "opened_ago pt-BR 172799s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 172799,
+        "locale": "pt-BR"
+      },
+      "expected": "há 1 dia"
+    },
+    {
+      "name": "opened_ago pt-BR 172800s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 172800,
+        "locale": "pt-BR"
+      },
+      "expected": "há 2 dias"
+    },
+    {
+      "name": "opened_ago pt-BR 518400s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 518400,
+        "locale": "pt-BR"
+      },
+      "expected": "há 6 dias"
+    },
+    {
+      "name": "opened_ago pt-BR 604799s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 604799,
+        "locale": "pt-BR"
+      },
+      "expected": "há 6 dias"
+    },
+    {
+      "name": "opened_ago pt-BR 604800s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 604800,
+        "locale": "pt-BR"
+      },
+      "expected": "há 7 dias"
+    },
+    {
+      "name": "opened_ago pt-BR 604801s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 604801,
+        "locale": "pt-BR"
+      },
+      "expected": "Há mais de uma semana"
+    },
+    {
+      "name": "opened_ago pt-BR 2592000s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 2592000,
+        "locale": "pt-BR"
+      },
+      "expected": "Há mais de uma semana"
+    },
+    {
+      "name": "opened_ago pt-BR -1s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": -1,
+        "locale": "pt-BR"
+      },
+      "expected": "Agora mesmo"
+    },
+    {
+      "name": "opened_ago pt-BR -60s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": -60,
+        "locale": "pt-BR"
+      },
+      "expected": "Agora mesmo"
+    },
+    {
+      "name": "opened_ago pt-BR -86400s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": -86400,
+        "locale": "pt-BR"
+      },
+      "expected": "Agora mesmo"
+    },
+    {
+      "name": "opened_ago pt-BR 0.4s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 0.4,
+        "locale": "pt-BR"
+      },
+      "expected": "Agora mesmo"
+    },
+    {
+      "name": "opened_ago pt-BR 0.999s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 0.999,
+        "locale": "pt-BR"
+      },
+      "expected": "Agora mesmo"
+    },
+    {
+      "name": "opened_ago pt-BR 1.5s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 1.5,
+        "locale": "pt-BR"
+      },
+      "expected": "há 1 segundo"
+    },
+    {
+      "name": "opened_ago pt-BR 59.999s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 59.999,
+        "locale": "pt-BR"
+      },
+      "expected": "há 59 segundos"
+    },
+    {
+      "name": "opened_ago pt-PT 0s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 0,
+        "locale": "pt-PT"
+      },
+      "expected": "Agora mesmo"
+    },
+    {
+      "name": "opened_ago pt-PT 1s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 1,
+        "locale": "pt-PT"
+      },
+      "expected": "há 1 segundo"
+    },
+    {
+      "name": "opened_ago pt-PT 2s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 2,
+        "locale": "pt-PT"
+      },
+      "expected": "há 2 segundos"
+    },
+    {
+      "name": "opened_ago pt-PT 59s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 59,
+        "locale": "pt-PT"
+      },
+      "expected": "há 59 segundos"
+    },
+    {
+      "name": "opened_ago pt-PT 60s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 60,
+        "locale": "pt-PT"
+      },
+      "expected": "há 1 minuto"
+    },
+    {
+      "name": "opened_ago pt-PT 61s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 61,
+        "locale": "pt-PT"
+      },
+      "expected": "há 1 minuto"
+    },
+    {
+      "name": "opened_ago pt-PT 119s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 119,
+        "locale": "pt-PT"
+      },
+      "expected": "há 1 minuto"
+    },
+    {
+      "name": "opened_ago pt-PT 120s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 120,
+        "locale": "pt-PT"
+      },
+      "expected": "há 2 minutos"
+    },
+    {
+      "name": "opened_ago pt-PT 600s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 600,
+        "locale": "pt-PT"
+      },
+      "expected": "há 10 minutos"
+    },
+    {
+      "name": "opened_ago pt-PT 3599s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 3599,
+        "locale": "pt-PT"
+      },
+      "expected": "há 59 minutos"
+    },
+    {
+      "name": "opened_ago pt-PT 3600s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 3600,
+        "locale": "pt-PT"
+      },
+      "expected": "há 1 hora"
+    },
+    {
+      "name": "opened_ago pt-PT 3601s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 3601,
+        "locale": "pt-PT"
+      },
+      "expected": "há 1 hora"
+    },
+    {
+      "name": "opened_ago pt-PT 7199s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 7199,
+        "locale": "pt-PT"
+      },
+      "expected": "há 1 hora"
+    },
+    {
+      "name": "opened_ago pt-PT 7200s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 7200,
+        "locale": "pt-PT"
+      },
+      "expected": "há 2 horas"
+    },
+    {
+      "name": "opened_ago pt-PT 86399s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 86399,
+        "locale": "pt-PT"
+      },
+      "expected": "há 23 horas"
+    },
+    {
+      "name": "opened_ago pt-PT 86400s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 86400,
+        "locale": "pt-PT"
+      },
+      "expected": "há 1 dia"
+    },
+    {
+      "name": "opened_ago pt-PT 86401s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 86401,
+        "locale": "pt-PT"
+      },
+      "expected": "há 1 dia"
+    },
+    {
+      "name": "opened_ago pt-PT 172799s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 172799,
+        "locale": "pt-PT"
+      },
+      "expected": "há 1 dia"
+    },
+    {
+      "name": "opened_ago pt-PT 172800s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 172800,
+        "locale": "pt-PT"
+      },
+      "expected": "há 2 dias"
+    },
+    {
+      "name": "opened_ago pt-PT 518400s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 518400,
+        "locale": "pt-PT"
+      },
+      "expected": "há 6 dias"
+    },
+    {
+      "name": "opened_ago pt-PT 604799s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 604799,
+        "locale": "pt-PT"
+      },
+      "expected": "há 6 dias"
+    },
+    {
+      "name": "opened_ago pt-PT 604800s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 604800,
+        "locale": "pt-PT"
+      },
+      "expected": "há 7 dias"
+    },
+    {
+      "name": "opened_ago pt-PT 604801s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 604801,
+        "locale": "pt-PT"
+      },
+      "expected": "Há mais de uma semana"
+    },
+    {
+      "name": "opened_ago pt-PT 2592000s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 2592000,
+        "locale": "pt-PT"
+      },
+      "expected": "Há mais de uma semana"
+    },
+    {
+      "name": "opened_ago pt-PT -1s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": -1,
+        "locale": "pt-PT"
+      },
+      "expected": "Agora mesmo"
+    },
+    {
+      "name": "opened_ago pt-PT -60s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": -60,
+        "locale": "pt-PT"
+      },
+      "expected": "Agora mesmo"
+    },
+    {
+      "name": "opened_ago pt-PT -86400s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": -86400,
+        "locale": "pt-PT"
+      },
+      "expected": "Agora mesmo"
+    },
+    {
+      "name": "opened_ago pt-PT 0.4s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 0.4,
+        "locale": "pt-PT"
+      },
+      "expected": "Agora mesmo"
+    },
+    {
+      "name": "opened_ago pt-PT 0.999s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 0.999,
+        "locale": "pt-PT"
+      },
+      "expected": "Agora mesmo"
+    },
+    {
+      "name": "opened_ago pt-PT 1.5s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 1.5,
+        "locale": "pt-PT"
+      },
+      "expected": "há 1 segundo"
+    },
+    {
+      "name": "opened_ago pt-PT 59.999s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 59.999,
+        "locale": "pt-PT"
+      },
+      "expected": "há 59 segundos"
+    },
+    {
+      "name": "opened_ago es 0s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 0,
+        "locale": "es"
+      },
+      "expected": "Ahora mismo"
+    },
+    {
+      "name": "opened_ago es 1s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 1,
+        "locale": "es"
+      },
+      "expected": "hace 1 segundo"
+    },
+    {
+      "name": "opened_ago es 2s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 2,
+        "locale": "es"
+      },
+      "expected": "hace 2 segundos"
+    },
+    {
+      "name": "opened_ago es 59s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 59,
+        "locale": "es"
+      },
+      "expected": "hace 59 segundos"
+    },
+    {
+      "name": "opened_ago es 60s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 60,
+        "locale": "es"
+      },
+      "expected": "hace 1 minuto"
+    },
+    {
+      "name": "opened_ago es 61s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 61,
+        "locale": "es"
+      },
+      "expected": "hace 1 minuto"
+    },
+    {
+      "name": "opened_ago es 119s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 119,
+        "locale": "es"
+      },
+      "expected": "hace 1 minuto"
+    },
+    {
+      "name": "opened_ago es 120s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 120,
+        "locale": "es"
+      },
+      "expected": "hace 2 minutos"
+    },
+    {
+      "name": "opened_ago es 600s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 600,
+        "locale": "es"
+      },
+      "expected": "hace 10 minutos"
+    },
+    {
+      "name": "opened_ago es 3599s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 3599,
+        "locale": "es"
+      },
+      "expected": "hace 59 minutos"
+    },
+    {
+      "name": "opened_ago es 3600s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 3600,
+        "locale": "es"
+      },
+      "expected": "hace 1 hora"
+    },
+    {
+      "name": "opened_ago es 3601s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 3601,
+        "locale": "es"
+      },
+      "expected": "hace 1 hora"
+    },
+    {
+      "name": "opened_ago es 7199s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 7199,
+        "locale": "es"
+      },
+      "expected": "hace 1 hora"
+    },
+    {
+      "name": "opened_ago es 7200s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 7200,
+        "locale": "es"
+      },
+      "expected": "hace 2 horas"
+    },
+    {
+      "name": "opened_ago es 86399s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 86399,
+        "locale": "es"
+      },
+      "expected": "hace 23 horas"
+    },
+    {
+      "name": "opened_ago es 86400s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 86400,
+        "locale": "es"
+      },
+      "expected": "hace 1 día"
+    },
+    {
+      "name": "opened_ago es 86401s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 86401,
+        "locale": "es"
+      },
+      "expected": "hace 1 día"
+    },
+    {
+      "name": "opened_ago es 172799s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 172799,
+        "locale": "es"
+      },
+      "expected": "hace 1 día"
+    },
+    {
+      "name": "opened_ago es 172800s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 172800,
+        "locale": "es"
+      },
+      "expected": "hace 2 días"
+    },
+    {
+      "name": "opened_ago es 518400s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 518400,
+        "locale": "es"
+      },
+      "expected": "hace 6 días"
+    },
+    {
+      "name": "opened_ago es 604799s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 604799,
+        "locale": "es"
+      },
+      "expected": "hace 6 días"
+    },
+    {
+      "name": "opened_ago es 604800s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 604800,
+        "locale": "es"
+      },
+      "expected": "hace 7 días"
+    },
+    {
+      "name": "opened_ago es 604801s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 604801,
+        "locale": "es"
+      },
+      "expected": "Hace más de una semana"
+    },
+    {
+      "name": "opened_ago es 2592000s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 2592000,
+        "locale": "es"
+      },
+      "expected": "Hace más de una semana"
+    },
+    {
+      "name": "opened_ago es -1s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": -1,
+        "locale": "es"
+      },
+      "expected": "Ahora mismo"
+    },
+    {
+      "name": "opened_ago es -60s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": -60,
+        "locale": "es"
+      },
+      "expected": "Ahora mismo"
+    },
+    {
+      "name": "opened_ago es -86400s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": -86400,
+        "locale": "es"
+      },
+      "expected": "Ahora mismo"
+    },
+    {
+      "name": "opened_ago es 0.4s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 0.4,
+        "locale": "es"
+      },
+      "expected": "Ahora mismo"
+    },
+    {
+      "name": "opened_ago es 0.999s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 0.999,
+        "locale": "es"
+      },
+      "expected": "Ahora mismo"
+    },
+    {
+      "name": "opened_ago es 1.5s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 1.5,
+        "locale": "es"
+      },
+      "expected": "hace 1 segundo"
+    },
+    {
+      "name": "opened_ago es 59.999s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 59.999,
+        "locale": "es"
+      },
+      "expected": "hace 59 segundos"
+    },
+    {
+      "name": "opened_ago he 0s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 0,
+        "locale": "he"
+      },
+      "expected": "ממש עכשיו"
+    },
+    {
+      "name": "opened_ago he 1s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 1,
+        "locale": "he"
+      },
+      "expected": "לפני שנייה"
+    },
+    {
+      "name": "opened_ago he 2s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 2,
+        "locale": "he"
+      },
+      "expected": "לפני 2 שניות"
+    },
+    {
+      "name": "opened_ago he 59s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 59,
+        "locale": "he"
+      },
+      "expected": "לפני 59 שניות"
+    },
+    {
+      "name": "opened_ago he 60s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 60,
+        "locale": "he"
+      },
+      "expected": "לפני דקה"
+    },
+    {
+      "name": "opened_ago he 61s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 61,
+        "locale": "he"
+      },
+      "expected": "לפני דקה"
+    },
+    {
+      "name": "opened_ago he 119s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 119,
+        "locale": "he"
+      },
+      "expected": "לפני דקה"
+    },
+    {
+      "name": "opened_ago he 120s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 120,
+        "locale": "he"
+      },
+      "expected": "לפני 2 דקות"
+    },
+    {
+      "name": "opened_ago he 600s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 600,
+        "locale": "he"
+      },
+      "expected": "לפני 10 דקות"
+    },
+    {
+      "name": "opened_ago he 3599s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 3599,
+        "locale": "he"
+      },
+      "expected": "לפני 59 דקות"
+    },
+    {
+      "name": "opened_ago he 3600s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 3600,
+        "locale": "he"
+      },
+      "expected": "לפני שעה"
+    },
+    {
+      "name": "opened_ago he 3601s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 3601,
+        "locale": "he"
+      },
+      "expected": "לפני שעה"
+    },
+    {
+      "name": "opened_ago he 7199s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 7199,
+        "locale": "he"
+      },
+      "expected": "לפני שעה"
+    },
+    {
+      "name": "opened_ago he 7200s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 7200,
+        "locale": "he"
+      },
+      "expected": "לפני 2 שעות"
+    },
+    {
+      "name": "opened_ago he 86399s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 86399,
+        "locale": "he"
+      },
+      "expected": "לפני 23 שעות"
+    },
+    {
+      "name": "opened_ago he 86400s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 86400,
+        "locale": "he"
+      },
+      "expected": "לפני יום"
+    },
+    {
+      "name": "opened_ago he 86401s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 86401,
+        "locale": "he"
+      },
+      "expected": "לפני יום"
+    },
+    {
+      "name": "opened_ago he 172799s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 172799,
+        "locale": "he"
+      },
+      "expected": "לפני יום"
+    },
+    {
+      "name": "opened_ago he 172800s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 172800,
+        "locale": "he"
+      },
+      "expected": "לפני 2 ימים"
+    },
+    {
+      "name": "opened_ago he 518400s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 518400,
+        "locale": "he"
+      },
+      "expected": "לפני 6 ימים"
+    },
+    {
+      "name": "opened_ago he 604799s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 604799,
+        "locale": "he"
+      },
+      "expected": "לפני 6 ימים"
+    },
+    {
+      "name": "opened_ago he 604800s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 604800,
+        "locale": "he"
+      },
+      "expected": "לפני 7 ימים"
+    },
+    {
+      "name": "opened_ago he 604801s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 604801,
+        "locale": "he"
+      },
+      "expected": "לפני יותר משבוע"
+    },
+    {
+      "name": "opened_ago he 2592000s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 2592000,
+        "locale": "he"
+      },
+      "expected": "לפני יותר משבוע"
+    },
+    {
+      "name": "opened_ago he -1s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": -1,
+        "locale": "he"
+      },
+      "expected": "ממש עכשיו"
+    },
+    {
+      "name": "opened_ago he -60s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": -60,
+        "locale": "he"
+      },
+      "expected": "ממש עכשיו"
+    },
+    {
+      "name": "opened_ago he -86400s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": -86400,
+        "locale": "he"
+      },
+      "expected": "ממש עכשיו"
+    },
+    {
+      "name": "opened_ago he 0.4s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 0.4,
+        "locale": "he"
+      },
+      "expected": "ממש עכשיו"
+    },
+    {
+      "name": "opened_ago he 0.999s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 0.999,
+        "locale": "he"
+      },
+      "expected": "ממש עכשיו"
+    },
+    {
+      "name": "opened_ago he 1.5s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 1.5,
+        "locale": "he"
+      },
+      "expected": "לפני שנייה"
+    },
+    {
+      "name": "opened_ago he 59.999s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 59.999,
+        "locale": "he"
+      },
+      "expected": "לפני 59 שניות"
+    },
+    {
+      "name": "opened_ago ja 0s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 0,
+        "locale": "ja"
+      },
+      "expected": "たった今"
+    },
+    {
+      "name": "opened_ago ja 1s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 1,
+        "locale": "ja"
+      },
+      "expected": "1秒前"
+    },
+    {
+      "name": "opened_ago ja 2s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 2,
+        "locale": "ja"
+      },
+      "expected": "2秒前"
+    },
+    {
+      "name": "opened_ago ja 59s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 59,
+        "locale": "ja"
+      },
+      "expected": "59秒前"
+    },
+    {
+      "name": "opened_ago ja 60s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 60,
+        "locale": "ja"
+      },
+      "expected": "1分前"
+    },
+    {
+      "name": "opened_ago ja 61s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 61,
+        "locale": "ja"
+      },
+      "expected": "1分前"
+    },
+    {
+      "name": "opened_ago ja 119s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 119,
+        "locale": "ja"
+      },
+      "expected": "1分前"
+    },
+    {
+      "name": "opened_ago ja 120s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 120,
+        "locale": "ja"
+      },
+      "expected": "2分前"
+    },
+    {
+      "name": "opened_ago ja 600s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 600,
+        "locale": "ja"
+      },
+      "expected": "10分前"
+    },
+    {
+      "name": "opened_ago ja 3599s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 3599,
+        "locale": "ja"
+      },
+      "expected": "59分前"
+    },
+    {
+      "name": "opened_ago ja 3600s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 3600,
+        "locale": "ja"
+      },
+      "expected": "1時間前"
+    },
+    {
+      "name": "opened_ago ja 3601s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 3601,
+        "locale": "ja"
+      },
+      "expected": "1時間前"
+    },
+    {
+      "name": "opened_ago ja 7199s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 7199,
+        "locale": "ja"
+      },
+      "expected": "1時間前"
+    },
+    {
+      "name": "opened_ago ja 7200s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 7200,
+        "locale": "ja"
+      },
+      "expected": "2時間前"
+    },
+    {
+      "name": "opened_ago ja 86399s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 86399,
+        "locale": "ja"
+      },
+      "expected": "23時間前"
+    },
+    {
+      "name": "opened_ago ja 86400s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 86400,
+        "locale": "ja"
+      },
+      "expected": "1日前"
+    },
+    {
+      "name": "opened_ago ja 86401s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 86401,
+        "locale": "ja"
+      },
+      "expected": "1日前"
+    },
+    {
+      "name": "opened_ago ja 172799s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 172799,
+        "locale": "ja"
+      },
+      "expected": "1日前"
+    },
+    {
+      "name": "opened_ago ja 172800s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 172800,
+        "locale": "ja"
+      },
+      "expected": "2日前"
+    },
+    {
+      "name": "opened_ago ja 518400s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 518400,
+        "locale": "ja"
+      },
+      "expected": "6日前"
+    },
+    {
+      "name": "opened_ago ja 604799s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 604799,
+        "locale": "ja"
+      },
+      "expected": "6日前"
+    },
+    {
+      "name": "opened_ago ja 604800s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 604800,
+        "locale": "ja"
+      },
+      "expected": "7日前"
+    },
+    {
+      "name": "opened_ago ja 604801s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 604801,
+        "locale": "ja"
+      },
+      "expected": "1週間以上前"
+    },
+    {
+      "name": "opened_ago ja 2592000s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 2592000,
+        "locale": "ja"
+      },
+      "expected": "1週間以上前"
+    },
+    {
+      "name": "opened_ago ja -1s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": -1,
+        "locale": "ja"
+      },
+      "expected": "たった今"
+    },
+    {
+      "name": "opened_ago ja -60s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": -60,
+        "locale": "ja"
+      },
+      "expected": "たった今"
+    },
+    {
+      "name": "opened_ago ja -86400s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": -86400,
+        "locale": "ja"
+      },
+      "expected": "たった今"
+    },
+    {
+      "name": "opened_ago ja 0.4s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 0.4,
+        "locale": "ja"
+      },
+      "expected": "たった今"
+    },
+    {
+      "name": "opened_ago ja 0.999s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 0.999,
+        "locale": "ja"
+      },
+      "expected": "たった今"
+    },
+    {
+      "name": "opened_ago ja 1.5s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 1.5,
+        "locale": "ja"
+      },
+      "expected": "1秒前"
+    },
+    {
+      "name": "opened_ago ja 59.999s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 59.999,
+        "locale": "ja"
+      },
+      "expected": "59秒前"
+    },
+    {
+      "name": "opened_ago ko 0s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 0,
+        "locale": "ko"
+      },
+      "expected": "방금"
+    },
+    {
+      "name": "opened_ago ko 1s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 1,
+        "locale": "ko"
+      },
+      "expected": "1초 전"
+    },
+    {
+      "name": "opened_ago ko 2s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 2,
+        "locale": "ko"
+      },
+      "expected": "2초 전"
+    },
+    {
+      "name": "opened_ago ko 59s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 59,
+        "locale": "ko"
+      },
+      "expected": "59초 전"
+    },
+    {
+      "name": "opened_ago ko 60s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 60,
+        "locale": "ko"
+      },
+      "expected": "1분 전"
+    },
+    {
+      "name": "opened_ago ko 61s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 61,
+        "locale": "ko"
+      },
+      "expected": "1분 전"
+    },
+    {
+      "name": "opened_ago ko 119s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 119,
+        "locale": "ko"
+      },
+      "expected": "1분 전"
+    },
+    {
+      "name": "opened_ago ko 120s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 120,
+        "locale": "ko"
+      },
+      "expected": "2분 전"
+    },
+    {
+      "name": "opened_ago ko 600s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 600,
+        "locale": "ko"
+      },
+      "expected": "10분 전"
+    },
+    {
+      "name": "opened_ago ko 3599s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 3599,
+        "locale": "ko"
+      },
+      "expected": "59분 전"
+    },
+    {
+      "name": "opened_ago ko 3600s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 3600,
+        "locale": "ko"
+      },
+      "expected": "1시간 전"
+    },
+    {
+      "name": "opened_ago ko 3601s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 3601,
+        "locale": "ko"
+      },
+      "expected": "1시간 전"
+    },
+    {
+      "name": "opened_ago ko 7199s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 7199,
+        "locale": "ko"
+      },
+      "expected": "1시간 전"
+    },
+    {
+      "name": "opened_ago ko 7200s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 7200,
+        "locale": "ko"
+      },
+      "expected": "2시간 전"
+    },
+    {
+      "name": "opened_ago ko 86399s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 86399,
+        "locale": "ko"
+      },
+      "expected": "23시간 전"
+    },
+    {
+      "name": "opened_ago ko 86400s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 86400,
+        "locale": "ko"
+      },
+      "expected": "1일 전"
+    },
+    {
+      "name": "opened_ago ko 86401s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 86401,
+        "locale": "ko"
+      },
+      "expected": "1일 전"
+    },
+    {
+      "name": "opened_ago ko 172799s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 172799,
+        "locale": "ko"
+      },
+      "expected": "1일 전"
+    },
+    {
+      "name": "opened_ago ko 172800s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 172800,
+        "locale": "ko"
+      },
+      "expected": "2일 전"
+    },
+    {
+      "name": "opened_ago ko 518400s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 518400,
+        "locale": "ko"
+      },
+      "expected": "6일 전"
+    },
+    {
+      "name": "opened_ago ko 604799s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 604799,
+        "locale": "ko"
+      },
+      "expected": "6일 전"
+    },
+    {
+      "name": "opened_ago ko 604800s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 604800,
+        "locale": "ko"
+      },
+      "expected": "7일 전"
+    },
+    {
+      "name": "opened_ago ko 604801s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 604801,
+        "locale": "ko"
+      },
+      "expected": "일주일 넘게 전"
+    },
+    {
+      "name": "opened_ago ko 2592000s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 2592000,
+        "locale": "ko"
+      },
+      "expected": "일주일 넘게 전"
+    },
+    {
+      "name": "opened_ago ko -1s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": -1,
+        "locale": "ko"
+      },
+      "expected": "방금"
+    },
+    {
+      "name": "opened_ago ko -60s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": -60,
+        "locale": "ko"
+      },
+      "expected": "방금"
+    },
+    {
+      "name": "opened_ago ko -86400s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": -86400,
+        "locale": "ko"
+      },
+      "expected": "방금"
+    },
+    {
+      "name": "opened_ago ko 0.4s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 0.4,
+        "locale": "ko"
+      },
+      "expected": "방금"
+    },
+    {
+      "name": "opened_ago ko 0.999s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 0.999,
+        "locale": "ko"
+      },
+      "expected": "방금"
+    },
+    {
+      "name": "opened_ago ko 1.5s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 1.5,
+        "locale": "ko"
+      },
+      "expected": "1초 전"
+    },
+    {
+      "name": "opened_ago ko 59.999s",
+      "fn": "recent_file_opened_ago",
+      "input": {
+        "now": "2026-01-30T12:34:56.789012Z",
+        "seconds_ago": 59.999,
+        "locale": "ko"
+      },
+      "expected": "59초 전"
+    },
+    {
+      "name": "opened_at \"2026-10-26T09:30:00-03:00\"",
+      "fn": "recent_file_opened_at",
+      "input": "2026-10-26T09:30:00-03:00",
+      "expected": {
+        "iso8601": "2026-10-26T09:30:00.000000-03:00",
+        "utc": "2026-10-26T12:30:00.000000Z",
+        "utc_offset": -10800
+      }
+    },
+    {
+      "name": "opened_at \"2026-10-26T12:30:00Z\"",
+      "fn": "recent_file_opened_at",
+      "input": "2026-10-26T12:30:00Z",
+      "expected": {
+        "iso8601": "2026-10-26T12:30:00.000000Z",
+        "utc": "2026-10-26T12:30:00.000000Z",
+        "utc_offset": 0
+      }
+    },
+    {
+      "name": "opened_at \"2026-10-26T12:30:00.123456Z\"",
+      "fn": "recent_file_opened_at",
+      "input": "2026-10-26T12:30:00.123456Z",
+      "expected": {
+        "iso8601": "2026-10-26T12:30:00.123456Z",
+        "utc": "2026-10-26T12:30:00.123456Z",
+        "utc_offset": 0
+      }
+    },
+    {
+      "name": "opened_at \"2026-10-26T12:30:00+05:30\"",
+      "fn": "recent_file_opened_at",
+      "input": "2026-10-26T12:30:00+05:30",
+      "expected": {
+        "iso8601": "2026-10-26T12:30:00.000000+05:30",
+        "utc": "2026-10-26T07:00:00.000000Z",
+        "utc_offset": 19800
+      }
+    },
+    {
+      "name": "opened_at \"2026-10-26T12:30:00\"",
+      "fn": "recent_file_opened_at",
+      "input": "2026-10-26T12:30:00",
+      "expected": {
+        "iso8601": "2026-10-26T12:30:00.000000+00:00",
+        "utc": "2026-10-26T12:30:00.000000Z",
+        "utc_offset": 0
+      }
+    },
+    {
+      "name": "opened_at \"2026-10-26\"",
+      "fn": "recent_file_opened_at",
+      "input": "2026-10-26",
+      "expected": null
+    },
+    {
+      "name": "opened_at \"2026-10-26 12:30:00Z\"",
+      "fn": "recent_file_opened_at",
+      "input": "2026-10-26 12:30:00Z",
+      "expected": null
+    },
+    {
+      "name": "opened_at \"2026-10-26T12:30Z\"",
+      "fn": "recent_file_opened_at",
+      "input": "2026-10-26T12:30Z",
+      "expected": null
+    },
+    {
+      "name": "opened_at \"not a timestamp\"",
+      "fn": "recent_file_opened_at",
+      "input": "not a timestamp",
+      "expected": null
+    },
+    {
+      "name": "opened_at \"\"",
+      "fn": "recent_file_opened_at",
+      "input": "",
+      "expected": null
+    },
+    {
+      "name": "opened_at \" 2026-10-26T12:30:00Z\"",
+      "fn": "recent_file_opened_at",
+      "input": " 2026-10-26T12:30:00Z",
+      "expected": {
+        "iso8601": "2026-10-26T12:30:00.000000Z",
+        "utc": "2026-10-26T12:30:00.000000Z",
+        "utc_offset": 0
+      }
+    },
+    {
+      "name": "opened_at \"2026-02-30T00:00:00Z\"",
+      "fn": "recent_file_opened_at",
+      "input": "2026-02-30T00:00:00Z",
+      "expected": {
+        "iso8601": "2026-03-02T00:00:00.000000Z",
+        "utc": "2026-03-02T00:00:00.000000Z",
+        "utc_offset": 0
+      }
+    },
+    {
+      "name": "opened_at \"2026-10-26T24:00:00Z\"",
+      "fn": "recent_file_opened_at",
+      "input": "2026-10-26T24:00:00Z",
+      "expected": {
+        "iso8601": "2026-10-27T00:00:00.000000Z",
+        "utc": "2026-10-27T00:00:00.000000Z",
+        "utc_offset": 0
+      }
+    },
+    {
+      "name": "opened_at \"2026-10-26T12:30:60Z\"",
+      "fn": "recent_file_opened_at",
+      "input": "2026-10-26T12:30:60Z",
+      "expected": {
+        "iso8601": "2026-10-26T12:31:00.000000Z",
+        "utc": "2026-10-26T12:31:00.000000Z",
+        "utc_offset": 0
+      }
+    },
+    {
+      "name": "opened_at \"+002026-10-26T12:30:00Z\"",
+      "fn": "recent_file_opened_at",
+      "input": "+002026-10-26T12:30:00Z",
+      "expected": null
+    },
+    {
+      "name": "opened_at \"2026-10-26t12:30:00z\"",
+      "fn": "recent_file_opened_at",
+      "input": "2026-10-26t12:30:00z",
+      "expected": {
+        "iso8601": "2026-10-26T12:30:00.000000Z",
+        "utc": "2026-10-26T12:30:00.000000Z",
+        "utc_offset": 0
+      }
+    },
+    {
+      "name": "opened_at \"2026-10-26T12:30:00.5+00:00\"",
+      "fn": "recent_file_opened_at",
+      "input": "2026-10-26T12:30:00.5+00:00",
+      "expected": {
+        "iso8601": "2026-10-26T12:30:00.500000+00:00",
+        "utc": "2026-10-26T12:30:00.500000Z",
+        "utc_offset": 0
+      }
+    },
+    {
+      "name": "opened_at \"１２\"",
+      "fn": "recent_file_opened_at",
+      "input": "１２",
+      "expected": null
+    }
+  ]
+}

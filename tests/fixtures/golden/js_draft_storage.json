@@ -1,0 +1,4118 @@
+{
+  "source": "app/javascript/lib/draft_storage.js @ d47a89e92d89f807878d318182fa5dcea0329ec4",
+  "frankmd_sha": "d47a89e92d89f807878d318182fa5dcea0329ec4",
+  "generator": "tools/golden/js/draft_storage.mjs",
+  "notes": "Scenario fixtures. input.initial = ordered [key, raw] storage seed; input.steps: {call, args} invokes DraftStorage method; {fault:{method,key?,prefix?,mode?:'throw'|'noop',message?}} installs a storage fault (throw new Error(message|default) or silently do nothing; getItem noop returns null); {clearFaults}; {providerFails:bool} makes the storageProvider throw Error('localStorage unavailable'); {raw:[k,v]} sets a key directly. Fault/control steps yield null results. expected.results[i] = encoded return value (Error -> {$error:{name,message}}); expected.storage_after = final ordered entries (Map insertion order; real localStorage key() order is browser-defined). crypto.randomUUID pinned to uuid-0001.. per case; Date.now pinned to 1700000000000 + 1000*n. Keys: frankmd:draft:<encodeURIComponent(path)>, frankmd:draft-conflict:<encodeURIComponent(path)>:<conflictId>, frankmd:backup:<raw path>.",
+  "cases": [
+    {
+      "name": "write+read empty draft",
+      "fn": "scenario",
+      "input": {
+        "steps": [
+          {
+            "call": "writeDraft",
+            "args": [
+              "folder/note.md",
+              "",
+              "server-revision"
+            ]
+          },
+          {
+            "call": "readDraft",
+            "args": [
+              "folder/note.md"
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "ok": true,
+            "draft": {
+              "schemaVersion": 1,
+              "path": "folder/note.md",
+              "content": "",
+              "baseRevision": "server-revision",
+              "draftRevision": "uuid-0001",
+              "updatedAt": 1700000000000
+            },
+            "unchanged": false
+          },
+          {
+            "ok": true,
+            "draft": {
+              "schemaVersion": 1,
+              "path": "folder/note.md",
+              "content": "",
+              "baseRevision": "server-revision",
+              "draftRevision": "uuid-0001",
+              "updatedAt": 1700000000000
+            }
+          }
+        ],
+        "storage_after": [
+          [
+            "frankmd:draft:folder%2Fnote.md",
+            "{\"schemaVersion\":1,\"path\":\"folder/note.md\",\"content\":\"\",\"baseRevision\":\"server-revision\",\"draftRevision\":\"uuid-0001\",\"updatedAt\":1700000000000}"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "unchanged snapshot keeps revision",
+      "fn": "scenario",
+      "input": {
+        "steps": [
+          {
+            "call": "writeDraft",
+            "args": [
+              "note.md",
+              "a",
+              "r1"
+            ]
+          },
+          {
+            "call": "writeDraft",
+            "args": [
+              "note.md",
+              "a",
+              "r1"
+            ]
+          },
+          {
+            "call": "writeDraft",
+            "args": [
+              "note.md",
+              "a",
+              "r2"
+            ]
+          },
+          {
+            "call": "writeDraft",
+            "args": [
+              "note.md",
+              "b",
+              "r2"
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "ok": true,
+            "draft": {
+              "schemaVersion": 1,
+              "path": "note.md",
+              "content": "a",
+              "baseRevision": "r1",
+              "draftRevision": "uuid-0001",
+              "updatedAt": 1700000000000
+            },
+            "unchanged": false
+          },
+          {
+            "ok": true,
+            "draft": {
+              "schemaVersion": 1,
+              "path": "note.md",
+              "content": "a",
+              "baseRevision": "r1",
+              "draftRevision": "uuid-0001",
+              "updatedAt": 1700000000000
+            },
+            "unchanged": true
+          },
+          {
+            "ok": true,
+            "draft": {
+              "schemaVersion": 1,
+              "path": "note.md",
+              "content": "a",
+              "baseRevision": "r2",
+              "draftRevision": "uuid-0002",
+              "updatedAt": 1700000001000
+            },
+            "unchanged": false
+          },
+          {
+            "ok": true,
+            "draft": {
+              "schemaVersion": 1,
+              "path": "note.md",
+              "content": "b",
+              "baseRevision": "r2",
+              "draftRevision": "uuid-0003",
+              "updatedAt": 1700000002000
+            },
+            "unchanged": false
+          }
+        ],
+        "storage_after": [
+          [
+            "frankmd:draft:note.md",
+            "{\"schemaVersion\":1,\"path\":\"note.md\",\"content\":\"b\",\"baseRevision\":\"r2\",\"draftRevision\":\"uuid-0003\",\"updatedAt\":1700000002000}"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "removeDraftIfRevision only matching",
+      "fn": "scenario",
+      "input": {
+        "steps": [
+          {
+            "call": "writeDraft",
+            "args": [
+              "note.md",
+              "local edit",
+              "revision"
+            ]
+          },
+          {
+            "call": "removeDraftIfRevision",
+            "args": [
+              "note.md",
+              "other"
+            ]
+          },
+          {
+            "call": "removeDraftIfRevision",
+            "args": [
+              "note.md",
+              "uuid-0001"
+            ]
+          },
+          {
+            "call": "readDraft",
+            "args": [
+              "note.md"
+            ]
+          },
+          {
+            "call": "removeDraftIfRevision",
+            "args": [
+              "missing.md",
+              "x"
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "ok": true,
+            "draft": {
+              "schemaVersion": 1,
+              "path": "note.md",
+              "content": "local edit",
+              "baseRevision": "revision",
+              "draftRevision": "uuid-0001",
+              "updatedAt": 1700000000000
+            },
+            "unchanged": false
+          },
+          {
+            "ok": true,
+            "removed": false
+          },
+          {
+            "ok": true,
+            "removed": true
+          },
+          {
+            "ok": true,
+            "draft": null
+          },
+          {
+            "ok": true,
+            "removed": false
+          }
+        ],
+        "storage_after": []
+      }
+    },
+    {
+      "name": "remap file draft",
+      "fn": "scenario",
+      "input": {
+        "steps": [
+          {
+            "call": "writeDraft",
+            "args": [
+              "old.md",
+              "local edit",
+              "revision"
+            ]
+          },
+          {
+            "call": "remapDrafts",
+            "args": [
+              "old.md",
+              "new.md"
+            ]
+          },
+          {
+            "call": "readDraft",
+            "args": [
+              "old.md"
+            ]
+          },
+          {
+            "call": "readDraft",
+            "args": [
+              "new.md"
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "ok": true,
+            "draft": {
+              "schemaVersion": 1,
+              "path": "old.md",
+              "content": "local edit",
+              "baseRevision": "revision",
+              "draftRevision": "uuid-0001",
+              "updatedAt": 1700000000000
+            },
+            "unchanged": false
+          },
+          {
+            "ok": true,
+            "remapped": 1
+          },
+          {
+            "ok": true,
+            "draft": null
+          },
+          {
+            "ok": true,
+            "draft": {
+              "schemaVersion": 1,
+              "path": "new.md",
+              "content": "local edit",
+              "baseRevision": "revision",
+              "draftRevision": "uuid-0001",
+              "updatedAt": 1700000000000
+            }
+          }
+        ],
+        "storage_after": [
+          [
+            "frankmd:draft:new.md",
+            "{\"schemaVersion\":1,\"path\":\"new.md\",\"content\":\"local edit\",\"baseRevision\":\"revision\",\"draftRevision\":\"uuid-0001\",\"updatedAt\":1700000000000}"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "remap folder and descendants only",
+      "fn": "scenario",
+      "input": {
+        "steps": [
+          {
+            "call": "writeDraft",
+            "args": [
+              "docs/a.md",
+              "local edit",
+              "revision"
+            ]
+          },
+          {
+            "call": "writeDraft",
+            "args": [
+              "docs/sub/b.md",
+              "local edit",
+              "revision"
+            ]
+          },
+          {
+            "call": "writeDraft",
+            "args": [
+              "docs-old/c.md",
+              "local edit",
+              "revision"
+            ]
+          },
+          {
+            "call": "writeDraft",
+            "args": [
+              "docs.md",
+              "local edit",
+              "revision"
+            ]
+          },
+          {
+            "call": "remapDrafts",
+            "args": [
+              "docs",
+              "guides",
+              "folder"
+            ]
+          },
+          {
+            "call": "listDrafts"
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "ok": true,
+            "draft": {
+              "schemaVersion": 1,
+              "path": "docs/a.md",
+              "content": "local edit",
+              "baseRevision": "revision",
+              "draftRevision": "uuid-0001",
+              "updatedAt": 1700000000000
+            },
+            "unchanged": false
+          },
+          {
+            "ok": true,
+            "draft": {
+              "schemaVersion": 1,
+              "path": "docs/sub/b.md",
+              "content": "local edit",
+              "baseRevision": "revision",
+              "draftRevision": "uuid-0002",
+              "updatedAt": 1700000001000
+            },
+            "unchanged": false
+          },
+          {
+            "ok": true,
+            "draft": {
+              "schemaVersion": 1,
+              "path": "docs-old/c.md",
+              "content": "local edit",
+              "baseRevision": "revision",
+              "draftRevision": "uuid-0003",
+              "updatedAt": 1700000002000
+            },
+            "unchanged": false
+          },
+          {
+            "ok": true,
+            "draft": {
+              "schemaVersion": 1,
+              "path": "docs.md",
+              "content": "local edit",
+              "baseRevision": "revision",
+              "draftRevision": "uuid-0004",
+              "updatedAt": 1700000003000
+            },
+            "unchanged": false
+          },
+          {
+            "ok": true,
+            "remapped": 2
+          },
+          {
+            "ok": true,
+            "drafts": [
+              {
+                "schemaVersion": 1,
+                "path": "docs-old/c.md",
+                "content": "local edit",
+                "baseRevision": "revision",
+                "draftRevision": "uuid-0003",
+                "updatedAt": 1700000002000
+              },
+              {
+                "schemaVersion": 1,
+                "path": "docs.md",
+                "content": "local edit",
+                "baseRevision": "revision",
+                "draftRevision": "uuid-0004",
+                "updatedAt": 1700000003000
+              },
+              {
+                "schemaVersion": 1,
+                "path": "guides/a.md",
+                "content": "local edit",
+                "baseRevision": "revision",
+                "draftRevision": "uuid-0001",
+                "updatedAt": 1700000000000
+              },
+              {
+                "schemaVersion": 1,
+                "path": "guides/sub/b.md",
+                "content": "local edit",
+                "baseRevision": "revision",
+                "draftRevision": "uuid-0002",
+                "updatedAt": 1700000001000
+              }
+            ]
+          }
+        ],
+        "storage_after": [
+          [
+            "frankmd:draft:docs-old%2Fc.md",
+            "{\"schemaVersion\":1,\"path\":\"docs-old/c.md\",\"content\":\"local edit\",\"baseRevision\":\"revision\",\"draftRevision\":\"uuid-0003\",\"updatedAt\":1700000002000}"
+          ],
+          [
+            "frankmd:draft:docs.md",
+            "{\"schemaVersion\":1,\"path\":\"docs.md\",\"content\":\"local edit\",\"baseRevision\":\"revision\",\"draftRevision\":\"uuid-0004\",\"updatedAt\":1700000003000}"
+          ],
+          [
+            "frankmd:draft:guides%2Fa.md",
+            "{\"schemaVersion\":1,\"path\":\"guides/a.md\",\"content\":\"local edit\",\"baseRevision\":\"revision\",\"draftRevision\":\"uuid-0001\",\"updatedAt\":1700000000000}"
+          ],
+          [
+            "frankmd:draft:guides%2Fsub%2Fb.md",
+            "{\"schemaVersion\":1,\"path\":\"guides/sub/b.md\",\"content\":\"local edit\",\"baseRevision\":\"revision\",\"draftRevision\":\"uuid-0002\",\"updatedAt\":1700000001000}"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "remap legacy backup rename",
+      "fn": "scenario",
+      "input": {
+        "initial": [
+          [
+            "frankmd:backup:old.md",
+            "{\"content\":\"unsaved edit\",\"timestamp\":123}"
+          ]
+        ],
+        "steps": [
+          {
+            "call": "remapDrafts",
+            "args": [
+              "old.md",
+              "new.md"
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "ok": true,
+            "remapped": 1
+          }
+        ],
+        "storage_after": [
+          [
+            "frankmd:backup:new.md",
+            "{\"content\":\"unsaved edit\",\"timestamp\":123}"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "remap legacy backups in folder",
+      "fn": "scenario",
+      "input": {
+        "initial": [
+          [
+            "frankmd:backup:docs/a.md",
+            "{\"content\":\"a\",\"timestamp\":1}"
+          ],
+          [
+            "frankmd:backup:docs/sub/b.md",
+            "{\"content\":\"b\",\"timestamp\":2}"
+          ],
+          [
+            "frankmd:backup:docs-old/c.md",
+            "{\"content\":\"c\",\"timestamp\":3}"
+          ]
+        ],
+        "steps": [
+          {
+            "call": "remapDrafts",
+            "args": [
+              "docs",
+              "archive/docs",
+              "folder"
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "ok": true,
+            "remapped": 2
+          }
+        ],
+        "storage_after": [
+          [
+            "frankmd:backup:docs-old/c.md",
+            "{\"content\":\"c\",\"timestamp\":3}"
+          ],
+          [
+            "frankmd:backup:archive/docs/a.md",
+            "{\"content\":\"a\",\"timestamp\":1}"
+          ],
+          [
+            "frankmd:backup:archive/docs/sub/b.md",
+            "{\"content\":\"b\",\"timestamp\":2}"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "legacy backup collision",
+      "fn": "scenario",
+      "input": {
+        "initial": [
+          [
+            "frankmd:backup:old.md",
+            "{\"content\":\"src\",\"timestamp\":1}"
+          ],
+          [
+            "frankmd:backup:new.md",
+            "{\"content\":\"dst\",\"timestamp\":2}"
+          ]
+        ],
+        "steps": [
+          {
+            "call": "remapDrafts",
+            "args": [
+              "old.md",
+              "new.md"
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "ok": false,
+            "backupCollision": true,
+            "error": {
+              "$error": {
+                "name": "Error",
+                "message": "A legacy backup already exists at new.md"
+              }
+            },
+            "sourcePath": "old.md",
+            "destinationPath": "new.md",
+            "affectedPaths": [
+              "new.md"
+            ]
+          }
+        ],
+        "storage_after": [
+          [
+            "frankmd:backup:old.md",
+            "{\"content\":\"src\",\"timestamp\":1}"
+          ],
+          [
+            "frankmd:backup:new.md",
+            "{\"content\":\"dst\",\"timestamp\":2}"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "legacy backup identical at destination",
+      "fn": "scenario",
+      "input": {
+        "initial": [
+          [
+            "frankmd:backup:old.md",
+            "{\"content\":\"same\",\"timestamp\":1}"
+          ],
+          [
+            "frankmd:backup:new.md",
+            "{\"content\":\"same\",\"timestamp\":1}"
+          ]
+        ],
+        "steps": [
+          {
+            "call": "remapDrafts",
+            "args": [
+              "old.md",
+              "new.md"
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "ok": true,
+            "remapped": 1
+          }
+        ],
+        "storage_after": [
+          [
+            "frankmd:backup:new.md",
+            "{\"content\":\"same\",\"timestamp\":1}"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "legacy backup destination write fails",
+      "fn": "scenario",
+      "input": {
+        "initial": [
+          [
+            "frankmd:backup:old.md",
+            "{\"content\":\"unsaved edit\",\"timestamp\":123}"
+          ]
+        ],
+        "steps": [
+          {
+            "fault": {
+              "method": "setItem",
+              "key": "frankmd:backup:new.md"
+            }
+          },
+          {
+            "call": "remapDrafts",
+            "args": [
+              "old.md",
+              "new.md"
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          null,
+          {
+            "ok": false,
+            "error": {
+              "$error": {
+                "name": "Error",
+                "message": "quota exceeded"
+              }
+            },
+            "sourcePath": "old.md",
+            "destinationPath": "new.md",
+            "affectedPaths": [
+              "new.md"
+            ]
+          }
+        ],
+        "storage_after": [
+          [
+            "frankmd:backup:old.md",
+            "{\"content\":\"unsaved edit\",\"timestamp\":123}"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "legacy backup source removal fails then retry",
+      "fn": "scenario",
+      "input": {
+        "initial": [
+          [
+            "frankmd:backup:old.md",
+            "{\"content\":\"unsaved edit\",\"timestamp\":123}"
+          ]
+        ],
+        "steps": [
+          {
+            "fault": {
+              "method": "removeItem",
+              "key": "frankmd:backup:old.md"
+            }
+          },
+          {
+            "call": "remapDrafts",
+            "args": [
+              "old.md",
+              "new.md"
+            ]
+          },
+          {
+            "clearFaults": true
+          },
+          {
+            "call": "remapDrafts",
+            "args": [
+              "old.md",
+              "new.md"
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          null,
+          {
+            "ok": false,
+            "error": {
+              "$error": {
+                "name": "Error",
+                "message": "storage unavailable"
+              }
+            },
+            "sourcePath": "old.md",
+            "destinationPath": "new.md",
+            "affectedPaths": [
+              "new.md"
+            ]
+          },
+          null,
+          {
+            "ok": true,
+            "remapped": 1
+          }
+        ],
+        "storage_after": [
+          [
+            "frankmd:backup:new.md",
+            "{\"content\":\"unsaved edit\",\"timestamp\":123}"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "draft collision preserves both",
+      "fn": "scenario",
+      "input": {
+        "steps": [
+          {
+            "call": "writeDraft",
+            "args": [
+              "old.md",
+              "source",
+              "revision"
+            ]
+          },
+          {
+            "call": "writeDraft",
+            "args": [
+              "new.md",
+              "destination",
+              "other-revision"
+            ]
+          },
+          {
+            "call": "remapDrafts",
+            "args": [
+              "old.md",
+              "new.md"
+            ]
+          },
+          {
+            "call": "readDraft",
+            "args": [
+              "old.md"
+            ]
+          },
+          {
+            "call": "readDraft",
+            "args": [
+              "new.md"
+            ]
+          },
+          {
+            "call": "listDraftConflicts",
+            "args": [
+              "new.md"
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "ok": true,
+            "draft": {
+              "schemaVersion": 1,
+              "path": "old.md",
+              "content": "source",
+              "baseRevision": "revision",
+              "draftRevision": "uuid-0001",
+              "updatedAt": 1700000000000
+            },
+            "unchanged": false
+          },
+          {
+            "ok": true,
+            "draft": {
+              "schemaVersion": 1,
+              "path": "new.md",
+              "content": "destination",
+              "baseRevision": "other-revision",
+              "draftRevision": "uuid-0002",
+              "updatedAt": 1700000001000
+            },
+            "unchanged": false
+          },
+          {
+            "ok": false,
+            "collision": true,
+            "sourcePath": "old.md",
+            "destinationPath": "new.md",
+            "conflictId": "uuid-0003",
+            "collisions": [
+              {
+                "sourcePath": "old.md",
+                "destinationPath": "new.md"
+              }
+            ],
+            "error": {
+              "$error": {
+                "name": "Error",
+                "message": "A local draft already exists at new.md"
+              }
+            },
+            "affectedPaths": [
+              "new.md"
+            ]
+          },
+          {
+            "ok": true,
+            "draft": null
+          },
+          {
+            "ok": true,
+            "draft": {
+              "schemaVersion": 1,
+              "path": "new.md",
+              "content": "destination",
+              "baseRevision": "other-revision",
+              "draftRevision": "uuid-0002",
+              "updatedAt": 1700000001000
+            }
+          },
+          {
+            "ok": true,
+            "conflicts": [
+              {
+                "schemaVersion": 1,
+                "path": "new.md",
+                "sourcePath": "old.md",
+                "conflictId": "uuid-0003",
+                "content": "source",
+                "baseRevision": "revision",
+                "draftRevision": "uuid-0001",
+                "updatedAt": 1700000000000
+              }
+            ]
+          }
+        ],
+        "storage_after": [
+          [
+            "frankmd:draft:new.md",
+            "{\"schemaVersion\":1,\"path\":\"new.md\",\"content\":\"destination\",\"baseRevision\":\"other-revision\",\"draftRevision\":\"uuid-0002\",\"updatedAt\":1700000001000}"
+          ],
+          [
+            "frankmd:draft-conflict:new.md:uuid-0003",
+            "{\"schemaVersion\":1,\"path\":\"new.md\",\"sourcePath\":\"old.md\",\"conflictId\":\"uuid-0003\",\"content\":\"source\",\"baseRevision\":\"revision\",\"draftRevision\":\"uuid-0001\",\"updatedAt\":1700000000000}"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "folder remap with one collision",
+      "fn": "scenario",
+      "input": {
+        "steps": [
+          {
+            "call": "writeDraft",
+            "args": [
+              "docs/a.md",
+              "A",
+              "revision"
+            ]
+          },
+          {
+            "call": "writeDraft",
+            "args": [
+              "docs/b.md",
+              "B",
+              "revision"
+            ]
+          },
+          {
+            "call": "writeDraft",
+            "args": [
+              "docs/sub/c.md",
+              "C",
+              "revision"
+            ]
+          },
+          {
+            "call": "writeDraft",
+            "args": [
+              "guides/b.md",
+              "existing",
+              "revision"
+            ]
+          },
+          {
+            "call": "remapDrafts",
+            "args": [
+              "docs",
+              "guides",
+              "folder"
+            ]
+          },
+          {
+            "call": "listDrafts"
+          },
+          {
+            "call": "listDraftConflicts",
+            "args": [
+              "guides/a.md"
+            ]
+          },
+          {
+            "call": "listDraftConflicts",
+            "args": [
+              "guides/b.md"
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "ok": true,
+            "draft": {
+              "schemaVersion": 1,
+              "path": "docs/a.md",
+              "content": "A",
+              "baseRevision": "revision",
+              "draftRevision": "uuid-0001",
+              "updatedAt": 1700000000000
+            },
+            "unchanged": false
+          },
+          {
+            "ok": true,
+            "draft": {
+              "schemaVersion": 1,
+              "path": "docs/b.md",
+              "content": "B",
+              "baseRevision": "revision",
+              "draftRevision": "uuid-0002",
+              "updatedAt": 1700000001000
+            },
+            "unchanged": false
+          },
+          {
+            "ok": true,
+            "draft": {
+              "schemaVersion": 1,
+              "path": "docs/sub/c.md",
+              "content": "C",
+              "baseRevision": "revision",
+              "draftRevision": "uuid-0003",
+              "updatedAt": 1700000002000
+            },
+            "unchanged": false
+          },
+          {
+            "ok": true,
+            "draft": {
+              "schemaVersion": 1,
+              "path": "guides/b.md",
+              "content": "existing",
+              "baseRevision": "revision",
+              "draftRevision": "uuid-0004",
+              "updatedAt": 1700000003000
+            },
+            "unchanged": false
+          },
+          {
+            "ok": false,
+            "collision": true,
+            "sourcePath": "docs/b.md",
+            "destinationPath": "guides/b.md",
+            "conflictId": "uuid-0006",
+            "collisions": [
+              {
+                "sourcePath": "docs/b.md",
+                "destinationPath": "guides/b.md"
+              }
+            ],
+            "error": {
+              "$error": {
+                "name": "Error",
+                "message": "A local draft already exists at guides/b.md"
+              }
+            },
+            "affectedPaths": [
+              "guides/a.md",
+              "guides/b.md",
+              "guides/sub/c.md"
+            ]
+          },
+          {
+            "ok": true,
+            "drafts": [
+              {
+                "schemaVersion": 1,
+                "path": "guides/b.md",
+                "content": "existing",
+                "baseRevision": "revision",
+                "draftRevision": "uuid-0004",
+                "updatedAt": 1700000003000
+              }
+            ]
+          },
+          {
+            "ok": true,
+            "conflicts": [
+              {
+                "schemaVersion": 1,
+                "path": "guides/a.md",
+                "sourcePath": "docs/a.md",
+                "conflictId": "uuid-0005",
+                "content": "A",
+                "baseRevision": "revision",
+                "draftRevision": "uuid-0001",
+                "updatedAt": 1700000000000
+              }
+            ]
+          },
+          {
+            "ok": true,
+            "conflicts": [
+              {
+                "schemaVersion": 1,
+                "path": "guides/b.md",
+                "sourcePath": "docs/b.md",
+                "conflictId": "uuid-0006",
+                "content": "B",
+                "baseRevision": "revision",
+                "draftRevision": "uuid-0002",
+                "updatedAt": 1700000001000
+              }
+            ]
+          }
+        ],
+        "storage_after": [
+          [
+            "frankmd:draft:guides%2Fb.md",
+            "{\"schemaVersion\":1,\"path\":\"guides/b.md\",\"content\":\"existing\",\"baseRevision\":\"revision\",\"draftRevision\":\"uuid-0004\",\"updatedAt\":1700000003000}"
+          ],
+          [
+            "frankmd:draft-conflict:guides%2Fa.md:uuid-0005",
+            "{\"schemaVersion\":1,\"path\":\"guides/a.md\",\"sourcePath\":\"docs/a.md\",\"conflictId\":\"uuid-0005\",\"content\":\"A\",\"baseRevision\":\"revision\",\"draftRevision\":\"uuid-0001\",\"updatedAt\":1700000000000}"
+          ],
+          [
+            "frankmd:draft-conflict:guides%2Fb.md:uuid-0006",
+            "{\"schemaVersion\":1,\"path\":\"guides/b.md\",\"sourcePath\":\"docs/b.md\",\"conflictId\":\"uuid-0006\",\"content\":\"B\",\"baseRevision\":\"revision\",\"draftRevision\":\"uuid-0002\",\"updatedAt\":1700000001000}"
+          ],
+          [
+            "frankmd:draft-conflict:guides%2Fsub%2Fc.md:uuid-0007",
+            "{\"schemaVersion\":1,\"path\":\"guides/sub/c.md\",\"sourcePath\":\"docs/sub/c.md\",\"conflictId\":\"uuid-0007\",\"content\":\"C\",\"baseRevision\":\"revision\",\"draftRevision\":\"uuid-0003\",\"updatedAt\":1700000002000}"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "collision retried is idempotent",
+      "fn": "scenario",
+      "input": {
+        "steps": [
+          {
+            "call": "writeDraft",
+            "args": [
+              "old.md",
+              "s",
+              "revision"
+            ]
+          },
+          {
+            "call": "writeDraft",
+            "args": [
+              "new.md",
+              "d",
+              "x"
+            ]
+          },
+          {
+            "call": "remapDrafts",
+            "args": [
+              "old.md",
+              "new.md"
+            ]
+          },
+          {
+            "call": "writeDraft",
+            "args": [
+              "old.md",
+              "s",
+              "revision"
+            ]
+          },
+          {
+            "call": "remapDrafts",
+            "args": [
+              "old.md",
+              "new.md"
+            ]
+          },
+          {
+            "call": "listDraftConflicts",
+            "args": [
+              "new.md"
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "ok": true,
+            "draft": {
+              "schemaVersion": 1,
+              "path": "old.md",
+              "content": "s",
+              "baseRevision": "revision",
+              "draftRevision": "uuid-0001",
+              "updatedAt": 1700000000000
+            },
+            "unchanged": false
+          },
+          {
+            "ok": true,
+            "draft": {
+              "schemaVersion": 1,
+              "path": "new.md",
+              "content": "d",
+              "baseRevision": "x",
+              "draftRevision": "uuid-0002",
+              "updatedAt": 1700000001000
+            },
+            "unchanged": false
+          },
+          {
+            "ok": false,
+            "collision": true,
+            "sourcePath": "old.md",
+            "destinationPath": "new.md",
+            "conflictId": "uuid-0003",
+            "collisions": [
+              {
+                "sourcePath": "old.md",
+                "destinationPath": "new.md"
+              }
+            ],
+            "error": {
+              "$error": {
+                "name": "Error",
+                "message": "A local draft already exists at new.md"
+              }
+            },
+            "affectedPaths": [
+              "new.md"
+            ]
+          },
+          {
+            "ok": true,
+            "draft": {
+              "schemaVersion": 1,
+              "path": "old.md",
+              "content": "s",
+              "baseRevision": "revision",
+              "draftRevision": "uuid-0004",
+              "updatedAt": 1700000002000
+            },
+            "unchanged": false
+          },
+          {
+            "ok": false,
+            "collision": true,
+            "sourcePath": "old.md",
+            "destinationPath": "new.md",
+            "conflictId": "uuid-0005",
+            "collisions": [
+              {
+                "sourcePath": "old.md",
+                "destinationPath": "new.md"
+              }
+            ],
+            "error": {
+              "$error": {
+                "name": "Error",
+                "message": "A local draft already exists at new.md"
+              }
+            },
+            "affectedPaths": [
+              "new.md"
+            ]
+          },
+          {
+            "ok": true,
+            "conflicts": [
+              {
+                "schemaVersion": 1,
+                "path": "new.md",
+                "sourcePath": "old.md",
+                "conflictId": "uuid-0003",
+                "content": "s",
+                "baseRevision": "revision",
+                "draftRevision": "uuid-0001",
+                "updatedAt": 1700000000000
+              },
+              {
+                "schemaVersion": 1,
+                "path": "new.md",
+                "sourcePath": "old.md",
+                "conflictId": "uuid-0005",
+                "content": "s",
+                "baseRevision": "revision",
+                "draftRevision": "uuid-0004",
+                "updatedAt": 1700000002000
+              }
+            ]
+          }
+        ],
+        "storage_after": [
+          [
+            "frankmd:draft:new.md",
+            "{\"schemaVersion\":1,\"path\":\"new.md\",\"content\":\"d\",\"baseRevision\":\"x\",\"draftRevision\":\"uuid-0002\",\"updatedAt\":1700000001000}"
+          ],
+          [
+            "frankmd:draft-conflict:new.md:uuid-0003",
+            "{\"schemaVersion\":1,\"path\":\"new.md\",\"sourcePath\":\"old.md\",\"conflictId\":\"uuid-0003\",\"content\":\"s\",\"baseRevision\":\"revision\",\"draftRevision\":\"uuid-0001\",\"updatedAt\":1700000000000}"
+          ],
+          [
+            "frankmd:draft-conflict:new.md:uuid-0005",
+            "{\"schemaVersion\":1,\"path\":\"new.md\",\"sourcePath\":\"old.md\",\"conflictId\":\"uuid-0005\",\"content\":\"s\",\"baseRevision\":\"revision\",\"draftRevision\":\"uuid-0004\",\"updatedAt\":1700000002000}"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "destination draft write fails",
+      "fn": "scenario",
+      "input": {
+        "steps": [
+          {
+            "call": "writeDraft",
+            "args": [
+              "old.md",
+              "local edit",
+              "revision"
+            ]
+          },
+          {
+            "fault": {
+              "method": "setItem",
+              "key": "frankmd:draft:new.md"
+            }
+          },
+          {
+            "call": "remapDrafts",
+            "args": [
+              "old.md",
+              "new.md"
+            ]
+          },
+          {
+            "call": "readDraft",
+            "args": [
+              "old.md"
+            ]
+          },
+          {
+            "call": "readDraft",
+            "args": [
+              "new.md"
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "ok": true,
+            "draft": {
+              "schemaVersion": 1,
+              "path": "old.md",
+              "content": "local edit",
+              "baseRevision": "revision",
+              "draftRevision": "uuid-0001",
+              "updatedAt": 1700000000000
+            },
+            "unchanged": false
+          },
+          null,
+          {
+            "ok": false,
+            "error": {
+              "$error": {
+                "name": "Error",
+                "message": "quota exceeded"
+              }
+            },
+            "sourcePath": "old.md",
+            "destinationPath": "new.md",
+            "affectedPaths": [
+              "new.md"
+            ]
+          },
+          {
+            "ok": true,
+            "draft": {
+              "schemaVersion": 1,
+              "path": "old.md",
+              "content": "local edit",
+              "baseRevision": "revision",
+              "draftRevision": "uuid-0001",
+              "updatedAt": 1700000000000
+            }
+          },
+          {
+            "ok": true,
+            "draft": null
+          }
+        ],
+        "storage_after": [
+          [
+            "frankmd:draft:old.md",
+            "{\"schemaVersion\":1,\"path\":\"old.md\",\"content\":\"local edit\",\"baseRevision\":\"revision\",\"draftRevision\":\"uuid-0001\",\"updatedAt\":1700000000000}"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "destination write silently dropped",
+      "fn": "scenario",
+      "input": {
+        "steps": [
+          {
+            "call": "writeDraft",
+            "args": [
+              "old.md",
+              "local edit",
+              "revision"
+            ]
+          },
+          {
+            "fault": {
+              "method": "setItem",
+              "key": "frankmd:draft:new.md",
+              "mode": "noop"
+            }
+          },
+          {
+            "call": "remapDrafts",
+            "args": [
+              "old.md",
+              "new.md"
+            ]
+          },
+          {
+            "call": "readDraft",
+            "args": [
+              "old.md"
+            ]
+          },
+          {
+            "call": "readDraft",
+            "args": [
+              "new.md"
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "ok": true,
+            "draft": {
+              "schemaVersion": 1,
+              "path": "old.md",
+              "content": "local edit",
+              "baseRevision": "revision",
+              "draftRevision": "uuid-0001",
+              "updatedAt": 1700000000000
+            },
+            "unchanged": false
+          },
+          null,
+          {
+            "ok": false,
+            "error": {
+              "$error": {
+                "name": "Error",
+                "message": "Unable to verify the local draft at new.md"
+              }
+            },
+            "sourcePath": "old.md",
+            "destinationPath": "new.md",
+            "affectedPaths": [
+              "new.md"
+            ]
+          },
+          {
+            "ok": true,
+            "draft": {
+              "schemaVersion": 1,
+              "path": "old.md",
+              "content": "local edit",
+              "baseRevision": "revision",
+              "draftRevision": "uuid-0001",
+              "updatedAt": 1700000000000
+            }
+          },
+          {
+            "ok": true,
+            "draft": null
+          }
+        ],
+        "storage_after": [
+          [
+            "frankmd:draft:old.md",
+            "{\"schemaVersion\":1,\"path\":\"old.md\",\"content\":\"local edit\",\"baseRevision\":\"revision\",\"draftRevision\":\"uuid-0001\",\"updatedAt\":1700000000000}"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "source removal fails keeps both",
+      "fn": "scenario",
+      "input": {
+        "steps": [
+          {
+            "call": "writeDraft",
+            "args": [
+              "old.md",
+              "local edit",
+              "revision"
+            ]
+          },
+          {
+            "fault": {
+              "method": "removeItem",
+              "key": "frankmd:draft:old.md"
+            }
+          },
+          {
+            "call": "remapDrafts",
+            "args": [
+              "old.md",
+              "new.md"
+            ]
+          },
+          {
+            "call": "readDraft",
+            "args": [
+              "old.md"
+            ]
+          },
+          {
+            "call": "readDraft",
+            "args": [
+              "new.md"
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "ok": true,
+            "draft": {
+              "schemaVersion": 1,
+              "path": "old.md",
+              "content": "local edit",
+              "baseRevision": "revision",
+              "draftRevision": "uuid-0001",
+              "updatedAt": 1700000000000
+            },
+            "unchanged": false
+          },
+          null,
+          {
+            "ok": false,
+            "error": {
+              "$error": {
+                "name": "Error",
+                "message": "storage unavailable"
+              }
+            },
+            "sourcePath": "old.md",
+            "destinationPath": "new.md",
+            "affectedPaths": [
+              "new.md"
+            ]
+          },
+          {
+            "ok": true,
+            "draft": {
+              "schemaVersion": 1,
+              "path": "old.md",
+              "content": "local edit",
+              "baseRevision": "revision",
+              "draftRevision": "uuid-0001",
+              "updatedAt": 1700000000000
+            }
+          },
+          {
+            "ok": true,
+            "draft": {
+              "schemaVersion": 1,
+              "path": "new.md",
+              "content": "local edit",
+              "baseRevision": "revision",
+              "draftRevision": "uuid-0001",
+              "updatedAt": 1700000000000
+            }
+          }
+        ],
+        "storage_after": [
+          [
+            "frankmd:draft:old.md",
+            "{\"schemaVersion\":1,\"path\":\"old.md\",\"content\":\"local edit\",\"baseRevision\":\"revision\",\"draftRevision\":\"uuid-0001\",\"updatedAt\":1700000000000}"
+          ],
+          [
+            "frankmd:draft:new.md",
+            "{\"schemaVersion\":1,\"path\":\"new.md\",\"content\":\"local edit\",\"baseRevision\":\"revision\",\"draftRevision\":\"uuid-0001\",\"updatedAt\":1700000000000}"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "removeDrafts folder boundary",
+      "fn": "scenario",
+      "input": {
+        "steps": [
+          {
+            "call": "writeDraft",
+            "args": [
+              "docs/index.md",
+              "index",
+              "rev-1"
+            ]
+          },
+          {
+            "call": "writeDraft",
+            "args": [
+              "docs/guides/setup.md",
+              "guide",
+              "rev-2"
+            ]
+          },
+          {
+            "call": "writeDraft",
+            "args": [
+              "docs-old/keep.md",
+              "keep",
+              "rev-3"
+            ]
+          },
+          {
+            "call": "writeBackup",
+            "args": [
+              "docs/index.md",
+              "legacy"
+            ]
+          },
+          {
+            "call": "writeBackup",
+            "args": [
+              "docs-old/keep.md",
+              "keep legacy"
+            ]
+          },
+          {
+            "call": "removeDrafts",
+            "args": [
+              "docs",
+              "folder"
+            ]
+          },
+          {
+            "call": "readDraft",
+            "args": [
+              "docs-old/keep.md"
+            ]
+          },
+          {
+            "call": "readBackup",
+            "args": [
+              "docs/index.md"
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "ok": true,
+            "draft": {
+              "schemaVersion": 1,
+              "path": "docs/index.md",
+              "content": "index",
+              "baseRevision": "rev-1",
+              "draftRevision": "uuid-0001",
+              "updatedAt": 1700000000000
+            },
+            "unchanged": false
+          },
+          {
+            "ok": true,
+            "draft": {
+              "schemaVersion": 1,
+              "path": "docs/guides/setup.md",
+              "content": "guide",
+              "baseRevision": "rev-2",
+              "draftRevision": "uuid-0002",
+              "updatedAt": 1700000001000
+            },
+            "unchanged": false
+          },
+          {
+            "ok": true,
+            "draft": {
+              "schemaVersion": 1,
+              "path": "docs-old/keep.md",
+              "content": "keep",
+              "baseRevision": "rev-3",
+              "draftRevision": "uuid-0003",
+              "updatedAt": 1700000002000
+            },
+            "unchanged": false
+          },
+          {
+            "ok": true
+          },
+          {
+            "ok": true
+          },
+          {
+            "ok": true,
+            "removed": 3
+          },
+          {
+            "ok": true,
+            "draft": {
+              "schemaVersion": 1,
+              "path": "docs-old/keep.md",
+              "content": "keep",
+              "baseRevision": "rev-3",
+              "draftRevision": "uuid-0003",
+              "updatedAt": 1700000002000
+            }
+          },
+          {
+            "ok": true,
+            "backup": null
+          }
+        ],
+        "storage_after": [
+          [
+            "frankmd:draft:docs-old%2Fkeep.md",
+            "{\"schemaVersion\":1,\"path\":\"docs-old/keep.md\",\"content\":\"keep\",\"baseRevision\":\"rev-3\",\"draftRevision\":\"uuid-0003\",\"updatedAt\":1700000002000}"
+          ],
+          [
+            "frankmd:backup:docs-old/keep.md",
+            "{\"content\":\"keep legacy\",\"timestamp\":1700000004000}"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "removeDrafts file only exact",
+      "fn": "scenario",
+      "input": {
+        "steps": [
+          {
+            "call": "writeDraft",
+            "args": [
+              "a.md",
+              "local edit",
+              "revision"
+            ]
+          },
+          {
+            "call": "writeDraft",
+            "args": [
+              "a.md.bak",
+              "local edit",
+              "revision"
+            ]
+          },
+          {
+            "call": "writeDraft",
+            "args": [
+              "a.md/child.md",
+              "local edit",
+              "revision"
+            ]
+          },
+          {
+            "call": "removeDrafts",
+            "args": [
+              "a.md"
+            ]
+          },
+          {
+            "call": "listDrafts"
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "ok": true,
+            "draft": {
+              "schemaVersion": 1,
+              "path": "a.md",
+              "content": "local edit",
+              "baseRevision": "revision",
+              "draftRevision": "uuid-0001",
+              "updatedAt": 1700000000000
+            },
+            "unchanged": false
+          },
+          {
+            "ok": true,
+            "draft": {
+              "schemaVersion": 1,
+              "path": "a.md.bak",
+              "content": "local edit",
+              "baseRevision": "revision",
+              "draftRevision": "uuid-0002",
+              "updatedAt": 1700000001000
+            },
+            "unchanged": false
+          },
+          {
+            "ok": true,
+            "draft": {
+              "schemaVersion": 1,
+              "path": "a.md/child.md",
+              "content": "local edit",
+              "baseRevision": "revision",
+              "draftRevision": "uuid-0003",
+              "updatedAt": 1700000002000
+            },
+            "unchanged": false
+          },
+          {
+            "ok": true,
+            "removed": 1
+          },
+          {
+            "ok": true,
+            "drafts": [
+              {
+                "schemaVersion": 1,
+                "path": "a.md.bak",
+                "content": "local edit",
+                "baseRevision": "revision",
+                "draftRevision": "uuid-0002",
+                "updatedAt": 1700000001000
+              },
+              {
+                "schemaVersion": 1,
+                "path": "a.md/child.md",
+                "content": "local edit",
+                "baseRevision": "revision",
+                "draftRevision": "uuid-0003",
+                "updatedAt": 1700000002000
+              }
+            ]
+          }
+        ],
+        "storage_after": [
+          [
+            "frankmd:draft:a.md.bak",
+            "{\"schemaVersion\":1,\"path\":\"a.md.bak\",\"content\":\"local edit\",\"baseRevision\":\"revision\",\"draftRevision\":\"uuid-0002\",\"updatedAt\":1700000001000}"
+          ],
+          [
+            "frankmd:draft:a.md%2Fchild.md",
+            "{\"schemaVersion\":1,\"path\":\"a.md/child.md\",\"content\":\"local edit\",\"baseRevision\":\"revision\",\"draftRevision\":\"uuid-0003\",\"updatedAt\":1700000002000}"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "removeDrafts removes conflicts",
+      "fn": "scenario",
+      "input": {
+        "steps": [
+          {
+            "call": "writeDraft",
+            "args": [
+              "docs/old.md",
+              "source",
+              "revision"
+            ]
+          },
+          {
+            "call": "writeDraft",
+            "args": [
+              "docs/new.md",
+              "destination",
+              "other"
+            ]
+          },
+          {
+            "call": "remapDrafts",
+            "args": [
+              "docs/old.md",
+              "docs/new.md"
+            ]
+          },
+          {
+            "call": "listDraftConflicts",
+            "args": [
+              "docs/new.md"
+            ]
+          },
+          {
+            "call": "removeDrafts",
+            "args": [
+              "docs",
+              "folder"
+            ]
+          },
+          {
+            "call": "listDraftConflicts",
+            "args": [
+              "docs/new.md"
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "ok": true,
+            "draft": {
+              "schemaVersion": 1,
+              "path": "docs/old.md",
+              "content": "source",
+              "baseRevision": "revision",
+              "draftRevision": "uuid-0001",
+              "updatedAt": 1700000000000
+            },
+            "unchanged": false
+          },
+          {
+            "ok": true,
+            "draft": {
+              "schemaVersion": 1,
+              "path": "docs/new.md",
+              "content": "destination",
+              "baseRevision": "other",
+              "draftRevision": "uuid-0002",
+              "updatedAt": 1700000001000
+            },
+            "unchanged": false
+          },
+          {
+            "ok": false,
+            "collision": true,
+            "sourcePath": "docs/old.md",
+            "destinationPath": "docs/new.md",
+            "conflictId": "uuid-0003",
+            "collisions": [
+              {
+                "sourcePath": "docs/old.md",
+                "destinationPath": "docs/new.md"
+              }
+            ],
+            "error": {
+              "$error": {
+                "name": "Error",
+                "message": "A local draft already exists at docs/new.md"
+              }
+            },
+            "affectedPaths": [
+              "docs/new.md"
+            ]
+          },
+          {
+            "ok": true,
+            "conflicts": [
+              {
+                "schemaVersion": 1,
+                "path": "docs/new.md",
+                "sourcePath": "docs/old.md",
+                "conflictId": "uuid-0003",
+                "content": "source",
+                "baseRevision": "revision",
+                "draftRevision": "uuid-0001",
+                "updatedAt": 1700000000000
+              }
+            ]
+          },
+          {
+            "ok": true,
+            "removed": 2
+          },
+          {
+            "ok": true,
+            "conflicts": []
+          }
+        ],
+        "storage_after": []
+      }
+    },
+    {
+      "name": "removeDrafts errors reported",
+      "fn": "scenario",
+      "input": {
+        "steps": [
+          {
+            "call": "writeDraft",
+            "args": [
+              "note.md",
+              "local edit",
+              "revision"
+            ]
+          },
+          {
+            "fault": {
+              "method": "removeItem"
+            }
+          },
+          {
+            "call": "removeDrafts",
+            "args": [
+              "note.md"
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "ok": true,
+            "draft": {
+              "schemaVersion": 1,
+              "path": "note.md",
+              "content": "local edit",
+              "baseRevision": "revision",
+              "draftRevision": "uuid-0001",
+              "updatedAt": 1700000000000
+            },
+            "unchanged": false
+          },
+          null,
+          {
+            "ok": false,
+            "error": {
+              "$error": {
+                "name": "Error",
+                "message": "storage unavailable"
+              }
+            },
+            "removed": 0
+          }
+        ],
+        "storage_after": [
+          [
+            "frankmd:draft:note.md",
+            "{\"schemaVersion\":1,\"path\":\"note.md\",\"content\":\"local edit\",\"baseRevision\":\"revision\",\"draftRevision\":\"uuid-0001\",\"updatedAt\":1700000000000}"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "malformed records discarded",
+      "fn": "scenario",
+      "input": {
+        "initial": [
+          [
+            "frankmd:draft:broken.md",
+            "{bad json"
+          ],
+          [
+            "frankmd:draft:wrong-path",
+            "{\"schemaVersion\":1,\"path\":\"another.md\",\"content\":\"untrusted\",\"baseRevision\":\"baseline\",\"draftRevision\":\"revision\",\"updatedAt\":1}"
+          ],
+          [
+            "another-app:key",
+            "leave me"
+          ]
+        ],
+        "steps": [
+          {
+            "call": "readDraft",
+            "args": [
+              "broken.md"
+            ]
+          },
+          {
+            "call": "listDrafts"
+          },
+          {
+            "call": "readDraft",
+            "args": [
+              "wrong-path"
+            ]
+          },
+          {
+            "call": "removeAllDrafts"
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "ok": true,
+            "draft": null,
+            "malformed": true
+          },
+          {
+            "ok": true,
+            "drafts": []
+          },
+          {
+            "ok": true,
+            "draft": null,
+            "malformed": true
+          },
+          {
+            "ok": true
+          }
+        ],
+        "storage_after": [
+          [
+            "another-app:key",
+            "leave me"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "newer schema preserved",
+      "fn": "scenario",
+      "input": {
+        "initial": [
+          [
+            "frankmd:draft:note.md",
+            "{\"schemaVersion\":2,\"content\":\"future draft\"}"
+          ]
+        ],
+        "steps": [
+          {
+            "call": "readDraft",
+            "args": [
+              "note.md"
+            ]
+          },
+          {
+            "call": "writeDraft",
+            "args": [
+              "note.md",
+              "x",
+              "y"
+            ]
+          },
+          {
+            "call": "listDrafts"
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "ok": false,
+            "error": {
+              "$error": {
+                "name": "Error",
+                "message": "Unsupported draft schema version: 2"
+              }
+            }
+          },
+          {
+            "ok": false,
+            "error": {
+              "$error": {
+                "name": "Error",
+                "message": "Unsupported draft schema version: 2"
+              }
+            }
+          },
+          {
+            "ok": true,
+            "drafts": []
+          }
+        ],
+        "storage_after": [
+          [
+            "frankmd:draft:note.md",
+            "{\"schemaVersion\":2,\"content\":\"future draft\"}"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "storage read failure",
+      "fn": "scenario",
+      "input": {
+        "steps": [
+          {
+            "fault": {
+              "method": "getItem",
+              "message": "QuotaExceededError"
+            }
+          },
+          {
+            "call": "readDraft",
+            "args": [
+              "note.md"
+            ]
+          },
+          {
+            "call": "writeDraft",
+            "args": [
+              "note.md",
+              "content",
+              "baseline"
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          null,
+          {
+            "ok": false,
+            "error": {
+              "$error": {
+                "name": "Error",
+                "message": "QuotaExceededError"
+              }
+            }
+          },
+          {
+            "ok": false,
+            "error": {
+              "$error": {
+                "name": "Error",
+                "message": "QuotaExceededError"
+              }
+            }
+          }
+        ],
+        "storage_after": []
+      }
+    },
+    {
+      "name": "storage write failure",
+      "fn": "scenario",
+      "input": {
+        "steps": [
+          {
+            "fault": {
+              "method": "setItem",
+              "message": "QuotaExceededError"
+            }
+          },
+          {
+            "call": "writeDraft",
+            "args": [
+              "note.md",
+              "content",
+              "baseline"
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          null,
+          {
+            "ok": false,
+            "error": {
+              "$error": {
+                "name": "Error",
+                "message": "QuotaExceededError"
+              }
+            }
+          }
+        ],
+        "storage_after": []
+      }
+    },
+    {
+      "name": "storage removal failure",
+      "fn": "scenario",
+      "input": {
+        "steps": [
+          {
+            "call": "writeDraft",
+            "args": [
+              "note.md",
+              "content",
+              "baseline"
+            ]
+          },
+          {
+            "fault": {
+              "method": "removeItem",
+              "message": "QuotaExceededError"
+            }
+          },
+          {
+            "call": "removeDraftIfRevision",
+            "args": [
+              "note.md",
+              "uuid-0001"
+            ]
+          },
+          {
+            "call": "removeDraft",
+            "args": [
+              "note.md"
+            ]
+          },
+          {
+            "call": "removeBackup",
+            "args": [
+              "note.md"
+            ]
+          },
+          {
+            "call": "removeAllDrafts"
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "ok": true,
+            "draft": {
+              "schemaVersion": 1,
+              "path": "note.md",
+              "content": "content",
+              "baseRevision": "baseline",
+              "draftRevision": "uuid-0001",
+              "updatedAt": 1700000000000
+            },
+            "unchanged": false
+          },
+          null,
+          {
+            "ok": false,
+            "error": {
+              "$error": {
+                "name": "Error",
+                "message": "QuotaExceededError"
+              }
+            }
+          },
+          {
+            "ok": false,
+            "error": {
+              "$error": {
+                "name": "Error",
+                "message": "QuotaExceededError"
+              }
+            }
+          },
+          {
+            "ok": false,
+            "error": {
+              "$error": {
+                "name": "Error",
+                "message": "QuotaExceededError"
+              }
+            }
+          },
+          {
+            "ok": false,
+            "error": {
+              "$error": {
+                "name": "Error",
+                "message": "QuotaExceededError"
+              }
+            }
+          }
+        ],
+        "storage_after": [
+          [
+            "frankmd:draft:note.md",
+            "{\"schemaVersion\":1,\"path\":\"note.md\",\"content\":\"content\",\"baseRevision\":\"baseline\",\"draftRevision\":\"uuid-0001\",\"updatedAt\":1700000000000}"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "legacy backups read/remove",
+      "fn": "scenario",
+      "input": {
+        "steps": [
+          {
+            "call": "writeBackup",
+            "args": [
+              "folder/note.md",
+              "offline"
+            ]
+          },
+          {
+            "call": "readBackup",
+            "args": [
+              "folder/note.md"
+            ]
+          },
+          {
+            "call": "removeBackup",
+            "args": [
+              "folder/note.md"
+            ]
+          },
+          {
+            "call": "readBackup",
+            "args": [
+              "folder/note.md"
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "ok": true
+          },
+          {
+            "ok": true,
+            "backup": {
+              "content": "offline",
+              "timestamp": 1700000000000
+            }
+          },
+          {
+            "ok": true
+          },
+          {
+            "ok": true,
+            "backup": null
+          }
+        ],
+        "storage_after": []
+      }
+    },
+    {
+      "name": "writeDraft argument validation",
+      "fn": "scenario",
+      "input": {
+        "steps": [
+          {
+            "call": "writeDraft",
+            "args": [
+              null,
+              "c",
+              "r"
+            ]
+          },
+          {
+            "call": "writeDraft",
+            "args": [
+              "p",
+              null,
+              "r"
+            ]
+          },
+          {
+            "call": "writeDraft",
+            "args": [
+              "p",
+              "c",
+              ""
+            ]
+          },
+          {
+            "call": "writeDraft",
+            "args": [
+              "p",
+              "c",
+              5
+            ]
+          },
+          {
+            "call": "writeDraft",
+            "args": [
+              "",
+              "c",
+              "r"
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "ok": false,
+            "error": {
+              "$error": {
+                "name": "TypeError",
+                "message": "A draft requires a path, string content, and server revision"
+              }
+            }
+          },
+          {
+            "ok": false,
+            "error": {
+              "$error": {
+                "name": "TypeError",
+                "message": "A draft requires a path, string content, and server revision"
+              }
+            }
+          },
+          {
+            "ok": false,
+            "error": {
+              "$error": {
+                "name": "TypeError",
+                "message": "A draft requires a path, string content, and server revision"
+              }
+            }
+          },
+          {
+            "ok": false,
+            "error": {
+              "$error": {
+                "name": "TypeError",
+                "message": "A draft requires a path, string content, and server revision"
+              }
+            }
+          },
+          {
+            "ok": true,
+            "draft": {
+              "schemaVersion": 1,
+              "path": "",
+              "content": "c",
+              "baseRevision": "r",
+              "draftRevision": "uuid-0001",
+              "updatedAt": 1700000000000
+            },
+            "unchanged": false
+          }
+        ],
+        "storage_after": [
+          [
+            "frankmd:draft:",
+            "{\"schemaVersion\":1,\"path\":\"\",\"content\":\"c\",\"baseRevision\":\"r\",\"draftRevision\":\"uuid-0001\",\"updatedAt\":1700000000000}"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "remapDrafts argument validation",
+      "fn": "scenario",
+      "input": {
+        "steps": [
+          {
+            "call": "remapDrafts",
+            "args": [
+              "",
+              "b"
+            ]
+          },
+          {
+            "call": "remapDrafts",
+            "args": [
+              "a",
+              null
+            ]
+          },
+          {
+            "call": "remapDrafts",
+            "args": [
+              "same.md",
+              "same.md"
+            ]
+          },
+          {
+            "call": "remapDrafts",
+            "args": [
+              "none.md",
+              "other.md"
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "ok": false,
+            "error": {
+              "$error": {
+                "name": "TypeError",
+                "message": "Draft remapping requires source and destination paths"
+              }
+            }
+          },
+          {
+            "ok": false,
+            "error": {
+              "$error": {
+                "name": "TypeError",
+                "message": "Draft remapping requires source and destination paths"
+              }
+            }
+          },
+          {
+            "ok": true,
+            "remapped": 0
+          },
+          {
+            "ok": true,
+            "remapped": 0
+          }
+        ],
+        "storage_after": []
+      }
+    },
+    {
+      "name": "removeDrafts validation",
+      "fn": "scenario",
+      "input": {
+        "steps": [
+          {
+            "call": "removeDrafts",
+            "args": [
+              ""
+            ]
+          },
+          {
+            "call": "removeDrafts",
+            "args": [
+              null,
+              "folder"
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "ok": false,
+            "error": {
+              "$error": {
+                "name": "TypeError",
+                "message": "Draft cleanup requires a path"
+              }
+            }
+          },
+          {
+            "ok": false,
+            "error": {
+              "$error": {
+                "name": "TypeError",
+                "message": "Draft cleanup requires a path"
+              }
+            }
+          }
+        ],
+        "storage_after": []
+      }
+    },
+    {
+      "name": "unicode and special path keys",
+      "fn": "scenario",
+      "input": {
+        "steps": [
+          {
+            "call": "writeDraft",
+            "args": [
+              "Ação/日本語 note.md",
+              "ç",
+              "revision"
+            ]
+          },
+          {
+            "call": "writeDraft",
+            "args": [
+              "100% done?.md",
+              "local edit",
+              "revision"
+            ]
+          },
+          {
+            "call": "writeDraft",
+            "args": [
+              "a+b&c=d#e.md",
+              "local edit",
+              "revision"
+            ]
+          },
+          {
+            "call": "writeDraft",
+            "args": [
+              "שלום/👨‍👩‍👧.md",
+              "local edit",
+              "revision"
+            ]
+          },
+          {
+            "call": "writeDraft",
+            "args": [
+              "../escape.md",
+              "local edit",
+              "revision"
+            ]
+          },
+          {
+            "call": "writeDraft",
+            "args": [
+              "C:\\win\\path.md",
+              "local edit",
+              "revision"
+            ]
+          },
+          {
+            "call": "listDrafts"
+          },
+          {
+            "call": "writeBackup",
+            "args": [
+              "Ação/x.md",
+              "b"
+            ]
+          },
+          {
+            "call": "draftKey",
+            "args": [
+              "Ação/日本語 note.md"
+            ]
+          },
+          {
+            "call": "backupKey",
+            "args": [
+              "Ação/日本語 note.md"
+            ]
+          },
+          {
+            "call": "draftConflictKey",
+            "args": [
+              "a b.md",
+              "id-1"
+            ]
+          },
+          {
+            "call": "draftConflictPathPrefix",
+            "args": [
+              "a:b.md"
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "ok": true,
+            "draft": {
+              "schemaVersion": 1,
+              "path": "Ação/日本語 note.md",
+              "content": "ç",
+              "baseRevision": "revision",
+              "draftRevision": "uuid-0001",
+              "updatedAt": 1700000000000
+            },
+            "unchanged": false
+          },
+          {
+            "ok": true,
+            "draft": {
+              "schemaVersion": 1,
+              "path": "100% done?.md",
+              "content": "local edit",
+              "baseRevision": "revision",
+              "draftRevision": "uuid-0002",
+              "updatedAt": 1700000001000
+            },
+            "unchanged": false
+          },
+          {
+            "ok": true,
+            "draft": {
+              "schemaVersion": 1,
+              "path": "a+b&c=d#e.md",
+              "content": "local edit",
+              "baseRevision": "revision",
+              "draftRevision": "uuid-0003",
+              "updatedAt": 1700000002000
+            },
+            "unchanged": false
+          },
+          {
+            "ok": true,
+            "draft": {
+              "schemaVersion": 1,
+              "path": "שלום/👨‍👩‍👧.md",
+              "content": "local edit",
+              "baseRevision": "revision",
+              "draftRevision": "uuid-0004",
+              "updatedAt": 1700000003000
+            },
+            "unchanged": false
+          },
+          {
+            "ok": true,
+            "draft": {
+              "schemaVersion": 1,
+              "path": "../escape.md",
+              "content": "local edit",
+              "baseRevision": "revision",
+              "draftRevision": "uuid-0005",
+              "updatedAt": 1700000004000
+            },
+            "unchanged": false
+          },
+          {
+            "ok": true,
+            "draft": {
+              "schemaVersion": 1,
+              "path": "C:\\win\\path.md",
+              "content": "local edit",
+              "baseRevision": "revision",
+              "draftRevision": "uuid-0006",
+              "updatedAt": 1700000005000
+            },
+            "unchanged": false
+          },
+          {
+            "ok": true,
+            "drafts": [
+              {
+                "schemaVersion": 1,
+                "path": "Ação/日本語 note.md",
+                "content": "ç",
+                "baseRevision": "revision",
+                "draftRevision": "uuid-0001",
+                "updatedAt": 1700000000000
+              },
+              {
+                "schemaVersion": 1,
+                "path": "100% done?.md",
+                "content": "local edit",
+                "baseRevision": "revision",
+                "draftRevision": "uuid-0002",
+                "updatedAt": 1700000001000
+              },
+              {
+                "schemaVersion": 1,
+                "path": "a+b&c=d#e.md",
+                "content": "local edit",
+                "baseRevision": "revision",
+                "draftRevision": "uuid-0003",
+                "updatedAt": 1700000002000
+              },
+              {
+                "schemaVersion": 1,
+                "path": "שלום/👨‍👩‍👧.md",
+                "content": "local edit",
+                "baseRevision": "revision",
+                "draftRevision": "uuid-0004",
+                "updatedAt": 1700000003000
+              },
+              {
+                "schemaVersion": 1,
+                "path": "../escape.md",
+                "content": "local edit",
+                "baseRevision": "revision",
+                "draftRevision": "uuid-0005",
+                "updatedAt": 1700000004000
+              },
+              {
+                "schemaVersion": 1,
+                "path": "C:\\win\\path.md",
+                "content": "local edit",
+                "baseRevision": "revision",
+                "draftRevision": "uuid-0006",
+                "updatedAt": 1700000005000
+              }
+            ]
+          },
+          {
+            "ok": true
+          },
+          "frankmd:draft:A%C3%A7%C3%A3o%2F%E6%97%A5%E6%9C%AC%E8%AA%9E%20note.md",
+          "frankmd:backup:Ação/日本語 note.md",
+          "frankmd:draft-conflict:a%20b.md:id-1",
+          "frankmd:draft-conflict:a%3Ab.md:"
+        ],
+        "storage_after": [
+          [
+            "frankmd:draft:A%C3%A7%C3%A3o%2F%E6%97%A5%E6%9C%AC%E8%AA%9E%20note.md",
+            "{\"schemaVersion\":1,\"path\":\"Ação/日本語 note.md\",\"content\":\"ç\",\"baseRevision\":\"revision\",\"draftRevision\":\"uuid-0001\",\"updatedAt\":1700000000000}"
+          ],
+          [
+            "frankmd:draft:100%25%20done%3F.md",
+            "{\"schemaVersion\":1,\"path\":\"100% done?.md\",\"content\":\"local edit\",\"baseRevision\":\"revision\",\"draftRevision\":\"uuid-0002\",\"updatedAt\":1700000001000}"
+          ],
+          [
+            "frankmd:draft:a%2Bb%26c%3Dd%23e.md",
+            "{\"schemaVersion\":1,\"path\":\"a+b&c=d#e.md\",\"content\":\"local edit\",\"baseRevision\":\"revision\",\"draftRevision\":\"uuid-0003\",\"updatedAt\":1700000002000}"
+          ],
+          [
+            "frankmd:draft:%D7%A9%D7%9C%D7%95%D7%9D%2F%F0%9F%91%A8%E2%80%8D%F0%9F%91%A9%E2%80%8D%F0%9F%91%A7.md",
+            "{\"schemaVersion\":1,\"path\":\"שלום/👨‍👩‍👧.md\",\"content\":\"local edit\",\"baseRevision\":\"revision\",\"draftRevision\":\"uuid-0004\",\"updatedAt\":1700000003000}"
+          ],
+          [
+            "frankmd:draft:..%2Fescape.md",
+            "{\"schemaVersion\":1,\"path\":\"../escape.md\",\"content\":\"local edit\",\"baseRevision\":\"revision\",\"draftRevision\":\"uuid-0005\",\"updatedAt\":1700000004000}"
+          ],
+          [
+            "frankmd:draft:C%3A%5Cwin%5Cpath.md",
+            "{\"schemaVersion\":1,\"path\":\"C:\\\\win\\\\path.md\",\"content\":\"local edit\",\"baseRevision\":\"revision\",\"draftRevision\":\"uuid-0006\",\"updatedAt\":1700000005000}"
+          ],
+          [
+            "frankmd:backup:Ação/x.md",
+            "{\"content\":\"b\",\"timestamp\":1700000006000}"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "undecodable draft key skipped by removeDrafts",
+      "fn": "scenario",
+      "input": {
+        "initial": [
+          [
+            "frankmd:draft:%E0%A4%A",
+            "{\"schemaVersion\":1,\"path\":\"x\",\"content\":\"c\",\"baseRevision\":\"b\",\"draftRevision\":\"r\",\"updatedAt\":1}"
+          ],
+          [
+            "frankmd:draft:%",
+            "junk"
+          ]
+        ],
+        "steps": [
+          {
+            "call": "removeDrafts",
+            "args": [
+              "x"
+            ]
+          },
+          {
+            "call": "listDrafts"
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "ok": true,
+            "removed": 0
+          },
+          {
+            "ok": true,
+            "drafts": []
+          }
+        ],
+        "storage_after": [
+          [
+            "frankmd:draft:%E0%A4%A",
+            "{\"schemaVersion\":1,\"path\":\"x\",\"content\":\"c\",\"baseRevision\":\"b\",\"draftRevision\":\"r\",\"updatedAt\":1}"
+          ],
+          [
+            "frankmd:draft:%",
+            "junk"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "listDrafts requires canonical key",
+      "fn": "scenario",
+      "input": {
+        "initial": [
+          [
+            "frankmd:draft:a%2Fb.md",
+            "{\"schemaVersion\":1,\"path\":\"a/b.md\",\"content\":\"c\",\"baseRevision\":\"b\",\"draftRevision\":\"r\",\"updatedAt\":1}"
+          ],
+          [
+            "frankmd:draft:a/b.md",
+            "{\"schemaVersion\":1,\"path\":\"a/b.md\",\"content\":\"d\",\"baseRevision\":\"b\",\"draftRevision\":\"r2\",\"updatedAt\":2}"
+          ]
+        ],
+        "steps": [
+          {
+            "call": "listDrafts"
+          },
+          {
+            "call": "readDraft",
+            "args": [
+              "a/b.md"
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "ok": true,
+            "drafts": [
+              {
+                "schemaVersion": 1,
+                "path": "a/b.md",
+                "content": "c",
+                "baseRevision": "b",
+                "draftRevision": "r",
+                "updatedAt": 1
+              }
+            ]
+          },
+          {
+            "ok": true,
+            "draft": {
+              "schemaVersion": 1,
+              "path": "a/b.md",
+              "content": "c",
+              "baseRevision": "b",
+              "draftRevision": "r",
+              "updatedAt": 1
+            }
+          }
+        ],
+        "storage_after": [
+          [
+            "frankmd:draft:a%2Fb.md",
+            "{\"schemaVersion\":1,\"path\":\"a/b.md\",\"content\":\"c\",\"baseRevision\":\"b\",\"draftRevision\":\"r\",\"updatedAt\":1}"
+          ],
+          [
+            "frankmd:draft:a/b.md",
+            "{\"schemaVersion\":1,\"path\":\"a/b.md\",\"content\":\"d\",\"baseRevision\":\"b\",\"draftRevision\":\"r2\",\"updatedAt\":2}"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "validDraft rejects fields",
+      "fn": "scenario",
+      "input": {
+        "initial": [
+          [
+            "frankmd:draft:a.md",
+            "{\"schemaVersion\":1,\"path\":\"a.md\",\"content\":\"c\",\"baseRevision\":\"\",\"draftRevision\":\"r\",\"updatedAt\":1}"
+          ],
+          [
+            "frankmd:draft:b.md",
+            "{\"schemaVersion\":1,\"path\":\"b.md\",\"content\":5,\"baseRevision\":\"b\",\"draftRevision\":\"r\",\"updatedAt\":1}"
+          ],
+          [
+            "frankmd:draft:c.md",
+            "{\"schemaVersion\":1,\"path\":\"c.md\",\"content\":\"c\",\"baseRevision\":\"b\",\"draftRevision\":\"r\",\"updatedAt\":\"1\"}"
+          ],
+          [
+            "frankmd:draft:d.md",
+            "{\"schemaVersion\":\"1\",\"path\":\"d.md\",\"content\":\"c\",\"baseRevision\":\"b\",\"draftRevision\":\"r\",\"updatedAt\":1}"
+          ],
+          [
+            "frankmd:draft:e.md",
+            "null"
+          ],
+          [
+            "frankmd:draft:f.md",
+            "[]"
+          ],
+          [
+            "frankmd:draft:g.md",
+            "\"str\""
+          ],
+          [
+            "frankmd:draft:h.md",
+            "{\"schemaVersion\":1,\"path\":\"h.md\",\"content\":\"ok\",\"baseRevision\":\"b\",\"draftRevision\":\"r\",\"updatedAt\":1.5,\"extra\":true}"
+          ]
+        ],
+        "steps": [
+          {
+            "call": "readDraft",
+            "args": [
+              "a.md"
+            ]
+          },
+          {
+            "call": "readDraft",
+            "args": [
+              "b.md"
+            ]
+          },
+          {
+            "call": "readDraft",
+            "args": [
+              "c.md"
+            ]
+          },
+          {
+            "call": "readDraft",
+            "args": [
+              "d.md"
+            ]
+          },
+          {
+            "call": "readDraft",
+            "args": [
+              "e.md"
+            ]
+          },
+          {
+            "call": "readDraft",
+            "args": [
+              "f.md"
+            ]
+          },
+          {
+            "call": "readDraft",
+            "args": [
+              "g.md"
+            ]
+          },
+          {
+            "call": "readDraft",
+            "args": [
+              "h.md"
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "ok": true,
+            "draft": null,
+            "malformed": true
+          },
+          {
+            "ok": true,
+            "draft": null,
+            "malformed": true
+          },
+          {
+            "ok": true,
+            "draft": null,
+            "malformed": true
+          },
+          {
+            "ok": true,
+            "draft": null,
+            "malformed": true
+          },
+          {
+            "ok": true,
+            "draft": null,
+            "malformed": true
+          },
+          {
+            "ok": true,
+            "draft": null,
+            "malformed": true
+          },
+          {
+            "ok": true,
+            "draft": null,
+            "malformed": true
+          },
+          {
+            "ok": true,
+            "draft": {
+              "schemaVersion": 1,
+              "path": "h.md",
+              "content": "ok",
+              "baseRevision": "b",
+              "draftRevision": "r",
+              "updatedAt": 1.5,
+              "extra": true
+            }
+          }
+        ],
+        "storage_after": [
+          [
+            "frankmd:draft:h.md",
+            "{\"schemaVersion\":1,\"path\":\"h.md\",\"content\":\"ok\",\"baseRevision\":\"b\",\"draftRevision\":\"r\",\"updatedAt\":1.5,\"extra\":true}"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "backup validation",
+      "fn": "scenario",
+      "input": {
+        "initial": [
+          [
+            "frankmd:backup:a.md",
+            "{bad"
+          ],
+          [
+            "frankmd:backup:b.md",
+            "{\"content\":\"x\"}"
+          ],
+          [
+            "frankmd:backup:c.md",
+            "{\"content\":\"x\",\"timestamp\":5}"
+          ]
+        ],
+        "steps": [
+          {
+            "call": "readBackup",
+            "args": [
+              "a.md"
+            ]
+          },
+          {
+            "call": "readBackup",
+            "args": [
+              "b.md"
+            ]
+          },
+          {
+            "call": "readBackup",
+            "args": [
+              "c.md"
+            ]
+          },
+          {
+            "call": "removeBackupIfSnapshot",
+            "args": [
+              "c.md",
+              "x",
+              6
+            ]
+          },
+          {
+            "call": "removeBackupIfSnapshot",
+            "args": [
+              "c.md",
+              "y",
+              5
+            ]
+          },
+          {
+            "call": "removeBackupIfSnapshot",
+            "args": [
+              "c.md",
+              "x",
+              5
+            ]
+          },
+          {
+            "call": "removeBackupIfSnapshot",
+            "args": [
+              "zz.md",
+              "x",
+              5
+            ]
+          },
+          {
+            "call": "writeBackup",
+            "args": [
+              "p",
+              5
+            ]
+          },
+          {
+            "call": "removeAllBackups"
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "ok": true,
+            "backup": null,
+            "malformed": true
+          },
+          {
+            "ok": true,
+            "backup": null,
+            "malformed": true
+          },
+          {
+            "ok": true,
+            "backup": {
+              "content": "x",
+              "timestamp": 5
+            }
+          },
+          {
+            "ok": true,
+            "removed": false
+          },
+          {
+            "ok": true,
+            "removed": false
+          },
+          {
+            "ok": true,
+            "removed": true
+          },
+          {
+            "ok": true,
+            "removed": false
+          },
+          {
+            "ok": false,
+            "error": {
+              "$error": {
+                "name": "TypeError",
+                "message": "A backup requires a path and string content"
+              }
+            }
+          },
+          {
+            "ok": true
+          }
+        ],
+        "storage_after": []
+      }
+    },
+    {
+      "name": "preserveDraftConflict + list sorted",
+      "fn": "scenario",
+      "input": {
+        "steps": [
+          {
+            "call": "preserveDraftConflict",
+            "args": [
+              "dest.md",
+              {
+                "schemaVersion": 1,
+                "path": "src.md",
+                "content": "c2",
+                "baseRevision": "b",
+                "draftRevision": "r2",
+                "updatedAt": 20
+              }
+            ]
+          },
+          {
+            "call": "preserveDraftConflict",
+            "args": [
+              "dest.md",
+              {
+                "schemaVersion": 1,
+                "path": "src.md",
+                "content": "c1",
+                "baseRevision": "b",
+                "draftRevision": "r1",
+                "updatedAt": 10
+              }
+            ]
+          },
+          {
+            "call": "preserveDraftConflict",
+            "args": [
+              "dest.md",
+              {
+                "path": "x"
+              }
+            ]
+          },
+          {
+            "call": "preserveDraftConflict",
+            "args": [
+              "",
+              {
+                "schemaVersion": 1,
+                "path": "s",
+                "content": "",
+                "baseRevision": "b",
+                "draftRevision": "r",
+                "updatedAt": 1
+              }
+            ]
+          },
+          {
+            "call": "listDraftConflicts",
+            "args": [
+              "dest.md"
+            ]
+          },
+          {
+            "call": "listDraftConflicts",
+            "args": [
+              "dest"
+            ]
+          },
+          {
+            "call": "removeDraftConflictIfRevision",
+            "args": [
+              "dest.md",
+              "uuid-0001",
+              "wrong"
+            ]
+          },
+          {
+            "call": "removeDraftConflictIfRevision",
+            "args": [
+              "dest.md",
+              "uuid-0001",
+              "r2"
+            ]
+          },
+          {
+            "call": "listDraftConflicts",
+            "args": [
+              "dest.md"
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "ok": true,
+            "conflictId": "uuid-0001",
+            "conflict": {
+              "schemaVersion": 1,
+              "path": "dest.md",
+              "sourcePath": "src.md",
+              "conflictId": "uuid-0001",
+              "content": "c2",
+              "baseRevision": "b",
+              "draftRevision": "r2",
+              "updatedAt": 20
+            }
+          },
+          {
+            "ok": true,
+            "conflictId": "uuid-0002",
+            "conflict": {
+              "schemaVersion": 1,
+              "path": "dest.md",
+              "sourcePath": "src.md",
+              "conflictId": "uuid-0002",
+              "content": "c1",
+              "baseRevision": "b",
+              "draftRevision": "r1",
+              "updatedAt": 10
+            }
+          },
+          {
+            "ok": false,
+            "error": {
+              "$error": {
+                "name": "TypeError",
+                "message": "A draft conflict requires a valid draft and destination path"
+              }
+            }
+          },
+          {
+            "ok": false,
+            "error": {
+              "$error": {
+                "name": "TypeError",
+                "message": "A draft conflict requires a valid draft and destination path"
+              }
+            }
+          },
+          {
+            "ok": true,
+            "conflicts": [
+              {
+                "schemaVersion": 1,
+                "path": "dest.md",
+                "sourcePath": "src.md",
+                "conflictId": "uuid-0002",
+                "content": "c1",
+                "baseRevision": "b",
+                "draftRevision": "r1",
+                "updatedAt": 10
+              },
+              {
+                "schemaVersion": 1,
+                "path": "dest.md",
+                "sourcePath": "src.md",
+                "conflictId": "uuid-0001",
+                "content": "c2",
+                "baseRevision": "b",
+                "draftRevision": "r2",
+                "updatedAt": 20
+              }
+            ]
+          },
+          {
+            "ok": true,
+            "conflicts": []
+          },
+          {
+            "ok": true,
+            "removed": false
+          },
+          {
+            "ok": true,
+            "removed": true
+          },
+          {
+            "ok": true,
+            "conflicts": [
+              {
+                "schemaVersion": 1,
+                "path": "dest.md",
+                "sourcePath": "src.md",
+                "conflictId": "uuid-0002",
+                "content": "c1",
+                "baseRevision": "b",
+                "draftRevision": "r1",
+                "updatedAt": 10
+              }
+            ]
+          }
+        ],
+        "storage_after": [
+          [
+            "frankmd:draft-conflict:dest.md:uuid-0002",
+            "{\"schemaVersion\":1,\"path\":\"dest.md\",\"sourcePath\":\"src.md\",\"conflictId\":\"uuid-0002\",\"content\":\"c1\",\"baseRevision\":\"b\",\"draftRevision\":\"r1\",\"updatedAt\":10}"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "conflict key path mismatch ignored",
+      "fn": "scenario",
+      "input": {
+        "initial": [
+          [
+            "frankmd:draft-conflict:a.md:id1",
+            "{\"schemaVersion\":1,\"path\":\"b.md\",\"sourcePath\":\"s.md\",\"conflictId\":\"id1\",\"content\":\"c\",\"baseRevision\":\"b\",\"draftRevision\":\"r\",\"updatedAt\":1}"
+          ],
+          [
+            "frankmd:draft-conflict:a.md:id2",
+            "{\"schemaVersion\":1,\"path\":\"a.md\",\"sourcePath\":\"s.md\",\"conflictId\":\"other\",\"content\":\"c\",\"baseRevision\":\"b\",\"draftRevision\":\"r\",\"updatedAt\":1}"
+          ],
+          [
+            "frankmd:draft-conflict:a.md:id3",
+            "{bad"
+          ]
+        ],
+        "steps": [
+          {
+            "call": "listDraftConflicts",
+            "args": [
+              "a.md"
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "ok": true,
+            "conflicts": []
+          }
+        ],
+        "storage_after": [
+          [
+            "frankmd:draft-conflict:a.md:id1",
+            "{\"schemaVersion\":1,\"path\":\"b.md\",\"sourcePath\":\"s.md\",\"conflictId\":\"id1\",\"content\":\"c\",\"baseRevision\":\"b\",\"draftRevision\":\"r\",\"updatedAt\":1}"
+          ],
+          [
+            "frankmd:draft-conflict:a.md:id2",
+            "{\"schemaVersion\":1,\"path\":\"a.md\",\"sourcePath\":\"s.md\",\"conflictId\":\"other\",\"content\":\"c\",\"baseRevision\":\"b\",\"draftRevision\":\"r\",\"updatedAt\":1}"
+          ],
+          [
+            "frankmd:draft-conflict:a.md:id3",
+            "{bad"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "folder remap moves existing conflicts",
+      "fn": "scenario",
+      "input": {
+        "initial": [
+          [
+            "frankmd:draft-conflict:docs%2Fa.md:c1",
+            "{\"schemaVersion\":1,\"path\":\"docs/a.md\",\"sourcePath\":\"x.md\",\"conflictId\":\"c1\",\"content\":\"old\",\"baseRevision\":\"b\",\"draftRevision\":\"r\",\"updatedAt\":5}"
+          ]
+        ],
+        "steps": [
+          {
+            "call": "writeDraft",
+            "args": [
+              "docs/a.md",
+              "A",
+              "revision"
+            ]
+          },
+          {
+            "call": "remapDrafts",
+            "args": [
+              "docs",
+              "notes",
+              "folder"
+            ]
+          },
+          {
+            "call": "listDraftConflicts",
+            "args": [
+              "notes/a.md"
+            ]
+          },
+          {
+            "call": "listDrafts"
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "ok": true,
+            "draft": {
+              "schemaVersion": 1,
+              "path": "docs/a.md",
+              "content": "A",
+              "baseRevision": "revision",
+              "draftRevision": "uuid-0001",
+              "updatedAt": 1700000000000
+            },
+            "unchanged": false
+          },
+          {
+            "ok": true,
+            "remapped": 2
+          },
+          {
+            "ok": true,
+            "conflicts": [
+              {
+                "schemaVersion": 1,
+                "path": "notes/a.md",
+                "sourcePath": "x.md",
+                "conflictId": "c1",
+                "content": "old",
+                "baseRevision": "b",
+                "draftRevision": "r",
+                "updatedAt": 5
+              }
+            ]
+          },
+          {
+            "ok": true,
+            "drafts": [
+              {
+                "schemaVersion": 1,
+                "path": "notes/a.md",
+                "content": "A",
+                "baseRevision": "revision",
+                "draftRevision": "uuid-0001",
+                "updatedAt": 1700000000000
+              }
+            ]
+          }
+        ],
+        "storage_after": [
+          [
+            "frankmd:draft:notes%2Fa.md",
+            "{\"schemaVersion\":1,\"path\":\"notes/a.md\",\"content\":\"A\",\"baseRevision\":\"revision\",\"draftRevision\":\"uuid-0001\",\"updatedAt\":1700000000000}"
+          ],
+          [
+            "frankmd:draft-conflict:notes%2Fa.md:c1",
+            "{\"schemaVersion\":1,\"path\":\"notes/a.md\",\"sourcePath\":\"x.md\",\"conflictId\":\"c1\",\"content\":\"old\",\"baseRevision\":\"b\",\"draftRevision\":\"r\",\"updatedAt\":5}"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "conflict destination exists differs",
+      "fn": "scenario",
+      "input": {
+        "initial": [
+          [
+            "frankmd:draft-conflict:old.md:c1",
+            "{\"schemaVersion\":1,\"path\":\"old.md\",\"sourcePath\":\"x.md\",\"conflictId\":\"c1\",\"content\":\"A\",\"baseRevision\":\"b\",\"draftRevision\":\"r\",\"updatedAt\":5}"
+          ],
+          [
+            "frankmd:draft-conflict:new.md:c1",
+            "{\"schemaVersion\":1,\"path\":\"new.md\",\"sourcePath\":\"x.md\",\"conflictId\":\"c1\",\"content\":\"DIFFERENT\",\"baseRevision\":\"b\",\"draftRevision\":\"r\",\"updatedAt\":5}"
+          ]
+        ],
+        "steps": [
+          {
+            "call": "remapDrafts",
+            "args": [
+              "old.md",
+              "new.md"
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "ok": false,
+            "error": {
+              "$error": {
+                "name": "Error",
+                "message": "A recovery copy already exists at new.md"
+              }
+            },
+            "affectedPaths": [
+              "new.md"
+            ]
+          }
+        ],
+        "storage_after": [
+          [
+            "frankmd:draft-conflict:old.md:c1",
+            "{\"schemaVersion\":1,\"path\":\"old.md\",\"sourcePath\":\"x.md\",\"conflictId\":\"c1\",\"content\":\"A\",\"baseRevision\":\"b\",\"draftRevision\":\"r\",\"updatedAt\":5}"
+          ],
+          [
+            "frankmd:draft-conflict:new.md:c1",
+            "{\"schemaVersion\":1,\"path\":\"new.md\",\"sourcePath\":\"x.md\",\"conflictId\":\"c1\",\"content\":\"DIFFERENT\",\"baseRevision\":\"b\",\"draftRevision\":\"r\",\"updatedAt\":5}"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "provider throws",
+      "fn": "scenario",
+      "input": {
+        "steps": [
+          {
+            "providerFails": true
+          },
+          {
+            "call": "readDraft",
+            "args": [
+              "a.md"
+            ]
+          },
+          {
+            "call": "writeDraft",
+            "args": [
+              "a.md",
+              "local edit",
+              "revision"
+            ]
+          },
+          {
+            "call": "listDrafts"
+          },
+          {
+            "call": "removeDrafts",
+            "args": [
+              "a.md"
+            ]
+          },
+          {
+            "call": "remapDrafts",
+            "args": [
+              "a.md",
+              "b.md"
+            ]
+          },
+          {
+            "call": "readBackup",
+            "args": [
+              "a.md"
+            ]
+          },
+          {
+            "call": "removeAllDrafts"
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          null,
+          {
+            "ok": false,
+            "error": {
+              "$error": {
+                "name": "Error",
+                "message": "localStorage unavailable"
+              }
+            }
+          },
+          {
+            "ok": false,
+            "error": {
+              "$error": {
+                "name": "Error",
+                "message": "localStorage unavailable"
+              }
+            }
+          },
+          {
+            "ok": false,
+            "error": {
+              "$error": {
+                "name": "Error",
+                "message": "localStorage unavailable"
+              }
+            }
+          },
+          {
+            "ok": false,
+            "error": {
+              "$error": {
+                "name": "Error",
+                "message": "localStorage unavailable"
+              }
+            }
+          },
+          {
+            "ok": false,
+            "error": {
+              "$error": {
+                "name": "Error",
+                "message": "localStorage unavailable"
+              }
+            }
+          },
+          {
+            "ok": false,
+            "error": {
+              "$error": {
+                "name": "Error",
+                "message": "localStorage unavailable"
+              }
+            }
+          },
+          {
+            "ok": false,
+            "error": {
+              "$error": {
+                "name": "Error",
+                "message": "localStorage unavailable"
+              }
+            }
+          }
+        ],
+        "storage_after": []
+      }
+    },
+    {
+      "name": "key enumeration throws",
+      "fn": "scenario",
+      "input": {
+        "steps": [
+          {
+            "call": "writeDraft",
+            "args": [
+              "a.md",
+              "local edit",
+              "revision"
+            ]
+          },
+          {
+            "fault": {
+              "method": "key"
+            }
+          },
+          {
+            "call": "removeDrafts",
+            "args": [
+              "a.md"
+            ]
+          },
+          {
+            "call": "listDrafts"
+          },
+          {
+            "call": "remapDrafts",
+            "args": [
+              "a.md",
+              "b.md"
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "ok": true,
+            "draft": {
+              "schemaVersion": 1,
+              "path": "a.md",
+              "content": "local edit",
+              "baseRevision": "revision",
+              "draftRevision": "uuid-0001",
+              "updatedAt": 1700000000000
+            },
+            "unchanged": false
+          },
+          null,
+          {
+            "ok": false,
+            "error": {
+              "$error": {
+                "name": "Error",
+                "message": "key failed"
+              }
+            },
+            "removed": 0
+          },
+          {
+            "ok": false,
+            "error": {
+              "$error": {
+                "name": "Error",
+                "message": "key failed"
+              }
+            }
+          },
+          {
+            "ok": false,
+            "error": {
+              "$error": {
+                "name": "Error",
+                "message": "key failed"
+              }
+            }
+          }
+        ],
+        "storage_after": [
+          [
+            "frankmd:draft:a.md",
+            "{\"schemaVersion\":1,\"path\":\"a.md\",\"content\":\"local edit\",\"baseRevision\":\"revision\",\"draftRevision\":\"uuid-0001\",\"updatedAt\":1700000000000}"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "pathMatches table",
+      "fn": "scenario",
+      "input": {
+        "steps": [
+          {
+            "call": "pathMatches",
+            "args": [
+              "a",
+              "a",
+              "file"
+            ]
+          },
+          {
+            "call": "pathMatches",
+            "args": [
+              "a/b",
+              "a",
+              "file"
+            ]
+          },
+          {
+            "call": "pathMatches",
+            "args": [
+              "a/b",
+              "a",
+              "folder"
+            ]
+          },
+          {
+            "call": "pathMatches",
+            "args": [
+              "ab",
+              "a",
+              "folder"
+            ]
+          },
+          {
+            "call": "pathMatches",
+            "args": [
+              "a",
+              "a",
+              "folder"
+            ]
+          },
+          {
+            "call": "pathMatches",
+            "args": [
+              "a//b",
+              "a/",
+              "folder"
+            ]
+          },
+          {
+            "call": "pathMatches",
+            "args": [
+              "",
+              "",
+              "folder"
+            ]
+          },
+          {
+            "call": "pathMatches",
+            "args": [
+              "/x",
+              "",
+              "folder"
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          true,
+          false,
+          true,
+          false,
+          true,
+          true,
+          true,
+          true
+        ],
+        "storage_after": []
+      }
+    },
+    {
+      "name": "rename folder to nested of itself",
+      "fn": "scenario",
+      "input": {
+        "steps": [
+          {
+            "call": "writeDraft",
+            "args": [
+              "a/x.md",
+              "local edit",
+              "revision"
+            ]
+          },
+          {
+            "call": "writeDraft",
+            "args": [
+              "a/b/y.md",
+              "local edit",
+              "revision"
+            ]
+          },
+          {
+            "call": "remapDrafts",
+            "args": [
+              "a",
+              "a/b",
+              "folder"
+            ]
+          },
+          {
+            "call": "listDrafts"
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "ok": true,
+            "draft": {
+              "schemaVersion": 1,
+              "path": "a/x.md",
+              "content": "local edit",
+              "baseRevision": "revision",
+              "draftRevision": "uuid-0001",
+              "updatedAt": 1700000000000
+            },
+            "unchanged": false
+          },
+          {
+            "ok": true,
+            "draft": {
+              "schemaVersion": 1,
+              "path": "a/b/y.md",
+              "content": "local edit",
+              "baseRevision": "revision",
+              "draftRevision": "uuid-0002",
+              "updatedAt": 1700000001000
+            },
+            "unchanged": false
+          },
+          {
+            "ok": true,
+            "remapped": 2
+          },
+          {
+            "ok": true,
+            "drafts": [
+              {
+                "schemaVersion": 1,
+                "path": "a/b/x.md",
+                "content": "local edit",
+                "baseRevision": "revision",
+                "draftRevision": "uuid-0001",
+                "updatedAt": 1700000000000
+              },
+              {
+                "schemaVersion": 1,
+                "path": "a/b/b/y.md",
+                "content": "local edit",
+                "baseRevision": "revision",
+                "draftRevision": "uuid-0002",
+                "updatedAt": 1700000001000
+              }
+            ]
+          }
+        ],
+        "storage_after": [
+          [
+            "frankmd:draft:a%2Fb%2Fx.md",
+            "{\"schemaVersion\":1,\"path\":\"a/b/x.md\",\"content\":\"local edit\",\"baseRevision\":\"revision\",\"draftRevision\":\"uuid-0001\",\"updatedAt\":1700000000000}"
+          ],
+          [
+            "frankmd:draft:a%2Fb%2Fb%2Fy.md",
+            "{\"schemaVersion\":1,\"path\":\"a/b/b/y.md\",\"content\":\"local edit\",\"baseRevision\":\"revision\",\"draftRevision\":\"uuid-0002\",\"updatedAt\":1700000001000}"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "remap CRLF and large content",
+      "fn": "scenario",
+      "input": {
+        "steps": [
+          {
+            "call": "writeDraft",
+            "args": [
+              "old.md",
+              "line1\r\nline2\rline3\nxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+              "rev"
+            ]
+          },
+          {
+            "call": "remapDrafts",
+            "args": [
+              "old.md",
+              "new.md"
+            ]
+          },
+          {
+            "call": "readDraft",
+            "args": [
+              "new.md"
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "results": [
+          {
+            "ok": true,
+            "draft": {
+              "schemaVersion": 1,
+              "path": "old.md",
+              "content": "line1\r\nline2\rline3\nxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+              "baseRevision": "rev",
+              "draftRevision": "uuid-0001",
+              "updatedAt": 1700000000000
+            },
+            "unchanged": false
+          },
+          {
+            "ok": true,
+            "remapped": 1
+          },
+          {
+            "ok": true,
+            "draft": {
+              "schemaVersion": 1,
+              "path": "new.md",
+              "content": "line1\r\nline2\rline3\nxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+              "baseRevision": "rev",
+              "draftRevision": "uuid-0001",
+              "updatedAt": 1700000000000
+            }
+          }
+        ],
+        "storage_after": [
+          [
+            "frankmd:draft:new.md",
+            "{\"schemaVersion\":1,\"path\":\"new.md\",\"content\":\"line1\\r\\nline2\\rline3\\nxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\",\"baseRevision\":\"rev\",\"draftRevision\":\"uuid-0001\",\"updatedAt\":1700000000000}"
+          ]
+        ]
+      }
+    }
+  ]
+}

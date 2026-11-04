@@ -1,0 +1,15 @@
+[package]
+name = "frankmd-watch"
+description = "File watching: vault changes with self-write suppression, .fed, Omarchy theme dir and fontconfig."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+frankmd-core.workspace = true
+thiserror.workspace = true
+
+[lints]
+workspace = true

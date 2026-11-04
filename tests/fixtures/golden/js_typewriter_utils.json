@@ -1,0 +1,454 @@
+{
+  "source": "app/javascript/lib/typewriter_utils.js @ d47a89e92d89f807878d318182fa5dcea0329ec4",
+  "frankmd_sha": "d47a89e92d89f807878d318182fa5dcea0329ec4",
+  "generator": "tools/golden/js/utils.mjs",
+  "notes": "input = encoded argument array (decode with golden.mjs decode: {$undefined}, {$number}, {$date}, {$regexp}, {$utf16}); expected = encoded return value, or {$error:{name,message}}. JS strings are UTF-16: all positions/lengths/indices in inputs and outputs are UTF-16 code-unit offsets; cases with non-BMP/multi-unit strings carry a `utf16` array (utf16_len/scalar_len/utf8_len per such string arg). TZ pinned to UTC for date-based helpers.",
+  "functions": [
+    "calculateTypewriterScroll",
+    "calculateTypewriterSyncRatio",
+    "getTypewriterSyncData"
+  ],
+  "cases": [
+    {
+      "name": "calculateTypewriterScroll #1 (from FrankMD vitest suite)",
+      "fn": "calculateTypewriterScroll",
+      "input": [
+        500,
+        400,
+        0.3
+      ],
+      "expected": 380
+    },
+    {
+      "name": "calculateTypewriterScroll #2 (from FrankMD vitest suite)",
+      "fn": "calculateTypewriterScroll",
+      "input": [
+        0,
+        500
+      ],
+      "expected": 0
+    },
+    {
+      "name": "calculateTypewriterScroll #3 (from FrankMD vitest suite)",
+      "fn": "calculateTypewriterScroll",
+      "input": [
+        500,
+        400
+      ],
+      "expected": 300
+    },
+    {
+      "name": "calculateTypewriterScroll #4 (from FrankMD vitest suite)",
+      "fn": "calculateTypewriterScroll",
+      "input": [
+        200,
+        500
+      ],
+      "expected": 0
+    },
+    {
+      "name": "calculateTypewriterScroll #5 (from FrankMD vitest suite)",
+      "fn": "calculateTypewriterScroll",
+      "input": [
+        50,
+        500
+      ],
+      "expected": 0
+    },
+    {
+      "name": "calculateTypewriterScroll #6 (from FrankMD vitest suite)",
+      "fn": "calculateTypewriterScroll",
+      "input": [
+        100,
+        500
+      ],
+      "expected": 0
+    },
+    {
+      "name": "calculateTypewriterSyncRatio #1 (from FrankMD vitest suite)",
+      "fn": "calculateTypewriterSyncRatio",
+      "input": [
+        100,
+        100
+      ],
+      "expected": 1
+    },
+    {
+      "name": "calculateTypewriterSyncRatio #2 (from FrankMD vitest suite)",
+      "fn": "calculateTypewriterSyncRatio",
+      "input": [
+        50,
+        100
+      ],
+      "expected": 0.494949494949495
+    },
+    {
+      "name": "calculateTypewriterSyncRatio #3 (from FrankMD vitest suite)",
+      "fn": "calculateTypewriterSyncRatio",
+      "input": [
+        200,
+        100
+      ],
+      "expected": 1
+    },
+    {
+      "name": "calculateTypewriterSyncRatio #4 (from FrankMD vitest suite)",
+      "fn": "calculateTypewriterSyncRatio",
+      "input": [
+        1,
+        2
+      ],
+      "expected": 0
+    },
+    {
+      "name": "calculateTypewriterSyncRatio #5 (from FrankMD vitest suite)",
+      "fn": "calculateTypewriterSyncRatio",
+      "input": [
+        1,
+        100
+      ],
+      "expected": 0
+    },
+    {
+      "name": "calculateTypewriterSyncRatio #6 (from FrankMD vitest suite)",
+      "fn": "calculateTypewriterSyncRatio",
+      "input": [
+        1,
+        1
+      ],
+      "expected": 0
+    },
+    {
+      "name": "calculateTypewriterSyncRatio #7 (from FrankMD vitest suite)",
+      "fn": "calculateTypewriterSyncRatio",
+      "input": [
+        0,
+        100
+      ],
+      "expected": 0
+    },
+    {
+      "name": "calculateTypewriterSyncRatio #8 (from FrankMD vitest suite)",
+      "fn": "calculateTypewriterSyncRatio",
+      "input": [
+        2,
+        2
+      ],
+      "expected": 1
+    },
+    {
+      "name": "getTypewriterSyncData #1 (from FrankMD vitest suite)",
+      "fn": "getTypewriterSyncData",
+      "input": [
+        "line1\nline2\nline3",
+        0
+      ],
+      "expected": {
+        "currentLine": 1,
+        "totalLines": 3
+      }
+    },
+    {
+      "name": "getTypewriterSyncData #2 (from FrankMD vitest suite)",
+      "fn": "getTypewriterSyncData",
+      "input": [
+        "line1\nline2\nline3",
+        17
+      ],
+      "expected": {
+        "currentLine": 3,
+        "totalLines": 3
+      }
+    },
+    {
+      "name": "getTypewriterSyncData #3 (from FrankMD vitest suite)",
+      "fn": "getTypewriterSyncData",
+      "input": [
+        "single line",
+        5
+      ],
+      "expected": {
+        "currentLine": 1,
+        "totalLines": 1
+      }
+    },
+    {
+      "name": "getTypewriterSyncData #4 (from FrankMD vitest suite)",
+      "fn": "getTypewriterSyncData",
+      "input": [
+        "line1\nline2",
+        6
+      ],
+      "expected": {
+        "currentLine": 2,
+        "totalLines": 2
+      }
+    },
+    {
+      "name": "getTypewriterSyncData #5 (from FrankMD vitest suite)",
+      "fn": "getTypewriterSyncData",
+      "input": [
+        "",
+        0
+      ],
+      "expected": {
+        "currentLine": 1,
+        "totalLines": 1
+      }
+    },
+    {
+      "name": "getTypewriterSyncData #6 (from FrankMD vitest suite)",
+      "fn": "getTypewriterSyncData",
+      "input": [
+        "line1\nline2\nline3",
+        8
+      ],
+      "expected": {
+        "currentLine": 2,
+        "totalLines": 3
+      }
+    },
+    {
+      "name": "calculateTypewriterScroll #7 (edge corpus)",
+      "fn": "calculateTypewriterScroll",
+      "input": [
+        100,
+        400
+      ],
+      "expected": 0
+    },
+    {
+      "name": "calculateTypewriterScroll #8 (edge corpus)",
+      "fn": "calculateTypewriterScroll",
+      "input": [
+        100,
+        400,
+        0.5
+      ],
+      "expected": 0
+    },
+    {
+      "name": "calculateTypewriterScroll #9 (edge corpus)",
+      "fn": "calculateTypewriterScroll",
+      "input": [
+        0,
+        0
+      ],
+      "expected": 0
+    },
+    {
+      "name": "calculateTypewriterScroll #10 (edge corpus)",
+      "fn": "calculateTypewriterScroll",
+      "input": [
+        -50,
+        400
+      ],
+      "expected": 0
+    },
+    {
+      "name": "calculateTypewriterScroll #11 (edge corpus)",
+      "fn": "calculateTypewriterScroll",
+      "input": [
+        1000,
+        400,
+        1
+      ],
+      "expected": 600
+    },
+    {
+      "name": "calculateTypewriterScroll #12 (edge corpus)",
+      "fn": "calculateTypewriterScroll",
+      "input": [
+        300,
+        600,
+        0
+      ],
+      "expected": 300
+    },
+    {
+      "name": "calculateTypewriterScroll #13 (edge corpus)",
+      "fn": "calculateTypewriterScroll",
+      "input": [
+        250.5,
+        101,
+        0.5
+      ],
+      "expected": 200
+    },
+    {
+      "name": "getTypewriterSyncData #7 (edge corpus)",
+      "fn": "getTypewriterSyncData",
+      "input": [
+        "a\nb\nc",
+        0
+      ],
+      "expected": {
+        "currentLine": 1,
+        "totalLines": 3
+      }
+    },
+    {
+      "name": "getTypewriterSyncData #8 (edge corpus)",
+      "fn": "getTypewriterSyncData",
+      "input": [
+        "a\nb\nc",
+        2
+      ],
+      "expected": {
+        "currentLine": 2,
+        "totalLines": 3
+      }
+    },
+    {
+      "name": "getTypewriterSyncData #9 (edge corpus)",
+      "fn": "getTypewriterSyncData",
+      "input": [
+        "a\nb\nc",
+        5
+      ],
+      "expected": {
+        "currentLine": 3,
+        "totalLines": 3
+      }
+    },
+    {
+      "name": "getTypewriterSyncData #10 (edge corpus)",
+      "fn": "getTypewriterSyncData",
+      "input": [
+        "a\nb\nc",
+        99
+      ],
+      "expected": {
+        "currentLine": 3,
+        "totalLines": 3
+      }
+    },
+    {
+      "name": "getTypewriterSyncData #11 (edge corpus)",
+      "fn": "getTypewriterSyncData",
+      "input": [
+        "a\r\nb",
+        3
+      ],
+      "expected": {
+        "currentLine": 2,
+        "totalLines": 2
+      }
+    },
+    {
+      "name": "getTypewriterSyncData #12 (edge corpus)",
+      "fn": "getTypewriterSyncData",
+      "input": [
+        "日本\n👋\nx",
+        4
+      ],
+      "expected": {
+        "currentLine": 2,
+        "totalLines": 3
+      },
+      "utf16": [
+        {
+          "utf16_len": 7,
+          "scalar_len": 6,
+          "utf8_len": 13
+        }
+      ]
+    },
+    {
+      "name": "getTypewriterSyncData #13 (edge corpus)",
+      "fn": "getTypewriterSyncData",
+      "input": [
+        "\n",
+        1
+      ],
+      "expected": {
+        "currentLine": 2,
+        "totalLines": 2
+      }
+    },
+    {
+      "name": "getTypewriterSyncData #14 (edge corpus)",
+      "fn": "getTypewriterSyncData",
+      "input": [
+        "a\nb",
+        -1
+      ],
+      "expected": {
+        "currentLine": 1,
+        "totalLines": 2
+      }
+    },
+    {
+      "name": "calculateTypewriterSyncRatio #9 (edge corpus)",
+      "fn": "calculateTypewriterSyncRatio",
+      "input": [
+        1,
+        0
+      ],
+      "expected": 0
+    },
+    {
+      "name": "calculateTypewriterSyncRatio #10 (edge corpus)",
+      "fn": "calculateTypewriterSyncRatio",
+      "input": [
+        1,
+        10
+      ],
+      "expected": 0
+    },
+    {
+      "name": "calculateTypewriterSyncRatio #11 (edge corpus)",
+      "fn": "calculateTypewriterSyncRatio",
+      "input": [
+        5,
+        10
+      ],
+      "expected": 0.4444444444444444
+    },
+    {
+      "name": "calculateTypewriterSyncRatio #12 (edge corpus)",
+      "fn": "calculateTypewriterSyncRatio",
+      "input": [
+        10,
+        10
+      ],
+      "expected": 1
+    },
+    {
+      "name": "calculateTypewriterSyncRatio #13 (edge corpus)",
+      "fn": "calculateTypewriterSyncRatio",
+      "input": [
+        11,
+        10
+      ],
+      "expected": 1
+    },
+    {
+      "name": "calculateTypewriterSyncRatio #14 (edge corpus)",
+      "fn": "calculateTypewriterSyncRatio",
+      "input": [
+        0,
+        10
+      ],
+      "expected": 0
+    },
+    {
+      "name": "calculateTypewriterSyncRatio #15 (edge corpus)",
+      "fn": "calculateTypewriterSyncRatio",
+      "input": [
+        3,
+        2
+      ],
+      "expected": 1
+    },
+    {
+      "name": "calculateTypewriterSyncRatio #16 (edge corpus)",
+      "fn": "calculateTypewriterSyncRatio",
+      "input": [
+        2,
+        3
+      ],
+      "expected": 0.5
+    }
+  ]
+}

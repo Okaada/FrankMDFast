@@ -1,0 +1,1315 @@
+{
+  "source": "app/javascript/lib/scroll_utils.js @ d47a89e92d89f807878d318182fa5dcea0329ec4",
+  "frankmd_sha": "d47a89e92d89f807878d318182fa5dcea0329ec4",
+  "generator": "tools/golden/js/utils.mjs",
+  "notes": "input = encoded argument array (decode with golden.mjs decode: {$undefined}, {$number}, {$date}, {$regexp}, {$utf16}); expected = encoded return value, or {$error:{name,message}}. JS strings are UTF-16: all positions/lengths/indices in inputs and outputs are UTF-16 code-unit offsets; cases with non-BMP/multi-unit strings carry a `utf16` array (utf16_len/scalar_len/utf8_len per such string arg). TZ pinned to UTC for date-based helpers.",
+  "functions": [
+    "calculateLineFromScroll",
+    "calculateScrollForLine",
+    "calculateScrollRatio",
+    "calculateScrollToCenterLine",
+    "calculateSyncedScrollPosition",
+    "lineAtScroll",
+    "scrollTopForElement"
+  ],
+  "cases": [
+    {
+      "name": "calculateLineFromScroll #1 (from FrankMD vitest suite)",
+      "fn": "calculateLineFromScroll",
+      "input": [
+        900,
+        200,
+        2000,
+        100
+      ],
+      "expected": 50
+    },
+    {
+      "name": "calculateLineFromScroll #2 (from FrankMD vitest suite)",
+      "fn": "calculateLineFromScroll",
+      "input": [
+        0,
+        200,
+        2000,
+        100
+      ],
+      "expected": 5
+    },
+    {
+      "name": "calculateLineFromScroll #3 (from FrankMD vitest suite)",
+      "fn": "calculateLineFromScroll",
+      "input": [
+        0,
+        200,
+        200,
+        0
+      ],
+      "expected": 1
+    },
+    {
+      "name": "calculateLineFromScroll #4 (from FrankMD vitest suite)",
+      "fn": "calculateLineFromScroll",
+      "input": [
+        1800,
+        200,
+        2000,
+        100
+      ],
+      "expected": 95
+    },
+    {
+      "name": "calculateScrollForLine #1 (from FrankMD vitest suite)",
+      "fn": "calculateScrollForLine",
+      "input": [
+        50,
+        20,
+        500
+      ],
+      "expected": 805
+    },
+    {
+      "name": "calculateScrollForLine #2 (from FrankMD vitest suite)",
+      "fn": "calculateScrollForLine",
+      "input": [
+        2,
+        20,
+        1000
+      ],
+      "expected": 0
+    },
+    {
+      "name": "calculateScrollForLine #3 (from FrankMD vitest suite)",
+      "fn": "calculateScrollForLine",
+      "input": [
+        50,
+        20,
+        500,
+        0.5
+      ],
+      "expected": 730
+    },
+    {
+      "name": "calculateScrollForLine #4 (from FrankMD vitest suite)",
+      "fn": "calculateScrollForLine",
+      "input": [
+        1,
+        20,
+        1000
+      ],
+      "expected": 0
+    },
+    {
+      "name": "calculateScrollForLine #5 (from FrankMD vitest suite)",
+      "fn": "calculateScrollForLine",
+      "input": [
+        1,
+        20,
+        500
+      ],
+      "expected": 0
+    },
+    {
+      "name": "calculateScrollRatio #1 (from FrankMD vitest suite)",
+      "fn": "calculateScrollRatio",
+      "input": [
+        0,
+        1000,
+        200
+      ],
+      "expected": 0
+    },
+    {
+      "name": "calculateScrollRatio #2 (from FrankMD vitest suite)",
+      "fn": "calculateScrollRatio",
+      "input": [
+        800,
+        1000,
+        200
+      ],
+      "expected": 1
+    },
+    {
+      "name": "calculateScrollRatio #3 (from FrankMD vitest suite)",
+      "fn": "calculateScrollRatio",
+      "input": [
+        -100,
+        1000,
+        200
+      ],
+      "expected": 0
+    },
+    {
+      "name": "calculateScrollRatio #4 (from FrankMD vitest suite)",
+      "fn": "calculateScrollRatio",
+      "input": [
+        0,
+        100,
+        200
+      ],
+      "expected": 0
+    },
+    {
+      "name": "calculateScrollRatio #5 (from FrankMD vitest suite)",
+      "fn": "calculateScrollRatio",
+      "input": [
+        400,
+        1000,
+        200
+      ],
+      "expected": 0.5
+    },
+    {
+      "name": "calculateScrollRatio #6 (from FrankMD vitest suite)",
+      "fn": "calculateScrollRatio",
+      "input": [
+        0,
+        200,
+        200
+      ],
+      "expected": 0
+    },
+    {
+      "name": "calculateScrollRatio #7 (from FrankMD vitest suite)",
+      "fn": "calculateScrollRatio",
+      "input": [
+        1000,
+        1000,
+        200
+      ],
+      "expected": 1
+    },
+    {
+      "name": "calculateScrollToCenterLine #1 (from FrankMD vitest suite)",
+      "fn": "calculateScrollToCenterLine",
+      "input": [
+        1,
+        0,
+        200,
+        200
+      ],
+      "expected": 0
+    },
+    {
+      "name": "calculateScrollToCenterLine #2 (from FrankMD vitest suite)",
+      "fn": "calculateScrollToCenterLine",
+      "input": [
+        1,
+        1,
+        200,
+        200
+      ],
+      "expected": 0
+    },
+    {
+      "name": "calculateScrollToCenterLine #3 (from FrankMD vitest suite)",
+      "fn": "calculateScrollToCenterLine",
+      "input": [
+        100,
+        100,
+        2000,
+        200
+      ],
+      "expected": 1800
+    },
+    {
+      "name": "calculateScrollToCenterLine #4 (from FrankMD vitest suite)",
+      "fn": "calculateScrollToCenterLine",
+      "input": [
+        1,
+        100,
+        2000,
+        200
+      ],
+      "expected": 0
+    },
+    {
+      "name": "calculateScrollToCenterLine #5 (from FrankMD vitest suite)",
+      "fn": "calculateScrollToCenterLine",
+      "input": [
+        50,
+        100,
+        2000,
+        200
+      ],
+      "expected": 890.909090909091
+    },
+    {
+      "name": "calculateSyncedScrollPosition #1 (from FrankMD vitest suite)",
+      "fn": "calculateSyncedScrollPosition",
+      "input": [
+        0.5,
+        1000,
+        200
+      ],
+      "expected": 400
+    },
+    {
+      "name": "calculateSyncedScrollPosition #2 (from FrankMD vitest suite)",
+      "fn": "calculateSyncedScrollPosition",
+      "input": [
+        0.5,
+        200,
+        200
+      ],
+      "expected": 0
+    },
+    {
+      "name": "calculateSyncedScrollPosition #3 (from FrankMD vitest suite)",
+      "fn": "calculateSyncedScrollPosition",
+      "input": [
+        1,
+        1000,
+        200
+      ],
+      "expected": 800
+    },
+    {
+      "name": "calculateSyncedScrollPosition #4 (from FrankMD vitest suite)",
+      "fn": "calculateSyncedScrollPosition",
+      "input": [
+        0.5,
+        100,
+        200
+      ],
+      "expected": 0
+    },
+    {
+      "name": "calculateSyncedScrollPosition #5 (from FrankMD vitest suite)",
+      "fn": "calculateSyncedScrollPosition",
+      "input": [
+        0,
+        1000,
+        200
+      ],
+      "expected": 0
+    },
+    {
+      "name": "lineAtScroll #1 (from FrankMD vitest suite)",
+      "fn": "lineAtScroll",
+      "input": [
+        [
+          {
+            "line": 1,
+            "top": 0
+          },
+          {
+            "line": 5,
+            "top": 100
+          },
+          {
+            "line": 10,
+            "top": 200
+          }
+        ],
+        150
+      ],
+      "expected": 5
+    },
+    {
+      "name": "lineAtScroll #2 (from FrankMD vitest suite)",
+      "fn": "lineAtScroll",
+      "input": [
+        [
+          {
+            "line": 1,
+            "top": 0
+          },
+          {
+            "line": 5,
+            "top": 100
+          },
+          {
+            "line": 10,
+            "top": 200
+          }
+        ],
+        100
+      ],
+      "expected": 5
+    },
+    {
+      "name": "lineAtScroll #3 (from FrankMD vitest suite)",
+      "fn": "lineAtScroll",
+      "input": [
+        [
+          {
+            "line": 1,
+            "top": 0
+          },
+          {
+            "line": 5,
+            "top": 100
+          },
+          {
+            "line": 10,
+            "top": 200
+          }
+        ],
+        0
+      ],
+      "expected": 1
+    },
+    {
+      "name": "lineAtScroll #4 (from FrankMD vitest suite)",
+      "fn": "lineAtScroll",
+      "input": [
+        [
+          {
+            "line": 1,
+            "top": 0
+          },
+          {
+            "line": 5,
+            "top": 100
+          },
+          {
+            "line": 10,
+            "top": 200
+          }
+        ],
+        999
+      ],
+      "expected": 10
+    },
+    {
+      "name": "lineAtScroll #5 (from FrankMD vitest suite)",
+      "fn": "lineAtScroll",
+      "input": [
+        [],
+        100
+      ],
+      "expected": null
+    },
+    {
+      "name": "lineAtScroll #6 (from FrankMD vitest suite)",
+      "fn": "lineAtScroll",
+      "input": [
+        [
+          {
+            "line": 1,
+            "top": 0
+          },
+          {
+            "line": 5,
+            "top": 100
+          },
+          {
+            "line": 10,
+            "top": 200
+          }
+        ],
+        500
+      ],
+      "expected": 10
+    },
+    {
+      "name": "lineAtScroll #7 (from FrankMD vitest suite)",
+      "fn": "lineAtScroll",
+      "input": [
+        [
+          {
+            "line": 2,
+            "top": 50
+          },
+          {
+            "line": 7,
+            "top": 50
+          }
+        ],
+        60
+      ],
+      "expected": 2
+    },
+    {
+      "name": "lineAtScroll #8 (from FrankMD vitest suite)",
+      "fn": "lineAtScroll",
+      "input": [
+        [
+          {
+            "line": 3,
+            "top": 50
+          },
+          {
+            "line": 8,
+            "top": 150
+          }
+        ],
+        10
+      ],
+      "expected": 3
+    },
+    {
+      "name": "lineAtScroll #9 (from FrankMD vitest suite)",
+      "fn": "lineAtScroll",
+      "input": [
+        null,
+        100
+      ],
+      "expected": null
+    },
+    {
+      "name": "lineAtScroll #10 (from FrankMD vitest suite)",
+      "fn": "lineAtScroll",
+      "input": [
+        [
+          {
+            "line": 1,
+            "top": 0
+          },
+          {
+            "line": 5,
+            "top": 100
+          },
+          {
+            "line": 10,
+            "top": 200
+          }
+        ],
+        -10
+      ],
+      "expected": 1
+    },
+    {
+      "name": "scrollTopForElement #1 (from FrankMD vitest suite)",
+      "fn": "scrollTopForElement",
+      "input": [
+        {
+          "top": 100,
+          "left": 0,
+          "right": 400,
+          "bottom": 120,
+          "width": 400,
+          "height": 20
+        },
+        {
+          "top": 0,
+          "left": 0,
+          "right": 400,
+          "bottom": 500,
+          "width": 400,
+          "height": 500
+        },
+        0
+      ],
+      "expected": 100
+    },
+    {
+      "name": "scrollTopForElement #2 (from FrankMD vitest suite)",
+      "fn": "scrollTopForElement",
+      "input": [
+        {
+          "top": -50
+        },
+        {
+          "top": 50
+        },
+        100
+      ],
+      "expected": 0
+    },
+    {
+      "name": "scrollTopForElement #3 (from FrankMD vitest suite)",
+      "fn": "scrollTopForElement",
+      "input": [
+        {
+          "top": 400,
+          "height": 60
+        },
+        {
+          "top": 100
+        },
+        80
+      ],
+      "expected": 380
+    },
+    {
+      "name": "scrollTopForElement #4 (from FrankMD vitest suite)",
+      "fn": "scrollTopForElement",
+      "input": [
+        {
+          "x": 0,
+          "y": 0,
+          "bottom": 0,
+          "height": 0,
+          "left": 0,
+          "right": 0,
+          "top": 0,
+          "width": 0
+        },
+        {
+          "x": 0,
+          "y": 0,
+          "bottom": 0,
+          "height": 0,
+          "left": 0,
+          "right": 0,
+          "top": 0,
+          "width": 0
+        },
+        0
+      ],
+      "expected": 0
+    },
+    {
+      "name": "scrollTopForElement #5 (from FrankMD vitest suite)",
+      "fn": "scrollTopForElement",
+      "input": [
+        {
+          "top": 150
+        },
+        {
+          "top": 50
+        },
+        200
+      ],
+      "expected": 300
+    },
+    {
+      "name": "scrollTopForElement #6 (from FrankMD vitest suite)",
+      "fn": "scrollTopForElement",
+      "input": [
+        {
+          "top": 0,
+          "left": 0,
+          "right": 400,
+          "bottom": 20,
+          "width": 400,
+          "height": 20
+        },
+        {
+          "top": 0,
+          "left": 0,
+          "right": 400,
+          "bottom": 500,
+          "width": 400,
+          "height": 500
+        },
+        0
+      ],
+      "expected": 0
+    },
+    {
+      "name": "scrollTopForElement #7 (from FrankMD vitest suite)",
+      "fn": "scrollTopForElement",
+      "input": [
+        {
+          "top": 5150
+        },
+        {
+          "top": 5050
+        },
+        200
+      ],
+      "expected": 300
+    },
+    {
+      "name": "scrollTopForElement #8 (from FrankMD vitest suite)",
+      "fn": "scrollTopForElement",
+      "input": [
+        {
+          "top": 5100,
+          "left": 0,
+          "right": 400,
+          "bottom": 5120,
+          "width": 400,
+          "height": 20
+        },
+        {
+          "top": 5000,
+          "left": 0,
+          "right": 400,
+          "bottom": 5500,
+          "width": 400,
+          "height": 500
+        },
+        0
+      ],
+      "expected": 100
+    },
+    {
+      "name": "calculateScrollRatio #8 (edge corpus)",
+      "fn": "calculateScrollRatio",
+      "input": [
+        0,
+        1000,
+        500
+      ],
+      "expected": 0
+    },
+    {
+      "name": "calculateScrollRatio #9 (edge corpus)",
+      "fn": "calculateScrollRatio",
+      "input": [
+        250,
+        1000,
+        500
+      ],
+      "expected": 0.5
+    },
+    {
+      "name": "calculateScrollRatio #10 (edge corpus)",
+      "fn": "calculateScrollRatio",
+      "input": [
+        500,
+        1000,
+        500
+      ],
+      "expected": 1
+    },
+    {
+      "name": "calculateScrollRatio #11 (edge corpus)",
+      "fn": "calculateScrollRatio",
+      "input": [
+        600,
+        1000,
+        500
+      ],
+      "expected": 1
+    },
+    {
+      "name": "calculateScrollRatio #12 (edge corpus)",
+      "fn": "calculateScrollRatio",
+      "input": [
+        -10,
+        1000,
+        500
+      ],
+      "expected": 0
+    },
+    {
+      "name": "calculateScrollRatio #13 (edge corpus)",
+      "fn": "calculateScrollRatio",
+      "input": [
+        0,
+        500,
+        500
+      ],
+      "expected": 0
+    },
+    {
+      "name": "calculateScrollRatio #14 (edge corpus)",
+      "fn": "calculateScrollRatio",
+      "input": [
+        10,
+        400,
+        500
+      ],
+      "expected": 0
+    },
+    {
+      "name": "calculateScrollRatio #15 (edge corpus)",
+      "fn": "calculateScrollRatio",
+      "input": [
+        1.5,
+        3,
+        1
+      ],
+      "expected": 0.75
+    },
+    {
+      "name": "calculateScrollForLine #6 (edge corpus)",
+      "fn": "calculateScrollForLine",
+      "input": [
+        1,
+        20,
+        600
+      ],
+      "expected": 0
+    },
+    {
+      "name": "calculateScrollForLine #7 (edge corpus)",
+      "fn": "calculateScrollForLine",
+      "input": [
+        10,
+        20,
+        600
+      ],
+      "expected": 0
+    },
+    {
+      "name": "calculateScrollForLine #8 (edge corpus)",
+      "fn": "calculateScrollForLine",
+      "input": [
+        100,
+        20,
+        600
+      ],
+      "expected": 1770
+    },
+    {
+      "name": "calculateScrollForLine #9 (edge corpus)",
+      "fn": "calculateScrollForLine",
+      "input": [
+        100,
+        20,
+        600,
+        0
+      ],
+      "expected": 1980
+    },
+    {
+      "name": "calculateScrollForLine #10 (edge corpus)",
+      "fn": "calculateScrollForLine",
+      "input": [
+        100,
+        20,
+        600,
+        1
+      ],
+      "expected": 1380
+    },
+    {
+      "name": "calculateScrollForLine #11 (edge corpus)",
+      "fn": "calculateScrollForLine",
+      "input": [
+        0,
+        20,
+        600
+      ],
+      "expected": 0
+    },
+    {
+      "name": "calculateScrollForLine #12 (edge corpus)",
+      "fn": "calculateScrollForLine",
+      "input": [
+        50,
+        18.5,
+        333.3,
+        0.5
+      ],
+      "expected": 739.85
+    },
+    {
+      "name": "calculateLineFromScroll #5 (edge corpus)",
+      "fn": "calculateLineFromScroll",
+      "input": [
+        0,
+        500,
+        1000,
+        100
+      ],
+      "expected": 25
+    },
+    {
+      "name": "calculateLineFromScroll #6 (edge corpus)",
+      "fn": "calculateLineFromScroll",
+      "input": [
+        250,
+        500,
+        1000,
+        100
+      ],
+      "expected": 50
+    },
+    {
+      "name": "calculateLineFromScroll #7 (edge corpus)",
+      "fn": "calculateLineFromScroll",
+      "input": [
+        500,
+        500,
+        1000,
+        100
+      ],
+      "expected": 75
+    },
+    {
+      "name": "calculateLineFromScroll #8 (edge corpus)",
+      "fn": "calculateLineFromScroll",
+      "input": [
+        9999,
+        500,
+        1000,
+        100
+      ],
+      "expected": 100
+    },
+    {
+      "name": "calculateLineFromScroll #9 (edge corpus)",
+      "fn": "calculateLineFromScroll",
+      "input": [
+        0,
+        500,
+        1000,
+        0
+      ],
+      "expected": 1
+    },
+    {
+      "name": "calculateLineFromScroll #10 (edge corpus)",
+      "fn": "calculateLineFromScroll",
+      "input": [
+        0,
+        500,
+        1000,
+        -5
+      ],
+      "expected": 1
+    },
+    {
+      "name": "calculateLineFromScroll #11 (edge corpus)",
+      "fn": "calculateLineFromScroll",
+      "input": [
+        0,
+        0,
+        0,
+        10
+      ],
+      "expected": {
+        "$number": "NaN"
+      }
+    },
+    {
+      "name": "calculateLineFromScroll #12 (edge corpus)",
+      "fn": "calculateLineFromScroll",
+      "input": [
+        10,
+        100,
+        1000,
+        1
+      ],
+      "expected": 1
+    },
+    {
+      "name": "calculateSyncedScrollPosition #6 (edge corpus)",
+      "fn": "calculateSyncedScrollPosition",
+      "input": [
+        0,
+        1000,
+        500
+      ],
+      "expected": 0
+    },
+    {
+      "name": "calculateSyncedScrollPosition #7 (edge corpus)",
+      "fn": "calculateSyncedScrollPosition",
+      "input": [
+        0.5,
+        1000,
+        500
+      ],
+      "expected": 250
+    },
+    {
+      "name": "calculateSyncedScrollPosition #8 (edge corpus)",
+      "fn": "calculateSyncedScrollPosition",
+      "input": [
+        1,
+        1000,
+        500
+      ],
+      "expected": 500
+    },
+    {
+      "name": "calculateSyncedScrollPosition #9 (edge corpus)",
+      "fn": "calculateSyncedScrollPosition",
+      "input": [
+        1.5,
+        1000,
+        500
+      ],
+      "expected": 750
+    },
+    {
+      "name": "calculateSyncedScrollPosition #10 (edge corpus)",
+      "fn": "calculateSyncedScrollPosition",
+      "input": [
+        -0.5,
+        1000,
+        500
+      ],
+      "expected": 0
+    },
+    {
+      "name": "calculateSyncedScrollPosition #11 (edge corpus)",
+      "fn": "calculateSyncedScrollPosition",
+      "input": [
+        0.5,
+        500,
+        500
+      ],
+      "expected": 0
+    },
+    {
+      "name": "calculateSyncedScrollPosition #12 (edge corpus)",
+      "fn": "calculateSyncedScrollPosition",
+      "input": [
+        0.5,
+        400,
+        500
+      ],
+      "expected": 0
+    },
+    {
+      "name": "calculateScrollToCenterLine #6 (edge corpus)",
+      "fn": "calculateScrollToCenterLine",
+      "input": [
+        1,
+        100,
+        2000,
+        500
+      ],
+      "expected": 0
+    },
+    {
+      "name": "calculateScrollToCenterLine #7 (edge corpus)",
+      "fn": "calculateScrollToCenterLine",
+      "input": [
+        50,
+        100,
+        2000,
+        500
+      ],
+      "expected": 742.4242424242425
+    },
+    {
+      "name": "calculateScrollToCenterLine #8 (edge corpus)",
+      "fn": "calculateScrollToCenterLine",
+      "input": [
+        100,
+        100,
+        2000,
+        500
+      ],
+      "expected": 1500
+    },
+    {
+      "name": "calculateScrollToCenterLine #9 (edge corpus)",
+      "fn": "calculateScrollToCenterLine",
+      "input": [
+        200,
+        100,
+        2000,
+        500
+      ],
+      "expected": 3015.151515151515
+    },
+    {
+      "name": "calculateScrollToCenterLine #10 (edge corpus)",
+      "fn": "calculateScrollToCenterLine",
+      "input": [
+        0,
+        100,
+        2000,
+        500
+      ],
+      "expected": 0
+    },
+    {
+      "name": "calculateScrollToCenterLine #11 (edge corpus)",
+      "fn": "calculateScrollToCenterLine",
+      "input": [
+        1,
+        1,
+        2000,
+        500
+      ],
+      "expected": 0
+    },
+    {
+      "name": "calculateScrollToCenterLine #12 (edge corpus)",
+      "fn": "calculateScrollToCenterLine",
+      "input": [
+        5,
+        0,
+        2000,
+        500
+      ],
+      "expected": 0
+    },
+    {
+      "name": "calculateScrollToCenterLine #13 (edge corpus)",
+      "fn": "calculateScrollToCenterLine",
+      "input": [
+        5,
+        10,
+        500,
+        500
+      ],
+      "expected": 0
+    },
+    {
+      "name": "scrollTopForElement #9 (edge corpus)",
+      "fn": "scrollTopForElement",
+      "input": [
+        {
+          "top": 500
+        },
+        {
+          "top": 100
+        },
+        0
+      ],
+      "expected": 400
+    },
+    {
+      "name": "scrollTopForElement #10 (edge corpus)",
+      "fn": "scrollTopForElement",
+      "input": [
+        {
+          "top": 50
+        },
+        {
+          "top": 100
+        },
+        300
+      ],
+      "expected": 250
+    },
+    {
+      "name": "scrollTopForElement #11 (edge corpus)",
+      "fn": "scrollTopForElement",
+      "input": [
+        {
+          "top": 10.5
+        },
+        {
+          "top": 0.25
+        },
+        7.75
+      ],
+      "expected": 18
+    },
+    {
+      "name": "lineAtScroll #11 (edge corpus)",
+      "fn": "lineAtScroll",
+      "input": [
+        [
+          {
+            "line": 1,
+            "top": 0
+          },
+          {
+            "line": 5,
+            "top": 100
+          },
+          {
+            "line": 9,
+            "top": 250
+          },
+          {
+            "line": 7,
+            "top": 180
+          },
+          {
+            "line": 12,
+            "top": 250
+          }
+        ],
+        -10
+      ],
+      "expected": 1
+    },
+    {
+      "name": "lineAtScroll #12 (edge corpus)",
+      "fn": "lineAtScroll",
+      "input": [
+        [
+          {
+            "line": 1,
+            "top": 0
+          },
+          {
+            "line": 5,
+            "top": 100
+          },
+          {
+            "line": 9,
+            "top": 250
+          },
+          {
+            "line": 7,
+            "top": 180
+          },
+          {
+            "line": 12,
+            "top": 250
+          }
+        ],
+        0
+      ],
+      "expected": 1
+    },
+    {
+      "name": "lineAtScroll #13 (edge corpus)",
+      "fn": "lineAtScroll",
+      "input": [
+        [
+          {
+            "line": 1,
+            "top": 0
+          },
+          {
+            "line": 5,
+            "top": 100
+          },
+          {
+            "line": 9,
+            "top": 250
+          },
+          {
+            "line": 7,
+            "top": 180
+          },
+          {
+            "line": 12,
+            "top": 250
+          }
+        ],
+        50
+      ],
+      "expected": 1
+    },
+    {
+      "name": "lineAtScroll #14 (edge corpus)",
+      "fn": "lineAtScroll",
+      "input": [
+        [
+          {
+            "line": 1,
+            "top": 0
+          },
+          {
+            "line": 5,
+            "top": 100
+          },
+          {
+            "line": 9,
+            "top": 250
+          },
+          {
+            "line": 7,
+            "top": 180
+          },
+          {
+            "line": 12,
+            "top": 250
+          }
+        ],
+        100
+      ],
+      "expected": 5
+    },
+    {
+      "name": "lineAtScroll #15 (edge corpus)",
+      "fn": "lineAtScroll",
+      "input": [
+        [
+          {
+            "line": 1,
+            "top": 0
+          },
+          {
+            "line": 5,
+            "top": 100
+          },
+          {
+            "line": 9,
+            "top": 250
+          },
+          {
+            "line": 7,
+            "top": 180
+          },
+          {
+            "line": 12,
+            "top": 250
+          }
+        ],
+        199
+      ],
+      "expected": 7
+    },
+    {
+      "name": "lineAtScroll #16 (edge corpus)",
+      "fn": "lineAtScroll",
+      "input": [
+        [
+          {
+            "line": 1,
+            "top": 0
+          },
+          {
+            "line": 5,
+            "top": 100
+          },
+          {
+            "line": 9,
+            "top": 250
+          },
+          {
+            "line": 7,
+            "top": 180
+          },
+          {
+            "line": 12,
+            "top": 250
+          }
+        ],
+        250
+      ],
+      "expected": 9
+    },
+    {
+      "name": "lineAtScroll #17 (edge corpus)",
+      "fn": "lineAtScroll",
+      "input": [
+        [
+          {
+            "line": 1,
+            "top": 0
+          },
+          {
+            "line": 5,
+            "top": 100
+          },
+          {
+            "line": 9,
+            "top": 250
+          },
+          {
+            "line": 7,
+            "top": 180
+          },
+          {
+            "line": 12,
+            "top": 250
+          }
+        ],
+        9999
+      ],
+      "expected": 9
+    },
+    {
+      "name": "lineAtScroll #18 (edge corpus)",
+      "fn": "lineAtScroll",
+      "input": [
+        [],
+        0
+      ],
+      "expected": null
+    },
+    {
+      "name": "lineAtScroll #19 (edge corpus)",
+      "fn": "lineAtScroll",
+      "input": [
+        null,
+        0
+      ],
+      "expected": null
+    },
+    {
+      "name": "lineAtScroll #20 (edge corpus)",
+      "fn": "lineAtScroll",
+      "input": [
+        [
+          {
+            "line": 3,
+            "top": 50
+          }
+        ],
+        0
+      ],
+      "expected": 3
+    }
+  ]
+}

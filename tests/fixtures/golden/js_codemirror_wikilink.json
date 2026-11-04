@@ -1,0 +1,2339 @@
+{
+  "source": "app/javascript/lib/codemirror_wikilink.js @ d47a89e92d89f807878d318182fa5dcea0329ec4",
+  "frankmd_sha": "d47a89e92d89f807878d318182fa5dcea0329ec4",
+  "generator": "tools/golden/js/ui_data.mjs",
+  "notes": "wikilinkCompletions (module-private) is taken from the autocompletion({override}) config of createWikilinkAutocomplete() and called with {state: EditorState.create({doc}), pos}. Option order is the file-provider order (sorting by boost is CodeMirror's job). apply = the transaction spec dispatched by option.apply(view, completion, from, to=pos): inserts '<path without .md>]]'. '<null provider>' = setWikilinkFileProvider(null). Only paths ending in lowercase '.md' are offered.",
+  "cases": [
+    {
+      "name": "complete \"[[\" @end",
+      "fn": "wikilinkCompletions",
+      "input": {
+        "doc": "[[",
+        "pos": 2,
+        "files": [
+          {
+            "path": "Note.md",
+            "name": "Note"
+          },
+          {
+            "path": "projects/My Note.md"
+          },
+          {
+            "path": "projects/notes/deep.md",
+            "name": "Deep Custom"
+          },
+          {
+            "path": "image.png"
+          },
+          {
+            "path": "Ação 日本.md"
+          },
+          {
+            "path": "README.MD"
+          },
+          {
+            "name": "no path"
+          },
+          {
+            "path": "folder/"
+          },
+          {
+            "path": ".hidden.md"
+          },
+          {
+            "path": "a/b/c/My Note.md"
+          },
+          {
+            "path": "notebook.md"
+          },
+          {
+            "path": "x.md.md"
+          }
+        ]
+      },
+      "expected": {
+        "from": 2,
+        "filter": false,
+        "options": [
+          {
+            "label": "Note",
+            "detail": {
+              "$undefined": true
+            },
+            "boost": 1,
+            "apply": {
+              "changes": {
+                "from": 2,
+                "to": 2,
+                "insert": "Note]]"
+              },
+              "selection": {
+                "anchor": 8
+              }
+            }
+          },
+          {
+            "label": "My Note",
+            "detail": "projects/My Note",
+            "boost": 1,
+            "apply": {
+              "changes": {
+                "from": 2,
+                "to": 2,
+                "insert": "projects/My Note]]"
+              },
+              "selection": {
+                "anchor": 20
+              }
+            }
+          },
+          {
+            "label": "Deep Custom",
+            "detail": "projects/notes/deep",
+            "boost": 1,
+            "apply": {
+              "changes": {
+                "from": 2,
+                "to": 2,
+                "insert": "projects/notes/deep]]"
+              },
+              "selection": {
+                "anchor": 23
+              }
+            }
+          },
+          {
+            "label": "Ação 日本",
+            "detail": {
+              "$undefined": true
+            },
+            "boost": 1,
+            "apply": {
+              "changes": {
+                "from": 2,
+                "to": 2,
+                "insert": "Ação 日本]]"
+              },
+              "selection": {
+                "anchor": 11
+              }
+            }
+          },
+          {
+            "label": ".hidden",
+            "detail": {
+              "$undefined": true
+            },
+            "boost": 1,
+            "apply": {
+              "changes": {
+                "from": 2,
+                "to": 2,
+                "insert": ".hidden]]"
+              },
+              "selection": {
+                "anchor": 11
+              }
+            }
+          },
+          {
+            "label": "My Note",
+            "detail": "a/b/c/My Note",
+            "boost": 1,
+            "apply": {
+              "changes": {
+                "from": 2,
+                "to": 2,
+                "insert": "a/b/c/My Note]]"
+              },
+              "selection": {
+                "anchor": 17
+              }
+            }
+          },
+          {
+            "label": "notebook",
+            "detail": {
+              "$undefined": true
+            },
+            "boost": 1,
+            "apply": {
+              "changes": {
+                "from": 2,
+                "to": 2,
+                "insert": "notebook]]"
+              },
+              "selection": {
+                "anchor": 12
+              }
+            }
+          },
+          {
+            "label": "x.md",
+            "detail": {
+              "$undefined": true
+            },
+            "boost": 1,
+            "apply": {
+              "changes": {
+                "from": 2,
+                "to": 2,
+                "insert": "x.md]]"
+              },
+              "selection": {
+                "anchor": 8
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "complete \"[[no\" @end",
+      "fn": "wikilinkCompletions",
+      "input": {
+        "doc": "[[no",
+        "pos": 4,
+        "files": [
+          {
+            "path": "Note.md",
+            "name": "Note"
+          },
+          {
+            "path": "projects/My Note.md"
+          },
+          {
+            "path": "projects/notes/deep.md",
+            "name": "Deep Custom"
+          },
+          {
+            "path": "image.png"
+          },
+          {
+            "path": "Ação 日本.md"
+          },
+          {
+            "path": "README.MD"
+          },
+          {
+            "name": "no path"
+          },
+          {
+            "path": "folder/"
+          },
+          {
+            "path": ".hidden.md"
+          },
+          {
+            "path": "a/b/c/My Note.md"
+          },
+          {
+            "path": "notebook.md"
+          },
+          {
+            "path": "x.md.md"
+          }
+        ]
+      },
+      "expected": {
+        "from": 2,
+        "filter": false,
+        "options": [
+          {
+            "label": "Note",
+            "detail": {
+              "$undefined": true
+            },
+            "boost": 3,
+            "apply": {
+              "changes": {
+                "from": 2,
+                "to": 4,
+                "insert": "Note]]"
+              },
+              "selection": {
+                "anchor": 8
+              }
+            }
+          },
+          {
+            "label": "My Note",
+            "detail": "projects/My Note",
+            "boost": 2,
+            "apply": {
+              "changes": {
+                "from": 2,
+                "to": 4,
+                "insert": "projects/My Note]]"
+              },
+              "selection": {
+                "anchor": 20
+              }
+            }
+          },
+          {
+            "label": "Deep Custom",
+            "detail": "projects/notes/deep",
+            "boost": 1,
+            "apply": {
+              "changes": {
+                "from": 2,
+                "to": 4,
+                "insert": "projects/notes/deep]]"
+              },
+              "selection": {
+                "anchor": 23
+              }
+            }
+          },
+          {
+            "label": "My Note",
+            "detail": "a/b/c/My Note",
+            "boost": 2,
+            "apply": {
+              "changes": {
+                "from": 2,
+                "to": 4,
+                "insert": "a/b/c/My Note]]"
+              },
+              "selection": {
+                "anchor": 17
+              }
+            }
+          },
+          {
+            "label": "notebook",
+            "detail": {
+              "$undefined": true
+            },
+            "boost": 3,
+            "apply": {
+              "changes": {
+                "from": 2,
+                "to": 4,
+                "insert": "notebook]]"
+              },
+              "selection": {
+                "anchor": 12
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "complete \"[[note\" @end",
+      "fn": "wikilinkCompletions",
+      "input": {
+        "doc": "[[note",
+        "pos": 6,
+        "files": [
+          {
+            "path": "Note.md",
+            "name": "Note"
+          },
+          {
+            "path": "projects/My Note.md"
+          },
+          {
+            "path": "projects/notes/deep.md",
+            "name": "Deep Custom"
+          },
+          {
+            "path": "image.png"
+          },
+          {
+            "path": "Ação 日本.md"
+          },
+          {
+            "path": "README.MD"
+          },
+          {
+            "name": "no path"
+          },
+          {
+            "path": "folder/"
+          },
+          {
+            "path": ".hidden.md"
+          },
+          {
+            "path": "a/b/c/My Note.md"
+          },
+          {
+            "path": "notebook.md"
+          },
+          {
+            "path": "x.md.md"
+          }
+        ]
+      },
+      "expected": {
+        "from": 2,
+        "filter": false,
+        "options": [
+          {
+            "label": "Note",
+            "detail": {
+              "$undefined": true
+            },
+            "boost": 3,
+            "apply": {
+              "changes": {
+                "from": 2,
+                "to": 6,
+                "insert": "Note]]"
+              },
+              "selection": {
+                "anchor": 8
+              }
+            }
+          },
+          {
+            "label": "My Note",
+            "detail": "projects/My Note",
+            "boost": 2,
+            "apply": {
+              "changes": {
+                "from": 2,
+                "to": 6,
+                "insert": "projects/My Note]]"
+              },
+              "selection": {
+                "anchor": 20
+              }
+            }
+          },
+          {
+            "label": "Deep Custom",
+            "detail": "projects/notes/deep",
+            "boost": 1,
+            "apply": {
+              "changes": {
+                "from": 2,
+                "to": 6,
+                "insert": "projects/notes/deep]]"
+              },
+              "selection": {
+                "anchor": 23
+              }
+            }
+          },
+          {
+            "label": "My Note",
+            "detail": "a/b/c/My Note",
+            "boost": 2,
+            "apply": {
+              "changes": {
+                "from": 2,
+                "to": 6,
+                "insert": "a/b/c/My Note]]"
+              },
+              "selection": {
+                "anchor": 17
+              }
+            }
+          },
+          {
+            "label": "notebook",
+            "detail": {
+              "$undefined": true
+            },
+            "boost": 3,
+            "apply": {
+              "changes": {
+                "from": 2,
+                "to": 6,
+                "insert": "notebook]]"
+              },
+              "selection": {
+                "anchor": 12
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "complete \"[[NOTE\" @end",
+      "fn": "wikilinkCompletions",
+      "input": {
+        "doc": "[[NOTE",
+        "pos": 6,
+        "files": [
+          {
+            "path": "Note.md",
+            "name": "Note"
+          },
+          {
+            "path": "projects/My Note.md"
+          },
+          {
+            "path": "projects/notes/deep.md",
+            "name": "Deep Custom"
+          },
+          {
+            "path": "image.png"
+          },
+          {
+            "path": "Ação 日本.md"
+          },
+          {
+            "path": "README.MD"
+          },
+          {
+            "name": "no path"
+          },
+          {
+            "path": "folder/"
+          },
+          {
+            "path": ".hidden.md"
+          },
+          {
+            "path": "a/b/c/My Note.md"
+          },
+          {
+            "path": "notebook.md"
+          },
+          {
+            "path": "x.md.md"
+          }
+        ]
+      },
+      "expected": {
+        "from": 2,
+        "filter": false,
+        "options": [
+          {
+            "label": "Note",
+            "detail": {
+              "$undefined": true
+            },
+            "boost": 3,
+            "apply": {
+              "changes": {
+                "from": 2,
+                "to": 6,
+                "insert": "Note]]"
+              },
+              "selection": {
+                "anchor": 8
+              }
+            }
+          },
+          {
+            "label": "My Note",
+            "detail": "projects/My Note",
+            "boost": 2,
+            "apply": {
+              "changes": {
+                "from": 2,
+                "to": 6,
+                "insert": "projects/My Note]]"
+              },
+              "selection": {
+                "anchor": 20
+              }
+            }
+          },
+          {
+            "label": "Deep Custom",
+            "detail": "projects/notes/deep",
+            "boost": 1,
+            "apply": {
+              "changes": {
+                "from": 2,
+                "to": 6,
+                "insert": "projects/notes/deep]]"
+              },
+              "selection": {
+                "anchor": 23
+              }
+            }
+          },
+          {
+            "label": "My Note",
+            "detail": "a/b/c/My Note",
+            "boost": 2,
+            "apply": {
+              "changes": {
+                "from": 2,
+                "to": 6,
+                "insert": "a/b/c/My Note]]"
+              },
+              "selection": {
+                "anchor": 17
+              }
+            }
+          },
+          {
+            "label": "notebook",
+            "detail": {
+              "$undefined": true
+            },
+            "boost": 3,
+            "apply": {
+              "changes": {
+                "from": 2,
+                "to": 6,
+                "insert": "notebook]]"
+              },
+              "selection": {
+                "anchor": 12
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "complete \"[[proj\" @end",
+      "fn": "wikilinkCompletions",
+      "input": {
+        "doc": "[[proj",
+        "pos": 6,
+        "files": [
+          {
+            "path": "Note.md",
+            "name": "Note"
+          },
+          {
+            "path": "projects/My Note.md"
+          },
+          {
+            "path": "projects/notes/deep.md",
+            "name": "Deep Custom"
+          },
+          {
+            "path": "image.png"
+          },
+          {
+            "path": "Ação 日本.md"
+          },
+          {
+            "path": "README.MD"
+          },
+          {
+            "name": "no path"
+          },
+          {
+            "path": "folder/"
+          },
+          {
+            "path": ".hidden.md"
+          },
+          {
+            "path": "a/b/c/My Note.md"
+          },
+          {
+            "path": "notebook.md"
+          },
+          {
+            "path": "x.md.md"
+          }
+        ]
+      },
+      "expected": {
+        "from": 2,
+        "filter": false,
+        "options": [
+          {
+            "label": "My Note",
+            "detail": "projects/My Note",
+            "boost": 1,
+            "apply": {
+              "changes": {
+                "from": 2,
+                "to": 6,
+                "insert": "projects/My Note]]"
+              },
+              "selection": {
+                "anchor": 20
+              }
+            }
+          },
+          {
+            "label": "Deep Custom",
+            "detail": "projects/notes/deep",
+            "boost": 1,
+            "apply": {
+              "changes": {
+                "from": 2,
+                "to": 6,
+                "insert": "projects/notes/deep]]"
+              },
+              "selection": {
+                "anchor": 23
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "complete \"[[deep\" @end",
+      "fn": "wikilinkCompletions",
+      "input": {
+        "doc": "[[deep",
+        "pos": 6,
+        "files": [
+          {
+            "path": "Note.md",
+            "name": "Note"
+          },
+          {
+            "path": "projects/My Note.md"
+          },
+          {
+            "path": "projects/notes/deep.md",
+            "name": "Deep Custom"
+          },
+          {
+            "path": "image.png"
+          },
+          {
+            "path": "Ação 日本.md"
+          },
+          {
+            "path": "README.MD"
+          },
+          {
+            "name": "no path"
+          },
+          {
+            "path": "folder/"
+          },
+          {
+            "path": ".hidden.md"
+          },
+          {
+            "path": "a/b/c/My Note.md"
+          },
+          {
+            "path": "notebook.md"
+          },
+          {
+            "path": "x.md.md"
+          }
+        ]
+      },
+      "expected": {
+        "from": 2,
+        "filter": false,
+        "options": [
+          {
+            "label": "Deep Custom",
+            "detail": "projects/notes/deep",
+            "boost": 3,
+            "apply": {
+              "changes": {
+                "from": 2,
+                "to": 6,
+                "insert": "projects/notes/deep]]"
+              },
+              "selection": {
+                "anchor": 23
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "complete \"[[my\" @end",
+      "fn": "wikilinkCompletions",
+      "input": {
+        "doc": "[[my",
+        "pos": 4,
+        "files": [
+          {
+            "path": "Note.md",
+            "name": "Note"
+          },
+          {
+            "path": "projects/My Note.md"
+          },
+          {
+            "path": "projects/notes/deep.md",
+            "name": "Deep Custom"
+          },
+          {
+            "path": "image.png"
+          },
+          {
+            "path": "Ação 日本.md"
+          },
+          {
+            "path": "README.MD"
+          },
+          {
+            "name": "no path"
+          },
+          {
+            "path": "folder/"
+          },
+          {
+            "path": ".hidden.md"
+          },
+          {
+            "path": "a/b/c/My Note.md"
+          },
+          {
+            "path": "notebook.md"
+          },
+          {
+            "path": "x.md.md"
+          }
+        ]
+      },
+      "expected": {
+        "from": 2,
+        "filter": false,
+        "options": [
+          {
+            "label": "My Note",
+            "detail": "projects/My Note",
+            "boost": 3,
+            "apply": {
+              "changes": {
+                "from": 2,
+                "to": 4,
+                "insert": "projects/My Note]]"
+              },
+              "selection": {
+                "anchor": 20
+              }
+            }
+          },
+          {
+            "label": "My Note",
+            "detail": "a/b/c/My Note",
+            "boost": 3,
+            "apply": {
+              "changes": {
+                "from": 2,
+                "to": 4,
+                "insert": "a/b/c/My Note]]"
+              },
+              "selection": {
+                "anchor": 17
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "complete \"[[ação\" @end",
+      "fn": "wikilinkCompletions",
+      "input": {
+        "doc": "[[ação",
+        "pos": 6,
+        "files": [
+          {
+            "path": "Note.md",
+            "name": "Note"
+          },
+          {
+            "path": "projects/My Note.md"
+          },
+          {
+            "path": "projects/notes/deep.md",
+            "name": "Deep Custom"
+          },
+          {
+            "path": "image.png"
+          },
+          {
+            "path": "Ação 日本.md"
+          },
+          {
+            "path": "README.MD"
+          },
+          {
+            "name": "no path"
+          },
+          {
+            "path": "folder/"
+          },
+          {
+            "path": ".hidden.md"
+          },
+          {
+            "path": "a/b/c/My Note.md"
+          },
+          {
+            "path": "notebook.md"
+          },
+          {
+            "path": "x.md.md"
+          }
+        ]
+      },
+      "expected": {
+        "from": 2,
+        "filter": false,
+        "options": [
+          {
+            "label": "Ação 日本",
+            "detail": {
+              "$undefined": true
+            },
+            "boost": 3,
+            "apply": {
+              "changes": {
+                "from": 2,
+                "to": 6,
+                "insert": "Ação 日本]]"
+              },
+              "selection": {
+                "anchor": 11
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "complete \"[[zzz\" @end",
+      "fn": "wikilinkCompletions",
+      "input": {
+        "doc": "[[zzz",
+        "pos": 5,
+        "files": [
+          {
+            "path": "Note.md",
+            "name": "Note"
+          },
+          {
+            "path": "projects/My Note.md"
+          },
+          {
+            "path": "projects/notes/deep.md",
+            "name": "Deep Custom"
+          },
+          {
+            "path": "image.png"
+          },
+          {
+            "path": "Ação 日本.md"
+          },
+          {
+            "path": "README.MD"
+          },
+          {
+            "name": "no path"
+          },
+          {
+            "path": "folder/"
+          },
+          {
+            "path": ".hidden.md"
+          },
+          {
+            "path": "a/b/c/My Note.md"
+          },
+          {
+            "path": "notebook.md"
+          },
+          {
+            "path": "x.md.md"
+          }
+        ]
+      },
+      "expected": null
+    },
+    {
+      "name": "complete \"no link\" @end",
+      "fn": "wikilinkCompletions",
+      "input": {
+        "doc": "no link",
+        "pos": 7,
+        "files": [
+          {
+            "path": "Note.md",
+            "name": "Note"
+          },
+          {
+            "path": "projects/My Note.md"
+          },
+          {
+            "path": "projects/notes/deep.md",
+            "name": "Deep Custom"
+          },
+          {
+            "path": "image.png"
+          },
+          {
+            "path": "Ação 日本.md"
+          },
+          {
+            "path": "README.MD"
+          },
+          {
+            "name": "no path"
+          },
+          {
+            "path": "folder/"
+          },
+          {
+            "path": ".hidden.md"
+          },
+          {
+            "path": "a/b/c/My Note.md"
+          },
+          {
+            "path": "notebook.md"
+          },
+          {
+            "path": "x.md.md"
+          }
+        ]
+      },
+      "expected": null
+    },
+    {
+      "name": "complete \"[[done]] \" @end",
+      "fn": "wikilinkCompletions",
+      "input": {
+        "doc": "[[done]] ",
+        "pos": 9,
+        "files": [
+          {
+            "path": "Note.md",
+            "name": "Note"
+          },
+          {
+            "path": "projects/My Note.md"
+          },
+          {
+            "path": "projects/notes/deep.md",
+            "name": "Deep Custom"
+          },
+          {
+            "path": "image.png"
+          },
+          {
+            "path": "Ação 日本.md"
+          },
+          {
+            "path": "README.MD"
+          },
+          {
+            "name": "no path"
+          },
+          {
+            "path": "folder/"
+          },
+          {
+            "path": ".hidden.md"
+          },
+          {
+            "path": "a/b/c/My Note.md"
+          },
+          {
+            "path": "notebook.md"
+          },
+          {
+            "path": "x.md.md"
+          }
+        ]
+      },
+      "expected": null
+    },
+    {
+      "name": "complete \"[[a]] [[not\" @end",
+      "fn": "wikilinkCompletions",
+      "input": {
+        "doc": "[[a]] [[not",
+        "pos": 11,
+        "files": [
+          {
+            "path": "Note.md",
+            "name": "Note"
+          },
+          {
+            "path": "projects/My Note.md"
+          },
+          {
+            "path": "projects/notes/deep.md",
+            "name": "Deep Custom"
+          },
+          {
+            "path": "image.png"
+          },
+          {
+            "path": "Ação 日本.md"
+          },
+          {
+            "path": "README.MD"
+          },
+          {
+            "name": "no path"
+          },
+          {
+            "path": "folder/"
+          },
+          {
+            "path": ".hidden.md"
+          },
+          {
+            "path": "a/b/c/My Note.md"
+          },
+          {
+            "path": "notebook.md"
+          },
+          {
+            "path": "x.md.md"
+          }
+        ]
+      },
+      "expected": {
+        "from": 8,
+        "filter": false,
+        "options": [
+          {
+            "label": "Note",
+            "detail": {
+              "$undefined": true
+            },
+            "boost": 3,
+            "apply": {
+              "changes": {
+                "from": 8,
+                "to": 11,
+                "insert": "Note]]"
+              },
+              "selection": {
+                "anchor": 14
+              }
+            }
+          },
+          {
+            "label": "My Note",
+            "detail": "projects/My Note",
+            "boost": 2,
+            "apply": {
+              "changes": {
+                "from": 8,
+                "to": 11,
+                "insert": "projects/My Note]]"
+              },
+              "selection": {
+                "anchor": 26
+              }
+            }
+          },
+          {
+            "label": "Deep Custom",
+            "detail": "projects/notes/deep",
+            "boost": 1,
+            "apply": {
+              "changes": {
+                "from": 8,
+                "to": 11,
+                "insert": "projects/notes/deep]]"
+              },
+              "selection": {
+                "anchor": 29
+              }
+            }
+          },
+          {
+            "label": "My Note",
+            "detail": "a/b/c/My Note",
+            "boost": 2,
+            "apply": {
+              "changes": {
+                "from": 8,
+                "to": 11,
+                "insert": "a/b/c/My Note]]"
+              },
+              "selection": {
+                "anchor": 23
+              }
+            }
+          },
+          {
+            "label": "notebook",
+            "detail": {
+              "$undefined": true
+            },
+            "boost": 3,
+            "apply": {
+              "changes": {
+                "from": 8,
+                "to": 11,
+                "insert": "notebook]]"
+              },
+              "selection": {
+                "anchor": 18
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "complete \"text [[\" @end",
+      "fn": "wikilinkCompletions",
+      "input": {
+        "doc": "text [[",
+        "pos": 7,
+        "files": [
+          {
+            "path": "Note.md",
+            "name": "Note"
+          },
+          {
+            "path": "projects/My Note.md"
+          },
+          {
+            "path": "projects/notes/deep.md",
+            "name": "Deep Custom"
+          },
+          {
+            "path": "image.png"
+          },
+          {
+            "path": "Ação 日本.md"
+          },
+          {
+            "path": "README.MD"
+          },
+          {
+            "name": "no path"
+          },
+          {
+            "path": "folder/"
+          },
+          {
+            "path": ".hidden.md"
+          },
+          {
+            "path": "a/b/c/My Note.md"
+          },
+          {
+            "path": "notebook.md"
+          },
+          {
+            "path": "x.md.md"
+          }
+        ]
+      },
+      "expected": {
+        "from": 7,
+        "filter": false,
+        "options": [
+          {
+            "label": "Note",
+            "detail": {
+              "$undefined": true
+            },
+            "boost": 1,
+            "apply": {
+              "changes": {
+                "from": 7,
+                "to": 7,
+                "insert": "Note]]"
+              },
+              "selection": {
+                "anchor": 13
+              }
+            }
+          },
+          {
+            "label": "My Note",
+            "detail": "projects/My Note",
+            "boost": 1,
+            "apply": {
+              "changes": {
+                "from": 7,
+                "to": 7,
+                "insert": "projects/My Note]]"
+              },
+              "selection": {
+                "anchor": 25
+              }
+            }
+          },
+          {
+            "label": "Deep Custom",
+            "detail": "projects/notes/deep",
+            "boost": 1,
+            "apply": {
+              "changes": {
+                "from": 7,
+                "to": 7,
+                "insert": "projects/notes/deep]]"
+              },
+              "selection": {
+                "anchor": 28
+              }
+            }
+          },
+          {
+            "label": "Ação 日本",
+            "detail": {
+              "$undefined": true
+            },
+            "boost": 1,
+            "apply": {
+              "changes": {
+                "from": 7,
+                "to": 7,
+                "insert": "Ação 日本]]"
+              },
+              "selection": {
+                "anchor": 16
+              }
+            }
+          },
+          {
+            "label": ".hidden",
+            "detail": {
+              "$undefined": true
+            },
+            "boost": 1,
+            "apply": {
+              "changes": {
+                "from": 7,
+                "to": 7,
+                "insert": ".hidden]]"
+              },
+              "selection": {
+                "anchor": 16
+              }
+            }
+          },
+          {
+            "label": "My Note",
+            "detail": "a/b/c/My Note",
+            "boost": 1,
+            "apply": {
+              "changes": {
+                "from": 7,
+                "to": 7,
+                "insert": "a/b/c/My Note]]"
+              },
+              "selection": {
+                "anchor": 22
+              }
+            }
+          },
+          {
+            "label": "notebook",
+            "detail": {
+              "$undefined": true
+            },
+            "boost": 1,
+            "apply": {
+              "changes": {
+                "from": 7,
+                "to": 7,
+                "insert": "notebook]]"
+              },
+              "selection": {
+                "anchor": 17
+              }
+            }
+          },
+          {
+            "label": "x.md",
+            "detail": {
+              "$undefined": true
+            },
+            "boost": 1,
+            "apply": {
+              "changes": {
+                "from": 7,
+                "to": 7,
+                "insert": "x.md]]"
+              },
+              "selection": {
+                "anchor": 13
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "complete \"line1\\n[[no\" @end",
+      "fn": "wikilinkCompletions",
+      "input": {
+        "doc": "line1\n[[no",
+        "pos": 10,
+        "files": [
+          {
+            "path": "Note.md",
+            "name": "Note"
+          },
+          {
+            "path": "projects/My Note.md"
+          },
+          {
+            "path": "projects/notes/deep.md",
+            "name": "Deep Custom"
+          },
+          {
+            "path": "image.png"
+          },
+          {
+            "path": "Ação 日本.md"
+          },
+          {
+            "path": "README.MD"
+          },
+          {
+            "name": "no path"
+          },
+          {
+            "path": "folder/"
+          },
+          {
+            "path": ".hidden.md"
+          },
+          {
+            "path": "a/b/c/My Note.md"
+          },
+          {
+            "path": "notebook.md"
+          },
+          {
+            "path": "x.md.md"
+          }
+        ]
+      },
+      "expected": {
+        "from": 8,
+        "filter": false,
+        "options": [
+          {
+            "label": "Note",
+            "detail": {
+              "$undefined": true
+            },
+            "boost": 3,
+            "apply": {
+              "changes": {
+                "from": 8,
+                "to": 10,
+                "insert": "Note]]"
+              },
+              "selection": {
+                "anchor": 14
+              }
+            }
+          },
+          {
+            "label": "My Note",
+            "detail": "projects/My Note",
+            "boost": 2,
+            "apply": {
+              "changes": {
+                "from": 8,
+                "to": 10,
+                "insert": "projects/My Note]]"
+              },
+              "selection": {
+                "anchor": 26
+              }
+            }
+          },
+          {
+            "label": "Deep Custom",
+            "detail": "projects/notes/deep",
+            "boost": 1,
+            "apply": {
+              "changes": {
+                "from": 8,
+                "to": 10,
+                "insert": "projects/notes/deep]]"
+              },
+              "selection": {
+                "anchor": 29
+              }
+            }
+          },
+          {
+            "label": "My Note",
+            "detail": "a/b/c/My Note",
+            "boost": 2,
+            "apply": {
+              "changes": {
+                "from": 8,
+                "to": 10,
+                "insert": "a/b/c/My Note]]"
+              },
+              "selection": {
+                "anchor": 23
+              }
+            }
+          },
+          {
+            "label": "notebook",
+            "detail": {
+              "$undefined": true
+            },
+            "boost": 3,
+            "apply": {
+              "changes": {
+                "from": 8,
+                "to": 10,
+                "insert": "notebook]]"
+              },
+              "selection": {
+                "anchor": 18
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "complete \"[[no\\nnext\" @4",
+      "fn": "wikilinkCompletions",
+      "input": {
+        "doc": "[[no\nnext",
+        "pos": 4,
+        "files": [
+          {
+            "path": "Note.md",
+            "name": "Note"
+          },
+          {
+            "path": "projects/My Note.md"
+          },
+          {
+            "path": "projects/notes/deep.md",
+            "name": "Deep Custom"
+          },
+          {
+            "path": "image.png"
+          },
+          {
+            "path": "Ação 日本.md"
+          },
+          {
+            "path": "README.MD"
+          },
+          {
+            "name": "no path"
+          },
+          {
+            "path": "folder/"
+          },
+          {
+            "path": ".hidden.md"
+          },
+          {
+            "path": "a/b/c/My Note.md"
+          },
+          {
+            "path": "notebook.md"
+          },
+          {
+            "path": "x.md.md"
+          }
+        ]
+      },
+      "expected": {
+        "from": 2,
+        "filter": false,
+        "options": [
+          {
+            "label": "Note",
+            "detail": {
+              "$undefined": true
+            },
+            "boost": 3,
+            "apply": {
+              "changes": {
+                "from": 2,
+                "to": 4,
+                "insert": "Note]]"
+              },
+              "selection": {
+                "anchor": 8
+              }
+            }
+          },
+          {
+            "label": "My Note",
+            "detail": "projects/My Note",
+            "boost": 2,
+            "apply": {
+              "changes": {
+                "from": 2,
+                "to": 4,
+                "insert": "projects/My Note]]"
+              },
+              "selection": {
+                "anchor": 20
+              }
+            }
+          },
+          {
+            "label": "Deep Custom",
+            "detail": "projects/notes/deep",
+            "boost": 1,
+            "apply": {
+              "changes": {
+                "from": 2,
+                "to": 4,
+                "insert": "projects/notes/deep]]"
+              },
+              "selection": {
+                "anchor": 23
+              }
+            }
+          },
+          {
+            "label": "My Note",
+            "detail": "a/b/c/My Note",
+            "boost": 2,
+            "apply": {
+              "changes": {
+                "from": 2,
+                "to": 4,
+                "insert": "a/b/c/My Note]]"
+              },
+              "selection": {
+                "anchor": 17
+              }
+            }
+          },
+          {
+            "label": "notebook",
+            "detail": {
+              "$undefined": true
+            },
+            "boost": 3,
+            "apply": {
+              "changes": {
+                "from": 2,
+                "to": 4,
+                "insert": "notebook]]"
+              },
+              "selection": {
+                "anchor": 12
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "complete \"[[x]] y\" @7",
+      "fn": "wikilinkCompletions",
+      "input": {
+        "doc": "[[x]] y",
+        "pos": 7,
+        "files": [
+          {
+            "path": "Note.md",
+            "name": "Note"
+          },
+          {
+            "path": "projects/My Note.md"
+          },
+          {
+            "path": "projects/notes/deep.md",
+            "name": "Deep Custom"
+          },
+          {
+            "path": "image.png"
+          },
+          {
+            "path": "Ação 日本.md"
+          },
+          {
+            "path": "README.MD"
+          },
+          {
+            "name": "no path"
+          },
+          {
+            "path": "folder/"
+          },
+          {
+            "path": ".hidden.md"
+          },
+          {
+            "path": "a/b/c/My Note.md"
+          },
+          {
+            "path": "notebook.md"
+          },
+          {
+            "path": "x.md.md"
+          }
+        ]
+      },
+      "expected": null
+    },
+    {
+      "name": "complete \"[[ note\" @end",
+      "fn": "wikilinkCompletions",
+      "input": {
+        "doc": "[[ note",
+        "pos": 7,
+        "files": [
+          {
+            "path": "Note.md",
+            "name": "Note"
+          },
+          {
+            "path": "projects/My Note.md"
+          },
+          {
+            "path": "projects/notes/deep.md",
+            "name": "Deep Custom"
+          },
+          {
+            "path": "image.png"
+          },
+          {
+            "path": "Ação 日本.md"
+          },
+          {
+            "path": "README.MD"
+          },
+          {
+            "name": "no path"
+          },
+          {
+            "path": "folder/"
+          },
+          {
+            "path": ".hidden.md"
+          },
+          {
+            "path": "a/b/c/My Note.md"
+          },
+          {
+            "path": "notebook.md"
+          },
+          {
+            "path": "x.md.md"
+          }
+        ]
+      },
+      "expected": {
+        "from": 2,
+        "filter": false,
+        "options": [
+          {
+            "label": "My Note",
+            "detail": "projects/My Note",
+            "boost": 2,
+            "apply": {
+              "changes": {
+                "from": 2,
+                "to": 7,
+                "insert": "projects/My Note]]"
+              },
+              "selection": {
+                "anchor": 20
+              }
+            }
+          },
+          {
+            "label": "My Note",
+            "detail": "a/b/c/My Note",
+            "boost": 2,
+            "apply": {
+              "changes": {
+                "from": 2,
+                "to": 7,
+                "insert": "a/b/c/My Note]]"
+              },
+              "selection": {
+                "anchor": 17
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "complete \"[[.\" @end",
+      "fn": "wikilinkCompletions",
+      "input": {
+        "doc": "[[.",
+        "pos": 3,
+        "files": [
+          {
+            "path": "Note.md",
+            "name": "Note"
+          },
+          {
+            "path": "projects/My Note.md"
+          },
+          {
+            "path": "projects/notes/deep.md",
+            "name": "Deep Custom"
+          },
+          {
+            "path": "image.png"
+          },
+          {
+            "path": "Ação 日本.md"
+          },
+          {
+            "path": "README.MD"
+          },
+          {
+            "name": "no path"
+          },
+          {
+            "path": "folder/"
+          },
+          {
+            "path": ".hidden.md"
+          },
+          {
+            "path": "a/b/c/My Note.md"
+          },
+          {
+            "path": "notebook.md"
+          },
+          {
+            "path": "x.md.md"
+          }
+        ]
+      },
+      "expected": {
+        "from": 2,
+        "filter": false,
+        "options": [
+          {
+            "label": ".hidden",
+            "detail": {
+              "$undefined": true
+            },
+            "boost": 3,
+            "apply": {
+              "changes": {
+                "from": 2,
+                "to": 3,
+                "insert": ".hidden]]"
+              },
+              "selection": {
+                "anchor": 11
+              }
+            }
+          },
+          {
+            "label": "x.md",
+            "detail": {
+              "$undefined": true
+            },
+            "boost": 2,
+            "apply": {
+              "changes": {
+                "from": 2,
+                "to": 3,
+                "insert": "x.md]]"
+              },
+              "selection": {
+                "anchor": 8
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "complete \"[[/\" @end",
+      "fn": "wikilinkCompletions",
+      "input": {
+        "doc": "[[/",
+        "pos": 3,
+        "files": [
+          {
+            "path": "Note.md",
+            "name": "Note"
+          },
+          {
+            "path": "projects/My Note.md"
+          },
+          {
+            "path": "projects/notes/deep.md",
+            "name": "Deep Custom"
+          },
+          {
+            "path": "image.png"
+          },
+          {
+            "path": "Ação 日本.md"
+          },
+          {
+            "path": "README.MD"
+          },
+          {
+            "name": "no path"
+          },
+          {
+            "path": "folder/"
+          },
+          {
+            "path": ".hidden.md"
+          },
+          {
+            "path": "a/b/c/My Note.md"
+          },
+          {
+            "path": "notebook.md"
+          },
+          {
+            "path": "x.md.md"
+          }
+        ]
+      },
+      "expected": {
+        "from": 2,
+        "filter": false,
+        "options": [
+          {
+            "label": "My Note",
+            "detail": "projects/My Note",
+            "boost": 1,
+            "apply": {
+              "changes": {
+                "from": 2,
+                "to": 3,
+                "insert": "projects/My Note]]"
+              },
+              "selection": {
+                "anchor": 20
+              }
+            }
+          },
+          {
+            "label": "Deep Custom",
+            "detail": "projects/notes/deep",
+            "boost": 1,
+            "apply": {
+              "changes": {
+                "from": 2,
+                "to": 3,
+                "insert": "projects/notes/deep]]"
+              },
+              "selection": {
+                "anchor": 23
+              }
+            }
+          },
+          {
+            "label": "My Note",
+            "detail": "a/b/c/My Note",
+            "boost": 1,
+            "apply": {
+              "changes": {
+                "from": 2,
+                "to": 3,
+                "insert": "a/b/c/My Note]]"
+              },
+              "selection": {
+                "anchor": 17
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "complete \"[[my note\" @end",
+      "fn": "wikilinkCompletions",
+      "input": {
+        "doc": "[[my note",
+        "pos": 9,
+        "files": [
+          {
+            "path": "Note.md",
+            "name": "Note"
+          },
+          {
+            "path": "projects/My Note.md"
+          },
+          {
+            "path": "projects/notes/deep.md",
+            "name": "Deep Custom"
+          },
+          {
+            "path": "image.png"
+          },
+          {
+            "path": "Ação 日本.md"
+          },
+          {
+            "path": "README.MD"
+          },
+          {
+            "name": "no path"
+          },
+          {
+            "path": "folder/"
+          },
+          {
+            "path": ".hidden.md"
+          },
+          {
+            "path": "a/b/c/My Note.md"
+          },
+          {
+            "path": "notebook.md"
+          },
+          {
+            "path": "x.md.md"
+          }
+        ]
+      },
+      "expected": {
+        "from": 2,
+        "filter": false,
+        "options": [
+          {
+            "label": "My Note",
+            "detail": "projects/My Note",
+            "boost": 3,
+            "apply": {
+              "changes": {
+                "from": 2,
+                "to": 9,
+                "insert": "projects/My Note]]"
+              },
+              "selection": {
+                "anchor": 20
+              }
+            }
+          },
+          {
+            "label": "My Note",
+            "detail": "a/b/c/My Note",
+            "boost": 3,
+            "apply": {
+              "changes": {
+                "from": 2,
+                "to": 9,
+                "insert": "a/b/c/My Note]]"
+              },
+              "selection": {
+                "anchor": 17
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "complete \"[[[\" @end",
+      "fn": "wikilinkCompletions",
+      "input": {
+        "doc": "[[[",
+        "pos": 3,
+        "files": [
+          {
+            "path": "Note.md",
+            "name": "Note"
+          },
+          {
+            "path": "projects/My Note.md"
+          },
+          {
+            "path": "projects/notes/deep.md",
+            "name": "Deep Custom"
+          },
+          {
+            "path": "image.png"
+          },
+          {
+            "path": "Ação 日本.md"
+          },
+          {
+            "path": "README.MD"
+          },
+          {
+            "name": "no path"
+          },
+          {
+            "path": "folder/"
+          },
+          {
+            "path": ".hidden.md"
+          },
+          {
+            "path": "a/b/c/My Note.md"
+          },
+          {
+            "path": "notebook.md"
+          },
+          {
+            "path": "x.md.md"
+          }
+        ]
+      },
+      "expected": {
+        "from": 3,
+        "filter": false,
+        "options": [
+          {
+            "label": "Note",
+            "detail": {
+              "$undefined": true
+            },
+            "boost": 1,
+            "apply": {
+              "changes": {
+                "from": 3,
+                "to": 3,
+                "insert": "Note]]"
+              },
+              "selection": {
+                "anchor": 9
+              }
+            }
+          },
+          {
+            "label": "My Note",
+            "detail": "projects/My Note",
+            "boost": 1,
+            "apply": {
+              "changes": {
+                "from": 3,
+                "to": 3,
+                "insert": "projects/My Note]]"
+              },
+              "selection": {
+                "anchor": 21
+              }
+            }
+          },
+          {
+            "label": "Deep Custom",
+            "detail": "projects/notes/deep",
+            "boost": 1,
+            "apply": {
+              "changes": {
+                "from": 3,
+                "to": 3,
+                "insert": "projects/notes/deep]]"
+              },
+              "selection": {
+                "anchor": 24
+              }
+            }
+          },
+          {
+            "label": "Ação 日本",
+            "detail": {
+              "$undefined": true
+            },
+            "boost": 1,
+            "apply": {
+              "changes": {
+                "from": 3,
+                "to": 3,
+                "insert": "Ação 日本]]"
+              },
+              "selection": {
+                "anchor": 12
+              }
+            }
+          },
+          {
+            "label": ".hidden",
+            "detail": {
+              "$undefined": true
+            },
+            "boost": 1,
+            "apply": {
+              "changes": {
+                "from": 3,
+                "to": 3,
+                "insert": ".hidden]]"
+              },
+              "selection": {
+                "anchor": 12
+              }
+            }
+          },
+          {
+            "label": "My Note",
+            "detail": "a/b/c/My Note",
+            "boost": 1,
+            "apply": {
+              "changes": {
+                "from": 3,
+                "to": 3,
+                "insert": "a/b/c/My Note]]"
+              },
+              "selection": {
+                "anchor": 18
+              }
+            }
+          },
+          {
+            "label": "notebook",
+            "detail": {
+              "$undefined": true
+            },
+            "boost": 1,
+            "apply": {
+              "changes": {
+                "from": 3,
+                "to": 3,
+                "insert": "notebook]]"
+              },
+              "selection": {
+                "anchor": 13
+              }
+            }
+          },
+          {
+            "label": "x.md",
+            "detail": {
+              "$undefined": true
+            },
+            "boost": 1,
+            "apply": {
+              "changes": {
+                "from": 3,
+                "to": 3,
+                "insert": "x.md]]"
+              },
+              "selection": {
+                "anchor": 9
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "complete \"[[]\" @end",
+      "fn": "wikilinkCompletions",
+      "input": {
+        "doc": "[[]",
+        "pos": 3,
+        "files": [
+          {
+            "path": "Note.md",
+            "name": "Note"
+          },
+          {
+            "path": "projects/My Note.md"
+          },
+          {
+            "path": "projects/notes/deep.md",
+            "name": "Deep Custom"
+          },
+          {
+            "path": "image.png"
+          },
+          {
+            "path": "Ação 日本.md"
+          },
+          {
+            "path": "README.MD"
+          },
+          {
+            "name": "no path"
+          },
+          {
+            "path": "folder/"
+          },
+          {
+            "path": ".hidden.md"
+          },
+          {
+            "path": "a/b/c/My Note.md"
+          },
+          {
+            "path": "notebook.md"
+          },
+          {
+            "path": "x.md.md"
+          }
+        ]
+      },
+      "expected": null
+    },
+    {
+      "name": "complete files=[]",
+      "fn": "wikilinkCompletions",
+      "input": {
+        "doc": "[[",
+        "pos": 2,
+        "files": []
+      },
+      "expected": null
+    },
+    {
+      "name": "complete files=null",
+      "fn": "wikilinkCompletions",
+      "input": {
+        "doc": "[[",
+        "pos": 2,
+        "files": null
+      },
+      "expected": null
+    },
+    {
+      "name": "complete files=\"<null provider>\"",
+      "fn": "wikilinkCompletions",
+      "input": {
+        "doc": "[[",
+        "pos": 2,
+        "files": "<null provider>"
+      },
+      "expected": null
+    },
+    {
+      "name": "complete files=[{\"path\":\"only.txt\"}]",
+      "fn": "wikilinkCompletions",
+      "input": {
+        "doc": "[[",
+        "pos": 2,
+        "files": [
+          {
+            "path": "only.txt"
+          }
+        ]
+      },
+      "expected": null
+    },
+    {
+      "name": "autocompletion config",
+      "fn": "createWikilinkAutocomplete(config)",
+      "input": [],
+      "expected": {
+        "activateOnTyping": true,
+        "maxRenderedOptions": 20,
+        "icons": true,
+        "overrideCount": 1,
+        "addToOptions": 0
+      }
+    },
+    {
+      "name": "autocompletion config with extras",
+      "fn": "createWikilinkAutocomplete(config)",
+      "input": [
+        {
+          "additionalSources": 1,
+          "addToOptions": 1
+        }
+      ],
+      "expected": {
+        "activateOnTyping": true,
+        "maxRenderedOptions": 20,
+        "icons": false,
+        "overrideCount": 2,
+        "addToOptions": 1
+      }
+    }
+  ]
+}

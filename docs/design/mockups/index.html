@@ -1,0 +1,1147 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FrankMDFast UI reference</title>
+<meta name="description" content="Static mockups of the FrankMDFast GPUI desktop app, themed with real Omarchy palettes.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Arimo:wght@400;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ------------------------------------------------------------------
+   Token layer. Raw Omarchy colors.toml values per theme, then the
+   role mapping from ui-spec.md §7.1 (sRGB mixes via color-mix).
+------------------------------------------------------------------ */
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0e0e14;font-family:Arimo,"Liberation Sans",Arial,sans-serif}
+body:has(#th-latte:checked){background:#d7d8dc}
+body:has(#th-rose:checked){background:#e1dbd5}
+.radio{position:absolute;opacity:0;pointer-events:none}
+
+.page{
+  /* tokyo-night (default) */
+  --bg:#1a1b26;--bg-dark:#13141c;--bg-darker:#0e0e14;--bg-light:#24283b;
+  --fg:#a9b1d6;--fg-dark:#565f89;--fg-bright:#c0caf5;--muted:#414868;
+  --accent:#7aa2f7;--sel:#292e42;--red:#f7768e;--yellow:#e0af68;--orange:#eb927b;
+  --green:#9ece6a;--cyan:#449dab;--blue:#7aa2f7;--magenta:#ad8ee6;--bcyan:#0db9d7;--bblue:#7da6ff;
+  --on-accent:#1a1b26;--shadow:rgba(0,0,0,.30);--R:0px;
+}
+#th-gruvbox:checked~.page{--bg:#282828;--bg-dark:#1e1e1e;--bg-darker:#161616;--bg-light:#3c3836;--fg:#d4be98;--fg-dark:#7c6f64;--fg-bright:#d4be98;--muted:#665c54;--accent:#7daea3;--sel:#504945;--red:#ea6962;--yellow:#d8a657;--orange:#e1875c;--green:#a9b665;--cyan:#89b482;--blue:#7daea3;--magenta:#d3869b;--bcyan:#89b482;--bblue:#7daea3;--on-accent:#282828}
+#th-everforest:checked~.page{--bg:#2d353b;--bg-dark:#21272c;--bg-darker:#181d20;--bg-light:#343f44;--fg:#d3c6aa;--fg-dark:#859289;--fg-bright:#d3c6aa;--muted:#475258;--accent:#7fbbb3;--sel:#3d484d;--red:#e67e80;--yellow:#dbbc7f;--orange:#e09d7f;--green:#a7c080;--cyan:#83c092;--blue:#7fbbb3;--magenta:#d699b6;--bcyan:#83c092;--bblue:#7fbbb3;--on-accent:#2d353b}
+#th-kanagawa:checked~.page{--bg:#1f1f28;--bg-dark:#17171e;--bg-darker:#111116;--bg-light:#223249;--fg:#dcd7ba;--fg-dark:#727169;--fg-bright:#dcd7ba;--muted:#54546d;--accent:#dcd7ba;--sel:#363646;--red:#c34043;--yellow:#c0a36e;--orange:#c17158;--green:#76946a;--cyan:#6a9589;--blue:#7e9cd8;--magenta:#957fb8;--bcyan:#7aa89f;--bblue:#7fb4ca;--on-accent:#1f1f28}
+#th-latte:checked~.page{--bg:#eff1f5;--bg-dark:#e3e4e8;--bg-darker:#d7d8dc;--bg-light:#dce0e8;--fg:#4c4f69;--fg-dark:#7c7f93;--fg-bright:#4c4f69;--muted:#acb0be;--accent:#1e66f5;--sel:#ccd0da;--red:#d20f39;--yellow:#b2700f;--orange:#d84e2b;--green:#40a02b;--cyan:#179299;--blue:#1e66f5;--magenta:#b44b9a;--bcyan:#179299;--bblue:#1e66f5;--on-accent:#ffffff;--shadow:rgba(0,0,0,.12)}
+#th-rose:checked~.page{--bg:#faf4ed;--bg-dark:#ede7e1;--bg-darker:#e1dbd5;--bg-light:#f2e9e1;--fg:#575279;--fg-dark:#797593;--fg-bright:#575279;--muted:#cecacd;--accent:#56949f;--sel:#dfdad9;--red:#b4637a;--yellow:#b06d14;--orange:#cf8057;--green:#286983;--cyan:#b5605c;--blue:#56949f;--magenta:#907aa9;--bcyan:#b5605c;--bblue:#56949f;--on-accent:#000000;--shadow:rgba(0,0,0,.12)}
+#rc-6:checked~.page{--R:6px}
+
+.page{
+  --surface:var(--bg);--recessed:var(--bg-dark);--raised:var(--bg-light);--sunken:var(--bg-darker);
+  --hover:color-mix(in srgb,var(--fg) 8%,var(--bg));
+  --code:var(--bg-dark);
+  --text:var(--fg);--strong:var(--fg-bright);--text-muted:var(--fg-dark);
+  --text-faint:color-mix(in srgb,var(--fg-dark) 65%,var(--bg));
+  --border:var(--muted);--border-subtle:color-mix(in srgb,var(--muted) 50%,var(--bg));
+  --rs:min(4px,var(--R));
+  --mono:"JetBrains Mono","JetBrainsMono Nerd Font",ui-monospace,monospace;
+  --ui:Arimo,"Liberation Sans",Arial,sans-serif;
+  background:var(--sunken);color:var(--text);min-height:100vh;
+  font:14px/1.5 var(--ui);
+}
+
+/* ------------------------------------------------------------------
+   Gallery chrome (not part of the app)
+------------------------------------------------------------------ */
+.wrap{max-width:1360px;margin:0 auto;padding:32px 16px 96px}
+.g-head{display:grid;gap:16px;grid-template-columns:1fr auto;align-items:end;padding-bottom:24px;border-bottom:1px solid var(--border-subtle)}
+.g-head h1{font:700 26px/1.2 var(--mono);color:var(--strong);letter-spacing:-.01em}
+.g-head p{color:var(--text-muted);max-width:68ch;margin-top:8px}
+.g-head a{color:var(--accent)}
+.controls{display:grid;gap:10px;justify-items:end}
+.ctl{display:flex;gap:4px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.ctl>span{font:12px var(--mono);color:var(--text-muted);margin-right:6px}
+.ctl label{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px;border:1px solid var(--border-subtle);border-radius:var(--rs);font:12px var(--mono);cursor:pointer;color:var(--text);background:var(--surface)}
+.ctl label:hover{border-color:var(--border)}
+.ctl .dot{width:10px;height:10px;border-radius:50%;border:1px solid rgba(127,127,127,.4)}
+#th-tokyo:checked~.page label[for=th-tokyo],#th-gruvbox:checked~.page label[for=th-gruvbox],#th-everforest:checked~.page label[for=th-everforest],#th-kanagawa:checked~.page label[for=th-kanagawa],#th-latte:checked~.page label[for=th-latte],#th-rose:checked~.page label[for=th-rose],#rc-0:checked~.page label[for=rc-0],#rc-6:checked~.page label[for=rc-6]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent);color:var(--strong)}
+.radio:focus-visible~.page .ctl{outline:none}
+#th-tokyo:focus-visible~.page label[for=th-tokyo],#th-gruvbox:focus-visible~.page label[for=th-gruvbox],#th-everforest:focus-visible~.page label[for=th-everforest],#th-kanagawa:focus-visible~.page label[for=th-kanagawa],#th-latte:focus-visible~.page label[for=th-latte],#th-rose:focus-visible~.page label[for=th-rose],#rc-0:focus-visible~.page label[for=rc-0],#rc-6:focus-visible~.page label[for=rc-6]{outline:2px solid var(--accent);outline-offset:2px}
+.toc{display:flex;flex-wrap:wrap;gap:4px 16px;padding:16px 0 8px;font:12px var(--mono)}
+.toc a{color:var(--text-muted);text-decoration:none}
+.toc a:hover{color:var(--accent)}
+.sec{padding-top:48px}
+.sec>h2{font:600 17px/1.3 var(--mono);color:var(--strong)}
+.sec>h2 small{font-weight:400;color:var(--text-muted);font-size:12px;margin-left:8px}
+.sec>p{color:var(--text-muted);max-width:76ch;margin:6px 0 16px}
+.sec>ul.notes{color:var(--text-muted);max-width:90ch;margin:12px 0 0 18px;font-size:13px}
+.sec>ul.notes li{margin:2px 0}
+.sec code{font:12px var(--mono);color:var(--text)}
+.stage{overflow-x:auto;padding:2px 2px 12px}
+.row-of{display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start}
+.cap{font:12px var(--mono);color:var(--text-muted);margin-top:8px}
+
+/* ------------------------------------------------------------------
+   App components (what GPUI should render)
+------------------------------------------------------------------ */
+.win{position:relative;overflow:hidden;background:var(--surface);color:var(--text);font:13px/20px var(--ui);border:1px solid var(--border);display:flex;flex-direction:column;border-radius:var(--R);flex:none}
+.i{width:16px;height:16px;fill:currentColor;stroke:none;flex:none}
+.logo{flex:none;display:block}
+.i.s14{width:14px;height:14px}.i.s12{width:12px;height:12px}
+.cols{flex:1;display:flex;min-height:0}
+.side{width:248px;flex:none;background:var(--recessed);border-inline-end:1px solid var(--border-subtle);display:flex;flex-direction:column;min-height:0}
+.pane{flex:1;min-width:0;display:flex;flex-direction:column;position:relative;background:var(--surface)}
+.pane.prev{flex:0 0 45%;border-inline-start:1px solid var(--border-subtle)}
+.ph{height:32px;flex:none;display:flex;align-items:center;gap:2px;padding:0 6px 0 12px;border-bottom:1px solid var(--border-subtle);position:relative;white-space:nowrap}
+.focused>.ph::before{content:"";position:absolute;inset:0 0 auto 0;height:2px;background:var(--accent)}
+.sp{flex:1}
+.ib{width:28px;height:28px;display:inline-grid;place-items:center;border:0;background:none;color:var(--text-muted);border-radius:var(--rs);font:inherit}
+.ib.on{color:var(--accent);background:var(--hover)}
+.ib.f{outline:2px solid var(--accent);outline-offset:-2px}
+.crumb{color:var(--text-muted)}
+.crumb b{font-weight:400;margin:0 6px;color:var(--text-faint)}
+.title{color:var(--strong);font-weight:600}
+.dirty{color:var(--text-muted);margin-left:6px;font-size:10px}
+.muted{color:var(--text-muted)}.faint{color:var(--text-faint)}
+.kbd{display:inline-flex;align-items:center;height:18px;padding:0 5px;font:500 11px/1 var(--mono);color:var(--text-muted);background:var(--recessed);border:1px solid var(--border-subtle);border-radius:var(--rs);white-space:nowrap}
+.kbds{display:inline-flex;gap:3px}
+
+/* sidebar */
+.vault{display:flex;align-items:center;gap:4px;color:var(--strong);font-weight:600}
+.tree{flex:1;padding:4px 0;overflow:hidden}
+.tr{height:24px;display:flex;align-items:center;gap:6px;padding-inline-start:calc(8px + var(--d,0) * 12px);padding-inline-end:8px;color:var(--text);position:relative;white-space:nowrap;overflow:hidden}
+.tr .chev{width:14px;color:var(--text-faint);display:grid;place-items:center}
+.tr .fo{color:var(--accent)}.tr .fi{color:var(--text-muted)}
+.tr.sel{background:var(--sel);color:var(--strong)}
+.tr.open::before{content:"";position:absolute;inset-block:3px;inset-inline-start:0;width:2px;background:var(--accent)}
+.tr.foc{outline:1px solid var(--accent);outline-offset:-1px}
+.tr.drop{background:color-mix(in srgb,var(--accent) 12%,transparent);outline:1px solid var(--accent);outline-offset:-1px}
+.sideh{height:24px;display:flex;align-items:center;gap:4px;padding:0 8px;color:var(--text-muted);font-size:12px;border-top:1px solid var(--border-subtle)}
+.bl{padding:2px 12px 6px 30px;font-size:12px;line-height:16px}
+.bl div{color:var(--text)}.bl span{color:var(--text-muted)}
+.dock{height:28px;display:flex;align-items:center;gap:2px;padding:0 4px;border-top:1px solid var(--border-subtle)}
+.dock .ib{width:24px;height:24px}
+
+/* editor text */
+.ed{flex:1;overflow:hidden;font:14px/1.6 var(--mono);padding:16px 32px;position:relative}
+.col{max-width:72ch;margin:0 auto;position:relative}
+.ln{white-space:pre-wrap;min-height:1.6em}
+.gut .ln{position:relative}
+.gut .ln::before{content:attr(data-n);position:absolute;inset-inline-end:calc(100% + 16px);width:3ch;text-align:end;color:var(--text-faint)}
+.gut .ln.cur::before{color:var(--text)}
+.m{color:var(--text-faint)}
+.h1{color:var(--magenta);font-weight:700}.h2{color:var(--blue);font-weight:700}.h3{color:var(--cyan);font-weight:700}
+.bo{color:var(--strong);font-weight:700}
+.lk{color:var(--accent)}
+.wl{color:var(--accent);text-decoration:underline dashed;text-underline-offset:3px}
+.kw{color:var(--magenta)}.fn{color:var(--yellow)}.st{color:var(--green)}.nu{color:var(--orange)}.co{color:var(--text-muted);font-style:italic}.ty{color:var(--cyan)}.pr{color:var(--bblue)}
+.fm{color:var(--text-muted)}
+.caret{display:inline-block;width:2px;height:1.25em;vertical-align:-.25em;background:var(--strong);margin:0 -1px}
+.blockcaret{background:var(--accent);color:var(--on-accent)}
+.selr{background:var(--sel);color:var(--strong)}
+.match{background:color-mix(in srgb,var(--sel) 60%,transparent);border-radius:2px}
+.match.cur{background:var(--sel);outline:1px solid var(--accent)}
+.preedit{text-decoration:underline;text-underline-offset:3px}
+
+/* preview */
+.pv{flex:1;overflow:hidden;padding:20px 28px;font:15px/1.6 var(--ui)}
+.prose{max-width:calc(72ch + 3rem);margin:0 auto}
+.prose .fmrow{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--text-muted);margin-bottom:10px}
+.prose h1{font-size:2em;line-height:1.25;color:var(--magenta);padding-bottom:.2em;border-bottom:1px solid var(--border-subtle);margin-bottom:.5em}
+.prose h2{font-size:1.5em;line-height:1.3;color:var(--blue);padding-bottom:.15em;border-bottom:1px solid var(--border-subtle);margin:.9em 0 .4em}
+.prose p{margin:.5em 0}
+.prose ul{list-style:none;margin:.4em 0}
+.prose li{display:flex;gap:8px;align-items:baseline}
+.cb{width:14px;height:14px;border:1.5px solid var(--accent);border-radius:min(3px,var(--rs));display:inline-grid;place-items:center;flex:none;transform:translateY(2px)}
+.cb.on{background:var(--accent);color:var(--on-accent)}
+.prose li.done span{color:var(--text-muted);text-decoration:line-through}
+.prose table{border-collapse:collapse;margin:.6em 0;font-size:.93em}
+.prose th,.prose td{border:1px solid var(--border-subtle);padding:4px 12px}
+.prose th{background:var(--recessed);text-align:start;font-weight:600}
+.prose .r{text-align:end}.prose .c{text-align:center}
+.pcode{position:relative;background:var(--code);border-radius:var(--rs);padding:24px 14px 12px;font:13px/1.55 var(--mono);margin:.7em 0;white-space:pre}
+.pcode .lang{position:absolute;top:4px;inset-inline-start:10px;font:600 10px var(--mono);color:var(--text-muted)}
+.pcode .cp{position:absolute;top:2px;inset-inline-end:2px;width:24px;height:24px;display:grid;place-items:center;color:var(--text-faint)}
+.frac{display:inline-flex;flex-direction:column;vertical-align:middle;font:italic 13px/1 "Times New Roman",serif;text-align:center}
+.frac span:first-child{border-bottom:1px solid currentColor;padding:0 2px 1px}
+
+/* status line */
+.status{height:24px;flex:none;display:flex;align-items:center;gap:12px;padding:0 10px 0 0;background:var(--recessed);border-top:1px solid var(--border-subtle);font:12px/1 var(--ui);color:var(--text-muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.status>:first-child{margin-inline-start:10px}
+.mode{align-self:stretch;display:flex;align-items:center;padding:0 10px;font:700 11px/1 var(--mono);background:var(--accent);color:var(--on-accent);margin-inline-start:0!important}
+.mode.m-ins{background:var(--green)}.mode.m-vis{background:var(--magenta)}.mode.m-cmd{background:var(--yellow)}
+.st-ok{color:var(--green)}.st-err{color:var(--red)}
+.chip{display:inline-flex;align-items:center;gap:6px;height:18px;padding:0 6px;border:1px solid var(--border-subtle);border-radius:var(--rs);color:var(--text)}
+.chip .kbd{height:14px;font-size:10px;padding:0 3px}
+.exline{color:var(--strong);font:12px var(--mono)}
+
+/* overlays */
+.scrim{position:absolute;inset:0;background:color-mix(in srgb,var(--bg) 60%,transparent)}
+.ov{position:absolute;top:12%;left:50%;transform:translateX(-50%);background:var(--raised);border:1px solid var(--border);border-radius:var(--R);box-shadow:0 8px 24px var(--shadow);display:flex;flex-direction:column;overflow:hidden}
+.ov-in{height:40px;display:flex;align-items:center;gap:8px;padding:0 12px;border-bottom:1px solid var(--border-subtle);font:14px var(--ui);color:var(--strong)}
+.ov-in .pfx{font:600 14px var(--mono);color:var(--accent)}
+.ov-in .ph-t{color:var(--text-faint)}
+.list{padding:4px 0}
+.li{height:28px;display:flex;align-items:center;gap:8px;padding:0 12px;white-space:nowrap;overflow:hidden;position:relative}
+.li.two{height:44px;align-items:center}
+.li.two .t2{display:flex;flex-direction:column;line-height:17px;min-width:0}
+.li .cat{color:var(--text-muted)}
+.li.sel{background:var(--sel);color:var(--strong)}
+.li.sel::before{content:"";position:absolute;inset-block:0;inset-inline-start:0;width:2px;background:var(--accent)}
+.li .hl{color:var(--accent);font-weight:700}
+.li .chk{width:14px;color:var(--accent)}
+.grp{height:24px;display:flex;align-items:center;padding:0 12px;font-size:12px;color:var(--text-muted)}
+.ov-foot{height:28px;display:flex;align-items:center;gap:12px;padding:0 12px;border-top:1px solid var(--border-subtle);font-size:12px;color:var(--text-muted)}
+
+/* dialogs */
+.dlg{position:absolute;left:50%;transform:translateX(-50%);top:8%;background:var(--raised);border:1px solid var(--border);border-radius:var(--R);box-shadow:0 8px 24px var(--shadow);display:flex;flex-direction:column;overflow:hidden}
+.dh{height:40px;flex:none;display:flex;align-items:center;gap:8px;padding:0 6px 0 16px;border-bottom:1px solid var(--border-subtle)}
+.dh .tt{font:600 14px var(--ui);color:var(--strong)}
+.badge{display:inline-flex;align-items:center;height:20px;padding:0 7px;border:1px solid var(--border-subtle);border-radius:var(--rs);font:11px var(--mono);color:var(--text-muted)}
+.db{flex:1;min-height:0;display:flex;overflow:hidden}
+.df{height:48px;flex:none;display:flex;align-items:center;gap:8px;padding:0 16px;border-top:1px solid var(--border-subtle)}
+.btn{height:28px;display:inline-flex;align-items:center;gap:8px;padding:0 12px;border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:var(--rs);font:13px var(--ui);white-space:nowrap}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:600}
+.btn.pri .kbd{background:color-mix(in srgb,var(--on-accent) 15%,transparent);border-color:transparent;color:var(--on-accent);height:16px}
+.btn.dan{background:var(--red);border-color:var(--red);color:var(--bg);font-weight:600}
+.btn.sm{height:24px;padding:0 8px;font-size:12px}
+.btn.f{outline:2px solid var(--accent);outline-offset:1px}
+.inp{height:28px;white-space:nowrap;overflow:hidden;display:flex;align-items:center;gap:6px;padding:0 8px;background:var(--sunken);border:1px solid var(--border);border-radius:var(--rs);color:var(--strong);min-width:0}
+.inp.f{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.inp .pl{color:var(--text-faint)}
+.lbl{font-size:12px;color:var(--text-muted)}
+.seg{display:inline-flex;border:1px solid var(--border);border-radius:var(--rs);overflow:hidden;height:28px}
+.seg span{display:flex;align-items:center;gap:6px;padding:0 10px;font-size:12px;color:var(--text-muted);border-inline-end:1px solid var(--border-subtle)}
+.seg span:last-child{border:0}
+.seg span.on{background:var(--sel);color:var(--strong)}
+.sel-ctl{height:28px;display:inline-flex;align-items:center;gap:8px;padding:0 8px;border:1px solid var(--border);border-radius:var(--rs);background:var(--surface);color:var(--text);font-size:12px;white-space:nowrap}
+.sw{width:32px;height:18px;border-radius:9px;background:var(--hover);border:1px solid var(--border);position:relative;flex:none}
+.sw::after{content:"";position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:var(--text-muted)}
+.sw.on{background:var(--accent);border-color:var(--accent)}
+.sw.on::after{left:16px;background:var(--on-accent)}
+.prov{display:inline-flex;align-items:center;height:18px;padding:0 6px;border-radius:var(--rs);font:11px var(--mono);color:var(--text-muted);background:var(--recessed);border:1px solid var(--border-subtle)}
+.prov.fed{color:var(--yellow)}.prov.env{color:var(--cyan)}
+
+/* banners */
+.ban{height:32px;flex:none;display:flex;align-items:center;gap:10px;padding:0 6px 0 12px;font-size:13px;color:var(--text);border-bottom:1px solid var(--border-subtle);box-shadow:inset 2px 0 0 var(--c);background:color-mix(in srgb,var(--c) 14%,var(--bg))}
+.ban .i{color:var(--c)}
+.ban.warn{--c:var(--yellow)}.ban.dang{--c:var(--red)}.ban.info{--c:var(--cyan)}.ban.acc{--c:var(--accent)}
+.ban .btn{height:24px;font-size:12px;padding:0 8px;background:transparent}
+.bar2{height:2px;background:linear-gradient(90deg,transparent 0 30%,var(--accent) 30% 55%,transparent 55%)}
+
+/* find bar */
+.find{flex:none;border-bottom:1px solid var(--border-subtle);background:var(--recessed);padding:4px 8px;display:grid;gap:4px}
+.find .r{display:flex;align-items:center;gap:4px}
+.find .inp{width:300px;height:26px}
+.tgl{height:24px;min-width:26px;display:inline-grid;place-items:center;padding:0 4px;border-radius:var(--rs);font:600 11px var(--mono);color:var(--text-muted);border:1px solid transparent}
+.tgl.on{color:var(--accent);border-color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,transparent)}
+.cnt{font-size:12px;color:var(--text-muted);min-width:56px;padding:0 4px;font-variant-numeric:tabular-nums}
+
+/* popovers */
+.pop{position:absolute;background:var(--raised);border:1px solid var(--border);border-radius:var(--R);box-shadow:0 8px 24px var(--shadow);overflow:hidden;font:13px var(--ui)}
+.pop .li{height:28px}
+.mn u{text-decoration:underline;text-underline-offset:2px;color:var(--accent);font-weight:700}
+.sep{height:1px;background:var(--border-subtle);margin:4px 0}
+
+/* grids & cards */
+.thumb{position:relative;background:var(--recessed);border:1px solid var(--border-subtle);border-radius:var(--rs);overflow:hidden;display:grid;place-items:center;color:var(--text-faint)}
+.thumb.sel{outline:2px solid var(--accent);outline-offset:1px}
+.thumb .dim{position:absolute;inset-block-end:4px;inset-inline-end:4px;font:10px var(--mono);padding:1px 4px;background:color-mix(in srgb,var(--bg) 80%,transparent);color:var(--text);border-radius:var(--rs)}
+.ph1{background:color-mix(in srgb,var(--blue) 35%,var(--bg-dark))}
+.ph2{background:color-mix(in srgb,var(--orange) 35%,var(--bg-dark))}
+.ph3{background:color-mix(in srgb,var(--green) 30%,var(--bg-dark))}
+.ph4{background:color-mix(in srgb,var(--magenta) 30%,var(--bg-dark))}
+.ph5{background:color-mix(in srgb,var(--cyan) 30%,var(--bg-dark))}
+.ph6{background:color-mix(in srgb,var(--yellow) 30%,var(--bg-dark))}
+.thumb svg.mt{position:absolute;inset:auto 0 0 0;width:100%;height:60%;fill:color-mix(in srgb,var(--bg) 45%,transparent);stroke:none}
+
+/* diff */
+.del{color:var(--red);background:color-mix(in srgb,var(--red) 16%,var(--bg));text-decoration:line-through}
+.ins{color:var(--green);background:color-mix(in srgb,var(--green) 16%,var(--bg));text-decoration:underline;text-underline-offset:3px}
+.hunk{display:inline-flex;gap:2px;vertical-align:middle;margin:0 2px}
+.hunk span{width:18px;height:18px;display:inline-grid;place-items:center;border:1px solid var(--border-subtle);border-radius:var(--rs);background:var(--surface)}
+.hunk .a{color:var(--green)}.hunk .x{color:var(--text-muted)}
+.hunk.f span:first-child{outline:2px solid var(--accent)}
+
+/* ghost window used behind overlays */
+.ghost .gl{height:9px;border-radius:2px;background:var(--hover);margin:9px 0}
+.ghost .gl.h{height:14px;width:45%;background:color-mix(in srgb,var(--magenta) 35%,var(--bg))}
+.ghost .gtr{height:9px;border-radius:2px;background:color-mix(in srgb,var(--fg) 12%,var(--bg-dark));margin:11px 12px}
+
+/* settings */
+.set-nav{width:180px;flex:none;border-inline-end:1px solid var(--border-subtle);padding:6px 0;background:var(--recessed)}
+.set-nav .li{height:30px}
+.set-body{flex:1;overflow:hidden;padding:4px 20px 16px}
+.set-h{font:600 13px var(--ui);color:var(--strong);margin:14px 0 2px}
+.srow{min-height:44px;display:flex;align-items:center;gap:16px;padding:8px 0;border-bottom:1px solid var(--border-subtle)}
+.srow .lab{flex:1;min-width:0}
+.srow .lab div:first-child{color:var(--strong)}
+.srow .lab div+div{font-size:12px;color:var(--text-muted);line-height:16px}
+.srow .ctl2{display:flex;align-items:center;gap:8px}
+.ovr{width:6px;height:6px;border-radius:50%;background:var(--yellow);display:inline-block;margin-inline-start:6px;vertical-align:middle}
+
+/* narrow-specific */
+.drawer{position:absolute;inset-block:0 24px;inset-inline-start:0;width:300px;background:var(--recessed);border-inline-end:1px solid var(--border);box-shadow:8px 0 24px var(--shadow);display:flex;flex-direction:column}
+
+/* component sheet */
+.sheet{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(min(100%,560px),1fr))}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--R);overflow:hidden}
+.card h3{font:600 12px var(--mono);color:var(--text-muted);padding:8px 12px;border-bottom:1px solid var(--border-subtle);background:var(--recessed)}
+.card .pad{padding:12px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.card .stack{display:flex;flex-direction:column}
+.card .status{border-top:0;border-bottom:1px solid var(--border-subtle)}
+.sw4{display:inline-flex;height:14px;border:1px solid var(--border-subtle);border-radius:var(--rs);overflow:hidden;flex:none}
+.sw4 i{width:12px}
+
+@media (prefers-reduced-motion:no-preference){.ctl label{transition:border-color .12s}}
+@media (max-width:760px){.g-head{grid-template-columns:1fr}.controls{justify-items:start}.ctl{justify-content:flex-start}}
+</style>
+</head>
+<body>
+<input class="radio" type="radio" name="theme" id="th-tokyo" checked>
+<input class="radio" type="radio" name="theme" id="th-gruvbox">
+<input class="radio" type="radio" name="theme" id="th-everforest">
+<input class="radio" type="radio" name="theme" id="th-kanagawa">
+<input class="radio" type="radio" name="theme" id="th-latte">
+<input class="radio" type="radio" name="theme" id="th-rose">
+<input class="radio" type="radio" name="corner" id="rc-0" checked>
+<input class="radio" type="radio" name="corner" id="rc-6">
+
+<div class="page">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+<defs>
+<!-- UI icons: Phosphor (regular), from assets/icons/phosphor.json. Logo: assets/brand/icon.svg -->
+<symbol id="i-side" viewBox="0 0 256 256"><path d="M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40ZM40,152H56a8,8,0,0,0,0-16H40V120H56a8,8,0,0,0,0-16H40V88H56a8,8,0,0,0,0-16H40V56H80V200H40Zm176,48H96V56H216V200Z"/></symbol>
+<symbol id="i-file" viewBox="0 0 256 256"><path d="M213.66,82.34l-56-56A8,8,0,0,0,152,24H56A16,16,0,0,0,40,40V216a16,16,0,0,0,16,16H200a16,16,0,0,0,16-16V88A8,8,0,0,0,213.66,82.34ZM160,51.31,188.69,80H160ZM200,216H56V40h88V88a8,8,0,0,0,8,8h48V216Zm-32-80a8,8,0,0,1-8,8H96a8,8,0,0,1,0-16h64A8,8,0,0,1,168,136Zm0,32a8,8,0,0,1-8,8H96a8,8,0,0,1,0-16h64A8,8,0,0,1,168,168Z"/></symbol>
+<symbol id="i-fileplus" viewBox="0 0 256 256"><path d="M213.66,82.34l-56-56A8,8,0,0,0,152,24H56A16,16,0,0,0,40,40V216a16,16,0,0,0,16,16H200a16,16,0,0,0,16-16V88A8,8,0,0,0,213.66,82.34ZM160,51.31,188.69,80H160ZM200,216H56V40h88V88a8,8,0,0,0,8,8h48V216Zm-40-64a8,8,0,0,1-8,8H136v16a8,8,0,0,1-16,0V160H104a8,8,0,0,1,0-16h16V128a8,8,0,0,1,16,0v16h16A8,8,0,0,1,160,152Z"/></symbol>
+<symbol id="i-folder" viewBox="0 0 256 256"><path d="M216,72H131.31L104,44.69A15.86,15.86,0,0,0,92.69,40H40A16,16,0,0,0,24,56V200.62A15.4,15.4,0,0,0,39.38,216H216.89A15.13,15.13,0,0,0,232,200.89V88A16,16,0,0,0,216,72ZM40,56H92.69l16,16H40ZM216,200H40V88H216Z"/></symbol>
+<symbol id="i-folderopen" viewBox="0 0 256 256"><path d="M245,110.64A16,16,0,0,0,232,104H216V88a16,16,0,0,0-16-16H130.67L102.94,51.2a16.14,16.14,0,0,0-9.6-3.2H40A16,16,0,0,0,24,64V208h0a8,8,0,0,0,8,8H211.1a8,8,0,0,0,7.59-5.47l28.49-85.47A16.05,16.05,0,0,0,245,110.64ZM93.34,64,123.2,86.4A8,8,0,0,0,128,88h72v16H69.77a16,16,0,0,0-15.18,10.94L40,158.7V64Zm112,136H43.1l26.67-80H232Z"/></symbol>
+<symbol id="i-folderplus" viewBox="0 0 256 256"><path d="M216,72H131.31L104,44.69A15.86,15.86,0,0,0,92.69,40H40A16,16,0,0,0,24,56V200.62A15.4,15.4,0,0,0,39.38,216H216.89A15.13,15.13,0,0,0,232,200.89V88A16,16,0,0,0,216,72ZM92.69,56l16,16H40V56ZM216,200H40V88H216Zm-88-88a8,8,0,0,1,8,8v16h16a8,8,0,0,1,0,16H136v16a8,8,0,0,1-16,0V152H104a8,8,0,0,1,0-16h16V120A8,8,0,0,1,128,112Z"/></symbol>
+<symbol id="i-chr" viewBox="0 0 256 256"><path d="M181.66,133.66l-80,80a8,8,0,0,1-11.32-11.32L164.69,128,90.34,53.66a8,8,0,0,1,11.32-11.32l80,80A8,8,0,0,1,181.66,133.66Z"/></symbol>
+<symbol id="i-chd" viewBox="0 0 256 256"><path d="M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,53.66,90.34L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z"/></symbol>
+<symbol id="i-search" viewBox="0 0 256 256"><path d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z"/></symbol>
+<symbol id="i-eye" viewBox="0 0 256 256"><path d="M247.31,124.76c-.35-.79-8.82-19.58-27.65-38.41C194.57,61.26,162.88,48,128,48S61.43,61.26,36.34,86.35C17.51,105.18,9,124,8.69,124.76a8,8,0,0,0,0,6.5c.35.79,8.82,19.57,27.65,38.4C61.43,194.74,93.12,208,128,208s66.57-13.26,91.66-38.34c18.83-18.83,27.3-37.61,27.65-38.4A8,8,0,0,0,247.31,124.76ZM128,192c-30.78,0-57.67-11.19-79.93-33.25A133.47,133.47,0,0,1,25,128,133.33,133.33,0,0,1,48.07,97.25C70.33,75.19,97.22,64,128,64s57.67,11.19,79.93,33.25A133.46,133.46,0,0,1,231.05,128C223.84,141.46,192.43,192,128,192Zm0-112a48,48,0,1,0,48,48A48.05,48.05,0,0,0,128,80Zm0,80a32,32,0,1,1,32-32A32,32,0,0,1,128,160Z"/></symbol>
+<symbol id="i-dots" viewBox="0 0 256 256"><path d="M140,128a12,12,0,1,1-12-12A12,12,0,0,1,140,128Zm56-12a12,12,0,1,0,12,12A12,12,0,0,0,196,116ZM60,116a12,12,0,1,0,12,12A12,12,0,0,0,60,116Z"/></symbol>
+<symbol id="i-image" viewBox="0 0 256 256"><path d="M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40Zm0,16V158.75l-26.07-26.06a16,16,0,0,0-22.63,0l-20,20-44-44a16,16,0,0,0-22.62,0L40,149.37V56ZM40,172l52-52,80,80H40Zm176,28H194.63l-36-36,20-20L216,181.38V200ZM144,100a12,12,0,1,1,12,12A12,12,0,0,1,144,100Z"/></symbol>
+<symbol id="i-images" viewBox="0 0 256 256"><path d="M216,40H72A16,16,0,0,0,56,56V72H40A16,16,0,0,0,24,88V200a16,16,0,0,0,16,16H184a16,16,0,0,0,16-16V184h16a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40ZM72,56H216v62.75l-10.07-10.06a16,16,0,0,0-22.63,0l-20,20-44-44a16,16,0,0,0-22.62,0L72,109.37ZM184,200H40V88H56v80a16,16,0,0,0,16,16H184Zm32-32H72V132l36-36,49.66,49.66a8,8,0,0,0,11.31,0L194.63,120,216,141.38V168ZM160,84a12,12,0,1,1,12,12A12,12,0,0,1,160,84Z"/></symbol>
+<symbol id="i-gear" viewBox="0 0 256 256"><path d="M128,80a48,48,0,1,0,48,48A48.05,48.05,0,0,0,128,80Zm0,80a32,32,0,1,1,32-32A32,32,0,0,1,128,160Zm88-29.84q.06-2.16,0-4.32l14.92-18.64a8,8,0,0,0,1.48-7.06,107.21,107.21,0,0,0-10.88-26.25,8,8,0,0,0-6-3.93l-23.72-2.64q-1.48-1.56-3-3L186,40.54a8,8,0,0,0-3.94-6,107.71,107.71,0,0,0-26.25-10.87,8,8,0,0,0-7.06,1.49L130.16,40Q128,40,125.84,40L107.2,25.11a8,8,0,0,0-7.06-1.48A107.6,107.6,0,0,0,73.89,34.51a8,8,0,0,0-3.93,6L67.32,64.27q-1.56,1.49-3,3L40.54,70a8,8,0,0,0-6,3.94,107.71,107.71,0,0,0-10.87,26.25,8,8,0,0,0,1.49,7.06L40,125.84Q40,128,40,130.16L25.11,148.8a8,8,0,0,0-1.48,7.06,107.21,107.21,0,0,0,10.88,26.25,8,8,0,0,0,6,3.93l23.72,2.64q1.49,1.56,3,3L70,215.46a8,8,0,0,0,3.94,6,107.71,107.71,0,0,0,26.25,10.87,8,8,0,0,0,7.06-1.49L125.84,216q2.16.06,4.32,0l18.64,14.92a8,8,0,0,0,7.06,1.48,107.21,107.21,0,0,0,26.25-10.88,8,8,0,0,0,3.93-6l2.64-23.72q1.56-1.48,3-3L215.46,186a8,8,0,0,0,6-3.94,107.71,107.71,0,0,0,10.87-26.25,8,8,0,0,0-1.49-7.06Zm-16.1-6.5a73.93,73.93,0,0,1,0,8.68,8,8,0,0,0,1.74,5.48l14.19,17.73a91.57,91.57,0,0,1-6.23,15L187,173.11a8,8,0,0,0-5.1,2.64,74.11,74.11,0,0,1-6.14,6.14,8,8,0,0,0-2.64,5.1l-2.51,22.58a91.32,91.32,0,0,1-15,6.23l-17.74-14.19a8,8,0,0,0-5-1.75h-.48a73.93,73.93,0,0,1-8.68,0,8,8,0,0,0-5.48,1.74L100.45,215.8a91.57,91.57,0,0,1-15-6.23L82.89,187a8,8,0,0,0-2.64-5.1,74.11,74.11,0,0,1-6.14-6.14,8,8,0,0,0-5.1-2.64L46.43,170.6a91.32,91.32,0,0,1-6.23-15l14.19-17.74a8,8,0,0,0,1.74-5.48,73.93,73.93,0,0,1,0-8.68,8,8,0,0,0-1.74-5.48L40.2,100.45a91.57,91.57,0,0,1,6.23-15L69,82.89a8,8,0,0,0,5.1-2.64,74.11,74.11,0,0,1,6.14-6.14A8,8,0,0,0,82.89,69L85.4,46.43a91.32,91.32,0,0,1,15-6.23l17.74,14.19a8,8,0,0,0,5.48,1.74,73.93,73.93,0,0,1,8.68,0,8,8,0,0,0,5.48-1.74L155.55,40.2a91.57,91.57,0,0,1,15,6.23L173.11,69a8,8,0,0,0,2.64,5.1,74.11,74.11,0,0,1,6.14,6.14,8,8,0,0,0,5.1,2.64l22.58,2.51a91.32,91.32,0,0,1,6.23,15l-14.19,17.74A8,8,0,0,0,199.87,123.66Z"/></symbol>
+<symbol id="i-help" viewBox="0 0 256 256"><path d="M140,180a12,12,0,1,1-12-12A12,12,0,0,1,140,180ZM128,72c-22.06,0-40,16.15-40,36v4a8,8,0,0,0,16,0v-4c0-11,10.77-20,24-20s24,9,24,20-10.77,20-24,20a8,8,0,0,0-8,8v8a8,8,0,0,0,16,0v-.72c18.24-3.35,32-17.9,32-35.28C168,88.15,150.06,72,128,72Zm104,56A104,104,0,1,1,128,24,104.11,104.11,0,0,1,232,128Zm-16,0a88,88,0,1,0-88,88A88.1,88.1,0,0,0,216,128Z"/></symbol>
+<symbol id="i-x" viewBox="0 0 256 256"><path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z"/></symbol>
+<symbol id="i-check" viewBox="0 0 256 256"><path d="M229.66,77.66l-128,128a8,8,0,0,1-11.32,0l-56-56a8,8,0,0,1,11.32-11.32L96,188.69,218.34,66.34a8,8,0,0,1,11.32,11.32Z"/></symbol>
+<symbol id="i-warn" viewBox="0 0 256 256"><path d="M236.8,188.09,149.35,36.22h0a24.76,24.76,0,0,0-42.7,0L19.2,188.09a23.51,23.51,0,0,0,0,23.72A24.35,24.35,0,0,0,40.55,224h174.9a24.35,24.35,0,0,0,21.33-12.19A23.51,23.51,0,0,0,236.8,188.09ZM222.93,203.8a8.5,8.5,0,0,1-7.48,4.2H40.55a8.5,8.5,0,0,1-7.48-4.2,7.59,7.59,0,0,1,0-7.72L120.52,44.21a8.75,8.75,0,0,1,15,0l87.45,151.87A7.59,7.59,0,0,1,222.93,203.8ZM120,144V104a8,8,0,0,1,16,0v40a8,8,0,0,1-16,0Zm20,36a12,12,0,1,1-12-12A12,12,0,0,1,140,180Z"/></symbol>
+<symbol id="i-cx" viewBox="0 0 256 256"><path d="M165.66,101.66,139.31,128l26.35,26.34a8,8,0,0,1-11.32,11.32L128,139.31l-26.34,26.35a8,8,0,0,1-11.32-11.32L116.69,128,90.34,101.66a8,8,0,0,1,11.32-11.32L128,116.69l26.34-26.35a8,8,0,0,1,11.32,11.32ZM232,128A104,104,0,1,1,128,24,104.11,104.11,0,0,1,232,128Zm-16,0a88,88,0,1,0-88,88A88.1,88.1,0,0,0,216,128Z"/></symbol>
+<symbol id="i-info" viewBox="0 0 256 256"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm16-40a8,8,0,0,1-8,8,16,16,0,0,1-16-16V128a8,8,0,0,1,0-16,16,16,0,0,1,16,16v40A8,8,0,0,1,144,176ZM112,84a12,12,0,1,1,12,12A12,12,0,0,1,112,84Z"/></symbol>
+<symbol id="i-drive" viewBox="0 0 256 256"><path d="M128,24C74.17,24,32,48.6,32,80v96c0,31.4,42.17,56,96,56s96-24.6,96-56V80C224,48.6,181.83,24,128,24Zm80,104c0,9.62-7.88,19.43-21.61,26.92C170.93,163.35,150.19,168,128,168s-42.93-4.65-58.39-13.08C55.88,147.43,48,137.62,48,128V111.36c17.06,15,46.23,24.64,80,24.64s62.94-9.68,80-24.64ZM69.61,53.08C85.07,44.65,105.81,40,128,40s42.93,4.65,58.39,13.08C200.12,60.57,208,70.38,208,80s-7.88,19.43-21.61,26.92C170.93,115.35,150.19,120,128,120s-42.93-4.65-58.39-13.08C55.88,99.43,48,89.62,48,80S55.88,60.57,69.61,53.08ZM186.39,202.92C170.93,211.35,150.19,216,128,216s-42.93-4.65-58.39-13.08C55.88,195.43,48,185.62,48,176V159.36c17.06,15,46.23,24.64,80,24.64s62.94-9.68,80-24.64V176C208,185.62,200.12,195.43,186.39,202.92Z"/></symbol>
+<symbol id="i-spark" viewBox="0 0 256 256"><path d="M197.58,129.06,146,110l-19-51.62a15.92,15.92,0,0,0-29.88,0L78,110l-51.62,19a15.92,15.92,0,0,0,0,29.88L78,178l19,51.62a15.92,15.92,0,0,0,29.88,0L146,178l51.62-19a15.92,15.92,0,0,0,0-29.88ZM137,164.22a8,8,0,0,0-4.74,4.74L112,223.85,91.78,169A8,8,0,0,0,87,164.22L32.15,144,87,123.78A8,8,0,0,0,91.78,119L112,64.15,132.22,119a8,8,0,0,0,4.74,4.74L191.85,144ZM144,40a8,8,0,0,1,8-8h16V16a8,8,0,0,1,16,0V32h16a8,8,0,0,1,0,16H184V64a8,8,0,0,1-16,0V48H152A8,8,0,0,1,144,40ZM248,88a8,8,0,0,1-8,8h-8v8a8,8,0,0,1-16,0V96h-8a8,8,0,0,1,0-16h8V72a8,8,0,0,1,16,0v8h8A8,8,0,0,1,248,88Z"/></symbol>
+<symbol id="i-table" viewBox="0 0 256 256"><path d="M224,48H32a8,8,0,0,0-8,8V192a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A8,8,0,0,0,224,48ZM40,112H80v32H40Zm56,0H216v32H96ZM216,64V96H40V64ZM40,160H80v32H40Zm176,32H96V160H216v32Z"/></symbol>
+<symbol id="i-code" viewBox="0 0 256 256"><path d="M69.12,94.15,28.5,128l40.62,33.85a8,8,0,1,1-10.24,12.29l-48-40a8,8,0,0,1,0-12.29l48-40a8,8,0,0,1,10.24,12.3Zm176,27.7-48-40a8,8,0,1,0-10.24,12.3L227.5,128l-40.62,33.85a8,8,0,1,0,10.24,12.29l48-40a8,8,0,0,0,0-12.29ZM162.73,32.48a8,8,0,0,0-10.25,4.79l-64,176a8,8,0,0,0,4.79,10.26A8.14,8.14,0,0,0,96,224a8,8,0,0,0,7.52-5.27l64-176A8,8,0,0,0,162.73,32.48Z"/></symbol>
+<symbol id="i-smile" viewBox="0 0 256 256"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216ZM80,108a12,12,0,1,1,12,12A12,12,0,0,1,80,108Zm96,0a12,12,0,1,1-12-12A12,12,0,0,1,176,108Zm-1.07,48c-10.29,17.79-27.4,28-46.93,28s-36.63-10.2-46.92-28a8,8,0,1,1,13.84-8c7.47,12.91,19.21,20,33.08,20s25.61-7.1,33.07-20a8,8,0,0,1,13.86,8Z"/></symbol>
+<symbol id="i-video" viewBox="0 0 256 256"><path d="M251.77,73a8,8,0,0,0-8.21.39L208,97.05V72a16,16,0,0,0-16-16H32A16,16,0,0,0,16,72V184a16,16,0,0,0,16,16H192a16,16,0,0,0,16-16V159l35.56,23.71A8,8,0,0,0,248,184a8,8,0,0,0,8-8V80A8,8,0,0,0,251.77,73ZM192,184H32V72H192V184Zm48-22.95-32-21.33V116.28L240,95Z"/></symbol>
+<symbol id="i-link" viewBox="0 0 256 256"><path d="M240,88.23a54.43,54.43,0,0,1-16,37L189.25,160a54.27,54.27,0,0,1-38.63,16h-.05A54.63,54.63,0,0,1,96,119.84a8,8,0,0,1,16,.45A38.62,38.62,0,0,0,150.58,160h0a38.39,38.39,0,0,0,27.31-11.31l34.75-34.75a38.63,38.63,0,0,0-54.63-54.63l-11,11A8,8,0,0,1,135.7,59l11-11A54.65,54.65,0,0,1,224,48,54.86,54.86,0,0,1,240,88.23ZM109,185.66l-11,11A38.41,38.41,0,0,1,70.6,208h0a38.63,38.63,0,0,1-27.29-65.94L78,107.31A38.63,38.63,0,0,1,144,135.71a8,8,0,0,0,16,.45A54.86,54.86,0,0,0,144,96a54.65,54.65,0,0,0-77.27,0L32,130.75A54.62,54.62,0,0,0,70.56,224h0a54.28,54.28,0,0,0,38.64-16l11-11A8,8,0,0,0,109,185.66Z"/></symbol>
+<symbol id="i-up" viewBox="0 0 256 256"><path d="M205.66,117.66a8,8,0,0,1-11.32,0L136,59.31V216a8,8,0,0,1-16,0V59.31L61.66,117.66a8,8,0,0,1-11.32-11.32l72-72a8,8,0,0,1,11.32,0l72,72A8,8,0,0,1,205.66,117.66Z"/></symbol>
+<symbol id="i-down" viewBox="0 0 256 256"><path d="M205.66,149.66l-72,72a8,8,0,0,1-11.32,0l-72-72a8,8,0,0,1,11.32-11.32L120,196.69V40a8,8,0,0,1,16,0V196.69l58.34-58.35a8,8,0,0,1,11.32,11.32Z"/></symbol>
+<symbol id="i-hist" viewBox="0 0 256 256"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm64-88a8,8,0,0,1-8,8H128a8,8,0,0,1-8-8V72a8,8,0,0,1,16,0v48h48A8,8,0,0,1,192,128Z"/></symbol>
+<symbol id="i-upload" viewBox="0 0 256 256"><path d="M224,144v64a8,8,0,0,1-8,8H40a8,8,0,0,1-8-8V144a8,8,0,0,1,16,0v56H208V144a8,8,0,0,1,16,0ZM93.66,77.66,120,51.31V144a8,8,0,0,0,16,0V51.31l26.34,26.35a8,8,0,0,0,11.32-11.32l-40-40a8,8,0,0,0-11.32,0l-40,40A8,8,0,0,0,93.66,77.66Z"/></symbol>
+<symbol id="i-globe" viewBox="0 0 256 256"><path d="M128,24h0A104,104,0,1,0,232,128,104.12,104.12,0,0,0,128,24Zm88,104a87.61,87.61,0,0,1-3.33,24H174.16a157.44,157.44,0,0,0,0-48h38.51A87.61,87.61,0,0,1,216,128ZM102,168H154a115.11,115.11,0,0,1-26,45A115.27,115.27,0,0,1,102,168Zm-3.9-16a140.84,140.84,0,0,1,0-48h59.88a140.84,140.84,0,0,1,0,48ZM40,128a87.61,87.61,0,0,1,3.33-24H81.84a157.44,157.44,0,0,0,0,48H43.33A87.61,87.61,0,0,1,40,128ZM154,88H102a115.11,115.11,0,0,1,26-45A115.27,115.27,0,0,1,154,88Zm52.33,0H170.71a135.28,135.28,0,0,0-22.3-45.6A88.29,88.29,0,0,1,206.37,88ZM107.59,42.4A135.28,135.28,0,0,0,85.29,88H49.63A88.29,88.29,0,0,1,107.59,42.4ZM49.63,168H85.29a135.28,135.28,0,0,0,22.3,45.6A88.29,88.29,0,0,1,49.63,168Zm98.78,45.6a135.28,135.28,0,0,0,22.3-45.6h35.66A88.29,88.29,0,0,1,148.41,213.6Z"/></symbol>
+<symbol id="i-minus" viewBox="0 0 256 256"><path d="M224,128a8,8,0,0,1-8,8H40a8,8,0,0,1,0-16H216A8,8,0,0,1,224,128Z"/></symbol>
+<symbol id="i-plus" viewBox="0 0 256 256"><path d="M224,128a8,8,0,0,1-8,8H136v80a8,8,0,0,1-16,0V136H40a8,8,0,0,1,0-16h80V40a8,8,0,0,1,16,0v80h80A8,8,0,0,1,224,128Z"/></symbol>
+<symbol id="i-trash" viewBox="0 0 256 256"><path d="M216,48H176V40a24,24,0,0,0-24-24H104A24,24,0,0,0,80,40v8H40a8,8,0,0,0,0,16h8V208a16,16,0,0,0,16,16H192a16,16,0,0,0,16-16V64h8a8,8,0,0,0,0-16ZM96,40a8,8,0,0,1,8-8h48a8,8,0,0,1,8,8v8H96Zm96,168H64V64H192ZM112,104v64a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Zm48,0v64a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Z"/></symbol>
+<symbol id="i-pencil" viewBox="0 0 256 256"><path d="M227.31,73.37,182.63,28.68a16,16,0,0,0-22.63,0L36.69,152A15.86,15.86,0,0,0,32,163.31V208a16,16,0,0,0,16,16H92.69A15.86,15.86,0,0,0,104,219.31L227.31,96a16,16,0,0,0,0-22.63ZM92.69,208H48V163.31l88-88L180.69,120ZM192,108.68,147.31,64l24-24L216,84.68Z"/></symbol>
+<symbol id="i-copy" viewBox="0 0 256 256"><path d="M216,32H88a8,8,0,0,0-8,8V80H40a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H168a8,8,0,0,0,8-8V176h40a8,8,0,0,0,8-8V40A8,8,0,0,0,216,32ZM160,208H48V96H160Zm48-48H176V88a8,8,0,0,0-8-8H96V48H208Z"/></symbol>
+<symbol id="i-heading" viewBox="0 0 256 256"><path d="M224,88H175.4l8.47-46.57a8,8,0,0,0-15.74-2.86l-9,49.43H111.4l8.47-46.57a8,8,0,0,0-15.74-2.86L95.14,88H48a8,8,0,0,0,0,16H92.23L83.5,152H32a8,8,0,0,0,0,16H80.6l-8.47,46.57a8,8,0,0,0,6.44,9.3A7.79,7.79,0,0,0,80,224a8,8,0,0,0,7.86-6.57l9-49.43H144.6l-8.47,46.57a8,8,0,0,0,6.44,9.3A7.79,7.79,0,0,0,144,224a8,8,0,0,0,7.86-6.57l9-49.43H208a8,8,0,0,0,0-16H163.77l8.73-48H224a8,8,0,0,0,0-16Zm-76.5,64H99.77l8.73-48h47.73Z"/></symbol>
+<symbol id="i-list" viewBox="0 0 256 256"><path d="M224,128a8,8,0,0,1-8,8H40a8,8,0,0,1,0-16H216A8,8,0,0,1,224,128ZM40,72H216a8,8,0,0,0,0-16H40a8,8,0,0,0,0,16ZM216,184H40a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16Z"/></symbol>
+<symbol id="i-checks" viewBox="0 0 256 256"><path d="M224,128a8,8,0,0,1-8,8H128a8,8,0,0,1,0-16h88A8,8,0,0,1,224,128ZM128,72h88a8,8,0,0,0,0-16H128a8,8,0,0,0,0,16Zm88,112H128a8,8,0,0,0,0,16h88a8,8,0,0,0,0-16ZM82.34,42.34,56,68.69,45.66,58.34A8,8,0,0,0,34.34,69.66l16,16a8,8,0,0,0,11.32,0l32-32A8,8,0,0,0,82.34,42.34Zm0,64L56,132.69,45.66,122.34a8,8,0,0,0-11.32,11.32l16,16a8,8,0,0,0,11.32,0l32-32a8,8,0,0,0-11.32-11.32Zm0,64L56,196.69,45.66,186.34a8,8,0,0,0-11.32,11.32l16,16a8,8,0,0,0,11.32,0l32-32a8,8,0,0,0-11.32-11.32Z"/></symbol>
+<symbol id="i-sigma" viewBox="0 0 256 256"><path d="M184,72V56H80.65l53.6,67a8,8,0,0,1,0,10l-53.6,67H184V184a8,8,0,0,1,16,0v24a8,8,0,0,1-8,8H64a8,8,0,0,1-6.25-13l60-75-60-75A8,8,0,0,1,64,40H192a8,8,0,0,1,8,8V72a8,8,0,0,1-16,0Z"/></symbol>
+<symbol id="i-quote" viewBox="0 0 256 256"><path d="M100,56H40A16,16,0,0,0,24,72v64a16,16,0,0,0,16,16h60v8a32,32,0,0,1-32,32,8,8,0,0,0,0,16,48.05,48.05,0,0,0,48-48V72A16,16,0,0,0,100,56Zm0,80H40V72h60ZM216,56H156a16,16,0,0,0-16,16v64a16,16,0,0,0,16,16h60v8a32,32,0,0,1-32,32,8,8,0,0,0,0,16,48.05,48.05,0,0,0,48-48V72A16,16,0,0,0,216,56Zm0,80H156V72h60Z"/></symbol>
+<symbol id="i-grid" viewBox="0 0 256 256"><path d="M104,40H56A16,16,0,0,0,40,56v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V56A16,16,0,0,0,104,40Zm0,64H56V56h48v48Zm96-64H152a16,16,0,0,0-16,16v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V56A16,16,0,0,0,200,40Zm0,64H152V56h48v48Zm-96,32H56a16,16,0,0,0-16,16v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V152A16,16,0,0,0,104,136Zm0,64H56V152h48v48Zm96-64H152a16,16,0,0,0-16,16v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V152A16,16,0,0,0,200,136Zm0,64H152V152h48v48Z"/></symbol>
+<symbol id="i-al" viewBox="0 0 256 256"><path d="M32,64a8,8,0,0,1,8-8H216a8,8,0,0,1,0,16H40A8,8,0,0,1,32,64Zm8,48H168a8,8,0,0,0,0-16H40a8,8,0,0,0,0,16Zm176,24H40a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16Zm-48,40H40a8,8,0,0,0,0,16H168a8,8,0,0,0,0-16Z"/></symbol>
+<symbol id="i-ac" viewBox="0 0 256 256"><path d="M32,64a8,8,0,0,1,8-8H216a8,8,0,0,1,0,16H40A8,8,0,0,1,32,64ZM64,96a8,8,0,0,0,0,16H192a8,8,0,0,0,0-16Zm152,40H40a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16Zm-24,40H64a8,8,0,0,0,0,16H192a8,8,0,0,0,0-16Z"/></symbol>
+<symbol id="i-ar" viewBox="0 0 256 256"><g transform="translate(256 0) scale(-1 1)"><path d="M32,64a8,8,0,0,1,8-8H216a8,8,0,0,1,0,16H40A8,8,0,0,1,32,64Zm8,48H168a8,8,0,0,0,0-16H40a8,8,0,0,0,0,16Zm176,24H40a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16Zm-48,40H40a8,8,0,0,0,0,16H168a8,8,0,0,0,0-16Z"/></g></symbol>
+<symbol id="i-cursor" viewBox="0 0 256 256"><path d="M168,128a8,8,0,0,1-8,8H96a8,8,0,0,1,0-16h64A8,8,0,0,1,168,128Zm-8,24H96a8,8,0,0,0,0,16h64a8,8,0,0,0,0-16ZM216,40V200a32,32,0,0,1-32,32H72a32,32,0,0,1-32-32V40a8,8,0,0,1,8-8H72V24a8,8,0,0,1,16,0v8h32V24a8,8,0,0,1,16,0v8h32V24a8,8,0,0,1,16,0v8h24A8,8,0,0,1,216,40Zm-16,8H184v8a8,8,0,0,1-16,0V48H136v8a8,8,0,0,1-16,0V48H88v8a8,8,0,0,1-16,0V48H56V200a16,16,0,0,0,16,16H184a16,16,0,0,0,16-16Z"/></symbol>
+<symbol id="i-lock" viewBox="0 0 256 256"><path d="M208,80H176V56a48,48,0,0,0-96,0V80H48A16,16,0,0,0,32,96V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V96A16,16,0,0,0,208,80ZM96,56a32,32,0,0,1,64,0V80H96ZM208,208H48V96H208V208Zm-68-56a12,12,0,1,1-12-12A12,12,0,0,1,140,152Z"/></symbol>
+<symbol id="i-play" viewBox="0 0 256 256"><path d="M232.4,114.49,88.32,26.35a16,16,0,0,0-16.2-.3A15.86,15.86,0,0,0,64,39.87V216.13A15.94,15.94,0,0,0,80,232a16.07,16.07,0,0,0,8.36-2.35L232.4,141.51a15.81,15.81,0,0,0,0-27ZM80,215.94V40l143.83,88Z"/></symbol>
+<symbol id="i-diff" viewBox="0 0 256 256"><path d="M208,112a32.05,32.05,0,0,0-30.69,23l-42.21-6a8,8,0,0,1-4.95-2.71L94.43,84.55A32,32,0,1,0,72,87v82a32,32,0,1,0,16,0V101.63l30,35a24,24,0,0,0,14.83,8.14l44,6.28A32,32,0,1,0,208,112ZM64,56A16,16,0,1,1,80,72,16,16,0,0,1,64,56ZM96,200a16,16,0,1,1-16-16A16,16,0,0,1,96,200Zm112-40a16,16,0,1,1,16-16A16,16,0,0,1,208,160Z"/></symbol>
+<symbol id="i-refresh" viewBox="0 0 256 256"><path d="M224,48V96a8,8,0,0,1-8,8H168a8,8,0,0,1,0-16h28.69L182.06,73.37a79.56,79.56,0,0,0-56.13-23.43h-.45A79.52,79.52,0,0,0,69.59,72.71,8,8,0,0,1,58.41,61.27a96,96,0,0,1,135,.79L208,76.69V48a8,8,0,0,1,16,0ZM186.41,183.29a80,80,0,0,1-112.47-.66L59.31,168H88a8,8,0,0,0,0-16H40a8,8,0,0,0-8,8v48a8,8,0,0,0,16,0V179.31l14.63,14.63A95.43,95.43,0,0,0,130,222.06h.53a95.36,95.36,0,0,0,67.07-27.33,8,8,0,0,0-11.18-11.44Z"/></symbol>
+<symbol id="i-cloud" viewBox="0 0 256 256"><path d="M160,40A88.09,88.09,0,0,0,81.29,88.67,64,64,0,1,0,72,216h88a88,88,0,0,0,0-176Zm0,160H72a48,48,0,0,1,0-96c1.1,0,2.2,0,3.29.11A88,88,0,0,0,72,128a8,8,0,0,0,16,0,72,72,0,1,1,72,72Z"/></symbol>
+<symbol id="i-term" viewBox="0 0 256 256"><path d="M117.31,134l-72,64a8,8,0,1,1-10.63-12L100,128,34.69,70A8,8,0,1,1,45.32,58l72,64a8,8,0,0,1,0,12ZM216,184H120a8,8,0,0,0,0,16h96a8,8,0,0,0,0-16Z"/></symbol>
+<symbol id="i-palette" viewBox="0 0 256 256"><path d="M200.77,53.89A103.27,103.27,0,0,0,128,24h-1.07A104,104,0,0,0,24,128c0,43,26.58,79.06,69.36,94.17A32,32,0,0,0,136,192a16,16,0,0,1,16-16h46.21a31.81,31.81,0,0,0,31.2-24.88,104.43,104.43,0,0,0,2.59-24A103.28,103.28,0,0,0,200.77,53.89Zm13,93.71A15.89,15.89,0,0,1,198.21,160H152a32,32,0,0,0-32,32,16,16,0,0,1-21.31,15.07C62.49,194.3,40,164,40,128a88,88,0,0,1,87.09-88h.9a88.35,88.35,0,0,1,88,87.25A88.86,88.86,0,0,1,213.81,147.6ZM140,76a12,12,0,1,1-12-12A12,12,0,0,1,140,76ZM96,100A12,12,0,1,1,84,88,12,12,0,0,1,96,100Zm0,56a12,12,0,1,1-12-12A12,12,0,0,1,96,156Zm88-56a12,12,0,1,1-12-12A12,12,0,0,1,184,100Z"/></symbol>
+<symbol id="i-type" viewBox="0 0 256 256"><path d="M178.48,115.7A44,44,0,0,0,148,40H80a8,8,0,0,0-8,8V200a8,8,0,0,0,8,8h80a48,48,0,0,0,18.48-92.3ZM88,56h60a28,28,0,0,1,0,56H88Zm72,136H88V128h72a32,32,0,0,1,0,64Z"/></symbol>
+<symbol id="i-kbd" viewBox="0 0 256 256"><path d="M224,88H175.4l8.47-46.57a8,8,0,0,0-15.74-2.86l-9,49.43H111.4l8.47-46.57a8,8,0,0,0-15.74-2.86L95.14,88H48a8,8,0,0,0,0,16H92.23L83.5,152H32a8,8,0,0,0,0,16H80.6l-8.47,46.57a8,8,0,0,0,6.44,9.3A7.79,7.79,0,0,0,80,224a8,8,0,0,0,7.86-6.57l9-49.43H144.6l-8.47,46.57a8,8,0,0,0,6.44,9.3A7.79,7.79,0,0,0,144,224a8,8,0,0,0,7.86-6.57l9-49.43H208a8,8,0,0,0,0-16H163.77l8.73-48H224a8,8,0,0,0,0-16Zm-76.5,64H99.77l8.73-48h47.73Z"/></symbol>
+<symbol id="logo" viewBox="0 0 512 512"> <circle cx="256" cy="256" r="250" fill="#FF6B9D"/> <circle cx="256" cy="256" r="250" fill="none" stroke="#FF6B9D" stroke-width="12"/> <g transform="translate(256, 315) scale(1.8)"> <path d="M-95 -100 L-95 -50 Q-95 60 0 80 Q95 60 95 -50 L95 -100 L-95 -100 Z" fill="#7CB342"/> <path d="M-95 -100 L-95 -50 Q-95 60 0 80 Q95 60 95 -50 L95 -100 L-95 -100 Z" fill="none" stroke="#FF6B9D" stroke-width="6"/> <rect x="-95" y="-130" width="190" height="35" rx="5" fill="#5D4037"/> <rect x="-95" y="-130" width="190" height="35" rx="5" fill="none" stroke="#FF6B9D" stroke-width="4"/> <rect x="-60" y="-155" width="12" height="30" rx="3" fill="#2E2E2E"/> <rect x="-25" y="-160" width="12" height="35" rx="3" fill="#2E2E2E"/> <rect x="15" y="-158" width="12" height="33" rx="3" fill="#2E2E2E"/> <rect x="50" y="-152" width="12" height="27" rx="3" fill="#2E2E2E"/> <line x1="-50" y1="-80" x2="50" y2="-80" stroke="#444" stroke-width="4" stroke-linecap="round"/> <line x1="-40" y1="-90" x2="-40" y2="-70" stroke="#444" stroke-width="3" stroke-linecap="round"/> <line x1="-15" y1="-90" x2="-15" y2="-70" stroke="#444" stroke-width="3" stroke-linecap="round"/> <line x1="15" y1="-90" x2="15" y2="-70" stroke="#444" stroke-width="3" stroke-linecap="round"/> <line x1="40" y1="-90" x2="40" y2="-70" stroke="#444" stroke-width="3" stroke-linecap="round"/> <ellipse cx="-100" cy="-20" rx="18" ry="12" fill="#888"/> <ellipse cx="-100" cy="-20" rx="18" ry="12" fill="none" stroke="#FF6B9D" stroke-width="3"/> <ellipse cx="100" cy="-20" rx="18" ry="12" fill="#888"/> <ellipse cx="100" cy="-20" rx="18" ry="12" fill="none" stroke="#FF6B9D" stroke-width="3"/> <ellipse cx="-40" cy="-25" rx="28" ry="32" fill="white"/> <ellipse cx="-40" cy="-25" rx="28" ry="32" fill="none" stroke="#FF6B9D" stroke-width="3"/> <circle cx="-35" cy="-20" r="15" fill="#2D1B4E"/> <circle cx="-30" cy="-25" r="5" fill="white"/> <ellipse cx="40" cy="-25" rx="28" ry="32" fill="white"/> <ellipse cx="40" cy="-25" rx="28" ry="32" fill="none" stroke="#FF6B9D" stroke-width="3"/> <circle cx="45" cy="-20" r="15" fill="#2D1B4E"/> <circle cx="50" cy="-25" r="5" fill="white"/> <path d="M-70 -60 Q-40 -75 -15 -55" stroke="#2E2E2E" stroke-width="10" stroke-linecap="round" fill="none"/> <path d="M70 -60 Q40 -75 15 -55" stroke="#2E2E2E" stroke-width="10" stroke-linecap="round" fill="none"/> <path d="M-40 40 Q0 70 40 40" stroke="#444" stroke-width="6" stroke-linecap="round" fill="none"/> <ellipse cx="-65" cy="20" rx="15" ry="10" fill="#FF9999" opacity="0.6"/> <ellipse cx="65" cy="20" rx="15" ry="10" fill="#FF9999" opacity="0.6"/> </g> </symbol>
+<symbol id="i-mtn" viewBox="0 0 100 60"><path d="M0 60 L28 22 L46 44 L64 14 L100 60 Z"/></symbol>
+</defs>
+</svg>
+
+<div class="wrap">
+<header class="g-head">
+  <div>
+    <h1 style="display:flex;align-items:center;gap:12px"><svg class="logo" width="40" height="40" aria-hidden="true"><use href="#logo"/></svg>FrankMDFast UI reference</h1>
+    <p>Static mockups for the GPUI + gpui-component build. Icons are Phosphor (regular) from <code>assets/icons/phosphor.json</code>, the logo is <code>assets/brand/icon.svg</code>, and built-in theme swatches come from <code>assets/themes/builtin.json</code>. Every app colour comes from a real Omarchy <code>colors.toml</code>, mapped through the roles in <a href="../ui-spec.md">ui-spec.md §7</a>. A few text and syntax colours in the light themes and Everforest are already contrast-corrected to 4.5:1, as §7.1 requires. Corners follow Hyprland's <code>decoration:rounding</code>: 0 on stock Omarchy, 6 with rounded corners on. Frames are drawn at 1:1 logical pixels.</p>
+  </div>
+  <div class="controls">
+    <div class="ctl" role="radiogroup" aria-label="Theme"><span>theme</span>
+      <label for="th-tokyo"><i class="dot" style="background:#7aa2f7"></i>tokyo-night</label>
+      <label for="th-gruvbox"><i class="dot" style="background:#7daea3"></i>gruvbox</label>
+      <label for="th-everforest"><i class="dot" style="background:#7fbbb3"></i>everforest</label>
+      <label for="th-kanagawa"><i class="dot" style="background:#dcd7ba"></i>kanagawa</label>
+      <label for="th-latte"><i class="dot" style="background:#1e66f5"></i>catppuccin-latte</label>
+      <label for="th-rose"><i class="dot" style="background:#56949f"></i>rose-pine</label>
+    </div>
+    <div class="ctl" role="radiogroup" aria-label="Corner radius"><span>rounding</span>
+      <label for="rc-0">0 (Omarchy default)</label>
+      <label for="rc-6">6 (corners-rounded)</label>
+    </div>
+  </div>
+</header>
+<nav class="toc" aria-label="Mockups">
+  <a href="#main">Main window</a><a href="#empty">Empty state</a><a href="#palette">Command palette</a><a href="#theme">Theme picker</a><a href="#quick">Quick open</a><a href="#search">Search in files</a><a href="#find">Find bar &amp; banners</a><a href="#inline">Inline popovers</a><a href="#image">Insert image</a><a href="#table">Table editor</a><a href="#grammar">Grammar check</a><a href="#recovery">Recovery</a><a href="#settings">Settings</a><a href="#library">Media library</a><a href="#narrow">Narrow tile</a><a href="#firstrun">First run &amp; About</a><a href="#parts">States &amp; parts</a>
+</nav>
+
+<!-- =============================================================== MAIN -->
+<section class="sec" id="main">
+<h2>Main window <small>wide class, split view · spec §3</small></h2>
+<p>Editor focused (accent line on its header). The caret sits in a table, so the status line offers <span class="kbd">Ctrl+.</span> Edit table. No title bar, no toolbar row: the pane headers carry the document identity and four fixed actions.</p>
+<div class="stage">
+<div class="win" style="width:1280px;height:760px">
+ <div class="cols">
+  <aside class="side">
+   <div class="ph" style="padding-left:12px"><span class="vault">notes<svg class="i s14"><use href="#i-chd"/></svg></span><span class="sp"></span><button class="ib" title="New note"><svg class="i"><use href="#i-fileplus"/></svg></button><button class="ib" title="New folder"><svg class="i"><use href="#i-folderplus"/></svg></button></div>
+   <div class="tree" role="tree">
+    <div class="tr"><span class="chev"><svg class="i s12"><use href="#i-chd"/></svg></span><svg class="i s14 fo"><use href="#i-folderopen"/></svg>blog</div>
+    <div class="tr" style="--d:1"><span class="chev"><svg class="i s12"><use href="#i-chr"/></svg></span><svg class="i s14 fo"><use href="#i-folder"/></svg>2026</div>
+    <div class="tr"><span class="chev"><svg class="i s12"><use href="#i-chd"/></svg></span><svg class="i s14 fo"><use href="#i-folderopen"/></svg>projects</div>
+    <div class="tr" style="--d:1"><span class="chev"></span><svg class="i s14 fi"><use href="#i-file"/></svg>Launch checklist</div>
+    <div class="tr sel open" style="--d:1"><span class="chev"></span><svg class="i s14 fi"><use href="#i-file"/></svg>Project brief</div>
+    <div class="tr" style="--d:1"><span class="chev"></span><svg class="i s14 fi"><use href="#i-file"/></svg>Retro notes</div>
+    <div class="tr"><span class="chev"><svg class="i s12"><use href="#i-chr"/></svg></span><svg class="i s14 fo"><use href="#i-folder"/></svg>reference</div>
+    <div class="tr"><span class="chev"></span><svg class="i s14 fi"><use href="#i-file"/></svg>Inbox</div>
+    <div class="tr"><span class="chev"></span><svg class="i s14 fi"><use href="#i-file"/></svg>Reading list</div>
+   </div>
+   <div class="sideh"><svg class="i s12"><use href="#i-chd"/></svg>Linked from <span class="faint">2</span></div>
+   <div class="bl"><div>Launch checklist</div><span>…scope lives in [[Project brief]]…</span></div>
+   <div class="bl"><div>Inbox</div><span>…move the brief to review by Friday…</span></div>
+   <div class="dock"><button class="ib" title="Media library"><svg class="i"><use href="#i-images"/></svg></button><button class="ib" title="Settings"><svg class="i"><use href="#i-gear"/></svg></button><button class="ib" title="Help"><svg class="i"><use href="#i-help"/></svg></button></div>
+  </aside>
+  <section class="pane focused">
+   <div class="ph"><span class="crumb">projects<b>/</b></span><span class="title">Project brief</span><span class="dirty">●</span><span class="sp"></span>
+    <button class="ib" title="Insert image (Ctrl+Shift+I)"><svg class="i"><use href="#i-image"/></svg></button><button class="ib" title="Find (Ctrl+F)"><svg class="i"><use href="#i-search"/></svg></button><button class="ib on" title="Preview (Ctrl+Shift+V)" aria-pressed="true"><svg class="i"><use href="#i-eye"/></svg></button><button class="ib" title="Document menu"><svg class="i"><use href="#i-dots"/></svg></button></div>
+   <div class="ed"><div class="col" style="max-width:62ch">
+<div class="ln fm">---</div>
+<div class="ln fm">title: Project brief</div>
+<div class="ln fm">tags: [planning]</div>
+<div class="ln fm">---</div>
+<div class="ln"><span class="m"># </span><span class="h1">A calmer writing workspace</span></div>
+<div class="ln"> </div>
+<div class="ln">The document is the centre of the workspace. Keep</div>
+<div class="ln">everyday actions <span class="m">**</span><span class="bo">close</span><span class="m">**</span> and the rest easy to find.</div>
+<div class="ln"> </div>
+<div class="ln"><span class="m">## </span><span class="h2">This week</span></div>
+<div class="ln"> </div>
+<div class="ln"><span class="m">- [x]</span> Outline the project</div>
+<div class="ln"><span class="m">- [x]</span> Gather reference material</div>
+<div class="ln"><span class="m">- [ ]</span> First draft, see <span class="m">[[</span><span class="wl">reference/style-guide</span><span class="m">]]</span></div>
+<div class="ln"><span class="m">- [ ]</span> Review and publish</div>
+<div class="ln"> </div>
+<div class="ln"><span class="m">|</span> Phase  <span class="m">|</span> Owner <span class="m">|</span>   Due <span class="m">|</span></div>
+<div class="ln"><span class="m">|:-------|:-----:|------:|</span></div>
+<div class="ln"><span class="m">|</span> Draft  <span class="m">|</span>  Ana  <span class="m">|</span> 11-08 <span class="m">|</span></div>
+<div class="ln"><span class="m">|</span> Review <span class="m">|</span>  Rui<span class="caret"></span>  <span class="m">|</span> 11-12 <span class="m">|</span></div>
+<div class="ln"> </div>
+<div class="ln"><span class="m">```</span><span class="ty">ruby</span></div>
+<div class="ln"><span class="kw">def</span> <span class="fn">publish</span>(note)</div>
+<div class="ln">  note.<span class="fn">save!</span> <span class="kw">if</span> note.<span class="fn">ready?</span>  <span class="co"># ship it</span></div>
+<div class="ln"><span class="kw">end</span></div>
+<div class="ln"><span class="m">```</span></div>
+<div class="ln"> </div>
+<div class="ln">Reading time stays under <span class="m">$</span><span class="pr">\frac{n}{200}</span><span class="m">$</span> minutes.</div>
+   </div></div>
+  </section>
+  <section class="pane prev">
+   <div class="ph"><span class="muted">Preview</span><span class="sp"></span><button class="ib" title="Zoom out"><svg class="i s14"><use href="#i-minus"/></svg></button><span class="muted" style="font-size:12px;width:36px;text-align:center">100%</span><button class="ib" title="Zoom in"><svg class="i s14"><use href="#i-plus"/></svg></button><button class="ib on" title="Scroll sync (Ctrl+Shift+\)" aria-pressed="true"><svg class="i"><use href="#i-link"/></svg></button><button class="ib" title="Close preview"><svg class="i"><use href="#i-x"/></svg></button></div>
+   <div class="pv"><div class="prose">
+    <div class="fmrow"><svg class="i s12"><use href="#i-chr"/></svg>Front matter</div>
+    <h1>A calmer writing workspace</h1>
+    <p>The document is the centre of the workspace. Keep everyday actions <b style="color:var(--strong)">close</b> and the rest easy to find.</p>
+    <h2>This week</h2>
+    <ul>
+     <li class="done"><i class="cb on"><svg class="i s12"><use href="#i-check"/></svg></i><span>Outline the project</span></li>
+     <li class="done"><i class="cb on"><svg class="i s12"><use href="#i-check"/></svg></i><span>Gather reference material</span></li>
+     <li><i class="cb"></i><span>First draft, see <span class="wl">style-guide</span></span></li>
+     <li><i class="cb"></i><span>Review and publish</span></li>
+    </ul>
+    <table><tr><th>Phase</th><th class="c">Owner</th><th class="r">Due</th></tr><tr><td>Draft</td><td class="c">Ana</td><td class="r">11-08</td></tr><tr><td>Review</td><td class="c">Rui</td><td class="r">11-12</td></tr></table>
+    <div class="pcode"><span class="lang">ruby</span><span class="cp" title="Copy code"><svg class="i s14"><use href="#i-copy"/></svg></span><span class="kw">def</span> <span class="fn">publish</span>(note)
+  note.<span class="fn">save!</span> <span class="kw">if</span> note.<span class="fn">ready?</span>  <span class="co"># ship it</span>
+<span class="kw">end</span></div>
+    <p>Reading time stays under <span class="frac"><span>n</span><span>200</span></span> minutes.</p>
+   </div></div>
+  </section>
+ </div>
+ <footer class="status" role="status">
+  <span class="st-ok">✓ Saved</span><span class="sp"></span>
+  <span class="chip"><span class="kbd">Ctrl+.</span>Edit table</span>
+  <span>1,204 words</span><span>20:8</span><span>notes</span>
+ </footer>
+</div>
+</div>
+<ul class="notes">
+ <li>Sidebar 248 px (resizable 180–480), preview 45 % (min 280). Splitters are the 1 px borders with a 6 px hit area.</li>
+ <li>Open note: 2 px accent bar at the row's start plus <code>selection</code> fill. "Linked from" only appears when there are backlinks.</li>
+ <li>Code-block copy button is always visible (faint), never hover-only. Front matter is collapsed behind a disclosure row.</li>
+</ul>
+</section>
+
+<!-- =============================================================== EMPTY -->
+<section class="sec" id="empty">
+<h2>Empty state <small>no note open, replaces Home · spec §5.2</small></h2>
+<p>The quick-open list, docked into the editor pane, under the FrankMD logo (40 px, <code>assets/brand/icon.svg</code>) and the vault name. You can type the moment the window appears. Recents first, then everything else by modification time.</p>
+<div class="stage">
+<div class="win" style="width:1100px;height:600px">
+ <div class="cols">
+  <aside class="side">
+   <div class="ph" style="padding-left:12px"><span class="vault">notes<svg class="i s14"><use href="#i-chd"/></svg></span><span class="sp"></span><button class="ib"><svg class="i"><use href="#i-fileplus"/></svg></button><button class="ib"><svg class="i"><use href="#i-folderplus"/></svg></button></div>
+   <div class="tree">
+    <div class="tr"><span class="chev"><svg class="i s12"><use href="#i-chr"/></svg></span><svg class="i s14 fo"><use href="#i-folder"/></svg>blog</div>
+    <div class="tr"><span class="chev"><svg class="i s12"><use href="#i-chr"/></svg></span><svg class="i s14 fo"><use href="#i-folder"/></svg>projects</div>
+    <div class="tr"><span class="chev"><svg class="i s12"><use href="#i-chr"/></svg></span><svg class="i s14 fo"><use href="#i-folder"/></svg>reference</div>
+    <div class="tr"><span class="chev"></span><svg class="i s14 fi"><use href="#i-file"/></svg>Inbox</div>
+    <div class="tr"><span class="chev"></span><svg class="i s14 fi"><use href="#i-file"/></svg>Reading list</div>
+   </div>
+   <div class="dock"><button class="ib"><svg class="i"><use href="#i-images"/></svg></button><button class="ib"><svg class="i"><use href="#i-gear"/></svg></button><button class="ib"><svg class="i"><use href="#i-help"/></svg></button></div>
+  </aside>
+  <section class="pane focused">
+   <div class="ph"><span class="muted">notes</span><span class="faint" style="margin-left:8px;font-size:12px">48 notes</span></div>
+   <div style="flex:1;display:flex;justify-content:center;padding-top:56px">
+    <div style="width:560px">
+     <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px"><svg class="logo" width="40" height="40" aria-hidden="true"><use href="#logo"/></svg><div><div class="title" style="font-size:15px">notes</div><div class="muted" style="font-size:12px">~/notes · 48 notes</div></div></div>
+     <div class="inp f" style="height:36px"><svg class="i muted"><use href="#i-search"/></svg><span class="pl">Open a note…</span></div>
+     <div class="grp" style="padding:12px 0 4px;justify-content:space-between"><span>Recent</span><span class="faint" style="font-size:12px">Clear history…</span></div>
+     <div class="list" style="padding:0">
+      <div class="li sel"><svg class="i s14 muted"><use href="#i-file"/></svg><span class="title" style="font-weight:400">Project brief</span><span class="muted" style="font-size:12px">projects</span><span class="sp"></span><span class="faint" style="font-size:12px">2 h ago</span></div>
+      <div class="li"><svg class="i s14 muted"><use href="#i-file"/></svg>Launch checklist<span class="muted" style="font-size:12px">projects</span><span class="sp"></span><span class="faint" style="font-size:12px">yesterday</span></div>
+      <div class="li"><svg class="i s14 muted"><use href="#i-file"/></svg>Shipping a native editor<span class="muted" style="font-size:12px">blog/2026/11/02/native-editor</span><span class="sp"></span><span class="faint" style="font-size:12px">2 d ago</span></div>
+      <div class="li"><svg class="i s14 muted"><use href="#i-file"/></svg>Inbox<span class="sp"></span><span class="faint" style="font-size:12px">3 d ago</span></div>
+     </div>
+     <div class="grp" style="padding:8px 0 4px">All notes</div>
+     <div class="list" style="padding:0">
+      <div class="li"><svg class="i s14 muted"><use href="#i-file"/></svg>Style guide<span class="muted" style="font-size:12px">reference</span></div>
+      <div class="li"><svg class="i s14 muted"><use href="#i-file"/></svg>Reading list</div>
+      <div class="li"><svg class="i s14 muted"><use href="#i-file"/></svg>Retro notes<span class="muted" style="font-size:12px">projects</span></div>
+     </div>
+     <div style="display:flex;gap:16px;margin-top:20px;font-size:12px" class="muted"><span><span class="kbd">Ctrl+N</span> New note</span><span><span class="kbd">Ctrl+Shift+F</span> Search</span><span><span class="kbd">Ctrl+Shift+P</span> Commands</span></div>
+    </div>
+   </div>
+  </section>
+ </div>
+ <footer class="status"><span class="muted">Following Omarchy theme</span><span class="sp"></span><span>notes</span></footer>
+</div>
+</div>
+</section>
+
+<!-- =============================================================== PALETTE -->
+<section class="sec" id="palette">
+<h2>Command palette <small>Ctrl+Shift+P · spec §5.1</small></h2>
+<p>The complete index of the app. Category in muted text, toggles show their state, shortcuts are printed on every row. Prefix <code>:</code> switches to go-to-line.</p>
+<div class="stage">
+<div class="win ghost" style="width:1100px;height:560px">
+ <div class="cols"><aside class="side"><div class="ph"></div><div class="gtr" style="width:50%"></div><div class="gtr" style="width:70%"></div><div class="gtr" style="width:60%"></div><div class="gtr" style="width:40%"></div></aside>
+ <section class="pane"><div class="ph"><span class="title">Project brief</span></div><div style="padding:24px 80px"><div class="gl h"></div><div class="gl"></div><div class="gl" style="width:80%"></div><div class="gl" style="width:90%"></div><div class="gl" style="width:60%"></div></div></section></div>
+ <footer class="status"></footer>
+ <div class="scrim"></div>
+ <div class="ov" style="width:600px">
+  <div class="ov-in"><span class="pfx">&gt;</span>vim<span class="caret"></span></div>
+  <div class="list">
+   <div class="li sel"><span class="chk"></span><span><span class="cat">Editor: </span><span class="hl">Vim</span> mode</span><span class="sp"></span><span class="muted" style="font-size:12px">off</span></div>
+   <div class="li"><span class="chk"></span><span><span class="cat">Help: </span><span class="hl">Vim</span> commands</span><span class="sp"></span><span class="kbds"><span class="kbd">F1</span></span></div>
+   <div class="li"><span class="chk"></span><span><span class="cat">Settings: </span>Open editor settings (<span class="hl">vim</span>, fonts, width)</span><span class="sp"></span><span class="kbd">Ctrl+,</span></div>
+  </div>
+  <div class="grp">Recently used</div>
+  <div class="list" style="padding-top:0">
+   <div class="li"><span class="chk"><svg class="i s14"><use href="#i-check"/></svg></span><span><span class="cat">View: </span>Typewriter mode</span><span class="sp"></span><span class="kbd">Ctrl+\</span></div>
+   <div class="li"><span class="chk"></span><span><span class="cat">Theme: </span>Select…</span></div>
+   <div class="li"><span class="chk"></span><span><span class="cat">AI: </span>Check grammar</span><span class="sp"></span><span class="kbd">Ctrl+Shift+G</span></div>
+   <div class="li"><span class="chk"></span><span><span class="cat">Document: </span>Copy contents</span></div>
+   <div class="li"><span class="chk"><svg class="i s14"><use href="#i-check"/></svg></span><span><span class="cat">Preview: </span>Scroll sync</span><span class="sp"></span><span class="kbd">Ctrl+Shift+\</span></div>
+  </div>
+  <div class="ov-foot"><span><span class="kbd">↵</span> run</span><span><span class="kbd">:</span> go to line</span><span><span class="kbd">Esc</span> close</span></div>
+ </div>
+</div>
+</div>
+</section>
+
+<!-- =============================================================== THEME -->
+<section class="sec" id="theme">
+<h2>Theme picker <small>palette sub-mode · spec §5.17</small></h2>
+<p>Arrowing applies a theme live; Esc reverts. "Follow Omarchy" is the default whenever Omarchy is present and names the current Omarchy theme.</p>
+<div class="stage">
+<div class="win ghost" style="width:820px;height:480px">
+ <div class="cols"><section class="pane"><div class="ph"></div><div style="padding:24px 80px"><div class="gl h"></div><div class="gl"></div><div class="gl" style="width:80%"></div></div></section></div>
+ <footer class="status"></footer>
+ <div class="scrim"></div>
+ <div class="ov" style="width:520px;top:10%">
+  <div class="ov-in"><span class="pfx">theme</span><span class="ph-t">Filter themes…</span></div>
+  <div class="list">
+   <div class="li sel"><span class="sw4"><i style="background:#1a1b26"></i><i style="background:#a9b1d6"></i><i style="background:#7aa2f7"></i><i style="background:#292e42"></i></span>Follow Omarchy<span class="muted" style="font-size:12px">Tokyo Night</span><span class="sp"></span><svg class="i s14" style="color:var(--accent)"><use href="#i-check"/></svg></div>
+   <div class="li"><span class="sw4"><i style="background:#ffffff"></i><i style="background:#18181b"></i><i style="background:#2563eb"></i><i style="background:#dbeafe"></i></span>Follow system light/dark</div>
+  </div>
+  <div class="grp">Built-in</div>
+  <div class="list" style="padding-top:0">
+   <div class="li"><span class="sw4"><i style="background:#1e1e2e"></i><i style="background:#cdd6f4"></i><i style="background:#89b4fa"></i><i style="background:#f5e0dc"></i></span>Catppuccin<span class="sp"></span><span class="faint" style="font-size:12px">dark</span></div>
+   <div class="li"><span class="sw4"><i style="background:#eff1f5"></i><i style="background:#4c4f69"></i><i style="background:#1e66f5"></i><i style="background:#dc8a78"></i></span>Catppuccin Latte<span class="sp"></span><span class="faint" style="font-size:12px">light</span></div>
+   <div class="li"><span class="sw4"><i style="background:#282828"></i><i style="background:#ebdbb2"></i><i style="background:#fe8019"></i><i style="background:#504945"></i></span>Gruvbox<span class="sp"></span><span class="faint" style="font-size:12px">dark</span></div>
+   <div class="li"><span class="sw4"><i style="background:#1f1f28"></i><i style="background:#dcd7ba"></i><i style="background:#7e9cd8"></i><i style="background:#2d4f67"></i></span>Kanagawa<span class="sp"></span><span class="faint" style="font-size:12px">dark</span></div>
+  </div>
+  <div class="grp">Custom</div>
+  <div class="list" style="padding-top:0"><div class="li"><svg class="i s14 muted"><use href="#i-palette"/></svg>Customize theme…</div></div>
+ </div>
+</div>
+</div>
+</section>
+
+<!-- =============================================================== QUICK OPEN -->
+<section class="sec" id="quick">
+<h2>Quick open <small>Ctrl+P · spec §5.2</small></h2>
+<p>Two columns when the window is at least 900 px wide: results and a 12-line preview of the selected note.</p>
+<div class="stage">
+<div class="win ghost" style="width:1100px;height:520px">
+ <div class="cols"><aside class="side"><div class="ph"></div><div class="gtr" style="width:50%"></div><div class="gtr" style="width:70%"></div><div class="gtr" style="width:60%"></div></aside>
+ <section class="pane"><div class="ph"></div><div style="padding:24px 80px"><div class="gl h"></div><div class="gl"></div><div class="gl" style="width:80%"></div></div></section></div>
+ <footer class="status"></footer>
+ <div class="scrim"></div>
+ <div class="ov" style="width:760px">
+  <div class="ov-in"><svg class="i muted"><use href="#i-search"/></svg>nat ed<span class="caret"></span></div>
+  <div style="display:flex;height:320px">
+   <div class="list" style="flex:0 0 58%;border-inline-end:1px solid var(--border-subtle)">
+    <div class="li two sel"><svg class="i s14 muted"><use href="#i-file"/></svg><span class="t2"><span>Shipping a <span class="hl">nat</span>ive <span class="hl">ed</span>itor</span><span class="muted" style="font-size:12px">blog/2026/11/02/native-editor</span></span><span class="sp"></span><span class="faint" style="font-size:12px">2 d ago</span></div>
+    <div class="li two"><svg class="i s14 muted"><use href="#i-file"/></svg><span class="t2"><span><span class="hl">Nat</span>ural <span class="hl">ed</span>its checklist</span><span class="muted" style="font-size:12px">reference</span></span></div>
+    <div class="li two"><svg class="i s14 muted"><use href="#i-file"/></svg><span class="t2"><span>Alter<span class="hl">nat</span>ive <span class="hl">ed</span>itors</span><span class="muted" style="font-size:12px">reference/tools</span></span></div>
+    <div class="li two"><svg class="i s14 muted"><use href="#i-file"/></svg><span class="t2"><span>Desti<span class="hl">nat</span>ion r<span class="hl">ed</span>irects</span><span class="muted" style="font-size:12px">projects/site</span></span></div>
+   </div>
+   <div style="flex:1;background:var(--code);padding:10px 12px;font:12px/1.6 var(--mono);color:var(--text-muted);white-space:pre;overflow:hidden"><span class="fm">---
+title: "Shipping a native editor"
+date: 2026-11-02T09:30:00-03:00
+draft: true
+---</span>
+<span class="h1"># Shipping a native editor</span>
+
+Rewriting a Rails app as a desktop
+binary sounds like a weekend. It
+was not a weekend.
+...</div>
+  </div>
+  <div class="ov-foot"><span><span class="kbd">↵</span> open</span><span><span class="kbd">Ctrl+↵</span> open and reveal</span><span><span class="kbd">Alt+↵</span> preview only</span><span class="sp"></span><span>4 of 48</span></div>
+ </div>
+</div>
+</div>
+</section>
+
+<!-- =============================================================== SEARCH -->
+<section class="sec" id="search">
+<h2>Search in files <small>Ctrl+Shift+F · spec §5.3</small></h2>
+<p>Results grouped by note, three lines of context each, the matching line on <code>selection</code>. Regex is on by default for parity; an invalid pattern falls back to text and says so.</p>
+<div class="stage">
+<div class="win ghost" style="width:1100px;height:600px">
+ <div class="cols"><aside class="side"><div class="ph"></div><div class="gtr" style="width:50%"></div><div class="gtr" style="width:70%"></div></aside>
+ <section class="pane"><div class="ph"></div><div style="padding:24px 80px"><div class="gl h"></div><div class="gl"></div></div></section></div>
+ <footer class="status"></footer>
+ <div class="scrim"></div>
+ <div class="ov" style="width:760px;top:8%">
+  <div class="ov-in"><svg class="i muted"><use href="#i-search"/></svg>draft(s)?\b<span class="caret"></span><span class="sp"></span><span class="tgl">Aa</span><span class="tgl on">.*</span><span class="chip" style="font-size:12px">all notes</span></div>
+  <div class="bar2"></div>
+  <div class="grp" style="height:28px">9 matches in 3 notes</div>
+  <div style="padding:0 0 6px">
+   <div class="li" style="height:26px"><svg class="i s14 muted"><use href="#i-file"/></svg><span class="title" style="font-weight:600">Project brief</span><span class="muted" style="font-size:12px">projects</span><span class="sp"></span><span class="faint" style="font-size:12px">2 matches</span></div>
+   <div style="margin:0 12px 8px 34px;background:var(--code);border-radius:var(--rs);font:12px/1.65 var(--mono);overflow:hidden">
+    <div style="display:flex"><span class="faint" style="width:36px;text-align:end;padding-right:10px">12</span><span>- [x] Gather reference material</span></div>
+    <div style="display:flex;background:var(--sel);box-shadow:inset 2px 0 0 var(--accent);color:var(--strong)"><span class="faint" style="width:36px;text-align:end;padding-right:10px">13</span><span>- [ ] First <span style="color:var(--accent);text-decoration:underline">draft</span>, see [[reference/style-guide]]</span></div>
+    <div style="display:flex"><span class="faint" style="width:36px;text-align:end;padding-right:10px">14</span><span>- [ ] Review and publish</span></div>
+   </div>
+   <div style="margin:0 12px 8px 34px;background:var(--code);border-radius:var(--rs);font:12px/1.65 var(--mono);overflow:hidden">
+    <div style="display:flex"><span class="faint" style="width:36px;text-align:end;padding-right:10px">18</span><span>| Phase  | Owner |   Due |</span></div>
+    <div style="display:flex"><span class="faint" style="width:36px;text-align:end;padding-right:10px">19</span><span>|:-------|:-----:|------:|</span></div>
+    <div style="display:flex"><span class="faint" style="width:36px;text-align:end;padding-right:10px">20</span><span>| <span style="color:var(--accent);text-decoration:underline">Draft</span>  |  Ana  | 11-08 |</span></div>
+   </div>
+   <div class="li" style="height:26px"><svg class="i s14 muted"><use href="#i-file"/></svg><span class="title" style="font-weight:600">Shipping a native editor</span><span class="muted" style="font-size:12px">blog/2026/11/02/native-editor</span><span class="sp"></span><span class="faint" style="font-size:12px">6 matches</span></div>
+   <div style="margin:0 12px 0 34px;background:var(--code);border-radius:var(--rs);font:12px/1.65 var(--mono);overflow:hidden">
+    <div style="display:flex"><span class="faint" style="width:36px;text-align:end;padding-right:10px">4</span><span>draft: true</span></div>
+   </div>
+  </div>
+  <div class="ov-foot"><span><span class="kbd">↑↓</span> matches</span><span><span class="kbd">↵</span> open at line</span><span><span class="kbd">Ctrl+↵</span> open, keep searching</span><span><span class="kbd">Alt+F</span> folder scope</span></div>
+ </div>
+</div>
+</div>
+</section>
+
+<!-- =============================================================== FIND -->
+<section class="sec" id="find">
+<h2>Find bar and pane banners <small>Ctrl+H · spec §5.4, §5.12</small></h2>
+<p>The sidebar is hidden (its toggle moves into the pane header). Two banners stack under the header: an external change and a blocked save. The find bar docks under them; matches update as you type in the document.</p>
+<div class="stage">
+<div class="win" style="width:1000px;height:520px">
+ <div class="cols">
+  <section class="pane focused">
+   <div class="ph" style="padding-left:4px"><button class="ib" title="Show sidebar (Ctrl+E)"><svg class="i"><use href="#i-side"/></svg></button><span class="crumb">projects<b>/</b></span><span class="title">Project brief</span><span class="dirty">●</span><span class="sp"></span><button class="ib"><svg class="i"><use href="#i-image"/></svg></button><button class="ib on"><svg class="i"><use href="#i-search"/></svg></button><button class="ib"><svg class="i"><use href="#i-eye"/></svg></button><button class="ib"><svg class="i"><use href="#i-dots"/></svg></button></div>
+   <div class="ban warn"><svg class="i"><use href="#i-refresh"/></svg><span>This note changed on disk.</span><span class="sp"></span><button class="btn">Reload</button><button class="btn">Compare…</button></div>
+   <div class="ban warn"><svg class="i"><use href="#i-warn"/></svg><span>Saving would remove 1,420 characters (38 %). The save is on hold.</span><span class="sp"></span><button class="btn">Undo</button><button class="btn">Save anyway</button></div>
+   <div class="find">
+    <div class="r"><div class="inp f"><span>review</span><span class="caret"></span></div><span class="cnt">2 of 3</span><button class="ib"><svg class="i s14"><use href="#i-up"/></svg></button><button class="ib"><svg class="i s14"><use href="#i-down"/></svg></button><span class="tgl">Aa</span><span class="tgl">.*</span><span class="tgl">W</span><span class="sp"></span><button class="ib"><svg class="i s14"><use href="#i-x"/></svg></button></div>
+    <div class="r"><div class="inp"><span>revision</span></div><button class="btn sm">Replace</button><button class="btn sm">Skip</button><button class="btn sm">All</button></div>
+   </div>
+   <div class="ed"><div class="col">
+<div class="ln"><span class="m">## </span><span class="h2">This week</span></div>
+<div class="ln"> </div>
+<div class="ln"><span class="m">- [x]</span> Outline the project</div>
+<div class="ln"><span class="m">- [x]</span> Gather reference material</div>
+<div class="ln"><span class="m">- [ ]</span> First draft, then <span class="match">review</span> with Rui</div>
+<div class="ln"><span class="m">- [ ]</span> <span class="match cur">Review</span> and publish</div>
+<div class="ln"> </div>
+<div class="ln"><span class="m">|</span> <span class="match">Review</span> <span class="m">|</span>  Rui  <span class="m">|</span> 11-12 <span class="m">|</span></div>
+   </div></div>
+  </section>
+ </div>
+ <footer class="status"><span>● Unsaved</span><span class="muted">Save on hold: large deletion</span><span class="sp"></span><span>842 words</span><span>14:3</span><span>notes</span></footer>
+</div>
+</div>
+</section>
+
+<!-- =============================================================== INLINE -->
+<section class="sec" id="inline">
+<h2>Inline popovers <small>slash menu, text format, emoji · spec §5.5</small></h2>
+<p>Anchored to the caret, flipped above when there's no room. Mnemonic letters and shortcuts are always printed.</p>
+<div class="stage"><div class="row-of">
+ <div>
+ <div class="win" style="width:420px;height:340px"><div class="cols"><section class="pane focused"><div class="ph"><span class="title">Project brief</span></div>
+  <div class="ed" style="padding:16px 20px"><div class="col">
+<div class="ln">Notes from the call.</div>
+<div class="ln"> </div>
+<div class="ln">/ta<span class="caret"></span></div>
+  </div>
+  <div class="pop" style="left:20px;top:84px;width:280px">
+   <div class="list">
+    <div class="li sel"><svg class="i s14 muted"><use href="#i-table"/></svg><span><span class="hl" style="font-weight:600">Ta</span>ble</span><span class="sp"></span><span class="faint" style="font-size:12px">grid</span></div>
+    <div class="li"><svg class="i s14 muted"><use href="#i-checks"/></svg>To-do list</div>
+    <div class="li"><svg class="i s14 muted"><use href="#i-quote"/></svg>Quote</div>
+    <div class="li"><svg class="i s14 muted"><use href="#i-heading"/></svg>Heading 2</div>
+    <div class="li"><svg class="i s14 muted"><use href="#i-sigma"/></svg>Equation</div>
+   </div>
+   <div class="ov-foot" style="height:24px"><span><span class="kbd">↵</span> insert</span><span><span class="kbd">Alt+I</span> anywhere</span></div>
+  </div></div>
+ </section></div></div>
+ <div class="cap">Slash menu (<code>/</code>), same list as the Alt+I insert menu</div>
+ </div>
+ <div>
+ <div class="win" style="width:420px;height:340px"><div class="cols"><section class="pane focused"><div class="ph"><span class="title">Project brief</span></div>
+  <div class="ed" style="padding:16px 20px"><div class="col">
+<div class="ln">Keep everyday actions <span class="selr">close and the rest</span></div>
+<div class="ln">easy to discover.</div>
+  </div>
+  <div class="pop" style="left:150px;top:76px;width:230px">
+   <div class="list">
+    <div class="li sel mn"><span><u>B</u>old</span><span class="sp"></span><span class="kbd">Ctrl+B</span></div>
+    <div class="li mn"><span><u>I</u>talic</span><span class="sp"></span><span class="kbd">Ctrl+I</span></div>
+    <div class="li mn"><span><u>S</u>trikethrough</span><span class="sp"></span><span class="kbd">Ctrl+Shift+S</span></div>
+    <div class="li mn"><span><u>H</u>ighlight</span></div>
+    <div class="li mn"><span>S<u>u</u>bscript</span></div>
+    <div class="li mn"><span>Su<u>p</u>erscript</span></div>
+    <div class="sep"></div>
+    <div class="li mn"><span><u>L</u>ink</span><span class="sp"></span><span class="kbd">Ctrl+K</span></div>
+   </div>
+  </div></div>
+ </section></div></div>
+ <div class="cap">Text format menu (Ctrl+M or right-click a selection)</div>
+ </div>
+ <div>
+ <div class="win" style="width:420px;height:340px"><div class="cols"><section class="pane focused"><div class="ph"><span class="title">Project brief</span></div>
+  <div class="ed" style="padding:16px 20px"><div class="col"><div class="ln">Shipped it <span class="caret"></span></div></div>
+  <div class="pop" style="left:40px;top:44px;width:340px">
+   <div style="padding:8px"><div class="inp f"><svg class="i s14 muted"><use href="#i-search"/></svg>rock<span class="caret"></span></div></div>
+   <div style="display:flex;gap:2px;padding:0 8px 6px;font-size:12px"><span class="chip" style="border-color:var(--accent);color:var(--strong)">Emoji</span><span class="chip" style="border-color:transparent;color:var(--text-muted)">Emoticons</span><span class="chip" style="border-color:transparent;color:var(--text-muted)">Icons</span></div>
+   <div style="display:grid;grid-template-columns:repeat(10,1fr);gap:2px;padding:0 8px 8px;font-size:18px;line-height:30px;text-align:center">
+    <span style="background:var(--sel);outline:2px solid var(--accent);border-radius:var(--rs)">🚀</span><span>🪨</span><span>🤘</span><span>🎸</span><span>🗿</span><span>🧗</span><span>⛰️</span><span>🏔️</span><span>💎</span><span>🎤</span>
+   </div>
+   <div class="ov-foot" style="height:36px"><span style="font-size:20px">🚀</span><span class="exline">:rocket:</span></div>
+  </div></div>
+ </section></div></div>
+ <div class="cap">Emoji picker (Ctrl+Shift+E), inserts <code>:rocket:</code></div>
+ </div>
+</div></div>
+</section>
+
+<!-- =============================================================== IMAGE -->
+<section class="sec" id="image">
+<h2>Insert image <small>Ctrl+Shift+I, paste, drop · spec §5.6</small></h2>
+<p>A source rail instead of seven tabs. Unconfigured sources stay visible with a "Set up" tag that leads to the exact Settings row. One storage row in the footer: provider, resize, key.</p>
+<div class="stage">
+<div class="win ghost" style="width:1100px;height:700px">
+ <div class="cols"><aside class="side"><div class="ph"></div><div class="gtr" style="width:50%"></div></aside><section class="pane"><div class="ph"></div></section></div>
+ <footer class="status"></footer>
+ <div class="scrim"></div>
+ <div class="dlg" style="width:880px;height:600px;top:5%">
+  <div class="dh"><span class="tt">Insert image</span><span class="sp"></span><button class="ib"><svg class="i"><use href="#i-x"/></svg></button></div>
+  <div class="db">
+   <div class="set-nav" style="width:168px">
+    <div class="li"><svg class="i s14 muted"><use href="#i-upload"/></svg>Upload<span class="sp"></span><span class="kbd">1</span></div>
+    <div class="li"><svg class="i s14 muted"><use href="#i-images"/></svg>Library<span class="sp"></span><span class="kbd">2</span></div>
+    <div class="li"><svg class="i s14 muted"><use href="#i-folder"/></svg>Folder<span class="sp"></span><span class="kbd">3</span></div>
+    <div class="li sel"><svg class="i s14"><use href="#i-globe"/></svg>Web<span class="sp"></span><span class="kbd">4</span></div>
+    <div class="li"><svg class="i s14 muted"><use href="#i-search"/></svg>Google<span class="sp"></span><span class="faint" style="font-size:11px">Set up</span></div>
+    <div class="li"><svg class="i s14 muted"><use href="#i-grid"/></svg>Pinterest<span class="sp"></span><span class="kbd">6</span></div>
+    <div class="li"><svg class="i s14 muted"><use href="#i-spark"/></svg>AI generate<span class="sp"></span><span class="kbd">7</span></div>
+   </div>
+   <div style="flex:1;padding:12px 16px;display:flex;flex-direction:column;gap:10px;min-width:0">
+    <div style="display:flex;gap:8px"><div class="inp f" style="flex:1"><svg class="i s14 muted"><use href="#i-search"/></svg>lisbon tram<span class="caret"></span></div><button class="btn">Search</button></div>
+    <div class="lbl">Found 20 images. Images are linked from their source unless you store a copy.</div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
+     <div class="thumb ph1" style="height:104px"><svg class="mt"><use href="#i-mtn"/></svg><span class="dim">1920×1280</span></div>
+     <div class="thumb ph2 sel" style="height:104px"><svg class="mt"><use href="#i-mtn"/></svg><span class="dim">2400×1600</span></div>
+     <div class="thumb ph3" style="height:104px"><svg class="mt"><use href="#i-mtn"/></svg><span class="dim">1600×1067</span></div>
+     <div class="thumb ph4" style="height:104px"><svg class="mt"><use href="#i-mtn"/></svg><span class="dim">1080×1350</span></div>
+     <div class="thumb ph5" style="height:104px"><svg class="mt"><use href="#i-mtn"/></svg><span class="dim">1280×853</span></div>
+     <div class="thumb ph6" style="height:104px"><svg class="mt"><use href="#i-mtn"/></svg><span class="dim">3000×2000</span></div>
+     <div class="thumb ph1" style="height:104px"><svg class="mt"><use href="#i-mtn"/></svg><span class="dim">1920×1080</span></div>
+     <div class="thumb ph3" style="height:104px"><svg class="mt"><use href="#i-mtn"/></svg><span class="dim">1200×800</span></div>
+    </div>
+   </div>
+  </div>
+  <div style="border-top:1px solid var(--border-subtle);padding:10px 16px;display:grid;gap:8px;grid-template-columns:auto 1fr auto 1fr;align-items:center">
+   <span class="lbl">Alt text</span><div class="inp"><span>Yellow tram climbing a Lisbon street</span></div>
+   <span class="lbl">Link</span><div class="inp"><span class="pl">Optional URL</span></div>
+   <span class="lbl">Store in</span><div style="display:flex;gap:8px;align-items:center;grid-column:2/5"><span class="sel-ctl"><svg class="i s14"><use href="#i-cloud"/></svg>S3: frankmd-media<svg class="i s12 muted"><use href="#i-chd"/></svg></span><span class="sel-ctl">Resize: 50 %<svg class="i s12 muted"><use href="#i-chd"/></svg></span><div class="inp" style="flex:1;font:12px var(--mono)"><span>frankmd/2026/11/lisbon-tram.jpg</span></div></div>
+  </div>
+  <div class="df"><span class="muted" style="font-size:12px">Selected: tram-28.jpg · 2400×1600</span><span class="sp"></span><button class="btn">Cancel</button><button class="btn pri">Insert <span class="kbd">Ctrl+↵</span></button></div>
+ </div>
+</div>
+</div>
+</section>
+
+<!-- =============================================================== TABLE -->
+<section class="sec" id="table">
+<h2>Table editor <small>Ctrl+. in a table · spec §5.8</small></h2>
+<p>Column alignment is new (FrankMD dropped the colons). Every right-click action also has a key, printed in the cell menu.</p>
+<div class="stage">
+<div class="win ghost" style="width:980px;height:600px">
+ <div class="cols"><section class="pane"><div class="ph"></div></section></div>
+ <footer class="status"></footer>
+ <div class="scrim"></div>
+ <div class="dlg" style="width:720px;top:8%">
+  <div class="dh"><span class="tt">Edit table</span><span class="sp"></span><button class="ib"><svg class="i"><use href="#i-x"/></svg></button></div>
+  <div style="display:flex;align-items:center;gap:16px;padding:10px 16px;border-bottom:1px solid var(--border-subtle)">
+   <span class="lbl">Rows</span><span class="seg"><span><svg class="i s14"><use href="#i-minus"/></svg></span><span style="color:var(--strong)">3</span><span><svg class="i s14"><use href="#i-plus"/></svg></span></span>
+   <span class="lbl">Columns</span><span class="seg"><span><svg class="i s14"><use href="#i-minus"/></svg></span><span style="color:var(--strong)">3</span><span><svg class="i s14"><use href="#i-plus"/></svg></span></span>
+   <span class="sp"></span><span class="lbl">Column 3 align</span>
+   <span class="seg"><span><svg class="i s14"><use href="#i-al"/></svg></span><span><svg class="i s14"><use href="#i-ac"/></svg></span><span class="on"><svg class="i s14"><use href="#i-ar"/></svg></span></span>
+  </div>
+  <div style="padding:14px 16px;position:relative;min-height:330px">
+   <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px">
+    <div class="inp" style="background:var(--recessed);font-weight:700">Phase</div><div class="inp" style="background:var(--recessed);font-weight:700;justify-content:center">Owner</div><div class="inp" style="background:var(--recessed);font-weight:700;justify-content:flex-end">Due</div>
+    <div class="inp">Draft</div><div class="inp" style="justify-content:center">Ana</div><div class="inp" style="justify-content:flex-end">11-08</div>
+    <div class="inp">Review</div><div class="inp" style="justify-content:center">Rui</div><div class="inp f" style="justify-content:flex-end">11-12<span class="caret"></span></div>
+   </div>
+   <div class="pop" style="right:30px;top:96px;width:280px">
+    <div class="list">
+     <div class="li">Move row up<span class="sp"></span><span class="kbd">Alt+↑</span></div>
+     <div class="li">Move row down<span class="sp"></span><span class="kbd">Alt+↓</span></div>
+     <div class="li">Delete row<span class="sp"></span><span class="kbd">Ctrl+Shift+⌫</span></div>
+     <div class="sep"></div>
+     <div class="li">Move column left<span class="sp"></span><span class="kbd">Alt+←</span></div>
+     <div class="li" style="color:var(--text-faint)">Move column right<span class="sp"></span><span class="kbd">Alt+→</span></div>
+     <div class="li">Delete column<span class="sp"></span><span class="kbd">Ctrl+Alt+⌫</span></div>
+    </div>
+   </div>
+  </div>
+  <div class="df"><span class="muted" style="font-size:12px"><span class="kbd">Tab</span> next cell, adds a row at the end</span><span class="sp"></span><button class="btn">Cancel</button><button class="btn pri">Update <span class="kbd">Ctrl+↵</span></button></div>
+ </div>
+</div>
+</div>
+</section>
+
+<!-- =============================================================== GRAMMAR -->
+<section class="sec" id="grammar">
+<h2>Grammar check <small>Ctrl+Shift+G · spec §5.10</small></h2>
+<p>While the request runs, a banner locks only this note (left frame). The result shows a side-by-side word diff with per-change accept and reject; the default is all accepted, as before.</p>
+<div class="stage"><div class="row-of">
+<div class="win" style="width:520px;height:220px">
+ <div class="cols"><section class="pane focused">
+  <div class="ph"><span class="title">Shipping a native editor</span><span class="sp"></span><button class="ib"><svg class="i"><use href="#i-dots"/></svg></button></div>
+  <div class="ban info"><svg class="i"><use href="#i-spark"/></svg><span>Checking grammar with anthropic · claude-sonnet-4</span><span class="sp"></span><button class="btn">Cancel <span class="kbd">Esc</span></button></div>
+  <div class="bar2"></div>
+  <div class="ed" style="opacity:.75"><div class="col"><div class="ln">Rewriting a Rails app as a desktop</div><div class="ln">binary sound like a weekend.</div></div></div>
+ </section></div>
+ <footer class="status"><svg class="i s12" style="color:var(--accent)"><use href="#i-spark"/></svg><span>Read-only while checking</span><span class="sp"></span><svg class="i s12"><use href="#i-lock"/></svg></footer>
+</div>
+<div class="win ghost" style="width:1000px;height:420px">
+ <div class="cols"><section class="pane"><div class="ph"></div></section></div>
+ <footer class="status"></footer>
+ <div class="scrim"></div>
+ <div class="dlg" style="width:920px;height:340px;top:5%">
+  <div class="dh"><span class="tt">Grammar check</span><span class="badge">anthropic · claude-sonnet-4</span><span class="sp"></span><span class="muted" style="font-size:12px;margin-right:8px">Change 2 of 5</span><button class="ib"><svg class="i"><use href="#i-x"/></svg></button></div>
+  <div class="db">
+   <div style="flex:1;padding:12px 16px;border-inline-end:1px solid var(--border-subtle);font:13px/1.8 var(--ui)">
+    <div class="lbl" style="margin-bottom:6px">Original</div>
+    Rewriting a Rails app as a desktop binary <span class="del">sound</span> like a weekend. It <span class="del">were</span> not a weekend. The editor alone took <span class="del">three week</span> and the preview <span class="del">an other</span> two.
+   </div>
+   <div style="flex:1;padding:12px 16px;font:13px/1.8 var(--ui)">
+    <div class="lbl" style="margin-bottom:6px">Corrected</div>
+    Rewriting a Rails app as a desktop binary <span class="ins">sounds</span><span class="hunk"><span class="a"><svg class="i s12"><use href="#i-check"/></svg></span><span class="x"><svg class="i s12"><use href="#i-x"/></svg></span></span> like a weekend. It <span class="ins">was</span><span class="hunk f"><span class="a"><svg class="i s12"><use href="#i-check"/></svg></span><span class="x"><svg class="i s12"><use href="#i-x"/></svg></span></span> not a weekend. The editor alone took <span class="ins">three weeks</span><span class="hunk"><span class="a"><svg class="i s12"><use href="#i-check"/></svg></span><span class="x"><svg class="i s12"><use href="#i-x"/></svg></span></span> and the preview <span class="ins">another</span><span class="hunk"><span class="a"><svg class="i s12"><use href="#i-check"/></svg></span><span class="x"><svg class="i s12"><use href="#i-x"/></svg></span></span> two.
+   </div>
+  </div>
+  <div class="df"><span class="muted" style="font-size:12px"><span class="kbd">Alt+↓</span> next change <span class="kbd">Y</span>/<span class="kbd">N</span> accept or reject <span class="kbd">Alt+E</span> edit</span><span class="sp"></span><button class="btn">Cancel</button><button class="btn pri">Apply changes <span class="kbd">Ctrl+↵</span></button></div>
+ </div>
+</div>
+</div></div>
+</section>
+
+<!-- =============================================================== RECOVERY -->
+<section class="sec" id="recovery">
+<h2>Recovery <small>the one blocking dialog · spec §5.11</small></h2>
+<p>Plain language about what happened, two timestamps, and a third way out that loses nothing. Esc and backdrop clicks do nothing here.</p>
+<div class="stage">
+<div class="win ghost" style="width:1100px;height:470px">
+ <div class="cols"><aside class="side"><div class="ph"></div></aside><section class="pane"><div class="ph"></div></section></div>
+ <footer class="status"></footer>
+ <div class="scrim"></div>
+ <div class="dlg" style="width:960px;height:380px;top:6%">
+  <div class="dh"><svg class="i" style="color:var(--yellow)"><use href="#i-hist"/></svg><span class="tt">This note has an unsaved draft that differs from the file</span></div>
+  <div style="padding:10px 16px;color:var(--text-muted);font-size:13px;border-bottom:1px solid var(--border-subtle)">The file <span style="color:var(--strong)">projects/Project brief.md</span> changed on disk after your draft was saved. Choose which version to keep.</div>
+  <div class="db">
+   <div style="flex:1;padding:12px 16px;border-inline-end:1px solid var(--border-subtle);font:13px/1.75 var(--mono);white-space:pre-wrap"><div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;font:12px var(--ui)" class="muted">File on disk <span class="badge">modified 14:31</span></div>## This week
+
+- [x] Outline the project
+- [ ] <span class="del">Write the first draft</span>
+- [ ] Review and <span class="del">publish</span></div>
+   <div style="flex:1;padding:12px 16px;font:13px/1.75 var(--mono);white-space:pre-wrap"><div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;font:12px var(--ui)" class="muted">Your draft <span class="badge">saved 14:02</span></div>## This week
+
+- [x] Outline the project
+- [ ] <span class="ins">First draft, see [[reference/style-guide]]</span>
+- [ ] Review and <span class="ins">publish on Friday</span></div>
+  </div>
+  <div class="df"><span class="sp"></span><button class="btn">Use file on disk</button><button class="btn">Keep both</button><button class="btn pri">Restore draft <span class="kbd">Ctrl+↵</span></button></div>
+ </div>
+</div>
+</div>
+</section>
+
+<!-- =============================================================== SETTINGS -->
+<section class="sec" id="settings">
+<h2>Settings <small>Ctrl+, · spec §5.16</small></h2>
+<p>One home for every key, including the AI, S3 and Hugo settings that used to need hand-editing <code>.fed</code>. The scope toggle picks global config or this vault's <code>.fed</code>; each row says where its value comes from.</p>
+<div class="stage">
+<div class="win ghost" style="width:1100px;height:720px">
+ <div class="cols"><aside class="side"><div class="ph"></div></aside><section class="pane"><div class="ph"></div></section></div>
+ <footer class="status"></footer>
+ <div class="scrim"></div>
+ <div class="dlg" style="width:960px;height:660px;top:16px">
+  <div class="dh"><span class="tt">Settings</span><span class="sp"></span><div class="inp" style="width:280px"><svg class="i s14 muted"><use href="#i-search"/></svg><span class="pl">Search settings</span></div><button class="ib"><svg class="i"><use href="#i-x"/></svg></button></div>
+  <div style="display:flex;align-items:center;gap:10px;padding:8px 16px;border-bottom:1px solid var(--border-subtle)"><span class="lbl">Scope</span><span class="seg"><span>All vaults</span><span class="on">This vault (notes)</span></span><span class="muted" style="font-size:12px">Writes ~/notes/.fed. A dot marks values that override the global setting.</span></div>
+  <div class="db">
+   <div class="set-nav">
+    <div class="li"><svg class="i s14 muted"><use href="#i-palette"/></svg>Appearance</div>
+    <div class="li"><svg class="i s14 muted"><use href="#i-type"/></svg>Editor</div>
+    <div class="li"><svg class="i s14 muted"><use href="#i-cursor"/></svg>Writing</div>
+    <div class="li"><svg class="i s14 muted"><use href="#i-eye"/></svg>Preview</div>
+    <div class="li"><svg class="i s14 muted"><use href="#i-folder"/></svg>Files</div>
+    <div class="li"><svg class="i s14 muted"><use href="#i-images"/></svg>Media</div>
+    <div class="li sel"><svg class="i s14"><use href="#i-spark"/></svg>Integrations</div>
+    <div class="li"><svg class="i s14 muted"><use href="#i-file"/></svg>Hugo</div>
+    <div class="li"><svg class="i s14 muted"><use href="#i-term"/></svg>Diagnostics</div>
+    <div class="li"><svg class="i s14 muted"><use href="#i-info"/></svg>About</div>
+   </div>
+   <div class="set-body">
+    <div class="set-h">AI for grammar check</div>
+    <div class="srow"><div class="lab"><div>Provider<span class="ovr" title="Overrides global"></span></div><div>Auto picks the first configured: OpenAI, Anthropic, OpenRouter, Ollama, Gemini.</div></div><div class="ctl2"><span class="prov fed">.fed</span><span class="sel-ctl">Anthropic<svg class="i s12 muted"><use href="#i-chd"/></svg></span></div></div>
+    <div class="srow"><div class="lab"><div>Model</div><div>Leave empty to use the provider's default.</div></div><div class="ctl2"><span class="prov">default</span><div class="inp" style="width:240px;font:12px var(--mono)">claude-sonnet-4-20250514</div></div></div>
+    <div class="srow"><div class="lab"><div>Anthropic API key</div><div>Stored in the system keyring, never in the notes folder.</div></div><div class="ctl2"><span class="prov env">env ANTHROPIC_API_KEY</span><div class="inp" style="width:180px;font:12px var(--mono)">sk-ant-••••••••3f2a</div><button class="btn sm">Show</button><button class="btn sm">Test</button></div></div>
+    <div class="srow"><div class="lab"><div>OpenAI-compatible endpoint</div><div>Any server that speaks the OpenAI API (base URL, key, model).</div></div><div class="ctl2"><span class="prov">not set</span><button class="btn sm">Add…</button></div></div>
+    <div class="set-h">Image generation</div>
+    <div class="srow"><div class="lab"><div>Model (OpenRouter)</div></div><div class="ctl2"><span class="prov">default</span><div class="inp" style="width:280px;font:12px var(--mono)">google/gemini-3.1-flash-image-preview</div></div></div>
+    <div class="set-h">Search providers</div>
+    <div class="srow"><div class="lab"><div>YouTube API key</div><div>Enables YouTube search in Insert video.</div></div><div class="ctl2"><span class="prov">not set</span><div class="inp" style="width:180px"><span class="pl">Paste key</span></div></div></div>
+    <div class="srow" style="border:0"><div class="lab"><div>Google search key and engine id</div><div>Enables the Google source in Insert image.</div></div><div class="ctl2"><span class="prov">not set</span><button class="btn sm">Set up…</button></div></div>
+   </div>
+  </div>
+ </div>
+</div>
+</div>
+</section>
+
+<!-- =============================================================== LIBRARY -->
+<section class="sec" id="library">
+<h2>Media library <small>Ctrl+Shift+M · spec §5.15</small></h2>
+<p>Replaces editor and preview. Card actions are visible at rest. Enter on a card opens the detail sheet, which merges FrankMD's preview and "used in" dialogs.</p>
+<div class="stage">
+<div class="win" style="width:1280px;height:640px">
+ <div class="cols">
+  <aside class="side">
+   <div class="ph" style="padding-left:12px"><span class="vault">notes<svg class="i s14"><use href="#i-chd"/></svg></span></div>
+   <div class="tree"><div class="tr"><span class="chev"><svg class="i s12"><use href="#i-chr"/></svg></span><svg class="i s14 fo"><use href="#i-folder"/></svg>blog</div><div class="tr"><span class="chev"><svg class="i s12"><use href="#i-chr"/></svg></span><svg class="i s14 fo"><use href="#i-folder"/></svg>projects</div></div>
+   <div class="dock"><button class="ib on"><svg class="i"><use href="#i-images"/></svg></button><button class="ib"><svg class="i"><use href="#i-gear"/></svg></button><button class="ib"><svg class="i"><use href="#i-help"/></svg></button></div>
+  </aside>
+  <section class="pane focused">
+   <div class="ph"><span class="title">Media library</span><span style="width:12px"></span><span class="seg" style="height:24px"><span class="on">Images 42</span><span>Videos 3</span></span><span class="sp"></span><div class="inp" style="width:200px;height:24px"><svg class="i s14 muted"><use href="#i-search"/></svg><span class="pl">Filter</span></div><button class="ib on"><svg class="i"><use href="#i-grid"/></svg></button><button class="ib"><svg class="i"><use href="#i-list"/></svg></button><span class="chip" style="margin-left:6px"><svg class="i s12"><use href="#i-drive"/></svg>Local</span></div>
+   <div style="display:flex;flex:1;min-height:0">
+    <div style="flex:1;padding:12px;display:grid;grid-template-columns:repeat(auto-fill,160px);gap:12px;align-content:start;overflow:hidden">
+     <!-- card -->
+     <div><div class="thumb ph2" style="height:100px"><svg class="mt"><use href="#i-mtn"/></svg></div><div style="font-size:12px;margin-top:4px;color:var(--strong)">tram-28.jpg</div><div class="muted" style="font-size:11px">412 KB · Nov 3</div><div style="font-size:11px;color:var(--text-muted)">Used in 2 notes</div><div style="display:flex;gap:2px;margin-top:2px"><button class="ib" style="width:24px;height:24px"><svg class="i s14"><use href="#i-plus"/></svg></button><button class="ib" style="width:24px;height:24px"><svg class="i s14"><use href="#i-copy"/></svg></button><button class="ib" style="width:24px;height:24px"><svg class="i s14"><use href="#i-trash"/></svg></button></div></div>
+     <div><div class="thumb ph1 sel" style="height:100px"><svg class="mt"><use href="#i-mtn"/></svg></div><div style="font-size:12px;margin-top:4px;color:var(--strong)">harbour.png</div><div class="muted" style="font-size:11px">1.2 MB · Nov 2</div><div style="font-size:11px;color:var(--text-muted)">Used in 1 note</div><div style="display:flex;gap:2px;margin-top:2px"><button class="ib" style="width:24px;height:24px"><svg class="i s14"><use href="#i-plus"/></svg></button><button class="ib" style="width:24px;height:24px"><svg class="i s14"><use href="#i-copy"/></svg></button><button class="ib" style="width:24px;height:24px"><svg class="i s14"><use href="#i-trash"/></svg></button></div></div>
+     <div><div class="thumb ph3" style="height:100px"><svg class="mt"><use href="#i-mtn"/></svg></div><div style="font-size:12px;margin-top:4px;color:var(--strong)">trail.webp</div><div class="muted" style="font-size:11px">88 KB · Oct 30</div><div style="font-size:11px;color:var(--yellow)">Not used</div><div style="display:flex;gap:2px;margin-top:2px"><button class="ib" style="width:24px;height:24px"><svg class="i s14"><use href="#i-plus"/></svg></button><button class="ib" style="width:24px;height:24px"><svg class="i s14"><use href="#i-copy"/></svg></button><button class="ib" style="width:24px;height:24px"><svg class="i s14"><use href="#i-trash"/></svg></button></div></div>
+     <div><div class="thumb ph4" style="height:100px"><svg class="mt"><use href="#i-mtn"/></svg></div><div style="font-size:12px;margin-top:4px;color:var(--strong)">ai_1730.png</div><div class="muted" style="font-size:11px">640 KB · Oct 28</div><div style="font-size:11px;color:var(--text-faint)">Checking…</div><div style="display:flex;gap:2px;margin-top:2px"><button class="ib" style="width:24px;height:24px"><svg class="i s14"><use href="#i-plus"/></svg></button><button class="ib" style="width:24px;height:24px"><svg class="i s14"><use href="#i-copy"/></svg></button><button class="ib" style="width:24px;height:24px"><svg class="i s14"><use href="#i-trash"/></svg></button></div></div>
+     <div><div class="thumb ph5" style="height:100px"><svg class="mt"><use href="#i-mtn"/></svg></div><div style="font-size:12px;margin-top:4px;color:var(--strong)">diagram.png</div><div class="muted" style="font-size:11px">54 KB · Oct 21</div><div style="font-size:11px;color:var(--text-muted)">Used in 4 notes</div><div style="display:flex;gap:2px;margin-top:2px"><button class="ib" style="width:24px;height:24px"><svg class="i s14"><use href="#i-plus"/></svg></button><button class="ib" style="width:24px;height:24px"><svg class="i s14"><use href="#i-copy"/></svg></button><button class="ib" style="width:24px;height:24px"><svg class="i s14"><use href="#i-trash"/></svg></button></div></div>
+    </div>
+    <div style="width:400px;flex:none;border-inline-start:1px solid var(--border);background:var(--raised);display:flex;flex-direction:column">
+     <div class="dh"><span class="tt">harbour.png</span><span class="sp"></span><button class="ib"><svg class="i"><use href="#i-x"/></svg></button></div>
+     <div style="padding:12px 16px;display:grid;gap:10px">
+      <div class="thumb ph1" style="height:200px"><svg class="mt"><use href="#i-mtn"/></svg></div>
+      <div style="display:grid;grid-template-columns:auto 1fr;gap:2px 16px;font-size:12px"><span class="muted">Size</span><span>1.2 MB</span><span class="muted">Dimensions</span><span>2048×1365 (3:2)</span><span class="muted">Format</span><span>PNG</span><span class="muted">Path</span><span style="font-family:var(--mono)">images/1730_9f2c_harbour.png</span></div>
+      <div class="lbl" style="margin-top:4px">Used in</div>
+      <div class="li" style="padding:0;height:24px"><svg class="i s14 muted"><use href="#i-file"/></svg>Shipping a native editor<span class="muted" style="font-size:12px">blog/…/native-editor</span></div>
+      <div style="display:flex;gap:8px;margin-top:6px"><button class="btn pri">Insert <span class="kbd">I</span></button><button class="btn">Copy path</button><span class="sp"></span><button class="btn">Delete…</button></div>
+     </div>
+    </div>
+   </div>
+  </section>
+ </div>
+ <footer class="status"><span>42 images · 18 MB</span><span class="sp"></span><span>notes</span></footer>
+</div>
+</div>
+</section>
+
+<!-- =============================================================== NARROW -->
+<section class="sec" id="narrow">
+<h2>Narrow tile <small>&lt; 720 px · spec §4.1</small></h2>
+<p>A half-width Hyprland tile on a 1080p screen. The header collapses to breadcrumb tail and two actions, the preview swaps instead of splitting, and the sidebar becomes a drawer over the text. Left: vim mode with relative line numbers and an ex command in the status line. Right: the drawer open.</p>
+<div class="stage"><div class="row-of">
+<div>
+<div class="win" style="width:560px;height:700px">
+ <div class="cols"><section class="pane focused">
+  <div class="ph" style="padding-left:4px"><button class="ib"><svg class="i"><use href="#i-side"/></svg></button><span class="crumb">…<b>/</b></span><span class="title">Project brief</span><span class="dirty">●</span><span class="sp"></span><button class="ib"><svg class="i"><use href="#i-eye"/></svg></button><button class="ib"><svg class="i"><use href="#i-dots"/></svg></button></div>
+  <div class="ed" style="padding:12px 16px 12px 48px"><div class="col gut">
+<div class="ln" data-n="4"><span class="m"># </span><span class="h1">A calmer writing workspace</span></div>
+<div class="ln" data-n="3"> </div>
+<div class="ln" data-n="2">The document is the centre of the</div>
+<div class="ln" data-n="1">workspace. Keep everyday actions</div>
+<div class="ln cur" data-n="9"><span class="blockcaret">c</span>lose and the rest easy to find.</div>
+<div class="ln" data-n="1"> </div>
+<div class="ln" data-n="2"><span class="m">## </span><span class="h2">This week</span></div>
+<div class="ln" data-n="3"> </div>
+<div class="ln" data-n="4"><span class="m">- [x]</span> Outline the project</div>
+<div class="ln" data-n="5"><span class="m">- [ ]</span> First draft</div>
+<div class="ln" data-n="6"><span class="m">- [ ]</span> Review and publish</div>
+<div class="ln" data-n="7"> </div>
+<div class="ln" data-n="8">日本語のメモも<span class="preedit">へんかん</span><span class="faint"> ← IME preedit</span></div>
+  </div></div>
+ </section></div>
+ <footer class="status"><span class="mode m-cmd">COMMAND</span><span class="exline">:e style<span class="caret"></span></span><span class="sp"></span><span>9:1</span></footer>
+</div>
+<div class="cap">Vim mode, ex line in the status line</div>
+</div>
+<div>
+<div class="win" style="width:560px;height:700px">
+ <div class="cols"><section class="pane">
+  <div class="ph" style="padding-left:4px"><button class="ib on"><svg class="i"><use href="#i-side"/></svg></button><span class="crumb">…<b>/</b></span><span class="title">Project brief</span><span class="sp"></span><button class="ib"><svg class="i"><use href="#i-eye"/></svg></button><button class="ib"><svg class="i"><use href="#i-dots"/></svg></button></div>
+  <div class="ed" style="padding:12px 16px"><div class="col"><div class="ln"><span class="m"># </span><span class="h1">A calmer writing workspace</span></div><div class="ln"> </div><div class="ln">The document is the centre of the</div><div class="ln">workspace. Keep everyday actions</div></div></div>
+  <div class="scrim" style="background:color-mix(in srgb,var(--bg) 40%,transparent)"></div>
+  <div class="drawer" style="inset-block:0">
+   <div class="ph" style="padding-left:12px"><span class="vault">notes<svg class="i s14"><use href="#i-chd"/></svg></span><span class="sp"></span><button class="ib"><svg class="i"><use href="#i-fileplus"/></svg></button><button class="ib"><svg class="i"><use href="#i-folderplus"/></svg></button></div>
+   <div class="tree">
+    <div class="tr"><span class="chev"><svg class="i s12"><use href="#i-chr"/></svg></span><svg class="i s14 fo"><use href="#i-folder"/></svg>blog</div>
+    <div class="tr"><span class="chev"><svg class="i s12"><use href="#i-chd"/></svg></span><svg class="i s14 fo"><use href="#i-folderopen"/></svg>projects</div>
+    <div class="tr" style="--d:1"><span class="chev"></span><svg class="i s14 fi"><use href="#i-file"/></svg>Launch checklist</div>
+    <div class="tr sel open foc" style="--d:1"><span class="chev"></span><svg class="i s14 fi"><use href="#i-file"/></svg>Project brief</div>
+    <div class="tr drop" style="--d:0"><span class="chev"><svg class="i s12"><use href="#i-chr"/></svg></span><svg class="i s14 fo"><use href="#i-folder"/></svg>reference</div>
+    <div class="tr"><span class="chev"></span><svg class="i s14 fi"><use href="#i-file"/></svg>Inbox</div>
+   </div>
+   <div class="dock"><button class="ib"><svg class="i"><use href="#i-images"/></svg></button><button class="ib"><svg class="i"><use href="#i-gear"/></svg></button><button class="ib"><svg class="i"><use href="#i-help"/></svg></button></div>
+  </div>
+ </section></div>
+ <footer class="status"><span class="st-ok">✓ Saved</span><span class="sp"></span><span>5:1</span></footer>
+</div>
+<div class="cap">Drawer open; "reference" shows the drop-target style</div>
+</div>
+</div></div>
+</section>
+
+<!-- =============================================================== FIRST RUN / ABOUT -->
+<section class="sec" id="firstrun">
+<h2>First run and About <small>spec §5.22, §5.16</small></h2>
+<p>The logo appears in exactly three places inside the app: first run, the empty state, and Settings › About. It is also the window and launcher icon (<code>frankmd.svg</code> in hicolor).</p>
+<div class="stage"><div class="row-of">
+<div>
+<div class="win" style="width:600px;height:420px">
+ <div class="cols"><section class="pane focused"><div class="ph"><span class="muted">FrankMD</span></div>
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:24px">
+   <svg class="logo" width="72" height="72" aria-hidden="true"><use href="#logo"/></svg>
+   <div class="title" style="font-size:15px">Choose a folder for your notes</div>
+   <div class="muted" style="max-width:40ch;font-size:13px">FrankMD edits the Markdown files in that folder. Nothing is copied or moved.</div>
+   <div style="display:flex;gap:8px;margin-top:4px"><button class="btn">Use ~/notes</button><button class="btn pri">Choose folder… <span class="kbd">↵</span></button></div>
+  </div>
+ </section></div>
+ <footer class="status"><span class="muted">Following Omarchy theme: Tokyo Night</span><span class="sp"></span></footer>
+</div>
+<div class="cap">First launch, no vault configured</div>
+</div>
+<div>
+<div class="win" style="width:600px;height:420px">
+ <div class="cols">
+  <div class="set-nav" style="width:160px"><div class="li"><svg class="i s14 muted"><use href="#i-term"/></svg>Diagnostics</div><div class="li sel"><svg class="i s14"><use href="#i-info"/></svg>About</div></div>
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;text-align:center">
+   <svg class="logo" width="64" height="64" aria-hidden="true"><use href="#logo"/></svg>
+   <div class="title" style="font-size:16px;margin-top:6px">FrankMD</div>
+   <div class="muted" style="font-size:13px">A modern markdown editor for your notes</div>
+   <div class="faint" style="font-size:12px">v2.0.0 · GPUI build</div>
+   <div class="faint" style="font-size:12px">© 2026 Fabio Akita</div>
+   <div style="display:flex;gap:8px;margin-top:10px"><button class="btn">Source code</button><button class="btn">Copy debug info</button></div>
+  </div>
+ </div>
+ <footer class="status"><span class="sp"></span><span>notes</span></footer>
+</div>
+<div class="cap">Settings › About</div>
+</div>
+</div></div>
+</section>
+
+<!-- =============================================================== PARTS -->
+<section class="sec" id="parts">
+<h2>States and parts <small>banners, status line, controls · spec §3.6, §5.12, §7</small></h2>
+<p>Banners tint the role colour 14 % into the surface with a 2 px bar, so they keep contrast in light themes. The status line is where all transient feedback lands.</p>
+<div class="sheet">
+ <div class="card"><h3>Pane banners</h3><div class="stack">
+  <div class="ban dang"><svg class="i"><use href="#i-drive"/></svg><span>Can't reach ~/notes. Edits are kept as drafts.</span><span class="sp"></span><button class="btn">Retry</button></div>
+  <div class="ban warn"><svg class="i"><use href="#i-refresh"/></svg><span>This note changed on disk.</span><span class="sp"></span><button class="btn">Reload</button><button class="btn">Compare…</button></div>
+  <div class="ban warn"><svg class="i"><use href="#i-warn"/></svg><span>This note was deleted or moved outside FrankMD.</span><span class="sp"></span><button class="btn">Save again</button><button class="btn">Close</button></div>
+  <div class="ban info"><svg class="i"><use href="#i-lock"/></svg><span>This note is read-only on disk.</span></div>
+  <div class="ban info"><svg class="i"><use href="#i-cloud"/></svg><span>S3 is no longer available; new media will be stored locally.</span><span class="sp"></span><button class="btn">Settings</button><button class="btn">Dismiss</button></div>
+ </div></div>
+ <div class="card"><h3>Status line</h3><div class="stack">
+  <div class="status"><span class="mode">NORMAL</span><span>● Unsaved</span><span class="sp"></span><span>1,204 words</span><span>12:4</span><span>notes</span></div>
+  <div class="status"><span class="mode m-ins">INSERT</span><span class="muted">↻ Saving</span><span class="sp"></span><span class="chip"><span class="kbd">Ctrl+.</span>Edit code block</span><span>12:4</span></div>
+  <div class="status"><span class="mode m-vis">VISUAL</span><span class="st-ok">✓ Saved</span><span class="muted">Copied to clipboard</span><span class="sp"></span><span>3,812 chars</span><span>2:18</span></div>
+  <div class="status"><span class="st-err">✕ Save failed</span><span class="st-err">Disk full: ~/notes has no space left</span><span class="sp"></span><svg class="i s12"><use href="#i-cursor"/></svg><span>40:1</span><span class="st-err" style="display:inline-flex;gap:4px;align-items:center"><svg class="i s12"><use href="#i-drive"/></svg>notes</span></div>
+  <div class="status"><span class="st-ok">✓ Saved</span><span>Editor width: 80ch</span><span class="sp"></span><span class="chip"><span class="kbd">Ctrl+.</span>Open link</span><span>7:22</span><span>notes</span></div>
+ </div></div>
+ <div class="card"><h3>Controls</h3><div class="pad">
+  <button class="btn">Cancel</button><button class="btn pri">Insert <span class="kbd">Ctrl+↵</span></button><button class="btn dan">Move to trash</button><button class="btn f">Focused</button>
+  <div class="inp" style="width:160px"><span class="pl">Placeholder</span></div><div class="inp f" style="width:160px">Focused input<span class="caret"></span></div>
+  <span class="seg"><span class="on">Split</span><span>Single</span></span><span class="sw on"></span><span class="sw"></span>
+  <span class="sel-ctl">Relative<svg class="i s12 muted"><use href="#i-chd"/></svg></span>
+  <span class="kbds"><span class="kbd">Ctrl</span><span class="kbd">Shift</span><span class="kbd">P</span></span>
+  <span class="prov fed">.fed</span><span class="prov env">env OPENAI_API_KEY</span><span class="prov">default</span>
+ </div></div>
+ <div class="card"><h3>Role swatches (current theme)</h3><div class="pad" style="font:11px var(--mono)">
+  <span style="display:inline-flex;align-items:center;gap:6px"><i style="width:18px;height:18px;background:var(--surface);border:1px solid var(--border)"></i>surface.base</span>
+  <span style="display:inline-flex;align-items:center;gap:6px"><i style="width:18px;height:18px;background:var(--recessed);border:1px solid var(--border)"></i>recessed</span>
+  <span style="display:inline-flex;align-items:center;gap:6px"><i style="width:18px;height:18px;background:var(--raised);border:1px solid var(--border)"></i>raised</span>
+  <span style="display:inline-flex;align-items:center;gap:6px"><i style="width:18px;height:18px;background:var(--sunken);border:1px solid var(--border)"></i>sunken</span>
+  <span style="display:inline-flex;align-items:center;gap:6px"><i style="width:18px;height:18px;background:var(--sel)"></i>selection</span>
+  <span style="display:inline-flex;align-items:center;gap:6px"><i style="width:18px;height:18px;background:var(--accent)"></i>accent</span>
+  <span style="display:inline-flex;align-items:center;gap:6px"><i style="width:18px;height:18px;background:var(--green)"></i>success</span>
+  <span style="display:inline-flex;align-items:center;gap:6px"><i style="width:18px;height:18px;background:var(--yellow)"></i>warning</span>
+  <span style="display:inline-flex;align-items:center;gap:6px"><i style="width:18px;height:18px;background:var(--red)"></i>danger</span>
+  <span style="display:inline-flex;align-items:center;gap:6px"><i style="width:18px;height:18px;background:var(--magenta)"></i>heading.1</span>
+  <span style="display:inline-flex;align-items:center;gap:6px"><i style="width:18px;height:18px;background:var(--blue)"></i>heading.2</span>
+  <span style="display:inline-flex;align-items:center;gap:6px"><i style="width:18px;height:18px;background:var(--cyan)"></i>heading.3</span>
+ </div></div>
+</div>
+</section>
+
+</div>
+</div>
+</body>
+</html>

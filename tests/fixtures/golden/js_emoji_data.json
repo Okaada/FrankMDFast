@@ -1,0 +1,4086 @@
+{
+  "source": "app/javascript/lib/emoji_data.js @ d47a89e92d89f807878d318182fa5dcea0329ec4",
+  "frankmd_sha": "d47a89e92d89f807878d318182fa5dcea0329ec4",
+  "generator": "tools/golden/js/ui_data.mjs",
+  "notes": "EMOJI_DATA rows are [shortcode, emoji, keywords]. getEmojiMap: shortcode -> emoji; for duplicate shortcodes the LAST row wins.",
+  "cases": [
+    {
+      "name": "EMOJI_DATA full dump",
+      "fn": "EMOJI_DATA",
+      "input": [],
+      "expected": [
+        [
+          "grinning",
+          "😀",
+          "smile happy"
+        ],
+        [
+          "smiley",
+          "😃",
+          "smile happy"
+        ],
+        [
+          "smile",
+          "😄",
+          "happy joy"
+        ],
+        [
+          "grin",
+          "😁",
+          "happy teeth"
+        ],
+        [
+          "laughing",
+          "😆",
+          "happy lol xd"
+        ],
+        [
+          "sweat_smile",
+          "😅",
+          "nervous relief"
+        ],
+        [
+          "rofl",
+          "🤣",
+          "lol laugh floor"
+        ],
+        [
+          "joy",
+          "😂",
+          "laugh cry tears"
+        ],
+        [
+          "slightly_smiling_face",
+          "🙂",
+          "smile"
+        ],
+        [
+          "upside_down_face",
+          "🙃",
+          "silly sarcasm"
+        ],
+        [
+          "wink",
+          "😉",
+          "flirt"
+        ],
+        [
+          "blush",
+          "😊",
+          "happy shy"
+        ],
+        [
+          "innocent",
+          "😇",
+          "angel halo"
+        ],
+        [
+          "smiling_face_with_three_hearts",
+          "🥰",
+          "love adore"
+        ],
+        [
+          "heart_eyes",
+          "😍",
+          "love crush"
+        ],
+        [
+          "star_struck",
+          "🤩",
+          "wow amazing"
+        ],
+        [
+          "kissing_heart",
+          "😘",
+          "kiss love"
+        ],
+        [
+          "kissing",
+          "😗",
+          "kiss"
+        ],
+        [
+          "relaxed",
+          "☺️",
+          "peaceful happy"
+        ],
+        [
+          "kissing_closed_eyes",
+          "😚",
+          "kiss love"
+        ],
+        [
+          "kissing_smiling_eyes",
+          "😙",
+          "kiss"
+        ],
+        [
+          "smiling_face_with_tear",
+          "🥲",
+          "grateful sad happy"
+        ],
+        [
+          "yum",
+          "😋",
+          "delicious tasty"
+        ],
+        [
+          "stuck_out_tongue",
+          "😛",
+          "playful silly"
+        ],
+        [
+          "stuck_out_tongue_winking_eye",
+          "😜",
+          "crazy playful"
+        ],
+        [
+          "zany_face",
+          "🤪",
+          "crazy silly wild"
+        ],
+        [
+          "stuck_out_tongue_closed_eyes",
+          "😝",
+          "playful"
+        ],
+        [
+          "money_mouth_face",
+          "🤑",
+          "rich money"
+        ],
+        [
+          "hugs",
+          "🤗",
+          "hug embrace"
+        ],
+        [
+          "hand_over_mouth",
+          "🤭",
+          "oops giggle"
+        ],
+        [
+          "shushing_face",
+          "🤫",
+          "quiet secret"
+        ],
+        [
+          "thinking",
+          "🤔",
+          "hmm consider ponder"
+        ],
+        [
+          "zipper_mouth_face",
+          "🤐",
+          "secret quiet"
+        ],
+        [
+          "raised_eyebrow",
+          "🤨",
+          "skeptic doubt"
+        ],
+        [
+          "neutral_face",
+          "😐",
+          "meh indifferent"
+        ],
+        [
+          "expressionless",
+          "😑",
+          "blank"
+        ],
+        [
+          "no_mouth",
+          "😶",
+          "silent mute"
+        ],
+        [
+          "smirk",
+          "😏",
+          "smug flirt"
+        ],
+        [
+          "unamused",
+          "😒",
+          "annoyed bored"
+        ],
+        [
+          "roll_eyes",
+          "🙄",
+          "whatever annoyed"
+        ],
+        [
+          "grimacing",
+          "😬",
+          "awkward nervous"
+        ],
+        [
+          "lying_face",
+          "🤥",
+          "pinocchio liar"
+        ],
+        [
+          "relieved",
+          "😌",
+          "peaceful content"
+        ],
+        [
+          "pensive",
+          "😔",
+          "sad thoughtful"
+        ],
+        [
+          "sleepy",
+          "😪",
+          "tired"
+        ],
+        [
+          "drooling_face",
+          "🤤",
+          "hungry delicious"
+        ],
+        [
+          "sleeping",
+          "😴",
+          "zzz tired"
+        ],
+        [
+          "mask",
+          "😷",
+          "sick covid"
+        ],
+        [
+          "face_with_thermometer",
+          "🤒",
+          "sick fever"
+        ],
+        [
+          "face_with_head_bandage",
+          "🤕",
+          "hurt injury"
+        ],
+        [
+          "nauseated_face",
+          "🤢",
+          "sick gross"
+        ],
+        [
+          "vomiting_face",
+          "🤮",
+          "sick barf"
+        ],
+        [
+          "sneezing_face",
+          "🤧",
+          "sick achoo"
+        ],
+        [
+          "hot_face",
+          "🥵",
+          "heat sweating"
+        ],
+        [
+          "cold_face",
+          "🥶",
+          "freezing"
+        ],
+        [
+          "woozy_face",
+          "🥴",
+          "drunk dizzy"
+        ],
+        [
+          "dizzy_face",
+          "😵",
+          "dead unconscious"
+        ],
+        [
+          "exploding_head",
+          "🤯",
+          "mind blown"
+        ],
+        [
+          "cowboy_hat_face",
+          "🤠",
+          "western"
+        ],
+        [
+          "partying_face",
+          "🥳",
+          "party celebrate"
+        ],
+        [
+          "disguised_face",
+          "🥸",
+          "glasses mustache"
+        ],
+        [
+          "sunglasses",
+          "😎",
+          "cool"
+        ],
+        [
+          "nerd_face",
+          "🤓",
+          "geek glasses"
+        ],
+        [
+          "monocle_face",
+          "🧐",
+          "thinking"
+        ],
+        [
+          "confused",
+          "😕",
+          "puzzled"
+        ],
+        [
+          "worried",
+          "😟",
+          "anxious concerned"
+        ],
+        [
+          "slightly_frowning_face",
+          "🙁",
+          "sad"
+        ],
+        [
+          "frowning_face",
+          "☹️",
+          "sad"
+        ],
+        [
+          "open_mouth",
+          "😮",
+          "surprised wow"
+        ],
+        [
+          "hushed",
+          "😯",
+          "surprised"
+        ],
+        [
+          "astonished",
+          "😲",
+          "shocked surprised"
+        ],
+        [
+          "flushed",
+          "😳",
+          "embarrassed"
+        ],
+        [
+          "pleading_face",
+          "🥺",
+          "puppy eyes cute"
+        ],
+        [
+          "frowning",
+          "😦",
+          "sad"
+        ],
+        [
+          "anguished",
+          "😧",
+          "pain"
+        ],
+        [
+          "fearful",
+          "😨",
+          "scared afraid"
+        ],
+        [
+          "cold_sweat",
+          "😰",
+          "nervous anxious"
+        ],
+        [
+          "disappointed_relieved",
+          "😥",
+          "sad relieved"
+        ],
+        [
+          "cry",
+          "😢",
+          "sad tears"
+        ],
+        [
+          "sob",
+          "😭",
+          "crying sad tears"
+        ],
+        [
+          "scream",
+          "😱",
+          "scared horror"
+        ],
+        [
+          "confounded",
+          "😖",
+          "frustrated"
+        ],
+        [
+          "persevere",
+          "😣",
+          "struggling"
+        ],
+        [
+          "disappointed",
+          "😞",
+          "sad"
+        ],
+        [
+          "sweat",
+          "😓",
+          "nervous hard work"
+        ],
+        [
+          "weary",
+          "😩",
+          "tired"
+        ],
+        [
+          "tired_face",
+          "😫",
+          "exhausted"
+        ],
+        [
+          "yawning_face",
+          "🥱",
+          "tired sleepy"
+        ],
+        [
+          "triumph",
+          "😤",
+          "frustrated huffing"
+        ],
+        [
+          "rage",
+          "😡",
+          "angry mad"
+        ],
+        [
+          "angry",
+          "😠",
+          "mad"
+        ],
+        [
+          "cursing_face",
+          "🤬",
+          "swearing angry"
+        ],
+        [
+          "smiling_imp",
+          "😈",
+          "devil evil"
+        ],
+        [
+          "imp",
+          "👿",
+          "devil angry"
+        ],
+        [
+          "skull",
+          "💀",
+          "dead death"
+        ],
+        [
+          "skull_and_crossbones",
+          "☠️",
+          "death danger"
+        ],
+        [
+          "poop",
+          "💩",
+          "poo shit"
+        ],
+        [
+          "clown_face",
+          "🤡",
+          "clown"
+        ],
+        [
+          "japanese_ogre",
+          "👹",
+          "monster"
+        ],
+        [
+          "japanese_goblin",
+          "👺",
+          "monster"
+        ],
+        [
+          "ghost",
+          "👻",
+          "halloween spooky"
+        ],
+        [
+          "alien",
+          "👽",
+          "ufo space"
+        ],
+        [
+          "space_invader",
+          "👾",
+          "game alien"
+        ],
+        [
+          "robot",
+          "🤖",
+          "bot machine"
+        ],
+        [
+          "wave",
+          "👋",
+          "hello bye"
+        ],
+        [
+          "raised_back_of_hand",
+          "🤚",
+          "stop"
+        ],
+        [
+          "raised_hand",
+          "✋",
+          "stop high five"
+        ],
+        [
+          "vulcan_salute",
+          "🖖",
+          "spock star trek"
+        ],
+        [
+          "ok_hand",
+          "👌",
+          "okay perfect"
+        ],
+        [
+          "pinched_fingers",
+          "🤌",
+          "italian chef kiss"
+        ],
+        [
+          "pinching_hand",
+          "🤏",
+          "small tiny"
+        ],
+        [
+          "v",
+          "✌️",
+          "peace victory"
+        ],
+        [
+          "crossed_fingers",
+          "🤞",
+          "luck hope"
+        ],
+        [
+          "love_you_gesture",
+          "🤟",
+          "ily love"
+        ],
+        [
+          "metal",
+          "🤘",
+          "rock horns"
+        ],
+        [
+          "call_me_hand",
+          "🤙",
+          "call shaka"
+        ],
+        [
+          "point_left",
+          "👈",
+          "left"
+        ],
+        [
+          "point_right",
+          "👉",
+          "right"
+        ],
+        [
+          "point_up_2",
+          "👆",
+          "up"
+        ],
+        [
+          "fu",
+          "🖕",
+          "middle finger"
+        ],
+        [
+          "point_down",
+          "👇",
+          "down"
+        ],
+        [
+          "point_up",
+          "☝️",
+          "up"
+        ],
+        [
+          "+1",
+          "👍",
+          "thumbsup like yes"
+        ],
+        [
+          "thumbsup",
+          "👍",
+          "like yes approve"
+        ],
+        [
+          "-1",
+          "👎",
+          "thumbsdown dislike no"
+        ],
+        [
+          "thumbsdown",
+          "👎",
+          "dislike no disapprove"
+        ],
+        [
+          "fist",
+          "✊",
+          "power"
+        ],
+        [
+          "fist_oncoming",
+          "👊",
+          "punch"
+        ],
+        [
+          "fist_left",
+          "🤛",
+          "bump"
+        ],
+        [
+          "fist_right",
+          "🤜",
+          "bump"
+        ],
+        [
+          "clap",
+          "👏",
+          "applause"
+        ],
+        [
+          "raised_hands",
+          "🙌",
+          "celebration hooray"
+        ],
+        [
+          "open_hands",
+          "👐",
+          "hug"
+        ],
+        [
+          "palms_up_together",
+          "🤲",
+          "prayer"
+        ],
+        [
+          "handshake",
+          "🤝",
+          "deal agreement"
+        ],
+        [
+          "pray",
+          "🙏",
+          "thanks please namaste"
+        ],
+        [
+          "writing_hand",
+          "✍️",
+          "write"
+        ],
+        [
+          "nail_care",
+          "💅",
+          "beauty nails"
+        ],
+        [
+          "selfie",
+          "🤳",
+          "photo"
+        ],
+        [
+          "muscle",
+          "💪",
+          "strong flex bicep"
+        ],
+        [
+          "mechanical_arm",
+          "🦾",
+          "robot prosthetic"
+        ],
+        [
+          "leg",
+          "🦵",
+          "kick"
+        ],
+        [
+          "foot",
+          "🦶",
+          "kick"
+        ],
+        [
+          "ear",
+          "👂",
+          "hear listen"
+        ],
+        [
+          "nose",
+          "👃",
+          "smell"
+        ],
+        [
+          "brain",
+          "🧠",
+          "smart think"
+        ],
+        [
+          "eyes",
+          "👀",
+          "look see watching"
+        ],
+        [
+          "eye",
+          "👁️",
+          "see"
+        ],
+        [
+          "tongue",
+          "👅",
+          "taste lick"
+        ],
+        [
+          "lips",
+          "👄",
+          "kiss mouth"
+        ],
+        [
+          "heart",
+          "❤️",
+          "love red"
+        ],
+        [
+          "orange_heart",
+          "🧡",
+          "love"
+        ],
+        [
+          "yellow_heart",
+          "💛",
+          "love"
+        ],
+        [
+          "green_heart",
+          "💚",
+          "love"
+        ],
+        [
+          "blue_heart",
+          "💙",
+          "love"
+        ],
+        [
+          "purple_heart",
+          "💜",
+          "love"
+        ],
+        [
+          "black_heart",
+          "🖤",
+          "love dark"
+        ],
+        [
+          "brown_heart",
+          "🤎",
+          "love"
+        ],
+        [
+          "white_heart",
+          "🤍",
+          "love pure"
+        ],
+        [
+          "broken_heart",
+          "💔",
+          "sad breakup"
+        ],
+        [
+          "heart_exclamation",
+          "❣️",
+          "love"
+        ],
+        [
+          "two_hearts",
+          "💕",
+          "love"
+        ],
+        [
+          "revolving_hearts",
+          "💞",
+          "love"
+        ],
+        [
+          "heartbeat",
+          "💓",
+          "love"
+        ],
+        [
+          "heartpulse",
+          "💗",
+          "love growing"
+        ],
+        [
+          "sparkling_heart",
+          "💖",
+          "love"
+        ],
+        [
+          "cupid",
+          "💘",
+          "love arrow"
+        ],
+        [
+          "gift_heart",
+          "💝",
+          "love present"
+        ],
+        [
+          "mending_heart",
+          "❤️‍🩹",
+          "healing"
+        ],
+        [
+          "heart_on_fire",
+          "❤️‍🔥",
+          "passion"
+        ],
+        [
+          "kiss",
+          "💋",
+          "lips love"
+        ],
+        [
+          "love_letter",
+          "💌",
+          "email heart"
+        ],
+        [
+          "100",
+          "💯",
+          "percent perfect"
+        ],
+        [
+          "anger",
+          "💢",
+          "angry"
+        ],
+        [
+          "boom",
+          "💥",
+          "explosion"
+        ],
+        [
+          "collision",
+          "💥",
+          "explosion crash"
+        ],
+        [
+          "dizzy",
+          "💫",
+          "star"
+        ],
+        [
+          "sweat_drops",
+          "💦",
+          "water"
+        ],
+        [
+          "dash",
+          "💨",
+          "wind fast running"
+        ],
+        [
+          "hole",
+          "🕳️",
+          "empty"
+        ],
+        [
+          "bomb",
+          "💣",
+          "explosive danger"
+        ],
+        [
+          "speech_balloon",
+          "💬",
+          "comment chat"
+        ],
+        [
+          "thought_balloon",
+          "💭",
+          "thinking"
+        ],
+        [
+          "zzz",
+          "💤",
+          "sleep tired"
+        ],
+        [
+          "fire",
+          "🔥",
+          "hot lit flame"
+        ],
+        [
+          "sparkles",
+          "✨",
+          "magic stars shine"
+        ],
+        [
+          "star",
+          "⭐",
+          "favorite"
+        ],
+        [
+          "star2",
+          "🌟",
+          "glowing"
+        ],
+        [
+          "zap",
+          "⚡",
+          "lightning electric"
+        ],
+        [
+          "rainbow",
+          "🌈",
+          "pride colors"
+        ],
+        [
+          "sunny",
+          "☀️",
+          "sun weather"
+        ],
+        [
+          "cloud",
+          "☁️",
+          "weather"
+        ],
+        [
+          "snowflake",
+          "❄️",
+          "cold winter"
+        ],
+        [
+          "umbrella",
+          "☔",
+          "rain weather"
+        ],
+        [
+          "coffee",
+          "☕",
+          "cafe drink"
+        ],
+        [
+          "tea",
+          "🍵",
+          "drink green"
+        ],
+        [
+          "beer",
+          "🍺",
+          "drink alcohol"
+        ],
+        [
+          "beers",
+          "🍻",
+          "cheers drink"
+        ],
+        [
+          "wine_glass",
+          "🍷",
+          "drink alcohol"
+        ],
+        [
+          "cocktail",
+          "🍸",
+          "drink martini"
+        ],
+        [
+          "tropical_drink",
+          "🍹",
+          "vacation"
+        ],
+        [
+          "champagne",
+          "🍾",
+          "celebrate party"
+        ],
+        [
+          "pizza",
+          "🍕",
+          "food"
+        ],
+        [
+          "hamburger",
+          "🍔",
+          "burger food"
+        ],
+        [
+          "fries",
+          "🍟",
+          "food"
+        ],
+        [
+          "taco",
+          "🌮",
+          "food mexican"
+        ],
+        [
+          "burrito",
+          "🌯",
+          "food mexican"
+        ],
+        [
+          "sushi",
+          "🍣",
+          "food japanese"
+        ],
+        [
+          "ramen",
+          "🍜",
+          "food noodles"
+        ],
+        [
+          "cake",
+          "🎂",
+          "birthday dessert"
+        ],
+        [
+          "cookie",
+          "🍪",
+          "dessert food"
+        ],
+        [
+          "chocolate_bar",
+          "🍫",
+          "candy sweet"
+        ],
+        [
+          "candy",
+          "🍬",
+          "sweet"
+        ],
+        [
+          "ice_cream",
+          "🍨",
+          "dessert cold"
+        ],
+        [
+          "icecream",
+          "🍦",
+          "dessert cone"
+        ],
+        [
+          "doughnut",
+          "🍩",
+          "donut dessert"
+        ],
+        [
+          "apple",
+          "🍎",
+          "fruit red"
+        ],
+        [
+          "green_apple",
+          "🍏",
+          "fruit"
+        ],
+        [
+          "banana",
+          "🍌",
+          "fruit"
+        ],
+        [
+          "orange",
+          "🍊",
+          "fruit tangerine"
+        ],
+        [
+          "lemon",
+          "🍋",
+          "fruit yellow"
+        ],
+        [
+          "grapes",
+          "🍇",
+          "fruit wine"
+        ],
+        [
+          "watermelon",
+          "🍉",
+          "fruit summer"
+        ],
+        [
+          "strawberry",
+          "🍓",
+          "fruit berry"
+        ],
+        [
+          "peach",
+          "🍑",
+          "fruit butt"
+        ],
+        [
+          "cherries",
+          "🍒",
+          "fruit"
+        ],
+        [
+          "avocado",
+          "🥑",
+          "fruit guacamole"
+        ],
+        [
+          "eggplant",
+          "🍆",
+          "vegetable aubergine"
+        ],
+        [
+          "carrot",
+          "🥕",
+          "vegetable"
+        ],
+        [
+          "corn",
+          "🌽",
+          "vegetable maize"
+        ],
+        [
+          "hot_pepper",
+          "🌶️",
+          "spicy chili"
+        ],
+        [
+          "broccoli",
+          "🥦",
+          "vegetable"
+        ],
+        [
+          "egg",
+          "🥚",
+          "food breakfast"
+        ],
+        [
+          "cheese",
+          "🧀",
+          "food"
+        ],
+        [
+          "bread",
+          "🍞",
+          "food toast"
+        ],
+        [
+          "croissant",
+          "🥐",
+          "food french"
+        ],
+        [
+          "bacon",
+          "🥓",
+          "food breakfast"
+        ],
+        [
+          "meat_on_bone",
+          "🍖",
+          "food"
+        ],
+        [
+          "poultry_leg",
+          "🍗",
+          "chicken food"
+        ],
+        [
+          "dog",
+          "🐕",
+          "pet puppy"
+        ],
+        [
+          "dog2",
+          "🐶",
+          "pet puppy cute"
+        ],
+        [
+          "cat",
+          "🐈",
+          "pet kitty"
+        ],
+        [
+          "cat2",
+          "🐱",
+          "pet kitty cute"
+        ],
+        [
+          "mouse",
+          "🐁",
+          "animal"
+        ],
+        [
+          "mouse2",
+          "🐭",
+          "animal cute"
+        ],
+        [
+          "hamster",
+          "🐹",
+          "pet cute"
+        ],
+        [
+          "rabbit",
+          "🐰",
+          "bunny easter"
+        ],
+        [
+          "fox_face",
+          "🦊",
+          "animal"
+        ],
+        [
+          "bear",
+          "🐻",
+          "animal"
+        ],
+        [
+          "panda_face",
+          "🐼",
+          "animal cute"
+        ],
+        [
+          "koala",
+          "🐨",
+          "animal"
+        ],
+        [
+          "tiger",
+          "🐯",
+          "animal"
+        ],
+        [
+          "lion",
+          "🦁",
+          "animal king"
+        ],
+        [
+          "cow",
+          "🐮",
+          "animal"
+        ],
+        [
+          "pig",
+          "🐷",
+          "animal"
+        ],
+        [
+          "frog",
+          "🐸",
+          "animal"
+        ],
+        [
+          "monkey_face",
+          "🐵",
+          "animal"
+        ],
+        [
+          "see_no_evil",
+          "🙈",
+          "monkey blind"
+        ],
+        [
+          "hear_no_evil",
+          "🙉",
+          "monkey deaf"
+        ],
+        [
+          "speak_no_evil",
+          "🙊",
+          "monkey mute"
+        ],
+        [
+          "monkey",
+          "🐒",
+          "animal"
+        ],
+        [
+          "chicken",
+          "🐔",
+          "animal bird"
+        ],
+        [
+          "penguin",
+          "🐧",
+          "animal bird"
+        ],
+        [
+          "bird",
+          "🐦",
+          "animal"
+        ],
+        [
+          "baby_chick",
+          "🐤",
+          "animal bird"
+        ],
+        [
+          "hatching_chick",
+          "🐣",
+          "animal bird"
+        ],
+        [
+          "hatched_chick",
+          "🐥",
+          "animal bird"
+        ],
+        [
+          "duck",
+          "🦆",
+          "animal bird"
+        ],
+        [
+          "eagle",
+          "🦅",
+          "bird america"
+        ],
+        [
+          "owl",
+          "🦉",
+          "bird wise"
+        ],
+        [
+          "bat",
+          "🦇",
+          "animal vampire"
+        ],
+        [
+          "wolf",
+          "🐺",
+          "animal"
+        ],
+        [
+          "boar",
+          "🐗",
+          "animal pig"
+        ],
+        [
+          "horse",
+          "🐴",
+          "animal"
+        ],
+        [
+          "unicorn",
+          "🦄",
+          "magic fantasy"
+        ],
+        [
+          "honeybee",
+          "🐝",
+          "bee insect"
+        ],
+        [
+          "bug",
+          "🐛",
+          "insect"
+        ],
+        [
+          "butterfly",
+          "🦋",
+          "insect"
+        ],
+        [
+          "snail",
+          "🐌",
+          "slow"
+        ],
+        [
+          "shell",
+          "🐚",
+          "beach sea"
+        ],
+        [
+          "beetle",
+          "🐞",
+          "insect ladybug"
+        ],
+        [
+          "ant",
+          "🐜",
+          "insect"
+        ],
+        [
+          "spider",
+          "🕷️",
+          "insect web"
+        ],
+        [
+          "spider_web",
+          "🕸️",
+          "web"
+        ],
+        [
+          "turtle",
+          "🐢",
+          "animal slow"
+        ],
+        [
+          "snake",
+          "🐍",
+          "animal"
+        ],
+        [
+          "lizard",
+          "🦎",
+          "animal reptile"
+        ],
+        [
+          "scorpion",
+          "🦂",
+          "animal"
+        ],
+        [
+          "crab",
+          "🦀",
+          "animal seafood"
+        ],
+        [
+          "shrimp",
+          "🦐",
+          "seafood"
+        ],
+        [
+          "squid",
+          "🦑",
+          "seafood octopus"
+        ],
+        [
+          "octopus",
+          "🐙",
+          "animal sea"
+        ],
+        [
+          "lobster",
+          "🦞",
+          "seafood"
+        ],
+        [
+          "fish",
+          "🐟",
+          "animal sea"
+        ],
+        [
+          "tropical_fish",
+          "🐠",
+          "animal sea"
+        ],
+        [
+          "blowfish",
+          "🐡",
+          "animal fish"
+        ],
+        [
+          "shark",
+          "🦈",
+          "animal sea"
+        ],
+        [
+          "whale",
+          "🐳",
+          "animal sea"
+        ],
+        [
+          "whale2",
+          "🐋",
+          "animal sea"
+        ],
+        [
+          "dolphin",
+          "🐬",
+          "animal sea"
+        ],
+        [
+          "crocodile",
+          "🐊",
+          "animal"
+        ],
+        [
+          "leopard",
+          "🐆",
+          "animal cat"
+        ],
+        [
+          "tiger2",
+          "🐅",
+          "animal cat"
+        ],
+        [
+          "elephant",
+          "🐘",
+          "animal"
+        ],
+        [
+          "gorilla",
+          "🦍",
+          "animal ape"
+        ],
+        [
+          "deer",
+          "🦌",
+          "animal"
+        ],
+        [
+          "camel",
+          "🐪",
+          "animal desert"
+        ],
+        [
+          "giraffe",
+          "🦒",
+          "animal tall"
+        ],
+        [
+          "kangaroo",
+          "🦘",
+          "animal australia"
+        ],
+        [
+          "sloth",
+          "🦥",
+          "animal slow lazy"
+        ],
+        [
+          "hedgehog",
+          "🦔",
+          "animal"
+        ],
+        [
+          "dinosaur",
+          "🦕",
+          "animal extinct"
+        ],
+        [
+          "t_rex",
+          "🦖",
+          "dinosaur animal"
+        ],
+        [
+          "dragon",
+          "🐉",
+          "fantasy"
+        ],
+        [
+          "dragon_face",
+          "🐲",
+          "fantasy"
+        ],
+        [
+          "bouquet",
+          "💐",
+          "flowers"
+        ],
+        [
+          "cherry_blossom",
+          "🌸",
+          "flower spring"
+        ],
+        [
+          "white_flower",
+          "💮",
+          "flower"
+        ],
+        [
+          "rosette",
+          "🏵️",
+          "flower"
+        ],
+        [
+          "rose",
+          "🌹",
+          "flower love"
+        ],
+        [
+          "wilted_flower",
+          "🥀",
+          "dead sad"
+        ],
+        [
+          "hibiscus",
+          "🌺",
+          "flower tropical"
+        ],
+        [
+          "sunflower",
+          "🌻",
+          "flower"
+        ],
+        [
+          "blossom",
+          "🌼",
+          "flower"
+        ],
+        [
+          "tulip",
+          "🌷",
+          "flower spring"
+        ],
+        [
+          "seedling",
+          "🌱",
+          "plant grow"
+        ],
+        [
+          "evergreen_tree",
+          "🌲",
+          "tree nature"
+        ],
+        [
+          "deciduous_tree",
+          "🌳",
+          "tree nature"
+        ],
+        [
+          "palm_tree",
+          "🌴",
+          "tree tropical vacation"
+        ],
+        [
+          "cactus",
+          "🌵",
+          "plant desert"
+        ],
+        [
+          "herb",
+          "🌿",
+          "plant leaf"
+        ],
+        [
+          "shamrock",
+          "☘️",
+          "luck irish"
+        ],
+        [
+          "four_leaf_clover",
+          "🍀",
+          "luck irish"
+        ],
+        [
+          "maple_leaf",
+          "🍁",
+          "fall autumn canada"
+        ],
+        [
+          "fallen_leaf",
+          "🍂",
+          "fall autumn"
+        ],
+        [
+          "leaves",
+          "🍃",
+          "nature wind"
+        ],
+        [
+          "mushroom",
+          "🍄",
+          "plant fungi"
+        ],
+        [
+          "soccer",
+          "⚽",
+          "football sport"
+        ],
+        [
+          "basketball",
+          "🏀",
+          "sport ball"
+        ],
+        [
+          "football",
+          "🏈",
+          "american sport"
+        ],
+        [
+          "baseball",
+          "⚾",
+          "sport ball"
+        ],
+        [
+          "tennis",
+          "🎾",
+          "sport ball"
+        ],
+        [
+          "volleyball",
+          "🏐",
+          "sport ball"
+        ],
+        [
+          "golf",
+          "⛳",
+          "sport"
+        ],
+        [
+          "8ball",
+          "🎱",
+          "pool billiards"
+        ],
+        [
+          "ping_pong",
+          "🏓",
+          "sport table tennis"
+        ],
+        [
+          "badminton",
+          "🏸",
+          "sport"
+        ],
+        [
+          "hockey",
+          "🏒",
+          "sport ice"
+        ],
+        [
+          "cricket_game",
+          "🏏",
+          "sport"
+        ],
+        [
+          "ski",
+          "🎿",
+          "snow winter sport"
+        ],
+        [
+          "snowboarder",
+          "🏂",
+          "snow winter sport"
+        ],
+        [
+          "ice_skate",
+          "⛸️",
+          "snow winter sport"
+        ],
+        [
+          "fishing_pole_and_fish",
+          "🎣",
+          "fishing"
+        ],
+        [
+          "dart",
+          "🎯",
+          "target bullseye"
+        ],
+        [
+          "bowling",
+          "🎳",
+          "sport"
+        ],
+        [
+          "video_game",
+          "🎮",
+          "game controller"
+        ],
+        [
+          "game_die",
+          "🎲",
+          "dice gambling"
+        ],
+        [
+          "jigsaw",
+          "🧩",
+          "puzzle"
+        ],
+        [
+          "chess_pawn",
+          "♟️",
+          "game"
+        ],
+        [
+          "performing_arts",
+          "🎭",
+          "theater drama"
+        ],
+        [
+          "art",
+          "🎨",
+          "paint palette"
+        ],
+        [
+          "guitar",
+          "🎸",
+          "music rock"
+        ],
+        [
+          "musical_keyboard",
+          "🎹",
+          "music piano"
+        ],
+        [
+          "saxophone",
+          "🎷",
+          "music jazz"
+        ],
+        [
+          "trumpet",
+          "🎺",
+          "music horn"
+        ],
+        [
+          "violin",
+          "🎻",
+          "music"
+        ],
+        [
+          "drum",
+          "🥁",
+          "music percussion"
+        ],
+        [
+          "microphone",
+          "🎤",
+          "music sing karaoke"
+        ],
+        [
+          "headphones",
+          "🎧",
+          "music audio"
+        ],
+        [
+          "radio",
+          "📻",
+          "music"
+        ],
+        [
+          "notes",
+          "🎶",
+          "music"
+        ],
+        [
+          "musical_note",
+          "🎵",
+          "music"
+        ],
+        [
+          "clapper",
+          "🎬",
+          "movie film"
+        ],
+        [
+          "movie_camera",
+          "🎥",
+          "film video"
+        ],
+        [
+          "camera",
+          "📷",
+          "photo picture"
+        ],
+        [
+          "camera_flash",
+          "📸",
+          "photo picture"
+        ],
+        [
+          "tv",
+          "📺",
+          "television"
+        ],
+        [
+          "computer",
+          "💻",
+          "laptop pc mac"
+        ],
+        [
+          "desktop_computer",
+          "🖥️",
+          "pc screen"
+        ],
+        [
+          "keyboard",
+          "⌨️",
+          "type"
+        ],
+        [
+          "mouse_computer",
+          "🖱️",
+          "click"
+        ],
+        [
+          "printer",
+          "🖨️",
+          "paper"
+        ],
+        [
+          "phone",
+          "📱",
+          "mobile cell"
+        ],
+        [
+          "telephone",
+          "☎️",
+          "call"
+        ],
+        [
+          "fax",
+          "📠",
+          "machine"
+        ],
+        [
+          "pager",
+          "📟",
+          "beeper"
+        ],
+        [
+          "battery",
+          "🔋",
+          "power energy"
+        ],
+        [
+          "electric_plug",
+          "🔌",
+          "power"
+        ],
+        [
+          "bulb",
+          "💡",
+          "idea light"
+        ],
+        [
+          "flashlight",
+          "🔦",
+          "light"
+        ],
+        [
+          "candle",
+          "🕯️",
+          "light"
+        ],
+        [
+          "wrench",
+          "🔧",
+          "tool fix"
+        ],
+        [
+          "hammer",
+          "🔨",
+          "tool build"
+        ],
+        [
+          "hammer_and_wrench",
+          "🛠️",
+          "tools fix"
+        ],
+        [
+          "screwdriver",
+          "🪛",
+          "tool fix"
+        ],
+        [
+          "nut_and_bolt",
+          "🔩",
+          "hardware"
+        ],
+        [
+          "gear",
+          "⚙️",
+          "settings cog"
+        ],
+        [
+          "chains",
+          "⛓️",
+          "link"
+        ],
+        [
+          "link",
+          "🔗",
+          "chain url"
+        ],
+        [
+          "scissors",
+          "✂️",
+          "cut"
+        ],
+        [
+          "paperclip",
+          "📎",
+          "attach"
+        ],
+        [
+          "paperclips",
+          "🖇️",
+          "attach"
+        ],
+        [
+          "pushpin",
+          "📌",
+          "pin location"
+        ],
+        [
+          "round_pushpin",
+          "📍",
+          "pin location"
+        ],
+        [
+          "triangular_ruler",
+          "📐",
+          "measure"
+        ],
+        [
+          "straight_ruler",
+          "📏",
+          "measure"
+        ],
+        [
+          "pen",
+          "🖊️",
+          "write"
+        ],
+        [
+          "fountain_pen",
+          "🖋️",
+          "write"
+        ],
+        [
+          "pencil",
+          "✏️",
+          "write draw"
+        ],
+        [
+          "crayon",
+          "🖍️",
+          "draw color"
+        ],
+        [
+          "memo",
+          "📝",
+          "note write"
+        ],
+        [
+          "briefcase",
+          "💼",
+          "work business"
+        ],
+        [
+          "file_folder",
+          "📁",
+          "directory"
+        ],
+        [
+          "open_file_folder",
+          "📂",
+          "directory"
+        ],
+        [
+          "clipboard",
+          "📋",
+          "paste"
+        ],
+        [
+          "calendar",
+          "📆",
+          "date schedule"
+        ],
+        [
+          "date",
+          "📅",
+          "calendar schedule"
+        ],
+        [
+          "card_index",
+          "📇",
+          "contacts"
+        ],
+        [
+          "chart_with_upwards_trend",
+          "📈",
+          "graph increase"
+        ],
+        [
+          "chart_with_downwards_trend",
+          "📉",
+          "graph decrease"
+        ],
+        [
+          "bar_chart",
+          "📊",
+          "graph stats"
+        ],
+        [
+          "books",
+          "📚",
+          "read study library"
+        ],
+        [
+          "book",
+          "📖",
+          "read"
+        ],
+        [
+          "closed_book",
+          "📕",
+          "read"
+        ],
+        [
+          "green_book",
+          "📗",
+          "read"
+        ],
+        [
+          "blue_book",
+          "📘",
+          "read"
+        ],
+        [
+          "orange_book",
+          "📙",
+          "read"
+        ],
+        [
+          "notebook",
+          "📓",
+          "journal"
+        ],
+        [
+          "notebook_with_decorative_cover",
+          "📔",
+          "journal"
+        ],
+        [
+          "ledger",
+          "📒",
+          "accounting"
+        ],
+        [
+          "scroll",
+          "📜",
+          "document ancient"
+        ],
+        [
+          "page_facing_up",
+          "📄",
+          "document"
+        ],
+        [
+          "page_with_curl",
+          "📃",
+          "document"
+        ],
+        [
+          "newspaper",
+          "📰",
+          "news press"
+        ],
+        [
+          "bookmark_tabs",
+          "📑",
+          "mark"
+        ],
+        [
+          "bookmark",
+          "🔖",
+          "mark save"
+        ],
+        [
+          "label",
+          "🏷️",
+          "tag"
+        ],
+        [
+          "envelope",
+          "✉️",
+          "mail email"
+        ],
+        [
+          "email",
+          "📧",
+          "mail"
+        ],
+        [
+          "incoming_envelope",
+          "📨",
+          "mail receive"
+        ],
+        [
+          "envelope_with_arrow",
+          "📩",
+          "mail send"
+        ],
+        [
+          "outbox_tray",
+          "📤",
+          "mail send"
+        ],
+        [
+          "inbox_tray",
+          "📥",
+          "mail receive"
+        ],
+        [
+          "package",
+          "📦",
+          "box delivery"
+        ],
+        [
+          "mailbox",
+          "📫",
+          "mail"
+        ],
+        [
+          "mailbox_with_mail",
+          "📬",
+          "mail"
+        ],
+        [
+          "postbox",
+          "📮",
+          "mail"
+        ],
+        [
+          "hourglass",
+          "⌛",
+          "time wait"
+        ],
+        [
+          "hourglass_flowing_sand",
+          "⏳",
+          "time wait"
+        ],
+        [
+          "watch",
+          "⌚",
+          "time"
+        ],
+        [
+          "alarm_clock",
+          "⏰",
+          "time wake"
+        ],
+        [
+          "stopwatch",
+          "⏱️",
+          "time"
+        ],
+        [
+          "timer_clock",
+          "⏲️",
+          "time"
+        ],
+        [
+          "clock",
+          "🕐",
+          "time"
+        ],
+        [
+          "lock",
+          "🔒",
+          "secure password"
+        ],
+        [
+          "unlock",
+          "🔓",
+          "open"
+        ],
+        [
+          "lock_with_ink_pen",
+          "🔏",
+          "secure sign"
+        ],
+        [
+          "closed_lock_with_key",
+          "🔐",
+          "secure"
+        ],
+        [
+          "key",
+          "🔑",
+          "password access"
+        ],
+        [
+          "old_key",
+          "🗝️",
+          "vintage"
+        ],
+        [
+          "mag",
+          "🔍",
+          "search zoom left"
+        ],
+        [
+          "mag_right",
+          "🔎",
+          "search zoom right"
+        ],
+        [
+          "heavy_check_mark",
+          "✔️",
+          "yes done"
+        ],
+        [
+          "white_check_mark",
+          "✅",
+          "yes done"
+        ],
+        [
+          "ballot_box_with_check",
+          "☑️",
+          "yes vote"
+        ],
+        [
+          "heavy_multiplication_x",
+          "✖️",
+          "no wrong"
+        ],
+        [
+          "x",
+          "❌",
+          "no wrong cancel"
+        ],
+        [
+          "negative_squared_cross_mark",
+          "❎",
+          "no"
+        ],
+        [
+          "heavy_plus_sign",
+          "➕",
+          "add plus"
+        ],
+        [
+          "heavy_minus_sign",
+          "➖",
+          "minus subtract"
+        ],
+        [
+          "heavy_division_sign",
+          "➗",
+          "divide"
+        ],
+        [
+          "curly_loop",
+          "➰",
+          "loop"
+        ],
+        [
+          "loop",
+          "➿",
+          "double loop"
+        ],
+        [
+          "question",
+          "❓",
+          "confused"
+        ],
+        [
+          "grey_question",
+          "❔",
+          "confused"
+        ],
+        [
+          "exclamation",
+          "❗",
+          "warning important"
+        ],
+        [
+          "grey_exclamation",
+          "❕",
+          "warning"
+        ],
+        [
+          "bangbang",
+          "‼️",
+          "surprise"
+        ],
+        [
+          "interrobang",
+          "⁉️",
+          "surprise confusion"
+        ],
+        [
+          "warning",
+          "⚠️",
+          "caution danger"
+        ],
+        [
+          "no_entry",
+          "⛔",
+          "stop forbidden"
+        ],
+        [
+          "no_entry_sign",
+          "🚫",
+          "forbidden banned"
+        ],
+        [
+          "o",
+          "⭕",
+          "circle"
+        ],
+        [
+          "no_good",
+          "🙅",
+          "no stop"
+        ],
+        [
+          "ok_woman",
+          "🙆",
+          "yes okay"
+        ],
+        [
+          "information_source",
+          "ℹ️",
+          "info help"
+        ],
+        [
+          "abc",
+          "🔤",
+          "letters alphabet"
+        ],
+        [
+          "abcd",
+          "🔡",
+          "lowercase alphabet"
+        ],
+        [
+          "capital_abcd",
+          "🔠",
+          "uppercase alphabet"
+        ],
+        [
+          "symbols",
+          "🔣",
+          "characters"
+        ],
+        [
+          "1234",
+          "🔢",
+          "numbers"
+        ],
+        [
+          "hash",
+          "#️⃣",
+          "pound number"
+        ],
+        [
+          "asterisk",
+          "*️⃣",
+          "star"
+        ],
+        [
+          "zero",
+          "0️⃣",
+          "number"
+        ],
+        [
+          "one",
+          "1️⃣",
+          "number"
+        ],
+        [
+          "two",
+          "2️⃣",
+          "number"
+        ],
+        [
+          "three",
+          "3️⃣",
+          "number"
+        ],
+        [
+          "four",
+          "4️⃣",
+          "number"
+        ],
+        [
+          "five",
+          "5️⃣",
+          "number"
+        ],
+        [
+          "six",
+          "6️⃣",
+          "number"
+        ],
+        [
+          "seven",
+          "7️⃣",
+          "number"
+        ],
+        [
+          "eight",
+          "8️⃣",
+          "number"
+        ],
+        [
+          "nine",
+          "9️⃣",
+          "number"
+        ],
+        [
+          "keycap_ten",
+          "🔟",
+          "number"
+        ],
+        [
+          "arrow_up",
+          "⬆️",
+          "direction"
+        ],
+        [
+          "arrow_down",
+          "⬇️",
+          "direction"
+        ],
+        [
+          "arrow_left",
+          "⬅️",
+          "direction"
+        ],
+        [
+          "arrow_right",
+          "➡️",
+          "direction"
+        ],
+        [
+          "arrow_upper_left",
+          "↖️",
+          "direction"
+        ],
+        [
+          "arrow_upper_right",
+          "↗️",
+          "direction"
+        ],
+        [
+          "arrow_lower_left",
+          "↙️",
+          "direction"
+        ],
+        [
+          "arrow_lower_right",
+          "↘️",
+          "direction"
+        ],
+        [
+          "left_right_arrow",
+          "↔️",
+          "direction"
+        ],
+        [
+          "arrow_up_down",
+          "↕️",
+          "direction"
+        ],
+        [
+          "arrows_counterclockwise",
+          "🔄",
+          "refresh reload sync"
+        ],
+        [
+          "arrow_backward",
+          "◀️",
+          "rewind back"
+        ],
+        [
+          "arrow_forward",
+          "▶️",
+          "play forward"
+        ],
+        [
+          "fast_forward",
+          "⏩",
+          "speed"
+        ],
+        [
+          "rewind",
+          "⏪",
+          "back"
+        ],
+        [
+          "arrow_double_up",
+          "⏫",
+          "fast up"
+        ],
+        [
+          "arrow_double_down",
+          "⏬",
+          "fast down"
+        ],
+        [
+          "twisted_rightwards_arrows",
+          "🔀",
+          "shuffle random"
+        ],
+        [
+          "repeat",
+          "🔁",
+          "loop"
+        ],
+        [
+          "repeat_one",
+          "🔂",
+          "loop once"
+        ],
+        [
+          "recycle",
+          "♻️",
+          "environment green"
+        ],
+        [
+          "tm",
+          "™️",
+          "trademark"
+        ],
+        [
+          "copyright",
+          "©️",
+          "ip"
+        ],
+        [
+          "registered",
+          "®️",
+          "ip"
+        ],
+        [
+          "dollar",
+          "💲",
+          "money"
+        ],
+        [
+          "yen",
+          "💴",
+          "money japan"
+        ],
+        [
+          "euro",
+          "💶",
+          "money europe"
+        ],
+        [
+          "pound",
+          "💷",
+          "money uk"
+        ],
+        [
+          "moneybag",
+          "💰",
+          "money rich"
+        ],
+        [
+          "credit_card",
+          "💳",
+          "payment"
+        ],
+        [
+          "money_with_wings",
+          "💸",
+          "payment spending"
+        ],
+        [
+          "rocket",
+          "🚀",
+          "space launch startup"
+        ],
+        [
+          "airplane",
+          "✈️",
+          "travel fly"
+        ],
+        [
+          "helicopter",
+          "🚁",
+          "fly"
+        ],
+        [
+          "car",
+          "🚗",
+          "vehicle auto"
+        ],
+        [
+          "taxi",
+          "🚕",
+          "car vehicle"
+        ],
+        [
+          "bus",
+          "🚌",
+          "vehicle transport"
+        ],
+        [
+          "ambulance",
+          "🚑",
+          "emergency medical"
+        ],
+        [
+          "fire_engine",
+          "🚒",
+          "emergency"
+        ],
+        [
+          "police_car",
+          "🚓",
+          "emergency law"
+        ],
+        [
+          "truck",
+          "🚚",
+          "delivery vehicle"
+        ],
+        [
+          "tractor",
+          "🚜",
+          "farm vehicle"
+        ],
+        [
+          "bike",
+          "🚲",
+          "bicycle cycling"
+        ],
+        [
+          "motor_scooter",
+          "🛵",
+          "vespa moped"
+        ],
+        [
+          "motorcycle",
+          "🏍️",
+          "bike"
+        ],
+        [
+          "train",
+          "🚆",
+          "rail transport"
+        ],
+        [
+          "metro",
+          "🚇",
+          "subway underground"
+        ],
+        [
+          "ship",
+          "🚢",
+          "boat cruise"
+        ],
+        [
+          "speedboat",
+          "🚤",
+          "boat"
+        ],
+        [
+          "sailboat",
+          "⛵",
+          "boat sailing"
+        ],
+        [
+          "anchor",
+          "⚓",
+          "ship boat"
+        ],
+        [
+          "construction",
+          "🚧",
+          "warning work"
+        ],
+        [
+          "vertical_traffic_light",
+          "🚦",
+          "road signal"
+        ],
+        [
+          "traffic_light",
+          "🚥",
+          "road signal"
+        ],
+        [
+          "fuelpump",
+          "⛽",
+          "gas station"
+        ],
+        [
+          "busstop",
+          "🚏",
+          "transport"
+        ],
+        [
+          "world_map",
+          "🗺️",
+          "travel"
+        ],
+        [
+          "statue_of_liberty",
+          "🗽",
+          "america new york"
+        ],
+        [
+          "moyai",
+          "🗿",
+          "easter island"
+        ],
+        [
+          "house",
+          "🏠",
+          "home"
+        ],
+        [
+          "house_with_garden",
+          "🏡",
+          "home"
+        ],
+        [
+          "office",
+          "🏢",
+          "building work"
+        ],
+        [
+          "factory",
+          "🏭",
+          "building industry"
+        ],
+        [
+          "post_office",
+          "🏣",
+          "building mail"
+        ],
+        [
+          "hospital",
+          "🏥",
+          "building medical"
+        ],
+        [
+          "bank",
+          "🏦",
+          "building money"
+        ],
+        [
+          "hotel",
+          "🏨",
+          "building sleep"
+        ],
+        [
+          "school",
+          "🏫",
+          "building education"
+        ],
+        [
+          "church",
+          "⛪",
+          "building religion"
+        ],
+        [
+          "mosque",
+          "🕌",
+          "building religion"
+        ],
+        [
+          "synagogue",
+          "🕍",
+          "building religion"
+        ],
+        [
+          "stadium",
+          "🏟️",
+          "building sports"
+        ],
+        [
+          "tent",
+          "⛺",
+          "camping outdoor"
+        ],
+        [
+          "camping",
+          "🏕️",
+          "outdoor tent"
+        ],
+        [
+          "beach_umbrella",
+          "🏖️",
+          "vacation summer"
+        ],
+        [
+          "desert",
+          "🏜️",
+          "sand dry"
+        ],
+        [
+          "mountain",
+          "⛰️",
+          "nature"
+        ],
+        [
+          "snow_capped_mountain",
+          "🏔️",
+          "nature"
+        ],
+        [
+          "volcano",
+          "🌋",
+          "nature eruption"
+        ],
+        [
+          "earth_africa",
+          "🌍",
+          "world globe"
+        ],
+        [
+          "earth_americas",
+          "🌎",
+          "world globe"
+        ],
+        [
+          "earth_asia",
+          "🌏",
+          "world globe"
+        ],
+        [
+          "globe_with_meridians",
+          "🌐",
+          "world internet"
+        ],
+        [
+          "crescent_moon",
+          "🌙",
+          "night"
+        ],
+        [
+          "full_moon",
+          "🌕",
+          "night"
+        ],
+        [
+          "new_moon",
+          "🌑",
+          "night"
+        ],
+        [
+          "sun_with_face",
+          "🌞",
+          "day"
+        ],
+        [
+          "full_moon_with_face",
+          "🌝",
+          "night"
+        ],
+        [
+          "new_moon_with_face",
+          "🌚",
+          "night"
+        ],
+        [
+          "comet",
+          "☄️",
+          "space"
+        ],
+        [
+          "milky_way",
+          "🌌",
+          "space galaxy"
+        ],
+        [
+          "checkered_flag",
+          "🏁",
+          "race finish"
+        ],
+        [
+          "triangular_flag_on_post",
+          "🚩",
+          "flag red"
+        ],
+        [
+          "crossed_flags",
+          "🎌",
+          "japan celebration"
+        ],
+        [
+          "black_flag",
+          "🏴",
+          "flag"
+        ],
+        [
+          "white_flag",
+          "🏳️",
+          "surrender peace"
+        ],
+        [
+          "rainbow_flag",
+          "🏳️‍🌈",
+          "pride lgbtq"
+        ],
+        [
+          "pirate_flag",
+          "🏴‍☠️",
+          "jolly roger skull"
+        ],
+        [
+          "trophy",
+          "🏆",
+          "winner award"
+        ],
+        [
+          "medal_sports",
+          "🏅",
+          "winner award"
+        ],
+        [
+          "medal_military",
+          "🎖️",
+          "award"
+        ],
+        [
+          "first_place_medal",
+          "🥇",
+          "winner gold"
+        ],
+        [
+          "second_place_medal",
+          "🥈",
+          "silver"
+        ],
+        [
+          "third_place_medal",
+          "🥉",
+          "bronze"
+        ],
+        [
+          "crown",
+          "👑",
+          "king queen royal"
+        ],
+        [
+          "gem",
+          "💎",
+          "diamond jewel"
+        ],
+        [
+          "ring",
+          "💍",
+          "wedding engagement"
+        ],
+        [
+          "lipstick",
+          "💄",
+          "makeup beauty"
+        ],
+        [
+          "dress",
+          "👗",
+          "clothes fashion"
+        ],
+        [
+          "tshirt",
+          "👕",
+          "clothes"
+        ],
+        [
+          "jeans",
+          "👖",
+          "clothes pants"
+        ],
+        [
+          "scarf",
+          "🧣",
+          "clothes winter"
+        ],
+        [
+          "gloves",
+          "🧤",
+          "clothes winter"
+        ],
+        [
+          "coat",
+          "🧥",
+          "clothes winter"
+        ],
+        [
+          "socks",
+          "🧦",
+          "clothes"
+        ],
+        [
+          "kimono",
+          "👘",
+          "clothes japan"
+        ],
+        [
+          "bikini",
+          "👙",
+          "clothes swim"
+        ],
+        [
+          "womans_clothes",
+          "👚",
+          "clothes"
+        ],
+        [
+          "purse",
+          "👛",
+          "bag money"
+        ],
+        [
+          "handbag",
+          "👜",
+          "bag fashion"
+        ],
+        [
+          "pouch",
+          "👝",
+          "bag"
+        ],
+        [
+          "shopping_bags",
+          "🛍️",
+          "buy retail"
+        ],
+        [
+          "school_satchel",
+          "🎒",
+          "backpack bag"
+        ],
+        [
+          "mans_shoe",
+          "👞",
+          "clothes"
+        ],
+        [
+          "athletic_shoe",
+          "👟",
+          "sneaker running"
+        ],
+        [
+          "hiking_boot",
+          "🥾",
+          "shoe outdoor"
+        ],
+        [
+          "womans_flat_shoe",
+          "🥿",
+          "shoe"
+        ],
+        [
+          "high_heel",
+          "👠",
+          "shoe"
+        ],
+        [
+          "sandal",
+          "👡",
+          "shoe"
+        ],
+        [
+          "boot",
+          "👢",
+          "shoe"
+        ],
+        [
+          "tophat",
+          "🎩",
+          "fancy gentleman"
+        ],
+        [
+          "billed_cap",
+          "🧢",
+          "hat baseball"
+        ],
+        [
+          "mortar_board",
+          "🎓",
+          "graduation school"
+        ],
+        [
+          "rescue_worker_helmet",
+          "⛑️",
+          "safety"
+        ],
+        [
+          "prayer_beads",
+          "📿",
+          "religion"
+        ],
+        [
+          "nazar_amulet",
+          "🧿",
+          "protection evil eye"
+        ],
+        [
+          "sunglasses2",
+          "🕶️",
+          "cool summer"
+        ],
+        [
+          "eyeglasses",
+          "👓",
+          "glasses nerd"
+        ],
+        [
+          "goggles",
+          "🥽",
+          "safety swim"
+        ],
+        [
+          "test_tube",
+          "🧪",
+          "science experiment"
+        ],
+        [
+          "petri_dish",
+          "🧫",
+          "science biology"
+        ],
+        [
+          "dna",
+          "🧬",
+          "science genetics"
+        ],
+        [
+          "microscope",
+          "🔬",
+          "science"
+        ],
+        [
+          "telescope",
+          "🔭",
+          "science space"
+        ],
+        [
+          "satellite",
+          "📡",
+          "signal space"
+        ],
+        [
+          "syringe",
+          "💉",
+          "medical vaccine"
+        ],
+        [
+          "pill",
+          "💊",
+          "medicine drug"
+        ],
+        [
+          "stethoscope",
+          "🩺",
+          "medical doctor"
+        ],
+        [
+          "adhesive_bandage",
+          "🩹",
+          "medical bandaid"
+        ],
+        [
+          "drop_of_blood",
+          "🩸",
+          "medical"
+        ],
+        [
+          "dagger",
+          "🗡️",
+          "knife sword"
+        ],
+        [
+          "crossed_swords",
+          "⚔️",
+          "battle fight"
+        ],
+        [
+          "shield",
+          "🛡️",
+          "defense protect"
+        ],
+        [
+          "bow_and_arrow",
+          "🏹",
+          "archery"
+        ],
+        [
+          "axe",
+          "🪓",
+          "tool weapon"
+        ],
+        [
+          "gun",
+          "🔫",
+          "weapon pistol"
+        ],
+        [
+          "crystal_ball",
+          "🔮",
+          "magic fortune"
+        ],
+        [
+          "magic_wand",
+          "🪄",
+          "wizard"
+        ],
+        [
+          "joystick",
+          "🕹️",
+          "game arcade"
+        ],
+        [
+          "teddy_bear",
+          "🧸",
+          "toy stuffed"
+        ],
+        [
+          "pinata",
+          "🪅",
+          "party celebration"
+        ],
+        [
+          "nesting_dolls",
+          "🪆",
+          "russian matryoshka"
+        ],
+        [
+          "balloon",
+          "🎈",
+          "party birthday"
+        ],
+        [
+          "tada",
+          "🎉",
+          "party celebration congratulations"
+        ],
+        [
+          "confetti_ball",
+          "🎊",
+          "party celebration"
+        ],
+        [
+          "ribbon",
+          "🎀",
+          "gift decoration"
+        ],
+        [
+          "gift",
+          "🎁",
+          "present birthday christmas"
+        ],
+        [
+          "christmas_tree",
+          "🎄",
+          "holiday decoration"
+        ],
+        [
+          "jack_o_lantern",
+          "🎃",
+          "halloween pumpkin"
+        ],
+        [
+          "firecracker",
+          "🧨",
+          "celebration explosion"
+        ],
+        [
+          "sparkler",
+          "🎇",
+          "fireworks celebration"
+        ]
+      ]
+    },
+    {
+      "name": "getEmojiMap full dump",
+      "fn": "getEmojiMap",
+      "input": [],
+      "expected": {
+        "100": "💯",
+        "1234": "🔢",
+        "grinning": "😀",
+        "smiley": "😃",
+        "smile": "😄",
+        "grin": "😁",
+        "laughing": "😆",
+        "sweat_smile": "😅",
+        "rofl": "🤣",
+        "joy": "😂",
+        "slightly_smiling_face": "🙂",
+        "upside_down_face": "🙃",
+        "wink": "😉",
+        "blush": "😊",
+        "innocent": "😇",
+        "smiling_face_with_three_hearts": "🥰",
+        "heart_eyes": "😍",
+        "star_struck": "🤩",
+        "kissing_heart": "😘",
+        "kissing": "😗",
+        "relaxed": "☺️",
+        "kissing_closed_eyes": "😚",
+        "kissing_smiling_eyes": "😙",
+        "smiling_face_with_tear": "🥲",
+        "yum": "😋",
+        "stuck_out_tongue": "😛",
+        "stuck_out_tongue_winking_eye": "😜",
+        "zany_face": "🤪",
+        "stuck_out_tongue_closed_eyes": "😝",
+        "money_mouth_face": "🤑",
+        "hugs": "🤗",
+        "hand_over_mouth": "🤭",
+        "shushing_face": "🤫",
+        "thinking": "🤔",
+        "zipper_mouth_face": "🤐",
+        "raised_eyebrow": "🤨",
+        "neutral_face": "😐",
+        "expressionless": "😑",
+        "no_mouth": "😶",
+        "smirk": "😏",
+        "unamused": "😒",
+        "roll_eyes": "🙄",
+        "grimacing": "😬",
+        "lying_face": "🤥",
+        "relieved": "😌",
+        "pensive": "😔",
+        "sleepy": "😪",
+        "drooling_face": "🤤",
+        "sleeping": "😴",
+        "mask": "😷",
+        "face_with_thermometer": "🤒",
+        "face_with_head_bandage": "🤕",
+        "nauseated_face": "🤢",
+        "vomiting_face": "🤮",
+        "sneezing_face": "🤧",
+        "hot_face": "🥵",
+        "cold_face": "🥶",
+        "woozy_face": "🥴",
+        "dizzy_face": "😵",
+        "exploding_head": "🤯",
+        "cowboy_hat_face": "🤠",
+        "partying_face": "🥳",
+        "disguised_face": "🥸",
+        "sunglasses": "😎",
+        "nerd_face": "🤓",
+        "monocle_face": "🧐",
+        "confused": "😕",
+        "worried": "😟",
+        "slightly_frowning_face": "🙁",
+        "frowning_face": "☹️",
+        "open_mouth": "😮",
+        "hushed": "😯",
+        "astonished": "😲",
+        "flushed": "😳",
+        "pleading_face": "🥺",
+        "frowning": "😦",
+        "anguished": "😧",
+        "fearful": "😨",
+        "cold_sweat": "😰",
+        "disappointed_relieved": "😥",
+        "cry": "😢",
+        "sob": "😭",
+        "scream": "😱",
+        "confounded": "😖",
+        "persevere": "😣",
+        "disappointed": "😞",
+        "sweat": "😓",
+        "weary": "😩",
+        "tired_face": "😫",
+        "yawning_face": "🥱",
+        "triumph": "😤",
+        "rage": "😡",
+        "angry": "😠",
+        "cursing_face": "🤬",
+        "smiling_imp": "😈",
+        "imp": "👿",
+        "skull": "💀",
+        "skull_and_crossbones": "☠️",
+        "poop": "💩",
+        "clown_face": "🤡",
+        "japanese_ogre": "👹",
+        "japanese_goblin": "👺",
+        "ghost": "👻",
+        "alien": "👽",
+        "space_invader": "👾",
+        "robot": "🤖",
+        "wave": "👋",
+        "raised_back_of_hand": "🤚",
+        "raised_hand": "✋",
+        "vulcan_salute": "🖖",
+        "ok_hand": "👌",
+        "pinched_fingers": "🤌",
+        "pinching_hand": "🤏",
+        "v": "✌️",
+        "crossed_fingers": "🤞",
+        "love_you_gesture": "🤟",
+        "metal": "🤘",
+        "call_me_hand": "🤙",
+        "point_left": "👈",
+        "point_right": "👉",
+        "point_up_2": "👆",
+        "fu": "🖕",
+        "point_down": "👇",
+        "point_up": "☝️",
+        "+1": "👍",
+        "thumbsup": "👍",
+        "-1": "👎",
+        "thumbsdown": "👎",
+        "fist": "✊",
+        "fist_oncoming": "👊",
+        "fist_left": "🤛",
+        "fist_right": "🤜",
+        "clap": "👏",
+        "raised_hands": "🙌",
+        "open_hands": "👐",
+        "palms_up_together": "🤲",
+        "handshake": "🤝",
+        "pray": "🙏",
+        "writing_hand": "✍️",
+        "nail_care": "💅",
+        "selfie": "🤳",
+        "muscle": "💪",
+        "mechanical_arm": "🦾",
+        "leg": "🦵",
+        "foot": "🦶",
+        "ear": "👂",
+        "nose": "👃",
+        "brain": "🧠",
+        "eyes": "👀",
+        "eye": "👁️",
+        "tongue": "👅",
+        "lips": "👄",
+        "heart": "❤️",
+        "orange_heart": "🧡",
+        "yellow_heart": "💛",
+        "green_heart": "💚",
+        "blue_heart": "💙",
+        "purple_heart": "💜",
+        "black_heart": "🖤",
+        "brown_heart": "🤎",
+        "white_heart": "🤍",
+        "broken_heart": "💔",
+        "heart_exclamation": "❣️",
+        "two_hearts": "💕",
+        "revolving_hearts": "💞",
+        "heartbeat": "💓",
+        "heartpulse": "💗",
+        "sparkling_heart": "💖",
+        "cupid": "💘",
+        "gift_heart": "💝",
+        "mending_heart": "❤️‍🩹",
+        "heart_on_fire": "❤️‍🔥",
+        "kiss": "💋",
+        "love_letter": "💌",
+        "anger": "💢",
+        "boom": "💥",
+        "collision": "💥",
+        "dizzy": "💫",
+        "sweat_drops": "💦",
+        "dash": "💨",
+        "hole": "🕳️",
+        "bomb": "💣",
+        "speech_balloon": "💬",
+        "thought_balloon": "💭",
+        "zzz": "💤",
+        "fire": "🔥",
+        "sparkles": "✨",
+        "star": "⭐",
+        "star2": "🌟",
+        "zap": "⚡",
+        "rainbow": "🌈",
+        "sunny": "☀️",
+        "cloud": "☁️",
+        "snowflake": "❄️",
+        "umbrella": "☔",
+        "coffee": "☕",
+        "tea": "🍵",
+        "beer": "🍺",
+        "beers": "🍻",
+        "wine_glass": "🍷",
+        "cocktail": "🍸",
+        "tropical_drink": "🍹",
+        "champagne": "🍾",
+        "pizza": "🍕",
+        "hamburger": "🍔",
+        "fries": "🍟",
+        "taco": "🌮",
+        "burrito": "🌯",
+        "sushi": "🍣",
+        "ramen": "🍜",
+        "cake": "🎂",
+        "cookie": "🍪",
+        "chocolate_bar": "🍫",
+        "candy": "🍬",
+        "ice_cream": "🍨",
+        "icecream": "🍦",
+        "doughnut": "🍩",
+        "apple": "🍎",
+        "green_apple": "🍏",
+        "banana": "🍌",
+        "orange": "🍊",
+        "lemon": "🍋",
+        "grapes": "🍇",
+        "watermelon": "🍉",
+        "strawberry": "🍓",
+        "peach": "🍑",
+        "cherries": "🍒",
+        "avocado": "🥑",
+        "eggplant": "🍆",
+        "carrot": "🥕",
+        "corn": "🌽",
+        "hot_pepper": "🌶️",
+        "broccoli": "🥦",
+        "egg": "🥚",
+        "cheese": "🧀",
+        "bread": "🍞",
+        "croissant": "🥐",
+        "bacon": "🥓",
+        "meat_on_bone": "🍖",
+        "poultry_leg": "🍗",
+        "dog": "🐕",
+        "dog2": "🐶",
+        "cat": "🐈",
+        "cat2": "🐱",
+        "mouse": "🐁",
+        "mouse2": "🐭",
+        "hamster": "🐹",
+        "rabbit": "🐰",
+        "fox_face": "🦊",
+        "bear": "🐻",
+        "panda_face": "🐼",
+        "koala": "🐨",
+        "tiger": "🐯",
+        "lion": "🦁",
+        "cow": "🐮",
+        "pig": "🐷",
+        "frog": "🐸",
+        "monkey_face": "🐵",
+        "see_no_evil": "🙈",
+        "hear_no_evil": "🙉",
+        "speak_no_evil": "🙊",
+        "monkey": "🐒",
+        "chicken": "🐔",
+        "penguin": "🐧",
+        "bird": "🐦",
+        "baby_chick": "🐤",
+        "hatching_chick": "🐣",
+        "hatched_chick": "🐥",
+        "duck": "🦆",
+        "eagle": "🦅",
+        "owl": "🦉",
+        "bat": "🦇",
+        "wolf": "🐺",
+        "boar": "🐗",
+        "horse": "🐴",
+        "unicorn": "🦄",
+        "honeybee": "🐝",
+        "bug": "🐛",
+        "butterfly": "🦋",
+        "snail": "🐌",
+        "shell": "🐚",
+        "beetle": "🐞",
+        "ant": "🐜",
+        "spider": "🕷️",
+        "spider_web": "🕸️",
+        "turtle": "🐢",
+        "snake": "🐍",
+        "lizard": "🦎",
+        "scorpion": "🦂",
+        "crab": "🦀",
+        "shrimp": "🦐",
+        "squid": "🦑",
+        "octopus": "🐙",
+        "lobster": "🦞",
+        "fish": "🐟",
+        "tropical_fish": "🐠",
+        "blowfish": "🐡",
+        "shark": "🦈",
+        "whale": "🐳",
+        "whale2": "🐋",
+        "dolphin": "🐬",
+        "crocodile": "🐊",
+        "leopard": "🐆",
+        "tiger2": "🐅",
+        "elephant": "🐘",
+        "gorilla": "🦍",
+        "deer": "🦌",
+        "camel": "🐪",
+        "giraffe": "🦒",
+        "kangaroo": "🦘",
+        "sloth": "🦥",
+        "hedgehog": "🦔",
+        "dinosaur": "🦕",
+        "t_rex": "🦖",
+        "dragon": "🐉",
+        "dragon_face": "🐲",
+        "bouquet": "💐",
+        "cherry_blossom": "🌸",
+        "white_flower": "💮",
+        "rosette": "🏵️",
+        "rose": "🌹",
+        "wilted_flower": "🥀",
+        "hibiscus": "🌺",
+        "sunflower": "🌻",
+        "blossom": "🌼",
+        "tulip": "🌷",
+        "seedling": "🌱",
+        "evergreen_tree": "🌲",
+        "deciduous_tree": "🌳",
+        "palm_tree": "🌴",
+        "cactus": "🌵",
+        "herb": "🌿",
+        "shamrock": "☘️",
+        "four_leaf_clover": "🍀",
+        "maple_leaf": "🍁",
+        "fallen_leaf": "🍂",
+        "leaves": "🍃",
+        "mushroom": "🍄",
+        "soccer": "⚽",
+        "basketball": "🏀",
+        "football": "🏈",
+        "baseball": "⚾",
+        "tennis": "🎾",
+        "volleyball": "🏐",
+        "golf": "⛳",
+        "8ball": "🎱",
+        "ping_pong": "🏓",
+        "badminton": "🏸",
+        "hockey": "🏒",
+        "cricket_game": "🏏",
+        "ski": "🎿",
+        "snowboarder": "🏂",
+        "ice_skate": "⛸️",
+        "fishing_pole_and_fish": "🎣",
+        "dart": "🎯",
+        "bowling": "🎳",
+        "video_game": "🎮",
+        "game_die": "🎲",
+        "jigsaw": "🧩",
+        "chess_pawn": "♟️",
+        "performing_arts": "🎭",
+        "art": "🎨",
+        "guitar": "🎸",
+        "musical_keyboard": "🎹",
+        "saxophone": "🎷",
+        "trumpet": "🎺",
+        "violin": "🎻",
+        "drum": "🥁",
+        "microphone": "🎤",
+        "headphones": "🎧",
+        "radio": "📻",
+        "notes": "🎶",
+        "musical_note": "🎵",
+        "clapper": "🎬",
+        "movie_camera": "🎥",
+        "camera": "📷",
+        "camera_flash": "📸",
+        "tv": "📺",
+        "computer": "💻",
+        "desktop_computer": "🖥️",
+        "keyboard": "⌨️",
+        "mouse_computer": "🖱️",
+        "printer": "🖨️",
+        "phone": "📱",
+        "telephone": "☎️",
+        "fax": "📠",
+        "pager": "📟",
+        "battery": "🔋",
+        "electric_plug": "🔌",
+        "bulb": "💡",
+        "flashlight": "🔦",
+        "candle": "🕯️",
+        "wrench": "🔧",
+        "hammer": "🔨",
+        "hammer_and_wrench": "🛠️",
+        "screwdriver": "🪛",
+        "nut_and_bolt": "🔩",
+        "gear": "⚙️",
+        "chains": "⛓️",
+        "link": "🔗",
+        "scissors": "✂️",
+        "paperclip": "📎",
+        "paperclips": "🖇️",
+        "pushpin": "📌",
+        "round_pushpin": "📍",
+        "triangular_ruler": "📐",
+        "straight_ruler": "📏",
+        "pen": "🖊️",
+        "fountain_pen": "🖋️",
+        "pencil": "✏️",
+        "crayon": "🖍️",
+        "memo": "📝",
+        "briefcase": "💼",
+        "file_folder": "📁",
+        "open_file_folder": "📂",
+        "clipboard": "📋",
+        "calendar": "📆",
+        "date": "📅",
+        "card_index": "📇",
+        "chart_with_upwards_trend": "📈",
+        "chart_with_downwards_trend": "📉",
+        "bar_chart": "📊",
+        "books": "📚",
+        "book": "📖",
+        "closed_book": "📕",
+        "green_book": "📗",
+        "blue_book": "📘",
+        "orange_book": "📙",
+        "notebook": "📓",
+        "notebook_with_decorative_cover": "📔",
+        "ledger": "📒",
+        "scroll": "📜",
+        "page_facing_up": "📄",
+        "page_with_curl": "📃",
+        "newspaper": "📰",
+        "bookmark_tabs": "📑",
+        "bookmark": "🔖",
+        "label": "🏷️",
+        "envelope": "✉️",
+        "email": "📧",
+        "incoming_envelope": "📨",
+        "envelope_with_arrow": "📩",
+        "outbox_tray": "📤",
+        "inbox_tray": "📥",
+        "package": "📦",
+        "mailbox": "📫",
+        "mailbox_with_mail": "📬",
+        "postbox": "📮",
+        "hourglass": "⌛",
+        "hourglass_flowing_sand": "⏳",
+        "watch": "⌚",
+        "alarm_clock": "⏰",
+        "stopwatch": "⏱️",
+        "timer_clock": "⏲️",
+        "clock": "🕐",
+        "lock": "🔒",
+        "unlock": "🔓",
+        "lock_with_ink_pen": "🔏",
+        "closed_lock_with_key": "🔐",
+        "key": "🔑",
+        "old_key": "🗝️",
+        "mag": "🔍",
+        "mag_right": "🔎",
+        "heavy_check_mark": "✔️",
+        "white_check_mark": "✅",
+        "ballot_box_with_check": "☑️",
+        "heavy_multiplication_x": "✖️",
+        "x": "❌",
+        "negative_squared_cross_mark": "❎",
+        "heavy_plus_sign": "➕",
+        "heavy_minus_sign": "➖",
+        "heavy_division_sign": "➗",
+        "curly_loop": "➰",
+        "loop": "➿",
+        "question": "❓",
+        "grey_question": "❔",
+        "exclamation": "❗",
+        "grey_exclamation": "❕",
+        "bangbang": "‼️",
+        "interrobang": "⁉️",
+        "warning": "⚠️",
+        "no_entry": "⛔",
+        "no_entry_sign": "🚫",
+        "o": "⭕",
+        "no_good": "🙅",
+        "ok_woman": "🙆",
+        "information_source": "ℹ️",
+        "abc": "🔤",
+        "abcd": "🔡",
+        "capital_abcd": "🔠",
+        "symbols": "🔣",
+        "hash": "#️⃣",
+        "asterisk": "*️⃣",
+        "zero": "0️⃣",
+        "one": "1️⃣",
+        "two": "2️⃣",
+        "three": "3️⃣",
+        "four": "4️⃣",
+        "five": "5️⃣",
+        "six": "6️⃣",
+        "seven": "7️⃣",
+        "eight": "8️⃣",
+        "nine": "9️⃣",
+        "keycap_ten": "🔟",
+        "arrow_up": "⬆️",
+        "arrow_down": "⬇️",
+        "arrow_left": "⬅️",
+        "arrow_right": "➡️",
+        "arrow_upper_left": "↖️",
+        "arrow_upper_right": "↗️",
+        "arrow_lower_left": "↙️",
+        "arrow_lower_right": "↘️",
+        "left_right_arrow": "↔️",
+        "arrow_up_down": "↕️",
+        "arrows_counterclockwise": "🔄",
+        "arrow_backward": "◀️",
+        "arrow_forward": "▶️",
+        "fast_forward": "⏩",
+        "rewind": "⏪",
+        "arrow_double_up": "⏫",
+        "arrow_double_down": "⏬",
+        "twisted_rightwards_arrows": "🔀",
+        "repeat": "🔁",
+        "repeat_one": "🔂",
+        "recycle": "♻️",
+        "tm": "™️",
+        "copyright": "©️",
+        "registered": "®️",
+        "dollar": "💲",
+        "yen": "💴",
+        "euro": "💶",
+        "pound": "💷",
+        "moneybag": "💰",
+        "credit_card": "💳",
+        "money_with_wings": "💸",
+        "rocket": "🚀",
+        "airplane": "✈️",
+        "helicopter": "🚁",
+        "car": "🚗",
+        "taxi": "🚕",
+        "bus": "🚌",
+        "ambulance": "🚑",
+        "fire_engine": "🚒",
+        "police_car": "🚓",
+        "truck": "🚚",
+        "tractor": "🚜",
+        "bike": "🚲",
+        "motor_scooter": "🛵",
+        "motorcycle": "🏍️",
+        "train": "🚆",
+        "metro": "🚇",
+        "ship": "🚢",
+        "speedboat": "🚤",
+        "sailboat": "⛵",
+        "anchor": "⚓",
+        "construction": "🚧",
+        "vertical_traffic_light": "🚦",
+        "traffic_light": "🚥",
+        "fuelpump": "⛽",
+        "busstop": "🚏",
+        "world_map": "🗺️",
+        "statue_of_liberty": "🗽",
+        "moyai": "🗿",
+        "house": "🏠",
+        "house_with_garden": "🏡",
+        "office": "🏢",
+        "factory": "🏭",
+        "post_office": "🏣",
+        "hospital": "🏥",
+        "bank": "🏦",
+        "hotel": "🏨",
+        "school": "🏫",
+        "church": "⛪",
+        "mosque": "🕌",
+        "synagogue": "🕍",
+        "stadium": "🏟️",
+        "tent": "⛺",
+        "camping": "🏕️",
+        "beach_umbrella": "🏖️",
+        "desert": "🏜️",
+        "mountain": "⛰️",
+        "snow_capped_mountain": "🏔️",
+        "volcano": "🌋",
+        "earth_africa": "🌍",
+        "earth_americas": "🌎",
+        "earth_asia": "🌏",
+        "globe_with_meridians": "🌐",
+        "crescent_moon": "🌙",
+        "full_moon": "🌕",
+        "new_moon": "🌑",
+        "sun_with_face": "🌞",
+        "full_moon_with_face": "🌝",
+        "new_moon_with_face": "🌚",
+        "comet": "☄️",
+        "milky_way": "🌌",
+        "checkered_flag": "🏁",
+        "triangular_flag_on_post": "🚩",
+        "crossed_flags": "🎌",
+        "black_flag": "🏴",
+        "white_flag": "🏳️",
+        "rainbow_flag": "🏳️‍🌈",
+        "pirate_flag": "🏴‍☠️",
+        "trophy": "🏆",
+        "medal_sports": "🏅",
+        "medal_military": "🎖️",
+        "first_place_medal": "🥇",
+        "second_place_medal": "🥈",
+        "third_place_medal": "🥉",
+        "crown": "👑",
+        "gem": "💎",
+        "ring": "💍",
+        "lipstick": "💄",
+        "dress": "👗",
+        "tshirt": "👕",
+        "jeans": "👖",
+        "scarf": "🧣",
+        "gloves": "🧤",
+        "coat": "🧥",
+        "socks": "🧦",
+        "kimono": "👘",
+        "bikini": "👙",
+        "womans_clothes": "👚",
+        "purse": "👛",
+        "handbag": "👜",
+        "pouch": "👝",
+        "shopping_bags": "🛍️",
+        "school_satchel": "🎒",
+        "mans_shoe": "👞",
+        "athletic_shoe": "👟",
+        "hiking_boot": "🥾",
+        "womans_flat_shoe": "🥿",
+        "high_heel": "👠",
+        "sandal": "👡",
+        "boot": "👢",
+        "tophat": "🎩",
+        "billed_cap": "🧢",
+        "mortar_board": "🎓",
+        "rescue_worker_helmet": "⛑️",
+        "prayer_beads": "📿",
+        "nazar_amulet": "🧿",
+        "sunglasses2": "🕶️",
+        "eyeglasses": "👓",
+        "goggles": "🥽",
+        "test_tube": "🧪",
+        "petri_dish": "🧫",
+        "dna": "🧬",
+        "microscope": "🔬",
+        "telescope": "🔭",
+        "satellite": "📡",
+        "syringe": "💉",
+        "pill": "💊",
+        "stethoscope": "🩺",
+        "adhesive_bandage": "🩹",
+        "drop_of_blood": "🩸",
+        "dagger": "🗡️",
+        "crossed_swords": "⚔️",
+        "shield": "🛡️",
+        "bow_and_arrow": "🏹",
+        "axe": "🪓",
+        "gun": "🔫",
+        "crystal_ball": "🔮",
+        "magic_wand": "🪄",
+        "joystick": "🕹️",
+        "teddy_bear": "🧸",
+        "pinata": "🪅",
+        "nesting_dolls": "🪆",
+        "balloon": "🎈",
+        "tada": "🎉",
+        "confetti_ball": "🎊",
+        "ribbon": "🎀",
+        "gift": "🎁",
+        "christmas_tree": "🎄",
+        "jack_o_lantern": "🎃",
+        "firecracker": "🧨",
+        "sparkler": "🎇"
+      }
+    },
+    {
+      "name": "dataset shape",
+      "fn": "EMOJI_DATA(shape)",
+      "input": [],
+      "expected": {
+        "entries": 675,
+        "mapSize": 675,
+        "duplicateShortcodes": [],
+        "entryArity": [
+          3
+        ],
+        "cached": true
+      }
+    }
+  ]
+}

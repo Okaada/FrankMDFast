@@ -1,0 +1,1986 @@
+{
+  "source": "app/javascript/lib/table_utils.js @ d47a89e92d89f807878d318182fa5dcea0329ec4",
+  "frankmd_sha": "d47a89e92d89f807878d318182fa5dcea0329ec4",
+  "generator": "tools/golden/js/utils.mjs",
+  "notes": "input = encoded argument array (decode with golden.mjs decode: {$undefined}, {$number}, {$date}, {$regexp}, {$utf16}); expected = encoded return value, or {$error:{name,message}}. JS strings are UTF-16: all positions/lengths/indices in inputs and outputs are UTF-16 code-unit offsets; cases with non-BMP/multi-unit strings carry a `utf16` array (utf16_len/scalar_len/utf8_len per such string arg). TZ pinned to UTC for date-based helpers.",
+  "functions": [
+    "addColumn",
+    "addRow",
+    "deleteColumn",
+    "deleteRow",
+    "generateMarkdownTable",
+    "parseMarkdownTable",
+    "swapColumns",
+    "swapRows"
+  ],
+  "cases": [
+    {
+      "name": "addColumn #1 (from FrankMD vitest suite)",
+      "fn": "addColumn",
+      "input": [
+        [
+          [
+            "A",
+            "B"
+          ],
+          [
+            "1",
+            "2"
+          ]
+        ],
+        "New"
+      ],
+      "expected": [
+        [
+          "A",
+          "B",
+          "New"
+        ],
+        [
+          "1",
+          "2",
+          ""
+        ]
+      ]
+    },
+    {
+      "name": "addRow #1 (from FrankMD vitest suite)",
+      "fn": "addRow",
+      "input": [
+        [
+          [
+            "A",
+            "B",
+            "C"
+          ],
+          [
+            "1",
+            "2",
+            "3"
+          ]
+        ]
+      ],
+      "expected": [
+        [
+          "A",
+          "B",
+          "C"
+        ],
+        [
+          "1",
+          "2",
+          "3"
+        ],
+        [
+          "",
+          "",
+          ""
+        ]
+      ]
+    },
+    {
+      "name": "deleteColumn #1 (from FrankMD vitest suite)",
+      "fn": "deleteColumn",
+      "input": [
+        [
+          [
+            "A",
+            "B",
+            "C"
+          ],
+          [
+            "1",
+            "2",
+            "3"
+          ]
+        ],
+        1
+      ],
+      "expected": [
+        [
+          "A",
+          "C"
+        ],
+        [
+          "1",
+          "3"
+        ]
+      ]
+    },
+    {
+      "name": "deleteRow #1 (from FrankMD vitest suite)",
+      "fn": "deleteRow",
+      "input": [
+        [
+          [
+            "Header"
+          ],
+          [
+            "Row1"
+          ],
+          [
+            "Row2"
+          ]
+        ],
+        1
+      ],
+      "expected": [
+        [
+          "Header"
+        ],
+        [
+          "Row2"
+        ]
+      ]
+    },
+    {
+      "name": "generateMarkdownTable #1 (from FrankMD vitest suite)",
+      "fn": "generateMarkdownTable",
+      "input": [
+        [
+          [
+            "A",
+            "LongerHeader"
+          ],
+          [
+            "Short",
+            "X"
+          ]
+        ]
+      ],
+      "expected": "| A     | LongerHeader |\n| ----- | ------------ |\n| Short | X            |"
+    },
+    {
+      "name": "generateMarkdownTable #2 (from FrankMD vitest suite)",
+      "fn": "generateMarkdownTable",
+      "input": [
+        [
+          [
+            "A",
+            "B",
+            "C"
+          ],
+          [
+            "1",
+            "",
+            "3"
+          ]
+        ]
+      ],
+      "expected": "| A   | B   | C   |\n| --- | --- | --- |\n| 1   |     | 3   |"
+    },
+    {
+      "name": "generateMarkdownTable #3 (from FrankMD vitest suite)",
+      "fn": "generateMarkdownTable",
+      "input": [
+        []
+      ],
+      "expected": ""
+    },
+    {
+      "name": "generateMarkdownTable #4 (from FrankMD vitest suite)",
+      "fn": "generateMarkdownTable",
+      "input": [
+        {
+          "$undefined": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "generateMarkdownTable #5 (from FrankMD vitest suite)",
+      "fn": "generateMarkdownTable",
+      "input": [
+        [
+          [
+            "Name",
+            "Age"
+          ],
+          [
+            "Alice",
+            "30"
+          ],
+          [
+            "Bob",
+            "25"
+          ]
+        ]
+      ],
+      "expected": "| Name  | Age |\n| ----- | --- |\n| Alice | 30  |\n| Bob   | 25  |"
+    },
+    {
+      "name": "generateMarkdownTable #6 (from FrankMD vitest suite)",
+      "fn": "generateMarkdownTable",
+      "input": [
+        null
+      ],
+      "expected": ""
+    },
+    {
+      "name": "generateMarkdownTable #7 (from FrankMD vitest suite)",
+      "fn": "generateMarkdownTable",
+      "input": [
+        [
+          [
+            "Product",
+            "Price",
+            "Quantity"
+          ],
+          [
+            "Apple",
+            "$1.50",
+            "10"
+          ],
+          [
+            "Banana",
+            "$0.75",
+            "25"
+          ]
+        ]
+      ],
+      "expected": "| Product | Price | Quantity |\n| ------- | ----- | -------- |\n| Apple   | $1.50 | 10       |\n| Banana  | $0.75 | 25       |"
+    },
+    {
+      "name": "generateMarkdownTable #8 (from FrankMD vitest suite)",
+      "fn": "generateMarkdownTable",
+      "input": [
+        [
+          [
+            "A",
+            "B",
+            "C"
+          ],
+          [
+            "1",
+            "2"
+          ]
+        ]
+      ],
+      "expected": "| A   | B   | C   |\n| --- | --- | --- |\n| 1   | 2   |     |"
+    },
+    {
+      "name": "generateMarkdownTable #9 (from FrankMD vitest suite)",
+      "fn": "generateMarkdownTable",
+      "input": [
+        [
+          [
+            "A",
+            "B"
+          ],
+          [
+            "1",
+            "2"
+          ]
+        ]
+      ],
+      "expected": "| A   | B   |\n| --- | --- |\n| 1   | 2   |"
+    },
+    {
+      "name": "parseMarkdownTable #1 (from FrankMD vitest suite)",
+      "fn": "parseMarkdownTable",
+      "input": [
+        "| Left | Center | Right |\n|:-----|:------:|------:|\n| L    | C      | R     |"
+      ],
+      "expected": [
+        [
+          "Left",
+          "Center",
+          "Right"
+        ],
+        [
+          "L",
+          "C",
+          "R"
+        ]
+      ]
+    },
+    {
+      "name": "parseMarkdownTable #2 (from FrankMD vitest suite)",
+      "fn": "parseMarkdownTable",
+      "input": [
+        ""
+      ],
+      "expected": []
+    },
+    {
+      "name": "parseMarkdownTable #3 (from FrankMD vitest suite)",
+      "fn": "parseMarkdownTable",
+      "input": [
+        "| Code | Description |\n| --- | --- |\n| `foo` | A *bold* statement |"
+      ],
+      "expected": [
+        [
+          "Code",
+          "Description"
+        ],
+        [
+          "`foo`",
+          "A *bold* statement"
+        ]
+      ]
+    },
+    {
+      "name": "parseMarkdownTable #4 (from FrankMD vitest suite)",
+      "fn": "parseMarkdownTable",
+      "input": [
+        "| Header |\n\n| --- |\n\n| Value |"
+      ],
+      "expected": [
+        [
+          "Header"
+        ],
+        [
+          "Value"
+        ]
+      ]
+    },
+    {
+      "name": "parseMarkdownTable #5 (from FrankMD vitest suite)",
+      "fn": "parseMarkdownTable",
+      "input": [
+        "| A | B |\n| --- | --- |\n| 1 | 2 |"
+      ],
+      "expected": [
+        [
+          "A",
+          "B"
+        ],
+        [
+          "1",
+          "2"
+        ]
+      ]
+    },
+    {
+      "name": "parseMarkdownTable #6 (from FrankMD vitest suite)",
+      "fn": "parseMarkdownTable",
+      "input": [
+        [
+          "| A | B |",
+          "| --- | --- |",
+          "| 1 | 2 |"
+        ]
+      ],
+      "expected": [
+        [
+          "A",
+          "B"
+        ],
+        [
+          "1",
+          "2"
+        ]
+      ]
+    },
+    {
+      "name": "parseMarkdownTable #7 (from FrankMD vitest suite)",
+      "fn": "parseMarkdownTable",
+      "input": [
+        "| Product | Price | Quantity |\n| ------- | ----- | -------- |\n| Apple   | $1.50 | 10       |\n| Banana  | $0.75 | 25       |"
+      ],
+      "expected": [
+        [
+          "Product",
+          "Price",
+          "Quantity"
+        ],
+        [
+          "Apple",
+          "$1.50",
+          "10"
+        ],
+        [
+          "Banana",
+          "$0.75",
+          "25"
+        ]
+      ]
+    },
+    {
+      "name": "parseMarkdownTable #8 (from FrankMD vitest suite)",
+      "fn": "parseMarkdownTable",
+      "input": [
+        "|  Name  |  Age  |\n|--------|-------|\n|  Alice |  30   |"
+      ],
+      "expected": [
+        [
+          "Name",
+          "Age"
+        ],
+        [
+          "Alice",
+          "30"
+        ]
+      ]
+    },
+    {
+      "name": "parseMarkdownTable #9 (from FrankMD vitest suite)",
+      "fn": "parseMarkdownTable",
+      "input": [
+        "| Name | Age |\n| --- | --- |\n| Alice | 30 |\n| Bob | 25 |"
+      ],
+      "expected": [
+        [
+          "Name",
+          "Age"
+        ],
+        [
+          "Alice",
+          "30"
+        ],
+        [
+          "Bob",
+          "25"
+        ]
+      ]
+    },
+    {
+      "name": "parseMarkdownTable #10 (from FrankMD vitest suite)",
+      "fn": "parseMarkdownTable",
+      "input": [
+        []
+      ],
+      "expected": []
+    },
+    {
+      "name": "swapColumns #1 (from FrankMD vitest suite)",
+      "fn": "swapColumns",
+      "input": [
+        [
+          [
+            "A",
+            "B"
+          ]
+        ],
+        0,
+        1
+      ],
+      "expected": [
+        [
+          "B",
+          "A"
+        ]
+      ]
+    },
+    {
+      "name": "swapColumns #2 (from FrankMD vitest suite)",
+      "fn": "swapColumns",
+      "input": [
+        [
+          [
+            "A",
+            "B",
+            "C"
+          ],
+          [
+            "1",
+            "2",
+            "3"
+          ]
+        ],
+        0,
+        2
+      ],
+      "expected": [
+        [
+          "C",
+          "B",
+          "A"
+        ],
+        [
+          "3",
+          "2",
+          "1"
+        ]
+      ]
+    },
+    {
+      "name": "swapRows #1 (from FrankMD vitest suite)",
+      "fn": "swapRows",
+      "input": [
+        [
+          [
+            "Header"
+          ],
+          [
+            "Row1"
+          ],
+          [
+            "Row2"
+          ]
+        ],
+        1,
+        2
+      ],
+      "expected": [
+        [
+          "Header"
+        ],
+        [
+          "Row2"
+        ],
+        [
+          "Row1"
+        ]
+      ]
+    },
+    {
+      "name": "parseMarkdownTable #11 (edge corpus)",
+      "fn": "parseMarkdownTable",
+      "input": [
+        "intro\n\n| A | B |\n| --- | --- |\n| 1 | 2 |\n\noutro"
+      ],
+      "expected": [
+        [
+          "A",
+          "B"
+        ],
+        [
+          "1",
+          "2"
+        ]
+      ]
+    },
+    {
+      "name": "parseMarkdownTable #12 (edge corpus)",
+      "fn": "parseMarkdownTable",
+      "input": [
+        "| A |\n|---|\n| 1 |"
+      ],
+      "expected": [
+        [
+          "A"
+        ],
+        [
+          "1"
+        ]
+      ]
+    },
+    {
+      "name": "parseMarkdownTable #13 (edge corpus)",
+      "fn": "parseMarkdownTable",
+      "input": [
+        "|A|B|\n|:-|-:|\n|1|2|"
+      ],
+      "expected": [
+        [
+          "A",
+          "B"
+        ],
+        [
+          "1",
+          "2"
+        ]
+      ]
+    },
+    {
+      "name": "parseMarkdownTable #14 (edge corpus)",
+      "fn": "parseMarkdownTable",
+      "input": [
+        "| A | B |\n| --- | --- |"
+      ],
+      "expected": [
+        [
+          "A",
+          "B"
+        ]
+      ]
+    },
+    {
+      "name": "parseMarkdownTable #15 (edge corpus)",
+      "fn": "parseMarkdownTable",
+      "input": [
+        "  | A | B |\n  | --- | --- |\n  | 1 | 2 |"
+      ],
+      "expected": [
+        [
+          "A",
+          "B"
+        ],
+        [
+          "1",
+          "2"
+        ]
+      ]
+    },
+    {
+      "name": "parseMarkdownTable #16 (edge corpus)",
+      "fn": "parseMarkdownTable",
+      "input": [
+        "| A | B |\r\n| --- | --- |\r\n| 1 | 2 |"
+      ],
+      "expected": [
+        [
+          "A",
+          "B"
+        ],
+        [
+          "1",
+          "2"
+        ]
+      ]
+    },
+    {
+      "name": "parseMarkdownTable #17 (edge corpus)",
+      "fn": "parseMarkdownTable",
+      "input": [
+        "| A | B |\n|---|---\n| 1 | 2 |"
+      ],
+      "expected": [
+        [
+          "A",
+          "B"
+        ],
+        [
+          "---"
+        ],
+        [
+          "1",
+          "2"
+        ]
+      ]
+    },
+    {
+      "name": "parseMarkdownTable #18 (edge corpus)",
+      "fn": "parseMarkdownTable",
+      "input": [
+        "| A | B |\n| - - | - |\n| 1 | 2 |"
+      ],
+      "expected": [
+        [
+          "A",
+          "B"
+        ],
+        [
+          "- -",
+          "-"
+        ],
+        [
+          "1",
+          "2"
+        ]
+      ]
+    },
+    {
+      "name": "parseMarkdownTable #19 (edge corpus)",
+      "fn": "parseMarkdownTable",
+      "input": [
+        "| A | B |\n| ::: | --- |\n| 1 | 2 |"
+      ],
+      "expected": [
+        [
+          "A",
+          "B"
+        ],
+        [
+          ":::",
+          "---"
+        ],
+        [
+          "1",
+          "2"
+        ]
+      ]
+    },
+    {
+      "name": "parseMarkdownTable #20 (edge corpus)",
+      "fn": "parseMarkdownTable",
+      "input": [
+        "| 日本 | שלום |\n| --- | --- |\n| 👨‍👩‍👧 | é |"
+      ],
+      "expected": [
+        [
+          "日本",
+          "שלום"
+        ],
+        [
+          "👨‍👩‍👧",
+          "é"
+        ]
+      ],
+      "utf16": [
+        {
+          "utf16_len": 44,
+          "scalar_len": 41,
+          "utf8_len": 63
+        }
+      ]
+    },
+    {
+      "name": "parseMarkdownTable #21 (edge corpus)",
+      "fn": "parseMarkdownTable",
+      "input": [
+        "text | not table\n---|---"
+      ],
+      "expected": []
+    },
+    {
+      "name": "parseMarkdownTable #22 (edge corpus)",
+      "fn": "parseMarkdownTable",
+      "input": [
+        "| a |\n| b |\n| --- |\n| c |"
+      ],
+      "expected": [
+        [
+          "a"
+        ],
+        [
+          "b"
+        ],
+        [
+          "c"
+        ]
+      ]
+    },
+    {
+      "name": "parseMarkdownTable #23 (edge corpus)",
+      "fn": "parseMarkdownTable",
+      "input": [
+        "|"
+      ],
+      "expected": []
+    },
+    {
+      "name": "parseMarkdownTable #24 (edge corpus)",
+      "fn": "parseMarkdownTable",
+      "input": [
+        "|\n|"
+      ],
+      "expected": []
+    },
+    {
+      "name": "parseMarkdownTable #25 (edge corpus)",
+      "fn": "parseMarkdownTable",
+      "input": [
+        "| A |\n| --- |\n\n| B |\n| --- |"
+      ],
+      "expected": [
+        [
+          "A"
+        ],
+        [
+          "B"
+        ]
+      ]
+    },
+    {
+      "name": "parseMarkdownTable #26 (edge corpus)",
+      "fn": "parseMarkdownTable",
+      "input": [
+        "A | B\n--- | ---\n1 | 2"
+      ],
+      "expected": []
+    },
+    {
+      "name": "parseMarkdownTable #27 (edge corpus)",
+      "fn": "parseMarkdownTable",
+      "input": [
+        "| A | B |\n|-----|-----|\n| 1 | 2 |\nnot a row\n| x | y |"
+      ],
+      "expected": [
+        [
+          "A",
+          "B"
+        ],
+        [
+          "1",
+          "2"
+        ],
+        [
+          "x",
+          "y"
+        ]
+      ]
+    },
+    {
+      "name": "parseMarkdownTable #28 (edge corpus)",
+      "fn": "parseMarkdownTable",
+      "input": [
+        [
+          "| a | b |",
+          "|---|---|",
+          "| 1 | 2 |"
+        ]
+      ],
+      "expected": [
+        [
+          "a",
+          "b"
+        ],
+        [
+          "1",
+          "2"
+        ]
+      ]
+    },
+    {
+      "name": "parseMarkdownTable #29 (edge corpus)",
+      "fn": "parseMarkdownTable",
+      "input": [
+        [
+          "| a |",
+          "",
+          "   ",
+          "| b |"
+        ]
+      ],
+      "expected": [
+        [
+          "a"
+        ],
+        [
+          "b"
+        ]
+      ]
+    },
+    {
+      "name": "parseMarkdownTable #30 (edge corpus)",
+      "fn": "parseMarkdownTable",
+      "input": [
+        "| a | b | c |\n| 1 |\n| 1 | 2 | 3 | 4 |"
+      ],
+      "expected": [
+        [
+          "a",
+          "b",
+          "c"
+        ],
+        [
+          "1"
+        ],
+        [
+          "1",
+          "2",
+          "3",
+          "4"
+        ]
+      ]
+    },
+    {
+      "name": "parseMarkdownTable #31 (edge corpus)",
+      "fn": "parseMarkdownTable",
+      "input": [
+        "| a \\| b | c |\n|---|---|\n| `x|y` | z |"
+      ],
+      "expected": [
+        [
+          "a \\",
+          "b",
+          "c"
+        ],
+        [
+          "`x",
+          "y`",
+          "z"
+        ]
+      ]
+    },
+    {
+      "name": "parseMarkdownTable #32 (edge corpus)",
+      "fn": "parseMarkdownTable",
+      "input": [
+        "|a||b|\n|-|-|-|\n||||"
+      ],
+      "expected": [
+        [
+          "a",
+          "",
+          "b"
+        ],
+        [
+          "",
+          "",
+          ""
+        ]
+      ]
+    },
+    {
+      "name": "parseMarkdownTable #33 (edge corpus)",
+      "fn": "parseMarkdownTable",
+      "input": [
+        "no pipes at all"
+      ],
+      "expected": []
+    },
+    {
+      "name": "parseMarkdownTable #34 (edge corpus)",
+      "fn": "parseMarkdownTable",
+      "input": [
+        "| only leading"
+      ],
+      "expected": []
+    },
+    {
+      "name": "parseMarkdownTable #35 (edge corpus)",
+      "fn": "parseMarkdownTable",
+      "input": [
+        "trailing only |"
+      ],
+      "expected": []
+    },
+    {
+      "name": "parseMarkdownTable #36 (edge corpus)",
+      "fn": "parseMarkdownTable",
+      "input": [
+        "|  spaced  |   cells   |"
+      ],
+      "expected": [
+        [
+          "spaced",
+          "cells"
+        ]
+      ]
+    },
+    {
+      "name": "parseMarkdownTable #37 (edge corpus)",
+      "fn": "parseMarkdownTable",
+      "input": [
+        "| :---: | --- |\n| a | b |"
+      ],
+      "expected": [
+        [
+          "a",
+          "b"
+        ]
+      ]
+    },
+    {
+      "name": "parseMarkdownTable #38 (edge corpus)",
+      "fn": "parseMarkdownTable",
+      "input": [
+        "|---|\n|---|"
+      ],
+      "expected": []
+    },
+    {
+      "name": "parseMarkdownTable #39 (edge corpus)",
+      "fn": "parseMarkdownTable",
+      "input": [
+        "| - |"
+      ],
+      "expected": []
+    },
+    {
+      "name": "generateMarkdownTable #10 (edge corpus)",
+      "fn": "generateMarkdownTable",
+      "input": [
+        [
+          [
+            "Name",
+            "Age"
+          ],
+          [
+            "Alice",
+            "30"
+          ],
+          [
+            "Bob",
+            "4"
+          ]
+        ]
+      ],
+      "expected": "| Name  | Age |\n| ----- | --- |\n| Alice | 30  |\n| Bob   | 4   |"
+    },
+    {
+      "name": "generateMarkdownTable #11 (edge corpus)",
+      "fn": "generateMarkdownTable",
+      "input": [
+        [
+          [
+            "a"
+          ]
+        ]
+      ],
+      "expected": "| a   |\n| --- |"
+    },
+    {
+      "name": "generateMarkdownTable #12 (edge corpus)",
+      "fn": "generateMarkdownTable",
+      "input": [
+        [
+          [
+            "a",
+            "b",
+            "c"
+          ],
+          [
+            "1"
+          ],
+          [
+            "1",
+            "2",
+            "3",
+            "4"
+          ]
+        ]
+      ],
+      "expected": "| a   | b   | c   |     |\n| --- | --- | --- | --- |\n| 1   |     |     |     |\n| 1   | 2   | 3   | 4   |"
+    },
+    {
+      "name": "generateMarkdownTable #13 (edge corpus)",
+      "fn": "generateMarkdownTable",
+      "input": [
+        [
+          [
+            "日本語",
+            "é"
+          ],
+          [
+            "👨‍👩‍👧",
+            "שלום"
+          ]
+        ]
+      ],
+      "expected": "| 日本語      | é    |\n| -------- | ---- |\n| 👨‍👩‍👧 | שלום |",
+      "utf16": [
+        {
+          "utf16_len": 8,
+          "scalar_len": 5,
+          "utf8_len": 18
+        }
+      ]
+    },
+    {
+      "name": "generateMarkdownTable #14 (edge corpus)",
+      "fn": "generateMarkdownTable",
+      "input": [
+        [
+          [
+            ""
+          ],
+          [
+            ""
+          ]
+        ]
+      ],
+      "expected": "|     |\n| --- |\n|     |"
+    },
+    {
+      "name": "generateMarkdownTable #15 (edge corpus)",
+      "fn": "generateMarkdownTable",
+      "input": [
+        [
+          [
+            "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+          ]
+        ]
+      ],
+      "expected": "| xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx |\n| -------------------------------------------------- |"
+    },
+    {
+      "name": "generateMarkdownTable #16 (edge corpus)",
+      "fn": "generateMarkdownTable",
+      "input": [
+        [
+          [
+            "a|b",
+            "c"
+          ]
+        ]
+      ],
+      "expected": "| a|b | c   |\n| --- | --- |"
+    },
+    {
+      "name": "generateMarkdownTable #17 (edge corpus)",
+      "fn": "generateMarkdownTable",
+      "input": [
+        [
+          [],
+          []
+        ]
+      ],
+      "expected": "|  |\n|  |\n|  |"
+    },
+    {
+      "name": "generateMarkdownTable #18 (edge corpus)",
+      "fn": "generateMarkdownTable",
+      "input": [
+        [
+          [
+            "Header"
+          ]
+        ]
+      ],
+      "expected": "| Header |\n| ------ |"
+    },
+    {
+      "name": "swapColumns #3 (edge corpus)",
+      "fn": "swapColumns",
+      "input": [
+        [
+          [
+            "Name",
+            "Age"
+          ],
+          [
+            "Alice",
+            "30"
+          ],
+          [
+            "Bob",
+            "4"
+          ]
+        ],
+        0,
+        1
+      ],
+      "expected": [
+        [
+          "Age",
+          "Name"
+        ],
+        [
+          "30",
+          "Alice"
+        ],
+        [
+          "4",
+          "Bob"
+        ]
+      ]
+    },
+    {
+      "name": "swapColumns #4 (edge corpus)",
+      "fn": "swapColumns",
+      "input": [
+        [
+          [
+            "Name",
+            "Age"
+          ],
+          [
+            "Alice",
+            "30"
+          ],
+          [
+            "Bob",
+            "4"
+          ]
+        ],
+        1,
+        0
+      ],
+      "expected": [
+        [
+          "Age",
+          "Name"
+        ],
+        [
+          "30",
+          "Alice"
+        ],
+        [
+          "4",
+          "Bob"
+        ]
+      ]
+    },
+    {
+      "name": "swapColumns #5 (edge corpus)",
+      "fn": "swapColumns",
+      "input": [
+        [
+          [
+            "Name",
+            "Age"
+          ],
+          [
+            "Alice",
+            "30"
+          ],
+          [
+            "Bob",
+            "4"
+          ]
+        ],
+        0,
+        0
+      ],
+      "expected": [
+        [
+          "Name",
+          "Age"
+        ],
+        [
+          "Alice",
+          "30"
+        ],
+        [
+          "Bob",
+          "4"
+        ]
+      ]
+    },
+    {
+      "name": "swapColumns #6 (edge corpus)",
+      "fn": "swapColumns",
+      "input": [
+        [
+          [
+            "Name",
+            "Age"
+          ],
+          [
+            "Alice",
+            "30"
+          ],
+          [
+            "Bob",
+            "4"
+          ]
+        ],
+        0,
+        5
+      ],
+      "expected": [
+        [
+          {
+            "$undefined": true
+          },
+          "Age",
+          null,
+          null,
+          null,
+          "Name"
+        ],
+        [
+          {
+            "$undefined": true
+          },
+          "30",
+          null,
+          null,
+          null,
+          "Alice"
+        ],
+        [
+          {
+            "$undefined": true
+          },
+          "4",
+          null,
+          null,
+          null,
+          "Bob"
+        ]
+      ]
+    },
+    {
+      "name": "swapColumns #7 (edge corpus)",
+      "fn": "swapColumns",
+      "input": [
+        [
+          [
+            "Name",
+            "Age"
+          ],
+          [
+            "Alice",
+            "30"
+          ],
+          [
+            "Bob",
+            "4"
+          ]
+        ],
+        -1,
+        0
+      ],
+      "expected": [
+        [
+          {
+            "$undefined": true
+          },
+          "Age"
+        ],
+        [
+          {
+            "$undefined": true
+          },
+          "30"
+        ],
+        [
+          {
+            "$undefined": true
+          },
+          "4"
+        ]
+      ]
+    },
+    {
+      "name": "swapRows #2 (edge corpus)",
+      "fn": "swapRows",
+      "input": [
+        [
+          [
+            "Name",
+            "Age"
+          ],
+          [
+            "Alice",
+            "30"
+          ],
+          [
+            "Bob",
+            "4"
+          ]
+        ],
+        0,
+        1
+      ],
+      "expected": [
+        [
+          "Alice",
+          "30"
+        ],
+        [
+          "Name",
+          "Age"
+        ],
+        [
+          "Bob",
+          "4"
+        ]
+      ]
+    },
+    {
+      "name": "swapRows #3 (edge corpus)",
+      "fn": "swapRows",
+      "input": [
+        [
+          [
+            "Name",
+            "Age"
+          ],
+          [
+            "Alice",
+            "30"
+          ],
+          [
+            "Bob",
+            "4"
+          ]
+        ],
+        1,
+        2
+      ],
+      "expected": [
+        [
+          "Name",
+          "Age"
+        ],
+        [
+          "Bob",
+          "4"
+        ],
+        [
+          "Alice",
+          "30"
+        ]
+      ]
+    },
+    {
+      "name": "swapRows #4 (edge corpus)",
+      "fn": "swapRows",
+      "input": [
+        [
+          [
+            "Name",
+            "Age"
+          ],
+          [
+            "Alice",
+            "30"
+          ],
+          [
+            "Bob",
+            "4"
+          ]
+        ],
+        2,
+        2
+      ],
+      "expected": [
+        [
+          "Name",
+          "Age"
+        ],
+        [
+          "Alice",
+          "30"
+        ],
+        [
+          "Bob",
+          "4"
+        ]
+      ]
+    },
+    {
+      "name": "swapRows #5 (edge corpus)",
+      "fn": "swapRows",
+      "input": [
+        [
+          [
+            "Name",
+            "Age"
+          ],
+          [
+            "Alice",
+            "30"
+          ],
+          [
+            "Bob",
+            "4"
+          ]
+        ],
+        0,
+        9
+      ],
+      "expected": [
+        {
+          "$undefined": true
+        },
+        [
+          "Alice",
+          "30"
+        ],
+        [
+          "Bob",
+          "4"
+        ],
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        [
+          "Name",
+          "Age"
+        ]
+      ]
+    },
+    {
+      "name": "deleteColumn #2 (edge corpus)",
+      "fn": "deleteColumn",
+      "input": [
+        [
+          [
+            "Name",
+            "Age"
+          ],
+          [
+            "Alice",
+            "30"
+          ],
+          [
+            "Bob",
+            "4"
+          ]
+        ],
+        0
+      ],
+      "expected": [
+        [
+          "Age"
+        ],
+        [
+          "30"
+        ],
+        [
+          "4"
+        ]
+      ]
+    },
+    {
+      "name": "deleteColumn #3 (edge corpus)",
+      "fn": "deleteColumn",
+      "input": [
+        [
+          [
+            "Name",
+            "Age"
+          ],
+          [
+            "Alice",
+            "30"
+          ],
+          [
+            "Bob",
+            "4"
+          ]
+        ],
+        1
+      ],
+      "expected": [
+        [
+          "Name"
+        ],
+        [
+          "Alice"
+        ],
+        [
+          "Bob"
+        ]
+      ]
+    },
+    {
+      "name": "deleteColumn #4 (edge corpus)",
+      "fn": "deleteColumn",
+      "input": [
+        [
+          [
+            "Name",
+            "Age"
+          ],
+          [
+            "Alice",
+            "30"
+          ],
+          [
+            "Bob",
+            "4"
+          ]
+        ],
+        5
+      ],
+      "expected": [
+        [
+          "Name",
+          "Age"
+        ],
+        [
+          "Alice",
+          "30"
+        ],
+        [
+          "Bob",
+          "4"
+        ]
+      ]
+    },
+    {
+      "name": "deleteColumn #5 (edge corpus)",
+      "fn": "deleteColumn",
+      "input": [
+        [
+          [
+            "Name",
+            "Age"
+          ],
+          [
+            "Alice",
+            "30"
+          ],
+          [
+            "Bob",
+            "4"
+          ]
+        ],
+        -1
+      ],
+      "expected": [
+        [
+          "Name"
+        ],
+        [
+          "Alice"
+        ],
+        [
+          "Bob"
+        ]
+      ]
+    },
+    {
+      "name": "deleteRow #2 (edge corpus)",
+      "fn": "deleteRow",
+      "input": [
+        [
+          [
+            "Name",
+            "Age"
+          ],
+          [
+            "Alice",
+            "30"
+          ],
+          [
+            "Bob",
+            "4"
+          ]
+        ],
+        0
+      ],
+      "expected": [
+        [
+          "Alice",
+          "30"
+        ],
+        [
+          "Bob",
+          "4"
+        ]
+      ]
+    },
+    {
+      "name": "deleteRow #3 (edge corpus)",
+      "fn": "deleteRow",
+      "input": [
+        [
+          [
+            "Name",
+            "Age"
+          ],
+          [
+            "Alice",
+            "30"
+          ],
+          [
+            "Bob",
+            "4"
+          ]
+        ],
+        1
+      ],
+      "expected": [
+        [
+          "Name",
+          "Age"
+        ],
+        [
+          "Bob",
+          "4"
+        ]
+      ]
+    },
+    {
+      "name": "deleteRow #4 (edge corpus)",
+      "fn": "deleteRow",
+      "input": [
+        [
+          [
+            "Name",
+            "Age"
+          ],
+          [
+            "Alice",
+            "30"
+          ],
+          [
+            "Bob",
+            "4"
+          ]
+        ],
+        2
+      ],
+      "expected": [
+        [
+          "Name",
+          "Age"
+        ],
+        [
+          "Alice",
+          "30"
+        ]
+      ]
+    },
+    {
+      "name": "deleteRow #5 (edge corpus)",
+      "fn": "deleteRow",
+      "input": [
+        [
+          [
+            "Name",
+            "Age"
+          ],
+          [
+            "Alice",
+            "30"
+          ],
+          [
+            "Bob",
+            "4"
+          ]
+        ],
+        9
+      ],
+      "expected": [
+        [
+          "Name",
+          "Age"
+        ],
+        [
+          "Alice",
+          "30"
+        ],
+        [
+          "Bob",
+          "4"
+        ]
+      ]
+    },
+    {
+      "name": "deleteRow #6 (edge corpus)",
+      "fn": "deleteRow",
+      "input": [
+        [
+          [
+            "Name",
+            "Age"
+          ],
+          [
+            "Alice",
+            "30"
+          ],
+          [
+            "Bob",
+            "4"
+          ]
+        ],
+        -1
+      ],
+      "expected": [
+        [
+          "Name",
+          "Age"
+        ],
+        [
+          "Alice",
+          "30"
+        ]
+      ]
+    },
+    {
+      "name": "addColumn #2 (edge corpus)",
+      "fn": "addColumn",
+      "input": [
+        [
+          [
+            "Name",
+            "Age"
+          ],
+          [
+            "Alice",
+            "30"
+          ],
+          [
+            "Bob",
+            "4"
+          ]
+        ]
+      ],
+      "expected": [
+        [
+          "Name",
+          "Age",
+          "Header"
+        ],
+        [
+          "Alice",
+          "30",
+          ""
+        ],
+        [
+          "Bob",
+          "4",
+          ""
+        ]
+      ]
+    },
+    {
+      "name": "addColumn #3 (edge corpus)",
+      "fn": "addColumn",
+      "input": [
+        [
+          [
+            "Name",
+            "Age"
+          ],
+          [
+            "Alice",
+            "30"
+          ],
+          [
+            "Bob",
+            "4"
+          ]
+        ],
+        "New"
+      ],
+      "expected": [
+        [
+          "Name",
+          "Age",
+          "New"
+        ],
+        [
+          "Alice",
+          "30",
+          ""
+        ],
+        [
+          "Bob",
+          "4",
+          ""
+        ]
+      ]
+    },
+    {
+      "name": "addColumn #4 (edge corpus)",
+      "fn": "addColumn",
+      "input": [
+        [
+          [
+            "Name",
+            "Age"
+          ],
+          [
+            "Alice",
+            "30"
+          ],
+          [
+            "Bob",
+            "4"
+          ]
+        ],
+        ""
+      ],
+      "expected": [
+        [
+          "Name",
+          "Age",
+          ""
+        ],
+        [
+          "Alice",
+          "30",
+          ""
+        ],
+        [
+          "Bob",
+          "4",
+          ""
+        ]
+      ]
+    },
+    {
+      "name": "addColumn #5 (edge corpus)",
+      "fn": "addColumn",
+      "input": [
+        [
+          [
+            "Name",
+            "Age"
+          ],
+          [
+            "Alice",
+            "30"
+          ],
+          [
+            "Bob",
+            "4"
+          ]
+        ],
+        "日本"
+      ],
+      "expected": [
+        [
+          "Name",
+          "Age",
+          "日本"
+        ],
+        [
+          "Alice",
+          "30",
+          ""
+        ],
+        [
+          "Bob",
+          "4",
+          ""
+        ]
+      ]
+    },
+    {
+      "name": "addColumn #6 (edge corpus)",
+      "fn": "addColumn",
+      "input": [
+        []
+      ],
+      "expected": []
+    },
+    {
+      "name": "addRow #2 (edge corpus)",
+      "fn": "addRow",
+      "input": [
+        [
+          [
+            "Name",
+            "Age"
+          ],
+          [
+            "Alice",
+            "30"
+          ],
+          [
+            "Bob",
+            "4"
+          ]
+        ]
+      ],
+      "expected": [
+        [
+          "Name",
+          "Age"
+        ],
+        [
+          "Alice",
+          "30"
+        ],
+        [
+          "Bob",
+          "4"
+        ],
+        [
+          "",
+          ""
+        ]
+      ]
+    },
+    {
+      "name": "addRow #3 (edge corpus)",
+      "fn": "addRow",
+      "input": [
+        []
+      ],
+      "expected": [
+        []
+      ]
+    },
+    {
+      "name": "addRow #4 (edge corpus)",
+      "fn": "addRow",
+      "input": [
+        [
+          [
+            "a",
+            "b",
+            "c"
+          ]
+        ]
+      ],
+      "expected": [
+        [
+          "a",
+          "b",
+          "c"
+        ],
+        [
+          "",
+          "",
+          ""
+        ]
+      ]
+    }
+  ]
+}

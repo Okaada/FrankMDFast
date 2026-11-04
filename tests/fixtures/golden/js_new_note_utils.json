@@ -1,0 +1,2659 @@
+{
+  "source": "app/javascript/lib/new_note_utils.js @ d47a89e92d89f807878d318182fa5dcea0329ec4",
+  "frankmd_sha": "d47a89e92d89f807878d318182fa5dcea0329ec4",
+  "generator": "tools/golden/js/utils.mjs",
+  "notes": "input = encoded argument array (decode with golden.mjs decode: {$undefined}, {$number}, {$date}, {$regexp}, {$utf16}); expected = encoded return value, or {$error:{name,message}}. JS strings are UTF-16: all positions/lengths/indices in inputs and outputs are UTF-16 code-unit offsets; cases with non-BMP/multi-unit strings carry a `utf16` array (utf16_len/scalar_len/utf8_len per such string arg). TZ pinned to UTC for date-based helpers. Date args are {$date}; local time = UTC.",
+  "functions": [
+    "canCreateNote",
+    "hugoDatePath",
+    "isValidNoteName",
+    "previewNotePath",
+    "slugify"
+  ],
+  "cases": [
+    {
+      "name": "canCreateNote #1 (from FrankMD vitest suite)",
+      "fn": "canCreateNote",
+      "input": [
+        "!!!",
+        "hugo"
+      ],
+      "expected": false
+    },
+    {
+      "name": "canCreateNote #2 (from FrankMD vitest suite)",
+      "fn": "canCreateNote",
+      "input": [
+        "My Post",
+        "hugo"
+      ],
+      "expected": true
+    },
+    {
+      "name": "canCreateNote #3 (from FrankMD vitest suite)",
+      "fn": "canCreateNote",
+      "input": [
+        "a/b",
+        "empty"
+      ],
+      "expected": false
+    },
+    {
+      "name": "canCreateNote #4 (from FrankMD vitest suite)",
+      "fn": "canCreateNote",
+      "input": [
+        "sample",
+        "hugo"
+      ],
+      "expected": true
+    },
+    {
+      "name": "canCreateNote #5 (from FrankMD vitest suite)",
+      "fn": "canCreateNote",
+      "input": [
+        "test",
+        "empty"
+      ],
+      "expected": true
+    },
+    {
+      "name": "canCreateNote #6 (from FrankMD vitest suite)",
+      "fn": "canCreateNote",
+      "input": [
+        "nested/path",
+        "empty"
+      ],
+      "expected": false
+    },
+    {
+      "name": "canCreateNote #7 (from FrankMD vitest suite)",
+      "fn": "canCreateNote",
+      "input": [
+        "",
+        "empty"
+      ],
+      "expected": false
+    },
+    {
+      "name": "canCreateNote #8 (from FrankMD vitest suite)",
+      "fn": "canCreateNote",
+      "input": [
+        "my note",
+        "empty"
+      ],
+      "expected": true
+    },
+    {
+      "name": "canCreateNote #9 (from FrankMD vitest suite)",
+      "fn": "canCreateNote",
+      "input": [
+        "My Post.md",
+        "hugo"
+      ],
+      "expected": true
+    },
+    {
+      "name": "canCreateNote #10 (from FrankMD vitest suite)",
+      "fn": "canCreateNote",
+      "input": [
+        "sample",
+        "empty"
+      ],
+      "expected": true
+    },
+    {
+      "name": "hugoDatePath #1 (from FrankMD vitest suite)",
+      "fn": "hugoDatePath",
+      "input": [
+        {
+          "$date": "2026-08-18T00:00:00.000Z"
+        }
+      ],
+      "expected": "2026/08/18"
+    },
+    {
+      "name": "hugoDatePath #2 (from FrankMD vitest suite)",
+      "fn": "hugoDatePath",
+      "input": [
+        {
+          "$date": "2026-01-03T00:00:00.000Z"
+        }
+      ],
+      "expected": "2026/01/03"
+    },
+    {
+      "name": "isValidNoteName #1 (from FrankMD vitest suite)",
+      "fn": "isValidNoteName",
+      "input": [
+        ""
+      ],
+      "expected": false
+    },
+    {
+      "name": "isValidNoteName #2 (from FrankMD vitest suite)",
+      "fn": "isValidNoteName",
+      "input": [
+        null
+      ],
+      "expected": false
+    },
+    {
+      "name": "isValidNoteName #3 (from FrankMD vitest suite)",
+      "fn": "isValidNoteName",
+      "input": [
+        "   "
+      ],
+      "expected": false
+    },
+    {
+      "name": "isValidNoteName #4 (from FrankMD vitest suite)",
+      "fn": "isValidNoteName",
+      "input": [
+        "trailing/"
+      ],
+      "expected": false
+    },
+    {
+      "name": "isValidNoteName #5 (from FrankMD vitest suite)",
+      "fn": "isValidNoteName",
+      "input": [
+        ".."
+      ],
+      "expected": false
+    },
+    {
+      "name": "isValidNoteName #6 (from FrankMD vitest suite)",
+      "fn": "isValidNoteName",
+      "input": [
+        "/absolute"
+      ],
+      "expected": false
+    },
+    {
+      "name": "isValidNoteName #7 (from FrankMD vitest suite)",
+      "fn": "isValidNoteName",
+      "input": [
+        "."
+      ],
+      "expected": false
+    },
+    {
+      "name": "isValidNoteName #8 (from FrankMD vitest suite)",
+      "fn": "isValidNoteName",
+      "input": [
+        "nested/path"
+      ],
+      "expected": false
+    },
+    {
+      "name": "isValidNoteName #9 (from FrankMD vitest suite)",
+      "fn": "isValidNoteName",
+      "input": [
+        "my note.md"
+      ],
+      "expected": true
+    },
+    {
+      "name": "isValidNoteName #10 (from FrankMD vitest suite)",
+      "fn": "isValidNoteName",
+      "input": [
+        "my-note"
+      ],
+      "expected": true
+    },
+    {
+      "name": "previewNotePath #1 (from FrankMD vitest suite)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "!!!",
+          "template": "hugo",
+          "date": {
+            "$date": "2026-08-18T00:00:00.000Z"
+          }
+        }
+      ],
+      "expected": {
+        "valid": false,
+        "empty": false,
+        "path": "root/2026/08/18/!!!/index.md"
+      }
+    },
+    {
+      "name": "previewNotePath #2 (from FrankMD vitest suite)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "My Post",
+          "parent": "blog",
+          "template": "hugo",
+          "date": {
+            "$date": "2026-08-18T00:00:00.000Z"
+          }
+        }
+      ],
+      "expected": {
+        "valid": true,
+        "empty": false,
+        "path": "blog/2026/08/18/my-post/index.md"
+      }
+    },
+    {
+      "name": "previewNotePath #3 (from FrankMD vitest suite)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "my-note",
+          "parent": "docs/guides",
+          "template": "empty",
+          "date": {
+            "$date": "2026-08-18T00:00:00.000Z"
+          }
+        }
+      ],
+      "expected": {
+        "valid": true,
+        "empty": false,
+        "path": "docs/guides/my-note.md"
+      }
+    },
+    {
+      "name": "previewNotePath #4 (from FrankMD vitest suite)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "My Post",
+          "template": "hugo",
+          "date": {
+            "$date": "2026-08-18T00:00:00.000Z"
+          }
+        }
+      ],
+      "expected": {
+        "valid": true,
+        "empty": false,
+        "path": "root/2026/08/18/my-post/index.md"
+      }
+    },
+    {
+      "name": "previewNotePath #5 (from FrankMD vitest suite)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "  my-note  ",
+          "template": "empty",
+          "date": {
+            "$date": "2026-08-18T00:00:00.000Z"
+          }
+        }
+      ],
+      "expected": {
+        "valid": true,
+        "empty": false,
+        "path": "root/my-note.md"
+      }
+    },
+    {
+      "name": "previewNotePath #6 (from FrankMD vitest suite)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "",
+          "template": "empty",
+          "date": {
+            "$date": "2026-08-18T00:00:00.000Z"
+          },
+          "namePlaceholder": "nome-da-nota"
+        }
+      ],
+      "expected": {
+        "valid": false,
+        "empty": true,
+        "path": "root/nome-da-nota.md"
+      }
+    },
+    {
+      "name": "previewNotePath #7 (from FrankMD vitest suite)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "x",
+          "template": "empty",
+          "date": {
+            "$date": "2026-08-18T00:00:00.000Z"
+          },
+          "rootSegment": "raiz"
+        }
+      ],
+      "expected": {
+        "valid": true,
+        "empty": false,
+        "path": "raiz/x.md"
+      }
+    },
+    {
+      "name": "previewNotePath #8 (from FrankMD vitest suite)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "my-note",
+          "template": "empty",
+          "date": {
+            "$date": "2026-08-18T00:00:00.000Z"
+          }
+        }
+      ],
+      "expected": {
+        "valid": true,
+        "empty": false,
+        "path": "root/my-note.md"
+      }
+    },
+    {
+      "name": "previewNotePath #9 (from FrankMD vitest suite)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "  ",
+          "template": "hugo",
+          "date": {
+            "$date": "2026-08-18T00:00:00.000Z"
+          },
+          "namePlaceholder": "note-name"
+        }
+      ],
+      "expected": {
+        "valid": false,
+        "empty": true,
+        "path": "root/2026/08/18/note-name/index.md"
+      }
+    },
+    {
+      "name": "previewNotePath #10 (from FrankMD vitest suite)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "Olá Mundo.md",
+          "template": "hugo",
+          "date": {
+            "$date": "2026-08-18T00:00:00.000Z"
+          }
+        }
+      ],
+      "expected": {
+        "valid": true,
+        "empty": false,
+        "path": "root/2026/08/18/ola-mundo/index.md"
+      }
+    },
+    {
+      "name": "previewNotePath #11 (from FrankMD vitest suite)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "a/b",
+          "template": "empty",
+          "date": {
+            "$date": "2026-08-18T00:00:00.000Z"
+          }
+        }
+      ],
+      "expected": {
+        "valid": false,
+        "empty": false,
+        "path": "root/a/b.md"
+      }
+    },
+    {
+      "name": "previewNotePath #12 (from FrankMD vitest suite)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "note.md",
+          "template": "empty",
+          "date": {
+            "$date": "2026-08-18T00:00:00.000Z"
+          }
+        }
+      ],
+      "expected": {
+        "valid": true,
+        "empty": false,
+        "path": "root/note.md"
+      }
+    },
+    {
+      "name": "slugify #1 (from FrankMD vitest suite)",
+      "fn": "slugify",
+      "input": [
+        ""
+      ],
+      "expected": ""
+    },
+    {
+      "name": "slugify #2 (from FrankMD vitest suite)",
+      "fn": "slugify",
+      "input": [
+        "my-post.md"
+      ],
+      "expected": "my-post-md"
+    },
+    {
+      "name": "slugify #3 (from FrankMD vitest suite)",
+      "fn": "slugify",
+      "input": [
+        "Grüße aus München"
+      ],
+      "expected": "grusse-aus-munchen"
+    },
+    {
+      "name": "slugify #4 (from FrankMD vitest suite)",
+      "fn": "slugify",
+      "input": [
+        "My First Post"
+      ],
+      "expected": "my-first-post"
+    },
+    {
+      "name": "slugify #5 (from FrankMD vitest suite)",
+      "fn": "slugify",
+      "input": [
+        "Olá, você está bem?"
+      ],
+      "expected": "ola-voce-esta-bem"
+    },
+    {
+      "name": "slugify #6 (from FrankMD vitest suite)",
+      "fn": "slugify",
+      "input": [
+        "--hello--"
+      ],
+      "expected": "hello"
+    },
+    {
+      "name": "slugify #7 (from FrankMD vitest suite)",
+      "fn": "slugify",
+      "input": [
+        "???"
+      ],
+      "expected": ""
+    },
+    {
+      "name": "slugify #8 (from FrankMD vitest suite)",
+      "fn": "slugify",
+      "input": [
+        "Hello, World! (v2)"
+      ],
+      "expected": "hello-world-v2"
+    },
+    {
+      "name": "slugify #9 (edge corpus)",
+      "fn": "slugify",
+      "input": [
+        "Hello World"
+      ],
+      "expected": "hello-world"
+    },
+    {
+      "name": "slugify #10 (edge corpus)",
+      "fn": "slugify",
+      "input": [
+        "Olá Mundo! Ação"
+      ],
+      "expected": "ola-mundo-acao"
+    },
+    {
+      "name": "slugify #11 (edge corpus)",
+      "fn": "slugify",
+      "input": [
+        "Ünïcödé Straße"
+      ],
+      "expected": "unicode-strasse"
+    },
+    {
+      "name": "slugify #12 (edge corpus)",
+      "fn": "slugify",
+      "input": [
+        "Crème Brûlée"
+      ],
+      "expected": "creme-brulee"
+    },
+    {
+      "name": "slugify #13 (edge corpus)",
+      "fn": "slugify",
+      "input": [
+        "Łódź Żółć"
+      ],
+      "expected": "lodz-zolc"
+    },
+    {
+      "name": "slugify #14 (edge corpus)",
+      "fn": "slugify",
+      "input": [
+        "Dvořák Škoda"
+      ],
+      "expected": "dvorak-skoda"
+    },
+    {
+      "name": "slugify #15 (edge corpus)",
+      "fn": "slugify",
+      "input": [
+        "Þór Ægir Øresund"
+      ],
+      "expected": "thor-aegir-oresund"
+    },
+    {
+      "name": "slugify #16 (edge corpus)",
+      "fn": "slugify",
+      "input": [
+        "Ğüşİöç Türkçe"
+      ],
+      "expected": "u-i-oc-turkce"
+    },
+    {
+      "name": "slugify #17 (edge corpus)",
+      "fn": "slugify",
+      "input": [
+        "Tiếng Việt"
+      ],
+      "expected": "ti-ng-vi-t"
+    },
+    {
+      "name": "slugify #18 (edge corpus)",
+      "fn": "slugify",
+      "input": [
+        "日本語"
+      ],
+      "expected": ""
+    },
+    {
+      "name": "slugify #19 (edge corpus)",
+      "fn": "slugify",
+      "input": [
+        "שלום"
+      ],
+      "expected": ""
+    },
+    {
+      "name": "slugify #20 (edge corpus)",
+      "fn": "slugify",
+      "input": [
+        "مرحبا"
+      ],
+      "expected": ""
+    },
+    {
+      "name": "slugify #21 (edge corpus)",
+      "fn": "slugify",
+      "input": [
+        "👋 emoji 🎉"
+      ],
+      "expected": "emoji",
+      "utf16": [
+        {
+          "utf16_len": 11,
+          "scalar_len": 9,
+          "utf8_len": 15
+        }
+      ]
+    },
+    {
+      "name": "slugify #22 (edge corpus)",
+      "fn": "slugify",
+      "input": [
+        "  spaced  out  "
+      ],
+      "expected": "spaced-out"
+    },
+    {
+      "name": "slugify #23 (edge corpus)",
+      "fn": "slugify",
+      "input": [
+        "--dashes--"
+      ],
+      "expected": "dashes"
+    },
+    {
+      "name": "slugify #24 (edge corpus)",
+      "fn": "slugify",
+      "input": [
+        "a---b"
+      ],
+      "expected": "a-b"
+    },
+    {
+      "name": "slugify #25 (edge corpus)",
+      "fn": "slugify",
+      "input": [
+        "under_score"
+      ],
+      "expected": "under-score"
+    },
+    {
+      "name": "slugify #26 (edge corpus)",
+      "fn": "slugify",
+      "input": [
+        "dots.in.name"
+      ],
+      "expected": "dots-in-name"
+    },
+    {
+      "name": "slugify #27 (edge corpus)",
+      "fn": "slugify",
+      "input": [
+        "CamelCase"
+      ],
+      "expected": "camelcase"
+    },
+    {
+      "name": "slugify #28 (edge corpus)",
+      "fn": "slugify",
+      "input": [
+        "123 numbers 456"
+      ],
+      "expected": "123-numbers-456"
+    },
+    {
+      "name": "slugify #29 (edge corpus)",
+      "fn": "slugify",
+      "input": [
+        "!!!"
+      ],
+      "expected": ""
+    },
+    {
+      "name": "slugify #30 (edge corpus)",
+      "fn": "slugify",
+      "input": [
+        null
+      ],
+      "expected": ""
+    },
+    {
+      "name": "slugify #31 (edge corpus)",
+      "fn": "slugify",
+      "input": [
+        {
+          "$undefined": true
+        }
+      ],
+      "expected": ""
+    },
+    {
+      "name": "slugify #32 (edge corpus)",
+      "fn": "slugify",
+      "input": [
+        "é"
+      ],
+      "expected": "e"
+    },
+    {
+      "name": "slugify #33 (edge corpus)",
+      "fn": "slugify",
+      "input": [
+        "ÀÉÎÕÜ"
+      ],
+      "expected": "aeiou"
+    },
+    {
+      "name": "slugify #34 (edge corpus)",
+      "fn": "slugify",
+      "input": [
+        "İstanbul"
+      ],
+      "expected": "i-stanbul"
+    },
+    {
+      "name": "slugify #35 (edge corpus)",
+      "fn": "slugify",
+      "input": [
+        "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+      ],
+      "expected": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    },
+    {
+      "name": "slugify #36 (edge corpus)",
+      "fn": "slugify",
+      "input": [
+        "C++ & C#"
+      ],
+      "expected": "c-c"
+    },
+    {
+      "name": "slugify #37 (edge corpus)",
+      "fn": "slugify",
+      "input": [
+        "file.md"
+      ],
+      "expected": "file-md"
+    },
+    {
+      "name": "slugify #38 (edge corpus)",
+      "fn": "slugify",
+      "input": [
+        "a/b\\c"
+      ],
+      "expected": "a-b-c"
+    },
+    {
+      "name": "hugoDatePath #3 (edge corpus)",
+      "fn": "hugoDatePath",
+      "input": [
+        {
+          "$date": "2026-08-18T12:00:00.000Z"
+        }
+      ],
+      "expected": "2026/08/18"
+    },
+    {
+      "name": "hugoDatePath #4 (edge corpus)",
+      "fn": "hugoDatePath",
+      "input": [
+        {
+          "$date": "2025-01-05T23:59:59.000Z"
+        }
+      ],
+      "expected": "2025/01/05"
+    },
+    {
+      "name": "hugoDatePath #5 (edge corpus)",
+      "fn": "hugoDatePath",
+      "input": [
+        {
+          "$date": "1999-12-31T00:00:00.000Z"
+        }
+      ],
+      "expected": "1999/12/31"
+    },
+    {
+      "name": "hugoDatePath #6 (edge corpus)",
+      "fn": "hugoDatePath",
+      "input": [
+        {
+          "$date": "2024-02-29T00:00:00.000Z"
+        }
+      ],
+      "expected": "2024/02/29"
+    },
+    {
+      "name": "isValidNoteName #11 (edge corpus)",
+      "fn": "isValidNoteName",
+      "input": [
+        "note"
+      ],
+      "expected": true
+    },
+    {
+      "name": "isValidNoteName #12 (edge corpus)",
+      "fn": "isValidNoteName",
+      "input": [
+        " note "
+      ],
+      "expected": true
+    },
+    {
+      "name": "isValidNoteName #13 (edge corpus)",
+      "fn": "isValidNoteName",
+      "input": [
+        {
+          "$undefined": true
+        }
+      ],
+      "expected": false
+    },
+    {
+      "name": "isValidNoteName #14 (edge corpus)",
+      "fn": "isValidNoteName",
+      "input": [
+        "a/b"
+      ],
+      "expected": false
+    },
+    {
+      "name": "isValidNoteName #15 (edge corpus)",
+      "fn": "isValidNoteName",
+      "input": [
+        "/"
+      ],
+      "expected": false
+    },
+    {
+      "name": "isValidNoteName #16 (edge corpus)",
+      "fn": "isValidNoteName",
+      "input": [
+        " .. "
+      ],
+      "expected": false
+    },
+    {
+      "name": "isValidNoteName #17 (edge corpus)",
+      "fn": "isValidNoteName",
+      "input": [
+        "..."
+      ],
+      "expected": true
+    },
+    {
+      "name": "isValidNoteName #18 (edge corpus)",
+      "fn": "isValidNoteName",
+      "input": [
+        ".hidden"
+      ],
+      "expected": true
+    },
+    {
+      "name": "isValidNoteName #19 (edge corpus)",
+      "fn": "isValidNoteName",
+      "input": [
+        "a\\b"
+      ],
+      "expected": true
+    },
+    {
+      "name": "isValidNoteName #20 (edge corpus)",
+      "fn": "isValidNoteName",
+      "input": [
+        "日本"
+      ],
+      "expected": true
+    },
+    {
+      "name": "isValidNoteName #21 (edge corpus)",
+      "fn": "isValidNoteName",
+      "input": [
+        "👋"
+      ],
+      "expected": true,
+      "utf16": [
+        {
+          "utf16_len": 2,
+          "scalar_len": 1,
+          "utf8_len": 4
+        }
+      ]
+    },
+    {
+      "name": "isValidNoteName #22 (edge corpus)",
+      "fn": "isValidNoteName",
+      "input": [
+        "note.md"
+      ],
+      "expected": true
+    },
+    {
+      "name": "isValidNoteName #23 (edge corpus)",
+      "fn": "isValidNoteName",
+      "input": [
+        "a\tb"
+      ],
+      "expected": true
+    },
+    {
+      "name": "isValidNoteName #24 (edge corpus)",
+      "fn": "isValidNoteName",
+      "input": [
+        "a\nb"
+      ],
+      "expected": true
+    },
+    {
+      "name": "canCreateNote #11 (edge corpus)",
+      "fn": "canCreateNote",
+      "input": [
+        "note",
+        "empty"
+      ],
+      "expected": true
+    },
+    {
+      "name": "canCreateNote #12 (edge corpus)",
+      "fn": "canCreateNote",
+      "input": [
+        "note",
+        "hugo"
+      ],
+      "expected": true
+    },
+    {
+      "name": "canCreateNote #13 (edge corpus)",
+      "fn": "canCreateNote",
+      "input": [
+        "note"
+      ],
+      "expected": true
+    },
+    {
+      "name": "canCreateNote #14 (edge corpus)",
+      "fn": "canCreateNote",
+      "input": [
+        "note",
+        "other"
+      ],
+      "expected": true
+    },
+    {
+      "name": "canCreateNote #15 (edge corpus)",
+      "fn": "canCreateNote",
+      "input": [
+        "",
+        "hugo"
+      ],
+      "expected": false
+    },
+    {
+      "name": "canCreateNote #16 (edge corpus)",
+      "fn": "canCreateNote",
+      "input": [
+        ""
+      ],
+      "expected": false
+    },
+    {
+      "name": "canCreateNote #17 (edge corpus)",
+      "fn": "canCreateNote",
+      "input": [
+        "",
+        "other"
+      ],
+      "expected": false
+    },
+    {
+      "name": "canCreateNote #18 (edge corpus)",
+      "fn": "canCreateNote",
+      "input": [
+        "a/b",
+        "hugo"
+      ],
+      "expected": false
+    },
+    {
+      "name": "canCreateNote #19 (edge corpus)",
+      "fn": "canCreateNote",
+      "input": [
+        "a/b"
+      ],
+      "expected": false
+    },
+    {
+      "name": "canCreateNote #20 (edge corpus)",
+      "fn": "canCreateNote",
+      "input": [
+        "a/b",
+        "other"
+      ],
+      "expected": false
+    },
+    {
+      "name": "canCreateNote #21 (edge corpus)",
+      "fn": "canCreateNote",
+      "input": [
+        "..",
+        "empty"
+      ],
+      "expected": false
+    },
+    {
+      "name": "canCreateNote #22 (edge corpus)",
+      "fn": "canCreateNote",
+      "input": [
+        "..",
+        "hugo"
+      ],
+      "expected": false
+    },
+    {
+      "name": "canCreateNote #23 (edge corpus)",
+      "fn": "canCreateNote",
+      "input": [
+        ".."
+      ],
+      "expected": false
+    },
+    {
+      "name": "canCreateNote #24 (edge corpus)",
+      "fn": "canCreateNote",
+      "input": [
+        "..",
+        "other"
+      ],
+      "expected": false
+    },
+    {
+      "name": "canCreateNote #25 (edge corpus)",
+      "fn": "canCreateNote",
+      "input": [
+        "!!!",
+        "empty"
+      ],
+      "expected": true
+    },
+    {
+      "name": "canCreateNote #26 (edge corpus)",
+      "fn": "canCreateNote",
+      "input": [
+        "!!!"
+      ],
+      "expected": true
+    },
+    {
+      "name": "canCreateNote #27 (edge corpus)",
+      "fn": "canCreateNote",
+      "input": [
+        "!!!",
+        "other"
+      ],
+      "expected": true
+    },
+    {
+      "name": "canCreateNote #28 (edge corpus)",
+      "fn": "canCreateNote",
+      "input": [
+        "日本語",
+        "empty"
+      ],
+      "expected": true
+    },
+    {
+      "name": "canCreateNote #29 (edge corpus)",
+      "fn": "canCreateNote",
+      "input": [
+        "日本語",
+        "hugo"
+      ],
+      "expected": false
+    },
+    {
+      "name": "canCreateNote #30 (edge corpus)",
+      "fn": "canCreateNote",
+      "input": [
+        "日本語"
+      ],
+      "expected": true
+    },
+    {
+      "name": "canCreateNote #31 (edge corpus)",
+      "fn": "canCreateNote",
+      "input": [
+        "日本語",
+        "other"
+      ],
+      "expected": true
+    },
+    {
+      "name": "canCreateNote #32 (edge corpus)",
+      "fn": "canCreateNote",
+      "input": [
+        "My Post.md",
+        "empty"
+      ],
+      "expected": true
+    },
+    {
+      "name": "canCreateNote #33 (edge corpus)",
+      "fn": "canCreateNote",
+      "input": [
+        "My Post.md"
+      ],
+      "expected": true
+    },
+    {
+      "name": "canCreateNote #34 (edge corpus)",
+      "fn": "canCreateNote",
+      "input": [
+        "My Post.md",
+        "other"
+      ],
+      "expected": true
+    },
+    {
+      "name": "canCreateNote #35 (edge corpus)",
+      "fn": "canCreateNote",
+      "input": [
+        ".md",
+        "empty"
+      ],
+      "expected": true
+    },
+    {
+      "name": "canCreateNote #36 (edge corpus)",
+      "fn": "canCreateNote",
+      "input": [
+        ".md",
+        "hugo"
+      ],
+      "expected": false
+    },
+    {
+      "name": "canCreateNote #37 (edge corpus)",
+      "fn": "canCreateNote",
+      "input": [
+        ".md"
+      ],
+      "expected": true
+    },
+    {
+      "name": "canCreateNote #38 (edge corpus)",
+      "fn": "canCreateNote",
+      "input": [
+        ".md",
+        "other"
+      ],
+      "expected": true
+    },
+    {
+      "name": "canCreateNote #39 (edge corpus)",
+      "fn": "canCreateNote",
+      "input": [
+        "  ",
+        "empty"
+      ],
+      "expected": false
+    },
+    {
+      "name": "canCreateNote #40 (edge corpus)",
+      "fn": "canCreateNote",
+      "input": [
+        "  ",
+        "hugo"
+      ],
+      "expected": false
+    },
+    {
+      "name": "canCreateNote #41 (edge corpus)",
+      "fn": "canCreateNote",
+      "input": [
+        "  "
+      ],
+      "expected": false
+    },
+    {
+      "name": "canCreateNote #42 (edge corpus)",
+      "fn": "canCreateNote",
+      "input": [
+        "  ",
+        "other"
+      ],
+      "expected": false
+    },
+    {
+      "name": "canCreateNote #43 (edge corpus)",
+      "fn": "canCreateNote",
+      "input": [
+        "Olá",
+        "empty"
+      ],
+      "expected": true
+    },
+    {
+      "name": "canCreateNote #44 (edge corpus)",
+      "fn": "canCreateNote",
+      "input": [
+        "Olá",
+        "hugo"
+      ],
+      "expected": true
+    },
+    {
+      "name": "canCreateNote #45 (edge corpus)",
+      "fn": "canCreateNote",
+      "input": [
+        "Olá"
+      ],
+      "expected": true
+    },
+    {
+      "name": "canCreateNote #46 (edge corpus)",
+      "fn": "canCreateNote",
+      "input": [
+        "Olá",
+        "other"
+      ],
+      "expected": true
+    },
+    {
+      "name": "previewNotePath #13 (edge corpus)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "",
+          "parent": "",
+          "template": "empty",
+          "pathStyle": "dated",
+          "date": {
+            "$date": "2026-08-18T12:00:00.000Z"
+          },
+          "namePlaceholder": "name",
+          "rootSegment": "root"
+        }
+      ],
+      "expected": {
+        "valid": false,
+        "empty": true,
+        "path": "root/name.md"
+      }
+    },
+    {
+      "name": "previewNotePath #14 (edge corpus)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "",
+          "parent": "blog/posts",
+          "template": "empty",
+          "pathStyle": "dated",
+          "date": {
+            "$date": "2026-08-18T12:00:00.000Z"
+          },
+          "namePlaceholder": "name",
+          "rootSegment": "root"
+        }
+      ],
+      "expected": {
+        "valid": false,
+        "empty": true,
+        "path": "blog/posts/name.md"
+      }
+    },
+    {
+      "name": "previewNotePath #15 (edge corpus)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "",
+          "parent": "",
+          "template": "empty",
+          "pathStyle": "flat",
+          "date": {
+            "$date": "2026-08-18T12:00:00.000Z"
+          },
+          "namePlaceholder": "name",
+          "rootSegment": "root"
+        }
+      ],
+      "expected": {
+        "valid": false,
+        "empty": true,
+        "path": "root/name.md"
+      }
+    },
+    {
+      "name": "previewNotePath #16 (edge corpus)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "",
+          "parent": "blog/posts",
+          "template": "empty",
+          "pathStyle": "flat",
+          "date": {
+            "$date": "2026-08-18T12:00:00.000Z"
+          },
+          "namePlaceholder": "name",
+          "rootSegment": "root"
+        }
+      ],
+      "expected": {
+        "valid": false,
+        "empty": true,
+        "path": "blog/posts/name.md"
+      }
+    },
+    {
+      "name": "previewNotePath #17 (edge corpus)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "",
+          "parent": "",
+          "template": "hugo",
+          "pathStyle": "dated",
+          "date": {
+            "$date": "2026-08-18T12:00:00.000Z"
+          },
+          "namePlaceholder": "name",
+          "rootSegment": "root"
+        }
+      ],
+      "expected": {
+        "valid": false,
+        "empty": true,
+        "path": "root/2026/08/18/name/index.md"
+      }
+    },
+    {
+      "name": "previewNotePath #18 (edge corpus)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "",
+          "parent": "blog/posts",
+          "template": "hugo",
+          "pathStyle": "dated",
+          "date": {
+            "$date": "2026-08-18T12:00:00.000Z"
+          },
+          "namePlaceholder": "name",
+          "rootSegment": "root"
+        }
+      ],
+      "expected": {
+        "valid": false,
+        "empty": true,
+        "path": "blog/posts/2026/08/18/name/index.md"
+      }
+    },
+    {
+      "name": "previewNotePath #19 (edge corpus)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "",
+          "parent": "",
+          "template": "hugo",
+          "pathStyle": "flat",
+          "date": {
+            "$date": "2026-08-18T12:00:00.000Z"
+          },
+          "namePlaceholder": "name",
+          "rootSegment": "root"
+        }
+      ],
+      "expected": {
+        "valid": false,
+        "empty": true,
+        "path": "root/name.md"
+      }
+    },
+    {
+      "name": "previewNotePath #20 (edge corpus)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "",
+          "parent": "blog/posts",
+          "template": "hugo",
+          "pathStyle": "flat",
+          "date": {
+            "$date": "2026-08-18T12:00:00.000Z"
+          },
+          "namePlaceholder": "name",
+          "rootSegment": "root"
+        }
+      ],
+      "expected": {
+        "valid": false,
+        "empty": true,
+        "path": "blog/posts/name.md"
+      }
+    },
+    {
+      "name": "previewNotePath #21 (edge corpus)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "My Note",
+          "parent": "",
+          "template": "empty",
+          "pathStyle": "dated",
+          "date": {
+            "$date": "2026-08-18T12:00:00.000Z"
+          },
+          "namePlaceholder": "name",
+          "rootSegment": "root"
+        }
+      ],
+      "expected": {
+        "valid": true,
+        "empty": false,
+        "path": "root/My Note.md"
+      }
+    },
+    {
+      "name": "previewNotePath #22 (edge corpus)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "My Note",
+          "parent": "blog/posts",
+          "template": "empty",
+          "pathStyle": "dated",
+          "date": {
+            "$date": "2026-08-18T12:00:00.000Z"
+          },
+          "namePlaceholder": "name",
+          "rootSegment": "root"
+        }
+      ],
+      "expected": {
+        "valid": true,
+        "empty": false,
+        "path": "blog/posts/My Note.md"
+      }
+    },
+    {
+      "name": "previewNotePath #23 (edge corpus)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "My Note",
+          "parent": "",
+          "template": "empty",
+          "pathStyle": "flat",
+          "date": {
+            "$date": "2026-08-18T12:00:00.000Z"
+          },
+          "namePlaceholder": "name",
+          "rootSegment": "root"
+        }
+      ],
+      "expected": {
+        "valid": true,
+        "empty": false,
+        "path": "root/My Note.md"
+      }
+    },
+    {
+      "name": "previewNotePath #24 (edge corpus)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "My Note",
+          "parent": "blog/posts",
+          "template": "empty",
+          "pathStyle": "flat",
+          "date": {
+            "$date": "2026-08-18T12:00:00.000Z"
+          },
+          "namePlaceholder": "name",
+          "rootSegment": "root"
+        }
+      ],
+      "expected": {
+        "valid": true,
+        "empty": false,
+        "path": "blog/posts/My Note.md"
+      }
+    },
+    {
+      "name": "previewNotePath #25 (edge corpus)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "My Note",
+          "parent": "",
+          "template": "hugo",
+          "pathStyle": "dated",
+          "date": {
+            "$date": "2026-08-18T12:00:00.000Z"
+          },
+          "namePlaceholder": "name",
+          "rootSegment": "root"
+        }
+      ],
+      "expected": {
+        "valid": true,
+        "empty": false,
+        "path": "root/2026/08/18/my-note/index.md"
+      }
+    },
+    {
+      "name": "previewNotePath #26 (edge corpus)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "My Note",
+          "parent": "blog/posts",
+          "template": "hugo",
+          "pathStyle": "dated",
+          "date": {
+            "$date": "2026-08-18T12:00:00.000Z"
+          },
+          "namePlaceholder": "name",
+          "rootSegment": "root"
+        }
+      ],
+      "expected": {
+        "valid": true,
+        "empty": false,
+        "path": "blog/posts/2026/08/18/my-note/index.md"
+      }
+    },
+    {
+      "name": "previewNotePath #27 (edge corpus)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "My Note",
+          "parent": "",
+          "template": "hugo",
+          "pathStyle": "flat",
+          "date": {
+            "$date": "2026-08-18T12:00:00.000Z"
+          },
+          "namePlaceholder": "name",
+          "rootSegment": "root"
+        }
+      ],
+      "expected": {
+        "valid": true,
+        "empty": false,
+        "path": "root/my-note.md"
+      }
+    },
+    {
+      "name": "previewNotePath #28 (edge corpus)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "My Note",
+          "parent": "blog/posts",
+          "template": "hugo",
+          "pathStyle": "flat",
+          "date": {
+            "$date": "2026-08-18T12:00:00.000Z"
+          },
+          "namePlaceholder": "name",
+          "rootSegment": "root"
+        }
+      ],
+      "expected": {
+        "valid": true,
+        "empty": false,
+        "path": "blog/posts/my-note.md"
+      }
+    },
+    {
+      "name": "previewNotePath #29 (edge corpus)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "My Note.md",
+          "parent": "",
+          "template": "empty",
+          "pathStyle": "dated",
+          "date": {
+            "$date": "2026-08-18T12:00:00.000Z"
+          },
+          "namePlaceholder": "name",
+          "rootSegment": "root"
+        }
+      ],
+      "expected": {
+        "valid": true,
+        "empty": false,
+        "path": "root/My Note.md"
+      }
+    },
+    {
+      "name": "previewNotePath #30 (edge corpus)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "My Note.md",
+          "parent": "blog/posts",
+          "template": "empty",
+          "pathStyle": "dated",
+          "date": {
+            "$date": "2026-08-18T12:00:00.000Z"
+          },
+          "namePlaceholder": "name",
+          "rootSegment": "root"
+        }
+      ],
+      "expected": {
+        "valid": true,
+        "empty": false,
+        "path": "blog/posts/My Note.md"
+      }
+    },
+    {
+      "name": "previewNotePath #31 (edge corpus)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "My Note.md",
+          "parent": "",
+          "template": "empty",
+          "pathStyle": "flat",
+          "date": {
+            "$date": "2026-08-18T12:00:00.000Z"
+          },
+          "namePlaceholder": "name",
+          "rootSegment": "root"
+        }
+      ],
+      "expected": {
+        "valid": true,
+        "empty": false,
+        "path": "root/My Note.md"
+      }
+    },
+    {
+      "name": "previewNotePath #32 (edge corpus)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "My Note.md",
+          "parent": "blog/posts",
+          "template": "empty",
+          "pathStyle": "flat",
+          "date": {
+            "$date": "2026-08-18T12:00:00.000Z"
+          },
+          "namePlaceholder": "name",
+          "rootSegment": "root"
+        }
+      ],
+      "expected": {
+        "valid": true,
+        "empty": false,
+        "path": "blog/posts/My Note.md"
+      }
+    },
+    {
+      "name": "previewNotePath #33 (edge corpus)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "My Note.md",
+          "parent": "",
+          "template": "hugo",
+          "pathStyle": "dated",
+          "date": {
+            "$date": "2026-08-18T12:00:00.000Z"
+          },
+          "namePlaceholder": "name",
+          "rootSegment": "root"
+        }
+      ],
+      "expected": {
+        "valid": true,
+        "empty": false,
+        "path": "root/2026/08/18/my-note/index.md"
+      }
+    },
+    {
+      "name": "previewNotePath #34 (edge corpus)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "My Note.md",
+          "parent": "blog/posts",
+          "template": "hugo",
+          "pathStyle": "dated",
+          "date": {
+            "$date": "2026-08-18T12:00:00.000Z"
+          },
+          "namePlaceholder": "name",
+          "rootSegment": "root"
+        }
+      ],
+      "expected": {
+        "valid": true,
+        "empty": false,
+        "path": "blog/posts/2026/08/18/my-note/index.md"
+      }
+    },
+    {
+      "name": "previewNotePath #35 (edge corpus)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "My Note.md",
+          "parent": "",
+          "template": "hugo",
+          "pathStyle": "flat",
+          "date": {
+            "$date": "2026-08-18T12:00:00.000Z"
+          },
+          "namePlaceholder": "name",
+          "rootSegment": "root"
+        }
+      ],
+      "expected": {
+        "valid": true,
+        "empty": false,
+        "path": "root/my-note.md"
+      }
+    },
+    {
+      "name": "previewNotePath #36 (edge corpus)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "My Note.md",
+          "parent": "blog/posts",
+          "template": "hugo",
+          "pathStyle": "flat",
+          "date": {
+            "$date": "2026-08-18T12:00:00.000Z"
+          },
+          "namePlaceholder": "name",
+          "rootSegment": "root"
+        }
+      ],
+      "expected": {
+        "valid": true,
+        "empty": false,
+        "path": "blog/posts/my-note.md"
+      }
+    },
+    {
+      "name": "previewNotePath #37 (edge corpus)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "日本語",
+          "parent": "",
+          "template": "empty",
+          "pathStyle": "dated",
+          "date": {
+            "$date": "2026-08-18T12:00:00.000Z"
+          },
+          "namePlaceholder": "name",
+          "rootSegment": "root"
+        }
+      ],
+      "expected": {
+        "valid": true,
+        "empty": false,
+        "path": "root/日本語.md"
+      }
+    },
+    {
+      "name": "previewNotePath #38 (edge corpus)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "日本語",
+          "parent": "blog/posts",
+          "template": "empty",
+          "pathStyle": "dated",
+          "date": {
+            "$date": "2026-08-18T12:00:00.000Z"
+          },
+          "namePlaceholder": "name",
+          "rootSegment": "root"
+        }
+      ],
+      "expected": {
+        "valid": true,
+        "empty": false,
+        "path": "blog/posts/日本語.md"
+      }
+    },
+    {
+      "name": "previewNotePath #39 (edge corpus)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "日本語",
+          "parent": "",
+          "template": "empty",
+          "pathStyle": "flat",
+          "date": {
+            "$date": "2026-08-18T12:00:00.000Z"
+          },
+          "namePlaceholder": "name",
+          "rootSegment": "root"
+        }
+      ],
+      "expected": {
+        "valid": true,
+        "empty": false,
+        "path": "root/日本語.md"
+      }
+    },
+    {
+      "name": "previewNotePath #40 (edge corpus)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "日本語",
+          "parent": "blog/posts",
+          "template": "empty",
+          "pathStyle": "flat",
+          "date": {
+            "$date": "2026-08-18T12:00:00.000Z"
+          },
+          "namePlaceholder": "name",
+          "rootSegment": "root"
+        }
+      ],
+      "expected": {
+        "valid": true,
+        "empty": false,
+        "path": "blog/posts/日本語.md"
+      }
+    },
+    {
+      "name": "previewNotePath #41 (edge corpus)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "日本語",
+          "parent": "",
+          "template": "hugo",
+          "pathStyle": "dated",
+          "date": {
+            "$date": "2026-08-18T12:00:00.000Z"
+          },
+          "namePlaceholder": "name",
+          "rootSegment": "root"
+        }
+      ],
+      "expected": {
+        "valid": false,
+        "empty": false,
+        "path": "root/2026/08/18/日本語/index.md"
+      }
+    },
+    {
+      "name": "previewNotePath #42 (edge corpus)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "日本語",
+          "parent": "blog/posts",
+          "template": "hugo",
+          "pathStyle": "dated",
+          "date": {
+            "$date": "2026-08-18T12:00:00.000Z"
+          },
+          "namePlaceholder": "name",
+          "rootSegment": "root"
+        }
+      ],
+      "expected": {
+        "valid": false,
+        "empty": false,
+        "path": "blog/posts/2026/08/18/日本語/index.md"
+      }
+    },
+    {
+      "name": "previewNotePath #43 (edge corpus)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "日本語",
+          "parent": "",
+          "template": "hugo",
+          "pathStyle": "flat",
+          "date": {
+            "$date": "2026-08-18T12:00:00.000Z"
+          },
+          "namePlaceholder": "name",
+          "rootSegment": "root"
+        }
+      ],
+      "expected": {
+        "valid": false,
+        "empty": false,
+        "path": "root/日本語.md"
+      }
+    },
+    {
+      "name": "previewNotePath #44 (edge corpus)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "日本語",
+          "parent": "blog/posts",
+          "template": "hugo",
+          "pathStyle": "flat",
+          "date": {
+            "$date": "2026-08-18T12:00:00.000Z"
+          },
+          "namePlaceholder": "name",
+          "rootSegment": "root"
+        }
+      ],
+      "expected": {
+        "valid": false,
+        "empty": false,
+        "path": "blog/posts/日本語.md"
+      }
+    },
+    {
+      "name": "previewNotePath #45 (edge corpus)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "!!!",
+          "parent": "",
+          "template": "empty",
+          "pathStyle": "dated",
+          "date": {
+            "$date": "2026-08-18T12:00:00.000Z"
+          },
+          "namePlaceholder": "name",
+          "rootSegment": "root"
+        }
+      ],
+      "expected": {
+        "valid": true,
+        "empty": false,
+        "path": "root/!!!.md"
+      }
+    },
+    {
+      "name": "previewNotePath #46 (edge corpus)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "!!!",
+          "parent": "blog/posts",
+          "template": "empty",
+          "pathStyle": "dated",
+          "date": {
+            "$date": "2026-08-18T12:00:00.000Z"
+          },
+          "namePlaceholder": "name",
+          "rootSegment": "root"
+        }
+      ],
+      "expected": {
+        "valid": true,
+        "empty": false,
+        "path": "blog/posts/!!!.md"
+      }
+    },
+    {
+      "name": "previewNotePath #47 (edge corpus)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "!!!",
+          "parent": "",
+          "template": "empty",
+          "pathStyle": "flat",
+          "date": {
+            "$date": "2026-08-18T12:00:00.000Z"
+          },
+          "namePlaceholder": "name",
+          "rootSegment": "root"
+        }
+      ],
+      "expected": {
+        "valid": true,
+        "empty": false,
+        "path": "root/!!!.md"
+      }
+    },
+    {
+      "name": "previewNotePath #48 (edge corpus)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "!!!",
+          "parent": "blog/posts",
+          "template": "empty",
+          "pathStyle": "flat",
+          "date": {
+            "$date": "2026-08-18T12:00:00.000Z"
+          },
+          "namePlaceholder": "name",
+          "rootSegment": "root"
+        }
+      ],
+      "expected": {
+        "valid": true,
+        "empty": false,
+        "path": "blog/posts/!!!.md"
+      }
+    },
+    {
+      "name": "previewNotePath #49 (edge corpus)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "!!!",
+          "parent": "",
+          "template": "hugo",
+          "pathStyle": "dated",
+          "date": {
+            "$date": "2026-08-18T12:00:00.000Z"
+          },
+          "namePlaceholder": "name",
+          "rootSegment": "root"
+        }
+      ],
+      "expected": {
+        "valid": false,
+        "empty": false,
+        "path": "root/2026/08/18/!!!/index.md"
+      }
+    },
+    {
+      "name": "previewNotePath #50 (edge corpus)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "!!!",
+          "parent": "blog/posts",
+          "template": "hugo",
+          "pathStyle": "dated",
+          "date": {
+            "$date": "2026-08-18T12:00:00.000Z"
+          },
+          "namePlaceholder": "name",
+          "rootSegment": "root"
+        }
+      ],
+      "expected": {
+        "valid": false,
+        "empty": false,
+        "path": "blog/posts/2026/08/18/!!!/index.md"
+      }
+    },
+    {
+      "name": "previewNotePath #51 (edge corpus)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "!!!",
+          "parent": "",
+          "template": "hugo",
+          "pathStyle": "flat",
+          "date": {
+            "$date": "2026-08-18T12:00:00.000Z"
+          },
+          "namePlaceholder": "name",
+          "rootSegment": "root"
+        }
+      ],
+      "expected": {
+        "valid": false,
+        "empty": false,
+        "path": "root/!!!.md"
+      }
+    },
+    {
+      "name": "previewNotePath #52 (edge corpus)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "!!!",
+          "parent": "blog/posts",
+          "template": "hugo",
+          "pathStyle": "flat",
+          "date": {
+            "$date": "2026-08-18T12:00:00.000Z"
+          },
+          "namePlaceholder": "name",
+          "rootSegment": "root"
+        }
+      ],
+      "expected": {
+        "valid": false,
+        "empty": false,
+        "path": "blog/posts/!!!.md"
+      }
+    },
+    {
+      "name": "previewNotePath #53 (edge corpus)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "a/b",
+          "parent": "",
+          "template": "empty",
+          "pathStyle": "dated",
+          "date": {
+            "$date": "2026-08-18T12:00:00.000Z"
+          },
+          "namePlaceholder": "name",
+          "rootSegment": "root"
+        }
+      ],
+      "expected": {
+        "valid": false,
+        "empty": false,
+        "path": "root/a/b.md"
+      }
+    },
+    {
+      "name": "previewNotePath #54 (edge corpus)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "a/b",
+          "parent": "blog/posts",
+          "template": "empty",
+          "pathStyle": "dated",
+          "date": {
+            "$date": "2026-08-18T12:00:00.000Z"
+          },
+          "namePlaceholder": "name",
+          "rootSegment": "root"
+        }
+      ],
+      "expected": {
+        "valid": false,
+        "empty": false,
+        "path": "blog/posts/a/b.md"
+      }
+    },
+    {
+      "name": "previewNotePath #55 (edge corpus)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "a/b",
+          "parent": "",
+          "template": "empty",
+          "pathStyle": "flat",
+          "date": {
+            "$date": "2026-08-18T12:00:00.000Z"
+          },
+          "namePlaceholder": "name",
+          "rootSegment": "root"
+        }
+      ],
+      "expected": {
+        "valid": false,
+        "empty": false,
+        "path": "root/a/b.md"
+      }
+    },
+    {
+      "name": "previewNotePath #56 (edge corpus)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "a/b",
+          "parent": "blog/posts",
+          "template": "empty",
+          "pathStyle": "flat",
+          "date": {
+            "$date": "2026-08-18T12:00:00.000Z"
+          },
+          "namePlaceholder": "name",
+          "rootSegment": "root"
+        }
+      ],
+      "expected": {
+        "valid": false,
+        "empty": false,
+        "path": "blog/posts/a/b.md"
+      }
+    },
+    {
+      "name": "previewNotePath #57 (edge corpus)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "a/b",
+          "parent": "",
+          "template": "hugo",
+          "pathStyle": "dated",
+          "date": {
+            "$date": "2026-08-18T12:00:00.000Z"
+          },
+          "namePlaceholder": "name",
+          "rootSegment": "root"
+        }
+      ],
+      "expected": {
+        "valid": false,
+        "empty": false,
+        "path": "root/2026/08/18/a-b/index.md"
+      }
+    },
+    {
+      "name": "previewNotePath #58 (edge corpus)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "a/b",
+          "parent": "blog/posts",
+          "template": "hugo",
+          "pathStyle": "dated",
+          "date": {
+            "$date": "2026-08-18T12:00:00.000Z"
+          },
+          "namePlaceholder": "name",
+          "rootSegment": "root"
+        }
+      ],
+      "expected": {
+        "valid": false,
+        "empty": false,
+        "path": "blog/posts/2026/08/18/a-b/index.md"
+      }
+    },
+    {
+      "name": "previewNotePath #59 (edge corpus)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "a/b",
+          "parent": "",
+          "template": "hugo",
+          "pathStyle": "flat",
+          "date": {
+            "$date": "2026-08-18T12:00:00.000Z"
+          },
+          "namePlaceholder": "name",
+          "rootSegment": "root"
+        }
+      ],
+      "expected": {
+        "valid": false,
+        "empty": false,
+        "path": "root/a-b.md"
+      }
+    },
+    {
+      "name": "previewNotePath #60 (edge corpus)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "a/b",
+          "parent": "blog/posts",
+          "template": "hugo",
+          "pathStyle": "flat",
+          "date": {
+            "$date": "2026-08-18T12:00:00.000Z"
+          },
+          "namePlaceholder": "name",
+          "rootSegment": "root"
+        }
+      ],
+      "expected": {
+        "valid": false,
+        "empty": false,
+        "path": "blog/posts/a-b.md"
+      }
+    },
+    {
+      "name": "previewNotePath #61 (edge corpus)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "Olá Mundo",
+          "parent": "",
+          "template": "empty",
+          "pathStyle": "dated",
+          "date": {
+            "$date": "2026-08-18T12:00:00.000Z"
+          },
+          "namePlaceholder": "name",
+          "rootSegment": "root"
+        }
+      ],
+      "expected": {
+        "valid": true,
+        "empty": false,
+        "path": "root/Olá Mundo.md"
+      }
+    },
+    {
+      "name": "previewNotePath #62 (edge corpus)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "Olá Mundo",
+          "parent": "blog/posts",
+          "template": "empty",
+          "pathStyle": "dated",
+          "date": {
+            "$date": "2026-08-18T12:00:00.000Z"
+          },
+          "namePlaceholder": "name",
+          "rootSegment": "root"
+        }
+      ],
+      "expected": {
+        "valid": true,
+        "empty": false,
+        "path": "blog/posts/Olá Mundo.md"
+      }
+    },
+    {
+      "name": "previewNotePath #63 (edge corpus)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "Olá Mundo",
+          "parent": "",
+          "template": "empty",
+          "pathStyle": "flat",
+          "date": {
+            "$date": "2026-08-18T12:00:00.000Z"
+          },
+          "namePlaceholder": "name",
+          "rootSegment": "root"
+        }
+      ],
+      "expected": {
+        "valid": true,
+        "empty": false,
+        "path": "root/Olá Mundo.md"
+      }
+    },
+    {
+      "name": "previewNotePath #64 (edge corpus)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "Olá Mundo",
+          "parent": "blog/posts",
+          "template": "empty",
+          "pathStyle": "flat",
+          "date": {
+            "$date": "2026-08-18T12:00:00.000Z"
+          },
+          "namePlaceholder": "name",
+          "rootSegment": "root"
+        }
+      ],
+      "expected": {
+        "valid": true,
+        "empty": false,
+        "path": "blog/posts/Olá Mundo.md"
+      }
+    },
+    {
+      "name": "previewNotePath #65 (edge corpus)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "Olá Mundo",
+          "parent": "",
+          "template": "hugo",
+          "pathStyle": "dated",
+          "date": {
+            "$date": "2026-08-18T12:00:00.000Z"
+          },
+          "namePlaceholder": "name",
+          "rootSegment": "root"
+        }
+      ],
+      "expected": {
+        "valid": true,
+        "empty": false,
+        "path": "root/2026/08/18/ola-mundo/index.md"
+      }
+    },
+    {
+      "name": "previewNotePath #66 (edge corpus)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "Olá Mundo",
+          "parent": "blog/posts",
+          "template": "hugo",
+          "pathStyle": "dated",
+          "date": {
+            "$date": "2026-08-18T12:00:00.000Z"
+          },
+          "namePlaceholder": "name",
+          "rootSegment": "root"
+        }
+      ],
+      "expected": {
+        "valid": true,
+        "empty": false,
+        "path": "blog/posts/2026/08/18/ola-mundo/index.md"
+      }
+    },
+    {
+      "name": "previewNotePath #67 (edge corpus)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "Olá Mundo",
+          "parent": "",
+          "template": "hugo",
+          "pathStyle": "flat",
+          "date": {
+            "$date": "2026-08-18T12:00:00.000Z"
+          },
+          "namePlaceholder": "name",
+          "rootSegment": "root"
+        }
+      ],
+      "expected": {
+        "valid": true,
+        "empty": false,
+        "path": "root/ola-mundo.md"
+      }
+    },
+    {
+      "name": "previewNotePath #68 (edge corpus)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "Olá Mundo",
+          "parent": "blog/posts",
+          "template": "hugo",
+          "pathStyle": "flat",
+          "date": {
+            "$date": "2026-08-18T12:00:00.000Z"
+          },
+          "namePlaceholder": "name",
+          "rootSegment": "root"
+        }
+      ],
+      "expected": {
+        "valid": true,
+        "empty": false,
+        "path": "blog/posts/ola-mundo.md"
+      }
+    },
+    {
+      "name": "previewNotePath #69 (edge corpus)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "  padded  ",
+          "parent": "",
+          "template": "empty",
+          "pathStyle": "dated",
+          "date": {
+            "$date": "2026-08-18T12:00:00.000Z"
+          },
+          "namePlaceholder": "name",
+          "rootSegment": "root"
+        }
+      ],
+      "expected": {
+        "valid": true,
+        "empty": false,
+        "path": "root/padded.md"
+      }
+    },
+    {
+      "name": "previewNotePath #70 (edge corpus)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "  padded  ",
+          "parent": "blog/posts",
+          "template": "empty",
+          "pathStyle": "dated",
+          "date": {
+            "$date": "2026-08-18T12:00:00.000Z"
+          },
+          "namePlaceholder": "name",
+          "rootSegment": "root"
+        }
+      ],
+      "expected": {
+        "valid": true,
+        "empty": false,
+        "path": "blog/posts/padded.md"
+      }
+    },
+    {
+      "name": "previewNotePath #71 (edge corpus)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "  padded  ",
+          "parent": "",
+          "template": "empty",
+          "pathStyle": "flat",
+          "date": {
+            "$date": "2026-08-18T12:00:00.000Z"
+          },
+          "namePlaceholder": "name",
+          "rootSegment": "root"
+        }
+      ],
+      "expected": {
+        "valid": true,
+        "empty": false,
+        "path": "root/padded.md"
+      }
+    },
+    {
+      "name": "previewNotePath #72 (edge corpus)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "  padded  ",
+          "parent": "blog/posts",
+          "template": "empty",
+          "pathStyle": "flat",
+          "date": {
+            "$date": "2026-08-18T12:00:00.000Z"
+          },
+          "namePlaceholder": "name",
+          "rootSegment": "root"
+        }
+      ],
+      "expected": {
+        "valid": true,
+        "empty": false,
+        "path": "blog/posts/padded.md"
+      }
+    },
+    {
+      "name": "previewNotePath #73 (edge corpus)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "  padded  ",
+          "parent": "",
+          "template": "hugo",
+          "pathStyle": "dated",
+          "date": {
+            "$date": "2026-08-18T12:00:00.000Z"
+          },
+          "namePlaceholder": "name",
+          "rootSegment": "root"
+        }
+      ],
+      "expected": {
+        "valid": true,
+        "empty": false,
+        "path": "root/2026/08/18/padded/index.md"
+      }
+    },
+    {
+      "name": "previewNotePath #74 (edge corpus)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "  padded  ",
+          "parent": "blog/posts",
+          "template": "hugo",
+          "pathStyle": "dated",
+          "date": {
+            "$date": "2026-08-18T12:00:00.000Z"
+          },
+          "namePlaceholder": "name",
+          "rootSegment": "root"
+        }
+      ],
+      "expected": {
+        "valid": true,
+        "empty": false,
+        "path": "blog/posts/2026/08/18/padded/index.md"
+      }
+    },
+    {
+      "name": "previewNotePath #75 (edge corpus)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "  padded  ",
+          "parent": "",
+          "template": "hugo",
+          "pathStyle": "flat",
+          "date": {
+            "$date": "2026-08-18T12:00:00.000Z"
+          },
+          "namePlaceholder": "name",
+          "rootSegment": "root"
+        }
+      ],
+      "expected": {
+        "valid": true,
+        "empty": false,
+        "path": "root/padded.md"
+      }
+    },
+    {
+      "name": "previewNotePath #76 (edge corpus)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "  padded  ",
+          "parent": "blog/posts",
+          "template": "hugo",
+          "pathStyle": "flat",
+          "date": {
+            "$date": "2026-08-18T12:00:00.000Z"
+          },
+          "namePlaceholder": "name",
+          "rootSegment": "root"
+        }
+      ],
+      "expected": {
+        "valid": true,
+        "empty": false,
+        "path": "blog/posts/padded.md"
+      }
+    },
+    {
+      "name": "previewNotePath #77 (edge corpus)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "x",
+          "date": {
+            "$date": "2026-08-18T12:00:00.000Z"
+          }
+        }
+      ],
+      "expected": {
+        "valid": true,
+        "empty": false,
+        "path": "root/x.md"
+      }
+    },
+    {
+      "name": "previewNotePath #78 (edge corpus)",
+      "fn": "previewNotePath",
+      "input": [
+        {
+          "name": "",
+          "template": "hugo",
+          "date": {
+            "$date": "2025-01-05T23:59:59.000Z"
+          },
+          "namePlaceholder": "nome",
+          "rootSegment": "raiz"
+        }
+      ],
+      "expected": {
+        "valid": false,
+        "empty": true,
+        "path": "raiz/2025/01/05/nome/index.md"
+      }
+    }
+  ]
+}

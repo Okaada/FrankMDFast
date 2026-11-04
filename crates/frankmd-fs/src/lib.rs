@@ -1,0 +1,36 @@
+//! # frankmd-fs
+//!
+//! Every filesystem **mutation** in FrankMD goes through this crate (HP-004,
+//! HP-015). Other crates are blocked from `std::fs::write` & co. by
+//! `clippy.toml`.
+//!
+//! Guarantees:
+//! - **Atomic write**: same-dir temp `.<basename>.<12hex>.tmp` (**[COMPAT]**
+//!   name), write, fsync, preserve mode, `rename(2)`.
+//! - **No-clobber create**: `O_EXCL` temp + `link(2)` (fallback
+//!   `renameat2(RENAME_NOREPLACE)`), mapping `EEXIST` → [`FsError::AlreadyExists`].
+//!   Never check-then-act (HP-005).
+//! - **Save never creates** ([`Vault::update_existing`]; HP-006).
+//! - **Compat locks**: `flock(2)` on `.frankmd-config.lock` /
+//!   `.frankmd-filesystem.lock` in the notes root so a Rails FrankMD sharing the
+//!   folder coordinates with us.
+//! - **Tolerant reads**: vanished files and non-UTF-8 bytes are reported, not
+//!   fatal (HP-028).
+#![allow(clippy::disallowed_methods)] // this crate is the sanctioned writer
+#![allow(unused_variables, dead_code)] // skeleton
+
+pub mod atomic;
+pub mod error;
+#[cfg(feature = "fault-injection")]
+pub mod fault;
+pub mod lock;
+pub mod model;
+pub mod path_safety;
+pub mod recent;
+pub mod service;
+pub mod vault;
+
+pub use error::FsError;
+pub use recent::{RecentFilesService, RecentStore};
+pub use service::NotesService;
+pub use vault::{ContainedPath, NoteFile, Vault};

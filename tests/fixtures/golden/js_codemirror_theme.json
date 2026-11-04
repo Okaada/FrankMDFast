@@ -1,0 +1,256 @@
+{
+  "source": "app/javascript/lib/codemirror_theme.js @ d47a89e92d89f807878d318182fa5dcea0329ec4",
+  "frankmd_sha": "d47a89e92d89f807878d318182fa5dcea0329ec4",
+  "generator": "tools/golden/js/ui_data.mjs",
+  "notes": "Vendored @codemirror/view EditorView.theme -> StyleModule rules (generated scope class names 'ͼxx' normalized to <SCOPE>); dark = the {dark:true} theme flag. createSyntaxHighlighting: HighlightStyle specs with @lezer/highlight tag names + generated CSS. Font options are interpolated verbatim (no escaping).",
+  "cases": [
+    {
+      "name": "createEditorTheme null",
+      "fn": "createEditorTheme",
+      "input": [
+        {
+          "$undefined": true
+        }
+      ],
+      "expected": {
+        "css": ".<SCOPE> {height: 100%; font-size: 14px; background-color: var(--theme-bg-primary); color: var(--theme-text-primary);}\n.<SCOPE>.cm-editor.cm-focused {outline: none;}\n.<SCOPE> .cm-scroller {font-family: 'Cascadia Code', monospace; line-height: 1.6; overflow: auto;}\n.<SCOPE> .cm-content {caret-color: var(--theme-text-primary); margin-inline: auto; padding: 1rem 2rem;}\n.<SCOPE> .cm-activeLine {background-color: transparent;}\n.<SCOPE> .cm-line {padding: 0;}\n.<SCOPE> .cm-cursor, .<SCOPE> .cm-dropCursor {border-left-color: var(--theme-text-primary); border-left-width: 2px;}\n.<SCOPE>.cm-focused .cm-selectionBackground, .<SCOPE> .cm-selectionBackground, .<SCOPE> .cm-content ::selection {background-color: var(--theme-selection);}\n.<SCOPE> .cm-gutters {background-color: var(--theme-bg-secondary); color: var(--theme-text-faint); border: none; border-right: 1px solid var(--theme-border);}\n.<SCOPE> .cm-gutter {min-width: 3ch;}\n.<SCOPE> .cm-lineNumbers .cm-gutterElement {padding: 0 0.5rem 0 0.5rem; min-width: 3ch; text-align: right;}\n.<SCOPE> .cm-activeLineGutter {background-color: transparent; color: var(--theme-text-muted);}\n.<SCOPE> .cm-foldGutter {width: 1rem;}\n.<SCOPE> .cm-placeholder {color: var(--theme-text-faint); font-style: italic;}\n.<SCOPE> .cm-searchMatch {background-color: var(--theme-selection); outline: 1px solid var(--theme-accent);}\n.<SCOPE> .cm-searchMatch.cm-searchMatch-selected {background-color: var(--theme-accent);}\n.<SCOPE>.cm-focused .cm-matchingBracket {background-color: var(--theme-selection); outline: 1px solid var(--theme-accent);}\n.<SCOPE> .cm-panels {background-color: var(--theme-bg-secondary); color: var(--theme-text-primary);}\n.<SCOPE> .cm-panel {padding: 0.5rem;}\n.<SCOPE> .cm-panel input {background-color: var(--theme-bg-primary); color: var(--theme-text-primary); border: 1px solid var(--theme-border); border-radius: 0.25rem; padding: 0.25rem 0.5rem;}\n.<SCOPE> .cm-panel button {background-color: var(--theme-bg-hover); color: var(--theme-text-primary); border: 1px solid var(--theme-border); border-radius: 0.25rem; padding: 0.25rem 0.5rem; cursor: pointer;}\n.<SCOPE> .cm-panel button:hover {background-color: var(--theme-accent); color: var(--theme-accent-text);}\n.<SCOPE> .cm-tooltip {background-color: var(--theme-bg-secondary); border: 1px solid var(--theme-border); border-radius: 0.25rem;}\n.<SCOPE> .cm-tooltip-autocomplete {background-color: var(--theme-bg-secondary);}\n.<SCOPE> .cm-tooltip.cm-tooltip-autocomplete > ul {height: auto; max-height: 16em; overflow-y: auto;}\n.<SCOPE> .cm-tooltip-autocomplete .frankmd-completion-icon {width: 1em; height: 1em; display: inline-block; margin-right: 0.5em; vertical-align: middle; opacity: 0.75;}",
+        "dark": true
+      }
+    },
+    {
+      "name": "createEditorTheme {}",
+      "fn": "createEditorTheme",
+      "input": [
+        {}
+      ],
+      "expected": {
+        "css": ".<SCOPE> {height: 100%; font-size: 14px; background-color: var(--theme-bg-primary); color: var(--theme-text-primary);}\n.<SCOPE>.cm-editor.cm-focused {outline: none;}\n.<SCOPE> .cm-scroller {font-family: 'Cascadia Code', monospace; line-height: 1.6; overflow: auto;}\n.<SCOPE> .cm-content {caret-color: var(--theme-text-primary); margin-inline: auto; padding: 1rem 2rem;}\n.<SCOPE> .cm-activeLine {background-color: transparent;}\n.<SCOPE> .cm-line {padding: 0;}\n.<SCOPE> .cm-cursor, .<SCOPE> .cm-dropCursor {border-left-color: var(--theme-text-primary); border-left-width: 2px;}\n.<SCOPE>.cm-focused .cm-selectionBackground, .<SCOPE> .cm-selectionBackground, .<SCOPE> .cm-content ::selection {background-color: var(--theme-selection);}\n.<SCOPE> .cm-gutters {background-color: var(--theme-bg-secondary); color: var(--theme-text-faint); border: none; border-right: 1px solid var(--theme-border);}\n.<SCOPE> .cm-gutter {min-width: 3ch;}\n.<SCOPE> .cm-lineNumbers .cm-gutterElement {padding: 0 0.5rem 0 0.5rem; min-width: 3ch; text-align: right;}\n.<SCOPE> .cm-activeLineGutter {background-color: transparent; color: var(--theme-text-muted);}\n.<SCOPE> .cm-foldGutter {width: 1rem;}\n.<SCOPE> .cm-placeholder {color: var(--theme-text-faint); font-style: italic;}\n.<SCOPE> .cm-searchMatch {background-color: var(--theme-selection); outline: 1px solid var(--theme-accent);}\n.<SCOPE> .cm-searchMatch.cm-searchMatch-selected {background-color: var(--theme-accent);}\n.<SCOPE>.cm-focused .cm-matchingBracket {background-color: var(--theme-selection); outline: 1px solid var(--theme-accent);}\n.<SCOPE> .cm-panels {background-color: var(--theme-bg-secondary); color: var(--theme-text-primary);}\n.<SCOPE> .cm-panel {padding: 0.5rem;}\n.<SCOPE> .cm-panel input {background-color: var(--theme-bg-primary); color: var(--theme-text-primary); border: 1px solid var(--theme-border); border-radius: 0.25rem; padding: 0.25rem 0.5rem;}\n.<SCOPE> .cm-panel button {background-color: var(--theme-bg-hover); color: var(--theme-text-primary); border: 1px solid var(--theme-border); border-radius: 0.25rem; padding: 0.25rem 0.5rem; cursor: pointer;}\n.<SCOPE> .cm-panel button:hover {background-color: var(--theme-accent); color: var(--theme-accent-text);}\n.<SCOPE> .cm-tooltip {background-color: var(--theme-bg-secondary); border: 1px solid var(--theme-border); border-radius: 0.25rem;}\n.<SCOPE> .cm-tooltip-autocomplete {background-color: var(--theme-bg-secondary);}\n.<SCOPE> .cm-tooltip.cm-tooltip-autocomplete > ul {height: auto; max-height: 16em; overflow-y: auto;}\n.<SCOPE> .cm-tooltip-autocomplete .frankmd-completion-icon {width: 1em; height: 1em; display: inline-block; margin-right: 0.5em; vertical-align: middle; opacity: 0.75;}",
+        "dark": true
+      }
+    },
+    {
+      "name": "createEditorTheme {\"fontFamily\":\"'Monaco', monospace\",\"fontSize\":\"16px\",\"lineHeight\":\"1.8\"}",
+      "fn": "createEditorTheme",
+      "input": [
+        {
+          "fontFamily": "'Monaco', monospace",
+          "fontSize": "16px",
+          "lineHeight": "1.8"
+        }
+      ],
+      "expected": {
+        "css": ".<SCOPE> {height: 100%; font-size: 16px; background-color: var(--theme-bg-primary); color: var(--theme-text-primary);}\n.<SCOPE>.cm-editor.cm-focused {outline: none;}\n.<SCOPE> .cm-scroller {font-family: 'Monaco', monospace; line-height: 1.8; overflow: auto;}\n.<SCOPE> .cm-content {caret-color: var(--theme-text-primary); margin-inline: auto; padding: 1rem 2rem;}\n.<SCOPE> .cm-activeLine {background-color: transparent;}\n.<SCOPE> .cm-line {padding: 0;}\n.<SCOPE> .cm-cursor, .<SCOPE> .cm-dropCursor {border-left-color: var(--theme-text-primary); border-left-width: 2px;}\n.<SCOPE>.cm-focused .cm-selectionBackground, .<SCOPE> .cm-selectionBackground, .<SCOPE> .cm-content ::selection {background-color: var(--theme-selection);}\n.<SCOPE> .cm-gutters {background-color: var(--theme-bg-secondary); color: var(--theme-text-faint); border: none; border-right: 1px solid var(--theme-border);}\n.<SCOPE> .cm-gutter {min-width: 3ch;}\n.<SCOPE> .cm-lineNumbers .cm-gutterElement {padding: 0 0.5rem 0 0.5rem; min-width: 3ch; text-align: right;}\n.<SCOPE> .cm-activeLineGutter {background-color: transparent; color: var(--theme-text-muted);}\n.<SCOPE> .cm-foldGutter {width: 1rem;}\n.<SCOPE> .cm-placeholder {color: var(--theme-text-faint); font-style: italic;}\n.<SCOPE> .cm-searchMatch {background-color: var(--theme-selection); outline: 1px solid var(--theme-accent);}\n.<SCOPE> .cm-searchMatch.cm-searchMatch-selected {background-color: var(--theme-accent);}\n.<SCOPE>.cm-focused .cm-matchingBracket {background-color: var(--theme-selection); outline: 1px solid var(--theme-accent);}\n.<SCOPE> .cm-panels {background-color: var(--theme-bg-secondary); color: var(--theme-text-primary);}\n.<SCOPE> .cm-panel {padding: 0.5rem;}\n.<SCOPE> .cm-panel input {background-color: var(--theme-bg-primary); color: var(--theme-text-primary); border: 1px solid var(--theme-border); border-radius: 0.25rem; padding: 0.25rem 0.5rem;}\n.<SCOPE> .cm-panel button {background-color: var(--theme-bg-hover); color: var(--theme-text-primary); border: 1px solid var(--theme-border); border-radius: 0.25rem; padding: 0.25rem 0.5rem; cursor: pointer;}\n.<SCOPE> .cm-panel button:hover {background-color: var(--theme-accent); color: var(--theme-accent-text);}\n.<SCOPE> .cm-tooltip {background-color: var(--theme-bg-secondary); border: 1px solid var(--theme-border); border-radius: 0.25rem;}\n.<SCOPE> .cm-tooltip-autocomplete {background-color: var(--theme-bg-secondary);}\n.<SCOPE> .cm-tooltip.cm-tooltip-autocomplete > ul {height: auto; max-height: 16em; overflow-y: auto;}\n.<SCOPE> .cm-tooltip-autocomplete .frankmd-completion-icon {width: 1em; height: 1em; display: inline-block; margin-right: 0.5em; vertical-align: middle; opacity: 0.75;}",
+        "dark": true
+      }
+    },
+    {
+      "name": "createEditorTheme {\"fontSize\":\"20px\"}",
+      "fn": "createEditorTheme",
+      "input": [
+        {
+          "fontSize": "20px"
+        }
+      ],
+      "expected": {
+        "css": ".<SCOPE> {height: 100%; font-size: 20px; background-color: var(--theme-bg-primary); color: var(--theme-text-primary);}\n.<SCOPE>.cm-editor.cm-focused {outline: none;}\n.<SCOPE> .cm-scroller {font-family: 'Cascadia Code', monospace; line-height: 1.6; overflow: auto;}\n.<SCOPE> .cm-content {caret-color: var(--theme-text-primary); margin-inline: auto; padding: 1rem 2rem;}\n.<SCOPE> .cm-activeLine {background-color: transparent;}\n.<SCOPE> .cm-line {padding: 0;}\n.<SCOPE> .cm-cursor, .<SCOPE> .cm-dropCursor {border-left-color: var(--theme-text-primary); border-left-width: 2px;}\n.<SCOPE>.cm-focused .cm-selectionBackground, .<SCOPE> .cm-selectionBackground, .<SCOPE> .cm-content ::selection {background-color: var(--theme-selection);}\n.<SCOPE> .cm-gutters {background-color: var(--theme-bg-secondary); color: var(--theme-text-faint); border: none; border-right: 1px solid var(--theme-border);}\n.<SCOPE> .cm-gutter {min-width: 3ch;}\n.<SCOPE> .cm-lineNumbers .cm-gutterElement {padding: 0 0.5rem 0 0.5rem; min-width: 3ch; text-align: right;}\n.<SCOPE> .cm-activeLineGutter {background-color: transparent; color: var(--theme-text-muted);}\n.<SCOPE> .cm-foldGutter {width: 1rem;}\n.<SCOPE> .cm-placeholder {color: var(--theme-text-faint); font-style: italic;}\n.<SCOPE> .cm-searchMatch {background-color: var(--theme-selection); outline: 1px solid var(--theme-accent);}\n.<SCOPE> .cm-searchMatch.cm-searchMatch-selected {background-color: var(--theme-accent);}\n.<SCOPE>.cm-focused .cm-matchingBracket {background-color: var(--theme-selection); outline: 1px solid var(--theme-accent);}\n.<SCOPE> .cm-panels {background-color: var(--theme-bg-secondary); color: var(--theme-text-primary);}\n.<SCOPE> .cm-panel {padding: 0.5rem;}\n.<SCOPE> .cm-panel input {background-color: var(--theme-bg-primary); color: var(--theme-text-primary); border: 1px solid var(--theme-border); border-radius: 0.25rem; padding: 0.25rem 0.5rem;}\n.<SCOPE> .cm-panel button {background-color: var(--theme-bg-hover); color: var(--theme-text-primary); border: 1px solid var(--theme-border); border-radius: 0.25rem; padding: 0.25rem 0.5rem; cursor: pointer;}\n.<SCOPE> .cm-panel button:hover {background-color: var(--theme-accent); color: var(--theme-accent-text);}\n.<SCOPE> .cm-tooltip {background-color: var(--theme-bg-secondary); border: 1px solid var(--theme-border); border-radius: 0.25rem;}\n.<SCOPE> .cm-tooltip-autocomplete {background-color: var(--theme-bg-secondary);}\n.<SCOPE> .cm-tooltip.cm-tooltip-autocomplete > ul {height: auto; max-height: 16em; overflow-y: auto;}\n.<SCOPE> .cm-tooltip-autocomplete .frankmd-completion-icon {width: 1em; height: 1em; display: inline-block; margin-right: 0.5em; vertical-align: middle; opacity: 0.75;}",
+        "dark": true
+      }
+    },
+    {
+      "name": "createEditorTheme {\"fontFamily\":\"\\\"Fira Code\\\"; } body { x: y\"}",
+      "fn": "createEditorTheme",
+      "input": [
+        {
+          "fontFamily": "\"Fira Code\"; } body { x: y"
+        }
+      ],
+      "expected": {
+        "css": ".<SCOPE> {height: 100%; font-size: 14px; background-color: var(--theme-bg-primary); color: var(--theme-text-primary);}\n.<SCOPE>.cm-editor.cm-focused {outline: none;}\n.<SCOPE> .cm-scroller {font-family: \"Fira Code\"; } body { x: y; line-height: 1.6; overflow: auto;}\n.<SCOPE> .cm-content {caret-color: var(--theme-text-primary); margin-inline: auto; padding: 1rem 2rem;}\n.<SCOPE> .cm-activeLine {background-color: transparent;}\n.<SCOPE> .cm-line {padding: 0;}\n.<SCOPE> .cm-cursor, .<SCOPE> .cm-dropCursor {border-left-color: var(--theme-text-primary); border-left-width: 2px;}\n.<SCOPE>.cm-focused .cm-selectionBackground, .<SCOPE> .cm-selectionBackground, .<SCOPE> .cm-content ::selection {background-color: var(--theme-selection);}\n.<SCOPE> .cm-gutters {background-color: var(--theme-bg-secondary); color: var(--theme-text-faint); border: none; border-right: 1px solid var(--theme-border);}\n.<SCOPE> .cm-gutter {min-width: 3ch;}\n.<SCOPE> .cm-lineNumbers .cm-gutterElement {padding: 0 0.5rem 0 0.5rem; min-width: 3ch; text-align: right;}\n.<SCOPE> .cm-activeLineGutter {background-color: transparent; color: var(--theme-text-muted);}\n.<SCOPE> .cm-foldGutter {width: 1rem;}\n.<SCOPE> .cm-placeholder {color: var(--theme-text-faint); font-style: italic;}\n.<SCOPE> .cm-searchMatch {background-color: var(--theme-selection); outline: 1px solid var(--theme-accent);}\n.<SCOPE> .cm-searchMatch.cm-searchMatch-selected {background-color: var(--theme-accent);}\n.<SCOPE>.cm-focused .cm-matchingBracket {background-color: var(--theme-selection); outline: 1px solid var(--theme-accent);}\n.<SCOPE> .cm-panels {background-color: var(--theme-bg-secondary); color: var(--theme-text-primary);}\n.<SCOPE> .cm-panel {padding: 0.5rem;}\n.<SCOPE> .cm-panel input {background-color: var(--theme-bg-primary); color: var(--theme-text-primary); border: 1px solid var(--theme-border); border-radius: 0.25rem; padding: 0.25rem 0.5rem;}\n.<SCOPE> .cm-panel button {background-color: var(--theme-bg-hover); color: var(--theme-text-primary); border: 1px solid var(--theme-border); border-radius: 0.25rem; padding: 0.25rem 0.5rem; cursor: pointer;}\n.<SCOPE> .cm-panel button:hover {background-color: var(--theme-accent); color: var(--theme-accent-text);}\n.<SCOPE> .cm-tooltip {background-color: var(--theme-bg-secondary); border: 1px solid var(--theme-border); border-radius: 0.25rem;}\n.<SCOPE> .cm-tooltip-autocomplete {background-color: var(--theme-bg-secondary);}\n.<SCOPE> .cm-tooltip.cm-tooltip-autocomplete > ul {height: auto; max-height: 16em; overflow-y: auto;}\n.<SCOPE> .cm-tooltip-autocomplete .frankmd-completion-icon {width: 1em; height: 1em; display: inline-block; margin-right: 0.5em; vertical-align: middle; opacity: 0.75;}",
+        "dark": true
+      }
+    },
+    {
+      "name": "createSyntaxHighlighting",
+      "fn": "createSyntaxHighlighting",
+      "input": [],
+      "expected": {
+        "specs": [
+          {
+            "tag": [
+              "heading1"
+            ],
+            "color": "var(--theme-heading-1)"
+          },
+          {
+            "tag": [
+              "heading2"
+            ],
+            "color": "var(--theme-heading-2)"
+          },
+          {
+            "tag": [
+              "heading3"
+            ],
+            "color": "var(--theme-heading-3)"
+          },
+          {
+            "tag": [
+              "heading4"
+            ],
+            "color": "var(--theme-accent)"
+          },
+          {
+            "tag": [
+              "heading5"
+            ],
+            "color": "var(--theme-accent)"
+          },
+          {
+            "tag": [
+              "heading6"
+            ],
+            "color": "var(--theme-accent)"
+          },
+          {
+            "tag": [
+              "strong"
+            ],
+            "fontWeight": "bold",
+            "color": "var(--theme-text-primary)"
+          },
+          {
+            "tag": [
+              "emphasis"
+            ],
+            "fontStyle": "italic",
+            "color": "var(--theme-text-muted)"
+          },
+          {
+            "tag": [
+              "strikethrough"
+            ],
+            "textDecoration": "line-through",
+            "color": "var(--theme-text-muted)"
+          },
+          {
+            "tag": [
+              "monospace"
+            ],
+            "color": "var(--theme-accent)",
+            "backgroundColor": "var(--theme-code-bg)",
+            "borderRadius": "0.25rem",
+            "padding": "0 0.25rem"
+          },
+          {
+            "tag": [
+              "link"
+            ],
+            "color": "var(--theme-accent)",
+            "textDecoration": "underline"
+          },
+          {
+            "tag": [
+              "url"
+            ],
+            "color": "var(--theme-accent)"
+          },
+          {
+            "tag": [
+              "quote"
+            ],
+            "color": "var(--theme-text-muted)"
+          },
+          {
+            "tag": [
+              "list"
+            ],
+            "color": "var(--theme-text-muted)"
+          },
+          {
+            "tag": [
+              "processingInstruction"
+            ],
+            "color": "var(--theme-text-muted)"
+          },
+          {
+            "tag": [
+              "meta"
+            ],
+            "color": "var(--theme-text-muted)"
+          },
+          {
+            "tag": [
+              "contentSeparator"
+            ],
+            "color": "var(--theme-border)"
+          },
+          {
+            "tag": [
+              "angleBracket"
+            ],
+            "color": "var(--theme-text-muted)"
+          },
+          {
+            "tag": [
+              "tagName"
+            ],
+            "color": "var(--theme-accent)"
+          },
+          {
+            "tag": [
+              "attributeName"
+            ],
+            "color": "var(--theme-heading-2)"
+          },
+          {
+            "tag": [
+              "attributeValue"
+            ],
+            "color": "var(--theme-heading-3)"
+          },
+          {
+            "tag": [
+              "comment"
+            ],
+            "color": "var(--theme-text-faint)",
+            "fontStyle": "italic"
+          },
+          {
+            "tag": [
+              "labelName"
+            ],
+            "color": "var(--theme-accent)"
+          },
+          {
+            "tag": [
+              "inserted"
+            ],
+            "color": "var(--theme-accent)"
+          },
+          {
+            "tag": [
+              "deleted"
+            ],
+            "color": "var(--theme-text-muted)",
+            "textDecoration": "line-through"
+          },
+          {
+            "tag": [
+              "escape"
+            ],
+            "color": "var(--theme-text-muted)"
+          }
+        ],
+        "css": ".<SCOPE> {color: var(--theme-heading-1);}\n.<SCOPE> {color: var(--theme-heading-2);}\n.<SCOPE> {color: var(--theme-heading-3);}\n.<SCOPE> {color: var(--theme-accent);}\n.<SCOPE> {color: var(--theme-accent);}\n.<SCOPE> {color: var(--theme-accent);}\n.<SCOPE> {font-weight: bold; color: var(--theme-text-primary);}\n.<SCOPE> {font-style: italic; color: var(--theme-text-muted);}\n.<SCOPE> {text-decoration: line-through; color: var(--theme-text-muted);}\n.<SCOPE> {color: var(--theme-accent); background-color: var(--theme-code-bg); border-radius: 0.25rem; padding: 0 0.25rem;}\n.<SCOPE> {color: var(--theme-accent); text-decoration: underline;}\n.<SCOPE> {color: var(--theme-accent);}\n.<SCOPE> {color: var(--theme-text-muted);}\n.<SCOPE> {color: var(--theme-text-muted);}\n.<SCOPE> {color: var(--theme-text-muted);}\n.<SCOPE> {color: var(--theme-text-muted);}\n.<SCOPE> {color: var(--theme-border);}\n.<SCOPE> {color: var(--theme-text-muted);}\n.<SCOPE> {color: var(--theme-accent);}\n.<SCOPE> {color: var(--theme-heading-2);}\n.<SCOPE> {color: var(--theme-heading-3);}\n.<SCOPE> {color: var(--theme-text-faint); font-style: italic;}\n.<SCOPE> {color: var(--theme-accent);}\n.<SCOPE> {color: var(--theme-accent);}\n.<SCOPE> {color: var(--theme-text-muted); text-decoration: line-through;}\n.<SCOPE> {color: var(--theme-text-muted);}"
+      }
+    },
+    {
+      "name": "createTheme shape",
+      "fn": "createTheme",
+      "input": [],
+      "expected": {
+        "length": 2
+      }
+    }
+  ]
+}

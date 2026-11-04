@@ -1,0 +1,2150 @@
+{
+  "source": "app/services/recent_files_service.rb (+ Config#modify persistence, NotesService side effects, RecentFilesController) @ d47a89e92d89f807878d318182fa5dcea0329ec4",
+  "frankmd_sha": "d47a89e92d89f807878d318182fa5dcea0329ec4",
+  "generator": "tools/golden/ruby/recent_files.rb",
+  "notes": "Storage: a single line `recent_files = <compact JSON array of {path, opened_at}>` in <NOTES_PATH>/.fed (written via Config surgical save: replaces an existing or commented key line in place, else appends at end; whole file rewritten atomically with trailing \\n). If .fed is missing it is first created from the template (shown as <FED_TEMPLATE>; text in fed_template). opened_at = Time.current.utc.iso8601(6). Time pinned with travel_to: each op runs at 2026-01-30T12:34:56.789012Z + op.at_offset seconds; entries_after is computed at now+3600s. Results: record/clear/remove/remap return Config#set result (true/false) or {error} (NotFoundError 'Note not found'). Lock file .frankmd-config.lock created in root.",
+  "fed_template": "# FrankMD Configuration\n# Uncomment and modify values as needed.\n# Environment variables are used as defaults if not specified here.\n\n# UI Settings\n\n# Theme: light, dark, gruvbox, tokyo-night, solarized-dark,\n#        solarized-light, nord, cappuccino, osaka, hackerman\n# theme = dark\n\n# Editor font: cascadia-code, jetbrains-mono, fira-code,\n#              source-code-pro, ubuntu-mono, roboto-mono, hack\n# editor_font = cascadia-code\n\n# editor_font_size = 14\n# preview_zoom = 100\n# sidebar_visible = true\n# typewriter_mode = false\n# cursor_recenter_on_click = false\n# show_stats = false\n\n# Vim mode: hjkl navigation, modal editing, and : ex-commands (default: false)\n# vim_mode = false\n\n# Editor indent: 0 = tab, 1-6 = spaces (default: 2)\n# editor_indent = 2\n\n# Editor width in characters (default: 72, minimum: 72)\n# Increase for wider text area, e.g., 100, 120, or 150\n# editor_width = 72\n\n# Local Images\n\n# images_path = /path/to/images\n\n# Media Uploads (drag-and-drop)\n\n# Destination for new media: local or s3 (requires AWS S3 configuration).\n# media_storage_provider = local\n\n# Comma-separated file extensions accepted by the image/video drop tabs.\n# image_upload_extensions = .jpg,.jpeg,.png,.gif,.webp,.bmp\n# video_upload_extensions = .mp4,.webm,.mkv,.mov,.avi,.m4v,.ogv\n\n# AWS S3 (for image uploads)\n\n# aws_access_key_id = your-access-key\n# aws_secret_access_key = your-secret-key\n# aws_s3_bucket = your-bucket-name\n# aws_region = us-east-1\n\n# S3-compatible services (MinIO, SeaweedFS, ...): set a custom endpoint\n# and force path-style URLs (bucket in the path).\n# aws_s3_endpoint = http://localhost:9000\n# aws_s3_force_path_style = true\n\n# YouTube API (for video search)\n\n# youtube_api_key = your-youtube-api-key\n\n# Google Custom Search (for image search)\n\n# google_api_key = your-google-api-key\n# google_cse_id = your-custom-search-engine-id\n\n# Hugo Blog Posts\n\n# Path style: dated = YYYY/MM/DD/slug/index.md (default)\n#             flat  = slug.md (in current folder)\n# hugo_path_style = dated\n\n# Custom frontmatter: create a .hugo_template.md file at the notes root\n# to override the generated frontmatter. Placeholders {{title}}, {{slug}}\n# and {{date}} are substituted. Leave unset to use the built-in template.\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+  "cases": [
+    {
+      "name": "bounded (10) deduplicated most-recent-first",
+      "fn": "RecentFilesService",
+      "input": {
+        "tree": {
+          "0.md": "# Test\n\nContent",
+          "1.md": "# Test\n\nContent",
+          "2.md": "# Test\n\nContent",
+          "3.md": "# Test\n\nContent",
+          "4.md": "# Test\n\nContent",
+          "5.md": "# Test\n\nContent",
+          "6.md": "# Test\n\nContent",
+          "7.md": "# Test\n\nContent",
+          "8.md": "# Test\n\nContent",
+          "9.md": "# Test\n\nContent",
+          "10.md": "# Test\n\nContent",
+          "11.md": "# Test\n\nContent"
+        },
+        "ops": [
+          {
+            "op": "record",
+            "path": "0.md",
+            "at_offset": 0
+          },
+          {
+            "op": "record",
+            "path": "1.md",
+            "at_offset": 1
+          },
+          {
+            "op": "record",
+            "path": "2.md",
+            "at_offset": 2
+          },
+          {
+            "op": "record",
+            "path": "3.md",
+            "at_offset": 3
+          },
+          {
+            "op": "record",
+            "path": "4.md",
+            "at_offset": 4
+          },
+          {
+            "op": "record",
+            "path": "5.md",
+            "at_offset": 5
+          },
+          {
+            "op": "record",
+            "path": "6.md",
+            "at_offset": 6
+          },
+          {
+            "op": "record",
+            "path": "7.md",
+            "at_offset": 7
+          },
+          {
+            "op": "record",
+            "path": "8.md",
+            "at_offset": 8
+          },
+          {
+            "op": "record",
+            "path": "9.md",
+            "at_offset": 9
+          },
+          {
+            "op": "record",
+            "path": "10.md",
+            "at_offset": 10
+          },
+          {
+            "op": "record",
+            "path": "11.md",
+            "at_offset": 11
+          },
+          {
+            "op": "record",
+            "path": "4.md",
+            "at_offset": 100
+          },
+          {
+            "op": "entries"
+          }
+        ],
+        "now": "2026-01-30T12:34:56.789012Z"
+      },
+      "expected": {
+        "results": [
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          [
+            {
+              "path": "4.md",
+              "opened_at": "2026-01-30T12:36:36.000000Z"
+            },
+            {
+              "path": "11.md",
+              "opened_at": "2026-01-30T12:35:07.000000Z"
+            },
+            {
+              "path": "10.md",
+              "opened_at": "2026-01-30T12:35:06.000000Z"
+            },
+            {
+              "path": "9.md",
+              "opened_at": "2026-01-30T12:35:05.000000Z"
+            },
+            {
+              "path": "8.md",
+              "opened_at": "2026-01-30T12:35:04.000000Z"
+            },
+            {
+              "path": "7.md",
+              "opened_at": "2026-01-30T12:35:03.000000Z"
+            },
+            {
+              "path": "6.md",
+              "opened_at": "2026-01-30T12:35:02.000000Z"
+            },
+            {
+              "path": "5.md",
+              "opened_at": "2026-01-30T12:35:01.000000Z"
+            },
+            {
+              "path": "3.md",
+              "opened_at": "2026-01-30T12:34:59.000000Z"
+            },
+            {
+              "path": "2.md",
+              "opened_at": "2026-01-30T12:34:58.000000Z"
+            }
+          ]
+        ],
+        "entries_after": [
+          {
+            "path": "4.md",
+            "opened_at": "2026-01-30T12:36:36.000000Z"
+          },
+          {
+            "path": "11.md",
+            "opened_at": "2026-01-30T12:35:07.000000Z"
+          },
+          {
+            "path": "10.md",
+            "opened_at": "2026-01-30T12:35:06.000000Z"
+          },
+          {
+            "path": "9.md",
+            "opened_at": "2026-01-30T12:35:05.000000Z"
+          },
+          {
+            "path": "8.md",
+            "opened_at": "2026-01-30T12:35:04.000000Z"
+          },
+          {
+            "path": "7.md",
+            "opened_at": "2026-01-30T12:35:03.000000Z"
+          },
+          {
+            "path": "6.md",
+            "opened_at": "2026-01-30T12:35:02.000000Z"
+          },
+          {
+            "path": "5.md",
+            "opened_at": "2026-01-30T12:35:01.000000Z"
+          },
+          {
+            "path": "3.md",
+            "opened_at": "2026-01-30T12:34:59.000000Z"
+          },
+          {
+            "path": "2.md",
+            "opened_at": "2026-01-30T12:34:58.000000Z"
+          }
+        ],
+        "fed_recent_files_lines": [
+          "recent_files = [{\"path\":\"4.md\",\"opened_at\":\"2026-01-30T12:36:36.000000Z\"},{\"path\":\"11.md\",\"opened_at\":\"2026-01-30T12:35:07.000000Z\"},{\"path\":\"10.md\",\"opened_at\":\"2026-01-30T12:35:06.000000Z\"},{\"path\":\"9.md\",\"opened_at\":\"2026-01-30T12:35:05.000000Z\"},{\"path\":\"8.md\",\"opened_at\":\"2026-01-30T12:35:04.000000Z\"},{\"path\":\"7.md\",\"opened_at\":\"2026-01-30T12:35:03.000000Z\"},{\"path\":\"6.md\",\"opened_at\":\"2026-01-30T12:35:02.000000Z\"},{\"path\":\"5.md\",\"opened_at\":\"2026-01-30T12:35:01.000000Z\"},{\"path\":\"3.md\",\"opened_at\":\"2026-01-30T12:34:59.000000Z\"},{\"path\":\"2.md\",\"opened_at\":\"2026-01-30T12:34:58.000000Z\"}]"
+        ],
+        "tree_after": {
+          ".fed": "<FED_TEMPLATE>recent_files = [{\"path\":\"4.md\",\"opened_at\":\"2026-01-30T12:36:36.000000Z\"},{\"path\":\"11.md\",\"opened_at\":\"2026-01-30T12:35:07.000000Z\"},{\"path\":\"10.md\",\"opened_at\":\"2026-01-30T12:35:06.000000Z\"},{\"path\":\"9.md\",\"opened_at\":\"2026-01-30T12:35:05.000000Z\"},{\"path\":\"8.md\",\"opened_at\":\"2026-01-30T12:35:04.000000Z\"},{\"path\":\"7.md\",\"opened_at\":\"2026-01-30T12:35:03.000000Z\"},{\"path\":\"6.md\",\"opened_at\":\"2026-01-30T12:35:02.000000Z\"},{\"path\":\"5.md\",\"opened_at\":\"2026-01-30T12:35:01.000000Z\"},{\"path\":\"3.md\",\"opened_at\":\"2026-01-30T12:34:59.000000Z\"},{\"path\":\"2.md\",\"opened_at\":\"2026-01-30T12:34:58.000000Z\"}]\n",
+          ".frankmd-config.lock": "",
+          "0.md": "# Test\n\nContent",
+          "1.md": "# Test\n\nContent",
+          "10.md": "# Test\n\nContent",
+          "11.md": "# Test\n\nContent",
+          "2.md": "# Test\n\nContent",
+          "3.md": "# Test\n\nContent",
+          "4.md": "# Test\n\nContent",
+          "5.md": "# Test\n\nContent",
+          "6.md": "# Test\n\nContent",
+          "7.md": "# Test\n\nContent",
+          "8.md": "# Test\n\nContent",
+          "9.md": "# Test\n\nContent"
+        }
+      }
+    },
+    {
+      "name": "record on fresh notes dir creates .fed from template",
+      "fn": "RecentFilesService",
+      "input": {
+        "tree": {
+          "a.md": "a"
+        },
+        "ops": [
+          {
+            "op": "record",
+            "path": "a.md",
+            "at_offset": 0
+          },
+          {
+            "op": "entries"
+          }
+        ],
+        "now": "2026-01-30T12:34:56.789012Z"
+      },
+      "expected": {
+        "results": [
+          true,
+          [
+            {
+              "path": "a.md",
+              "opened_at": "2026-01-30T12:34:56.000000Z"
+            }
+          ]
+        ],
+        "entries_after": [
+          {
+            "path": "a.md",
+            "opened_at": "2026-01-30T12:34:56.000000Z"
+          }
+        ],
+        "fed_recent_files_lines": [
+          "recent_files = [{\"path\":\"a.md\",\"opened_at\":\"2026-01-30T12:34:56.000000Z\"}]"
+        ],
+        "tree_after": {
+          ".fed": "<FED_TEMPLATE>recent_files = [{\"path\":\"a.md\",\"opened_at\":\"2026-01-30T12:34:56.000000Z\"}]\n",
+          ".frankmd-config.lock": "",
+          "a.md": "a"
+        }
+      }
+    },
+    {
+      "name": "record same path twice moves to front with new time",
+      "fn": "RecentFilesService",
+      "input": {
+        "tree": {
+          "a.md": "a",
+          "b.md": "b"
+        },
+        "ops": [
+          {
+            "op": "record",
+            "path": "a.md",
+            "at_offset": 0
+          },
+          {
+            "op": "record",
+            "path": "b.md",
+            "at_offset": 1
+          },
+          {
+            "op": "record",
+            "path": "a.md",
+            "at_offset": 2
+          }
+        ],
+        "now": "2026-01-30T12:34:56.789012Z"
+      },
+      "expected": {
+        "results": [
+          true,
+          true,
+          true
+        ],
+        "entries_after": [
+          {
+            "path": "a.md",
+            "opened_at": "2026-01-30T12:34:58.000000Z"
+          },
+          {
+            "path": "b.md",
+            "opened_at": "2026-01-30T12:34:57.000000Z"
+          }
+        ],
+        "fed_recent_files_lines": [
+          "recent_files = [{\"path\":\"a.md\",\"opened_at\":\"2026-01-30T12:34:58.000000Z\"},{\"path\":\"b.md\",\"opened_at\":\"2026-01-30T12:34:57.000000Z\"}]"
+        ],
+        "tree_after": {
+          ".fed": "<FED_TEMPLATE>recent_files = [{\"path\":\"a.md\",\"opened_at\":\"2026-01-30T12:34:58.000000Z\"},{\"path\":\"b.md\",\"opened_at\":\"2026-01-30T12:34:57.000000Z\"}]\n",
+          ".frankmd-config.lock": "",
+          "a.md": "a",
+          "b.md": "b"
+        }
+      }
+    },
+    {
+      "name": "external deletion filtered without removing unrelated",
+      "fn": "RecentFilesService",
+      "input": {
+        "tree": {
+          "gone.md": "g",
+          "keep.md": "k"
+        },
+        "ops": [
+          {
+            "op": "record",
+            "path": "gone.md",
+            "at_offset": 0
+          },
+          {
+            "op": "record",
+            "path": "keep.md",
+            "at_offset": 1
+          },
+          {
+            "op": "fs_delete",
+            "path": "gone.md"
+          },
+          {
+            "op": "entries"
+          },
+          {
+            "op": "record",
+            "path": "gone.md",
+            "at_offset": 2
+          }
+        ],
+        "now": "2026-01-30T12:34:56.789012Z"
+      },
+      "expected": {
+        "results": [
+          true,
+          true,
+          true,
+          [
+            {
+              "path": "keep.md",
+              "opened_at": "2026-01-30T12:34:57.000000Z"
+            }
+          ],
+          {
+            "error": "NotesService::NotFoundError",
+            "message": "Note not found"
+          }
+        ],
+        "entries_after": [
+          {
+            "path": "keep.md",
+            "opened_at": "2026-01-30T12:34:57.000000Z"
+          }
+        ],
+        "fed_recent_files_lines": [
+          "recent_files = [{\"path\":\"keep.md\",\"opened_at\":\"2026-01-30T12:34:57.000000Z\"},{\"path\":\"gone.md\",\"opened_at\":\"2026-01-30T12:34:56.000000Z\"}]"
+        ],
+        "tree_after": {
+          ".fed": "<FED_TEMPLATE>recent_files = [{\"path\":\"keep.md\",\"opened_at\":\"2026-01-30T12:34:57.000000Z\"},{\"path\":\"gone.md\",\"opened_at\":\"2026-01-30T12:34:56.000000Z\"}]\n",
+          ".frankmd-config.lock": "",
+          "keep.md": "k"
+        }
+      }
+    },
+    {
+      "name": "file and folder mutations update shared history",
+      "fn": "RecentFilesService",
+      "input": {
+        "tree": {
+          "docs/first.md": "f",
+          "docs-other/other.md": "o"
+        },
+        "ops": [
+          {
+            "op": "record",
+            "path": "docs/first.md",
+            "at_offset": 0
+          },
+          {
+            "op": "record",
+            "path": "docs-other/other.md",
+            "at_offset": 1
+          },
+          {
+            "op": "service_rename",
+            "old_path": "docs",
+            "new_path": "renamed"
+          },
+          {
+            "op": "entries"
+          },
+          {
+            "op": "service_rename",
+            "old_path": "renamed/first.md",
+            "new_path": "renamed/second.md"
+          },
+          {
+            "op": "entries"
+          },
+          {
+            "op": "service_delete",
+            "path": "renamed/second.md"
+          },
+          {
+            "op": "entries"
+          }
+        ],
+        "now": "2026-01-30T12:34:56.789012Z"
+      },
+      "expected": {
+        "results": [
+          true,
+          true,
+          true,
+          [
+            {
+              "path": "docs-other/other.md",
+              "opened_at": "2026-01-30T12:34:57.000000Z"
+            },
+            {
+              "path": "renamed/first.md",
+              "opened_at": "2026-01-30T12:34:56.000000Z"
+            }
+          ],
+          true,
+          [
+            {
+              "path": "docs-other/other.md",
+              "opened_at": "2026-01-30T12:34:57.000000Z"
+            },
+            {
+              "path": "renamed/second.md",
+              "opened_at": "2026-01-30T12:34:56.000000Z"
+            }
+          ],
+          true,
+          [
+            {
+              "path": "docs-other/other.md",
+              "opened_at": "2026-01-30T12:34:57.000000Z"
+            }
+          ]
+        ],
+        "entries_after": [
+          {
+            "path": "docs-other/other.md",
+            "opened_at": "2026-01-30T12:34:57.000000Z"
+          }
+        ],
+        "fed_recent_files_lines": [
+          "recent_files = [{\"path\":\"docs-other/other.md\",\"opened_at\":\"2026-01-30T12:34:57.000000Z\"}]"
+        ],
+        "tree_after": {
+          ".fed": "<FED_TEMPLATE>recent_files = [{\"path\":\"docs-other/other.md\",\"opened_at\":\"2026-01-30T12:34:57.000000Z\"}]\n",
+          ".frankmd-config.lock": "",
+          ".frankmd-filesystem.lock": "",
+          "docs-other/": null,
+          "docs-other/other.md": "o",
+          "renamed/": null
+        }
+      }
+    },
+    {
+      "name": "rejects traversal, hidden, outside symlinks, non-markdown and malformed paths",
+      "fn": "RecentFilesService",
+      "input": {
+        "tree": {
+          "safe.md": "s",
+          "outside.md": {
+            "symlink": "<OUTSIDE>/x.md"
+          },
+          "dir.md/": null,
+          "sub/.hidden/x.md": "h",
+          "image.png": "p",
+          "a/b.md": "ab"
+        },
+        "ops": [
+          {
+            "op": "record",
+            "path": "../README.md",
+            "at_offset": 0
+          },
+          {
+            "op": "record",
+            "path": "/tmp/secret.md",
+            "at_offset": 0
+          },
+          {
+            "op": "record",
+            "path": ".secret.md",
+            "at_offset": 0
+          },
+          {
+            "op": "record",
+            "path": "docs/../safe.md",
+            "at_offset": 0
+          },
+          {
+            "op": "record",
+            "path": "outside.md",
+            "at_offset": 0
+          },
+          {
+            "op": "record",
+            "path": "image.png",
+            "at_offset": 0
+          },
+          {
+            "op": "record",
+            "path": null,
+            "at_offset": 0
+          },
+          {
+            "op": "record",
+            "path": "",
+            "at_offset": 0
+          },
+          {
+            "op": "record",
+            "path": "safe",
+            "at_offset": 0
+          },
+          {
+            "op": "record",
+            "path": "a//b.md",
+            "at_offset": 0
+          },
+          {
+            "op": "record",
+            "path": "a\\b.md",
+            "at_offset": 0
+          },
+          {
+            "op": "record",
+            "path": "x\u0000.md",
+            "at_offset": 0
+          },
+          {
+            "op": "record",
+            "path": "dir.md",
+            "at_offset": 0
+          },
+          {
+            "op": "record",
+            "path": "sub/.hidden/x.md",
+            "at_offset": 0
+          },
+          {
+            "op": "record",
+            "path": "./safe.md",
+            "at_offset": 0
+          },
+          {
+            "op": "record",
+            "path": "safe.md/",
+            "at_offset": 0
+          },
+          {
+            "op": "record",
+            "path": "SAFE.md",
+            "at_offset": 0
+          },
+          {
+            "op": "record",
+            "path": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.md",
+            "at_offset": 0
+          },
+          {
+            "op": "record",
+            "path": 42,
+            "at_offset": 0
+          },
+          {
+            "op": "record",
+            "path": [
+              "safe.md"
+            ],
+            "at_offset": 0
+          },
+          {
+            "op": "record",
+            "path": "safe.md",
+            "at_offset": 1
+          },
+          {
+            "op": "record",
+            "path": "a/b.md",
+            "at_offset": 2
+          }
+        ],
+        "now": "2026-01-30T12:34:56.789012Z"
+      },
+      "expected": {
+        "results": [
+          {
+            "error": "NotesService::NotFoundError",
+            "message": "Note not found"
+          },
+          {
+            "error": "NotesService::NotFoundError",
+            "message": "Note not found"
+          },
+          {
+            "error": "NotesService::NotFoundError",
+            "message": "Note not found"
+          },
+          {
+            "error": "NotesService::NotFoundError",
+            "message": "Note not found"
+          },
+          {
+            "error": "NotesService::NotFoundError",
+            "message": "Note not found"
+          },
+          {
+            "error": "NotesService::NotFoundError",
+            "message": "Note not found"
+          },
+          {
+            "error": "NotesService::NotFoundError",
+            "message": "Note not found"
+          },
+          {
+            "error": "NotesService::NotFoundError",
+            "message": "Note not found"
+          },
+          {
+            "error": "NotesService::NotFoundError",
+            "message": "Note not found"
+          },
+          {
+            "error": "NotesService::NotFoundError",
+            "message": "Note not found"
+          },
+          {
+            "error": "NotesService::NotFoundError",
+            "message": "Note not found"
+          },
+          {
+            "error": "NotesService::NotFoundError",
+            "message": "Note not found"
+          },
+          {
+            "error": "NotesService::NotFoundError",
+            "message": "Note not found"
+          },
+          {
+            "error": "NotesService::NotFoundError",
+            "message": "Note not found"
+          },
+          {
+            "error": "NotesService::NotFoundError",
+            "message": "Note not found"
+          },
+          {
+            "error": "NotesService::NotFoundError",
+            "message": "Note not found"
+          },
+          {
+            "error": "NotesService::NotFoundError",
+            "message": "Note not found"
+          },
+          {
+            "error": "NotesService::NotFoundError",
+            "message": "Note not found"
+          },
+          {
+            "error": "NotesService::NotFoundError",
+            "message": "Note not found"
+          },
+          {
+            "error": "NotesService::NotFoundError",
+            "message": "Note not found"
+          },
+          true,
+          true
+        ],
+        "entries_after": [
+          {
+            "path": "a/b.md",
+            "opened_at": "2026-01-30T12:34:58.000000Z"
+          },
+          {
+            "path": "safe.md",
+            "opened_at": "2026-01-30T12:34:57.000000Z"
+          }
+        ],
+        "fed_recent_files_lines": [
+          "recent_files = [{\"path\":\"a/b.md\",\"opened_at\":\"2026-01-30T12:34:58.000000Z\"},{\"path\":\"safe.md\",\"opened_at\":\"2026-01-30T12:34:57.000000Z\"}]"
+        ],
+        "tree_after": {
+          ".fed": "<FED_TEMPLATE>recent_files = [{\"path\":\"a/b.md\",\"opened_at\":\"2026-01-30T12:34:58.000000Z\"},{\"path\":\"safe.md\",\"opened_at\":\"2026-01-30T12:34:57.000000Z\"}]\n",
+          ".frankmd-config.lock": "",
+          "a/": null,
+          "a/b.md": "ab",
+          "dir.md/": null,
+          "image.png": "p",
+          "outside.md": {
+            "symlink": "<OUTSIDE>/x.md"
+          },
+          "safe.md": "s",
+          "sub/": null,
+          "sub/.hidden/": null,
+          "sub/.hidden/x.md": "h"
+        }
+      }
+    },
+    {
+      "name": "unicode, spaces and internal symlink paths are accepted",
+      "fn": "RecentFilesService",
+      "input": {
+        "tree": {
+          "日本語/ノート.md": "j",
+          "with space.md": "s",
+          "שלום.md": "h",
+          "👨‍👩‍👧.md": "e",
+          "real.md": "r",
+          "alias.md": {
+            "symlink": "real.md"
+          }
+        },
+        "ops": [
+          {
+            "op": "record",
+            "path": "日本語/ノート.md",
+            "at_offset": 0
+          },
+          {
+            "op": "record",
+            "path": "with space.md",
+            "at_offset": 1
+          },
+          {
+            "op": "record",
+            "path": "שלום.md",
+            "at_offset": 2
+          },
+          {
+            "op": "record",
+            "path": "👨‍👩‍👧.md",
+            "at_offset": 3
+          },
+          {
+            "op": "record",
+            "path": "alias.md",
+            "at_offset": 4
+          },
+          {
+            "op": "entries"
+          }
+        ],
+        "now": "2026-01-30T12:34:56.789012Z"
+      },
+      "expected": {
+        "results": [
+          true,
+          true,
+          true,
+          true,
+          true,
+          [
+            {
+              "path": "alias.md",
+              "opened_at": "2026-01-30T12:35:00.000000Z"
+            },
+            {
+              "path": "👨‍👩‍👧.md",
+              "opened_at": "2026-01-30T12:34:59.000000Z"
+            },
+            {
+              "path": "שלום.md",
+              "opened_at": "2026-01-30T12:34:58.000000Z"
+            },
+            {
+              "path": "with space.md",
+              "opened_at": "2026-01-30T12:34:57.000000Z"
+            },
+            {
+              "path": "日本語/ノート.md",
+              "opened_at": "2026-01-30T12:34:56.000000Z"
+            }
+          ]
+        ],
+        "entries_after": [
+          {
+            "path": "alias.md",
+            "opened_at": "2026-01-30T12:35:00.000000Z"
+          },
+          {
+            "path": "👨‍👩‍👧.md",
+            "opened_at": "2026-01-30T12:34:59.000000Z"
+          },
+          {
+            "path": "שלום.md",
+            "opened_at": "2026-01-30T12:34:58.000000Z"
+          },
+          {
+            "path": "with space.md",
+            "opened_at": "2026-01-30T12:34:57.000000Z"
+          },
+          {
+            "path": "日本語/ノート.md",
+            "opened_at": "2026-01-30T12:34:56.000000Z"
+          }
+        ],
+        "fed_recent_files_lines": [
+          "recent_files = [{\"path\":\"alias.md\",\"opened_at\":\"2026-01-30T12:35:00.000000Z\"},{\"path\":\"👨‍👩‍👧.md\",\"opened_at\":\"2026-01-30T12:34:59.000000Z\"},{\"path\":\"שלום.md\",\"opened_at\":\"2026-01-30T12:34:58.000000Z\"},{\"path\":\"with space.md\",\"opened_at\":\"2026-01-30T12:34:57.000000Z\"},{\"path\":\"日本語/ノート.md\",\"opened_at\":\"2026-01-30T12:34:56.000000Z\"}]"
+        ],
+        "tree_after": {
+          ".fed": "<FED_TEMPLATE>recent_files = [{\"path\":\"alias.md\",\"opened_at\":\"2026-01-30T12:35:00.000000Z\"},{\"path\":\"👨‍👩‍👧.md\",\"opened_at\":\"2026-01-30T12:34:59.000000Z\"},{\"path\":\"שלום.md\",\"opened_at\":\"2026-01-30T12:34:58.000000Z\"},{\"path\":\"with space.md\",\"opened_at\":\"2026-01-30T12:34:57.000000Z\"},{\"path\":\"日本語/ノート.md\",\"opened_at\":\"2026-01-30T12:34:56.000000Z\"}]\n",
+          ".frankmd-config.lock": "",
+          "alias.md": {
+            "symlink": "real.md"
+          },
+          "real.md": "r",
+          "with space.md": "s",
+          "שלום.md": "h",
+          "日本語/": null,
+          "日本語/ノート.md": "j",
+          "👨‍👩‍👧.md": "e"
+        }
+      }
+    },
+    {
+      "name": "permission errors (EACCES on stat) do not erase an entry",
+      "fn": "RecentFilesService",
+      "input": {
+        "tree": {
+          "locked/a.md": "a",
+          "b.md": "b"
+        },
+        "ops": [
+          {
+            "op": "record",
+            "path": "locked/a.md",
+            "at_offset": 0
+          },
+          {
+            "op": "record",
+            "path": "b.md",
+            "at_offset": 1
+          },
+          {
+            "op": "fs_chmod",
+            "path": "locked",
+            "mode": 0
+          },
+          {
+            "op": "entries"
+          },
+          {
+            "op": "record",
+            "path": "b.md",
+            "at_offset": 2
+          }
+        ],
+        "now": "2026-01-30T12:34:56.789012Z"
+      },
+      "expected": {
+        "results": [
+          true,
+          true,
+          true,
+          [
+            {
+              "path": "b.md",
+              "opened_at": "2026-01-30T12:34:57.000000Z"
+            },
+            {
+              "path": "locked/a.md",
+              "opened_at": "2026-01-30T12:34:56.000000Z"
+            }
+          ],
+          true
+        ],
+        "entries_after": [
+          {
+            "path": "b.md",
+            "opened_at": "2026-01-30T12:34:58.000000Z"
+          },
+          {
+            "path": "locked/a.md",
+            "opened_at": "2026-01-30T12:34:56.000000Z"
+          }
+        ],
+        "fed_recent_files_lines": [
+          "recent_files = [{\"path\":\"b.md\",\"opened_at\":\"2026-01-30T12:34:58.000000Z\"},{\"path\":\"locked/a.md\",\"opened_at\":\"2026-01-30T12:34:56.000000Z\"}]"
+        ],
+        "tree_after": {
+          ".fed": "<FED_TEMPLATE>recent_files = [{\"path\":\"b.md\",\"opened_at\":\"2026-01-30T12:34:58.000000Z\"},{\"path\":\"locked/a.md\",\"opened_at\":\"2026-01-30T12:34:56.000000Z\"}]\n",
+          ".frankmd-config.lock": "",
+          "b.md": "b",
+          "locked/": null,
+          "locked/a.md": "a"
+        }
+      },
+      "notes": "locked/ chmod 000 makes stat raise EACCES (non-root user); present? treats EACCES as present."
+    },
+    {
+      "name": "malformed history JSON does not discard other configuration",
+      "fn": "RecentFilesService",
+      "input": {
+        "tree": {
+          ".fed": "theme = nord\nrecent_files = [broken\n"
+        },
+        "ops": [
+          {
+            "op": "entries"
+          },
+          {
+            "op": "clear"
+          },
+          {
+            "op": "entries"
+          }
+        ],
+        "now": "2026-01-30T12:34:56.789012Z"
+      },
+      "expected": {
+        "results": [
+          [],
+          true,
+          []
+        ],
+        "entries_after": [],
+        "fed_recent_files_lines": [
+          "recent_files = []"
+        ],
+        "tree_after": {
+          ".fed": "theme = nord\nrecent_files = []\n\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+          ".frankmd-config.lock": ""
+        }
+      }
+    },
+    {
+      "name": "non-array history value",
+      "fn": "RecentFilesService",
+      "input": {
+        "tree": {
+          ".fed": "<FED_TEMPLATE>recent_files = {\"path\":\"a.md\"}\n",
+          "a.md": "a"
+        },
+        "ops": [
+          {
+            "op": "entries"
+          },
+          {
+            "op": "record",
+            "path": "a.md",
+            "at_offset": 0
+          }
+        ],
+        "now": "2026-01-30T12:34:56.789012Z"
+      },
+      "expected": {
+        "results": [
+          [],
+          true
+        ],
+        "entries_after": [
+          {
+            "path": "a.md",
+            "opened_at": "2026-01-30T12:34:56.000000Z"
+          }
+        ],
+        "fed_recent_files_lines": [
+          "recent_files = [{\"path\":\"a.md\",\"opened_at\":\"2026-01-30T12:34:56.000000Z\"}]"
+        ],
+        "tree_after": {
+          ".fed": "<FED_TEMPLATE>recent_files = [{\"path\":\"a.md\",\"opened_at\":\"2026-01-30T12:34:56.000000Z\"}]\n",
+          ".frankmd-config.lock": "",
+          "a.md": "a"
+        }
+      }
+    },
+    {
+      "name": "normalization of crafted history (types, dupes, missing files, extra keys)",
+      "fn": "RecentFilesService",
+      "input": {
+        "tree": {
+          ".fed": "<FED_TEMPLATE>recent_files = [{\"path\":\"a.md\",\"opened_at\":\"2026-01-01T00:00:09.000000Z\",\"extra\":\"dropped\"},\"not a hash\",42,null,{\"path\":\"b.md\"},{\"path\":\"c.md\",\"opened_at\":12345},{\"path\":\"a.md\",\"opened_at\":\"2026-01-01T00:00:08.000000Z\"},{\"path\":\"missing.md\",\"opened_at\":\"2026-01-01T00:00:07.000000Z\"},{\"path\":\"../x.md\",\"opened_at\":\"2026-01-01T00:00:06.000000Z\"},{\"path\":\"d.md\",\"opened_at\":\"not a timestamp\"},{\"path\":\"e.md\",\"opened_at\":\"\"},{\"path\":\"f.md\",\"opened_at\":\"2026-10-26T09:30:00-03:00\"}]\n",
+          "a.md": "a",
+          "b.md": "b",
+          "c.md": "c",
+          "d.md": "d",
+          "e.md": "e",
+          "f.md": "f",
+          "g.md": "g"
+        },
+        "ops": [
+          {
+            "op": "entries"
+          },
+          {
+            "op": "record",
+            "path": "g.md",
+            "at_offset": 0
+          }
+        ],
+        "now": "2026-01-30T12:34:56.789012Z"
+      },
+      "expected": {
+        "results": [
+          [
+            {
+              "path": "a.md",
+              "opened_at": "2026-01-01T00:00:09.000000Z"
+            },
+            {
+              "path": "d.md",
+              "opened_at": "not a timestamp"
+            },
+            {
+              "path": "e.md",
+              "opened_at": ""
+            },
+            {
+              "path": "f.md",
+              "opened_at": "2026-10-26T09:30:00-03:00"
+            }
+          ],
+          true
+        ],
+        "entries_after": [
+          {
+            "path": "g.md",
+            "opened_at": "2026-01-30T12:34:56.000000Z"
+          },
+          {
+            "path": "a.md",
+            "opened_at": "2026-01-01T00:00:09.000000Z"
+          },
+          {
+            "path": "d.md",
+            "opened_at": "not a timestamp"
+          },
+          {
+            "path": "e.md",
+            "opened_at": ""
+          },
+          {
+            "path": "f.md",
+            "opened_at": "2026-10-26T09:30:00-03:00"
+          }
+        ],
+        "fed_recent_files_lines": [
+          "recent_files = [{\"path\":\"g.md\",\"opened_at\":\"2026-01-30T12:34:56.000000Z\"},{\"path\":\"a.md\",\"opened_at\":\"2026-01-01T00:00:09.000000Z\"},{\"path\":\"d.md\",\"opened_at\":\"not a timestamp\"},{\"path\":\"e.md\",\"opened_at\":\"\"},{\"path\":\"f.md\",\"opened_at\":\"2026-10-26T09:30:00-03:00\"}]"
+        ],
+        "tree_after": {
+          ".fed": "<FED_TEMPLATE>recent_files = [{\"path\":\"g.md\",\"opened_at\":\"2026-01-30T12:34:56.000000Z\"},{\"path\":\"a.md\",\"opened_at\":\"2026-01-01T00:00:09.000000Z\"},{\"path\":\"d.md\",\"opened_at\":\"not a timestamp\"},{\"path\":\"e.md\",\"opened_at\":\"\"},{\"path\":\"f.md\",\"opened_at\":\"2026-10-26T09:30:00-03:00\"}]\n",
+          ".frankmd-config.lock": "",
+          "a.md": "a",
+          "b.md": "b",
+          "c.md": "c",
+          "d.md": "d",
+          "e.md": "e",
+          "f.md": "f",
+          "g.md": "g"
+        }
+      }
+    },
+    {
+      "name": "history longer than 100 items is truncated before filtering",
+      "fn": "RecentFilesService",
+      "input": {
+        "tree": {
+          "n10.md": "x",
+          "n11.md": "x",
+          "n12.md": "x",
+          "n13.md": "x",
+          "n14.md": "x",
+          "n15.md": "x",
+          "n16.md": "x",
+          "n17.md": "x",
+          "n18.md": "x",
+          "n19.md": "x",
+          "n20.md": "x",
+          "n21.md": "x",
+          "n22.md": "x",
+          "n23.md": "x",
+          "n24.md": "x",
+          "n25.md": "x",
+          "n26.md": "x",
+          "n27.md": "x",
+          "n28.md": "x",
+          "n29.md": "x",
+          "n30.md": "x",
+          "n31.md": "x",
+          "n32.md": "x",
+          "n33.md": "x",
+          "n34.md": "x",
+          "n35.md": "x",
+          "n36.md": "x",
+          "n37.md": "x",
+          "n38.md": "x",
+          "n39.md": "x",
+          "n40.md": "x",
+          "n41.md": "x",
+          "n42.md": "x",
+          "n43.md": "x",
+          "n44.md": "x",
+          "n45.md": "x",
+          "n46.md": "x",
+          "n47.md": "x",
+          "n48.md": "x",
+          "n49.md": "x",
+          "n50.md": "x",
+          "n51.md": "x",
+          "n52.md": "x",
+          "n53.md": "x",
+          "n54.md": "x",
+          "n55.md": "x",
+          "n56.md": "x",
+          "n57.md": "x",
+          "n58.md": "x",
+          "n59.md": "x",
+          "n60.md": "x",
+          "n61.md": "x",
+          "n62.md": "x",
+          "n63.md": "x",
+          "n64.md": "x",
+          "n65.md": "x",
+          "n66.md": "x",
+          "n67.md": "x",
+          "n68.md": "x",
+          "n69.md": "x",
+          "n70.md": "x",
+          "n71.md": "x",
+          "n72.md": "x",
+          "n73.md": "x",
+          "n74.md": "x",
+          "n75.md": "x",
+          "n76.md": "x",
+          "n77.md": "x",
+          "n78.md": "x",
+          "n79.md": "x",
+          "n80.md": "x",
+          "n81.md": "x",
+          "n82.md": "x",
+          "n83.md": "x",
+          "n84.md": "x",
+          "n85.md": "x",
+          "n86.md": "x",
+          "n87.md": "x",
+          "n88.md": "x",
+          "n89.md": "x",
+          "n90.md": "x",
+          "n91.md": "x",
+          "n92.md": "x",
+          "n93.md": "x",
+          "n94.md": "x",
+          "n95.md": "x",
+          "n96.md": "x",
+          "n97.md": "x",
+          "n98.md": "x",
+          "n99.md": "x",
+          "n100.md": "x",
+          "n101.md": "x",
+          "n102.md": "x",
+          "n103.md": "x",
+          "n104.md": "x",
+          "n105.md": "x",
+          "n106.md": "x",
+          "n107.md": "x",
+          "n108.md": "x",
+          "n109.md": "x",
+          "n110.md": "x",
+          "n111.md": "x",
+          "n112.md": "x",
+          "n113.md": "x",
+          "n114.md": "x",
+          "n115.md": "x",
+          "n116.md": "x",
+          "n117.md": "x",
+          "n118.md": "x",
+          "n119.md": "x",
+          ".fed": "<FED_TEMPLATE>recent_files = [{\"path\":\"n0.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n1.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n2.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n3.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n4.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n5.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n6.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n7.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n8.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n9.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n10.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n11.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n12.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n13.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n14.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n15.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n16.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n17.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n18.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n19.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n20.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n21.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n22.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n23.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n24.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n25.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n26.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n27.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n28.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n29.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n30.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n31.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n32.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n33.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n34.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n35.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n36.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n37.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n38.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n39.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n40.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n41.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n42.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n43.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n44.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n45.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n46.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n47.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n48.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n49.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n50.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n51.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n52.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n53.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n54.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n55.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n56.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n57.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n58.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n59.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n60.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n61.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n62.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n63.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n64.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n65.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n66.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n67.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n68.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n69.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n70.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n71.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n72.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n73.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n74.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n75.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n76.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n77.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n78.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n79.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n80.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n81.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n82.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n83.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n84.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n85.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n86.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n87.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n88.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n89.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n90.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n91.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n92.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n93.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n94.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n95.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n96.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n97.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n98.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n99.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n100.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n101.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n102.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n103.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n104.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n105.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n106.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n107.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n108.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n109.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n110.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n111.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n112.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n113.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n114.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n115.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n116.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n117.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n118.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n119.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"}]\n"
+        },
+        "ops": [
+          {
+            "op": "entries"
+          },
+          {
+            "op": "record",
+            "path": "n110.md",
+            "at_offset": 0
+          }
+        ],
+        "now": "2026-01-30T12:34:56.789012Z"
+      },
+      "expected": {
+        "results": [
+          [
+            {
+              "path": "n10.md",
+              "opened_at": "2026-01-01T00:00:00.000000Z"
+            },
+            {
+              "path": "n11.md",
+              "opened_at": "2026-01-01T00:00:00.000000Z"
+            },
+            {
+              "path": "n12.md",
+              "opened_at": "2026-01-01T00:00:00.000000Z"
+            },
+            {
+              "path": "n13.md",
+              "opened_at": "2026-01-01T00:00:00.000000Z"
+            },
+            {
+              "path": "n14.md",
+              "opened_at": "2026-01-01T00:00:00.000000Z"
+            },
+            {
+              "path": "n15.md",
+              "opened_at": "2026-01-01T00:00:00.000000Z"
+            },
+            {
+              "path": "n16.md",
+              "opened_at": "2026-01-01T00:00:00.000000Z"
+            },
+            {
+              "path": "n17.md",
+              "opened_at": "2026-01-01T00:00:00.000000Z"
+            },
+            {
+              "path": "n18.md",
+              "opened_at": "2026-01-01T00:00:00.000000Z"
+            },
+            {
+              "path": "n19.md",
+              "opened_at": "2026-01-01T00:00:00.000000Z"
+            }
+          ],
+          true
+        ],
+        "entries_after": [
+          {
+            "path": "n110.md",
+            "opened_at": "2026-01-30T12:34:56.000000Z"
+          },
+          {
+            "path": "n10.md",
+            "opened_at": "2026-01-01T00:00:00.000000Z"
+          },
+          {
+            "path": "n11.md",
+            "opened_at": "2026-01-01T00:00:00.000000Z"
+          },
+          {
+            "path": "n12.md",
+            "opened_at": "2026-01-01T00:00:00.000000Z"
+          },
+          {
+            "path": "n13.md",
+            "opened_at": "2026-01-01T00:00:00.000000Z"
+          },
+          {
+            "path": "n14.md",
+            "opened_at": "2026-01-01T00:00:00.000000Z"
+          },
+          {
+            "path": "n15.md",
+            "opened_at": "2026-01-01T00:00:00.000000Z"
+          },
+          {
+            "path": "n16.md",
+            "opened_at": "2026-01-01T00:00:00.000000Z"
+          },
+          {
+            "path": "n17.md",
+            "opened_at": "2026-01-01T00:00:00.000000Z"
+          },
+          {
+            "path": "n18.md",
+            "opened_at": "2026-01-01T00:00:00.000000Z"
+          }
+        ],
+        "fed_recent_files_lines": [
+          "recent_files = [{\"path\":\"n110.md\",\"opened_at\":\"2026-01-30T12:34:56.000000Z\"},{\"path\":\"n10.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n11.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n12.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n13.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n14.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n15.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n16.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n17.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n18.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"}]"
+        ],
+        "tree_after": {
+          ".fed": "<FED_TEMPLATE>recent_files = [{\"path\":\"n110.md\",\"opened_at\":\"2026-01-30T12:34:56.000000Z\"},{\"path\":\"n10.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n11.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n12.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n13.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n14.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n15.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n16.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n17.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"},{\"path\":\"n18.md\",\"opened_at\":\"2026-01-01T00:00:00.000000Z\"}]\n",
+          ".frankmd-config.lock": "",
+          "n10.md": "x",
+          "n100.md": "x",
+          "n101.md": "x",
+          "n102.md": "x",
+          "n103.md": "x",
+          "n104.md": "x",
+          "n105.md": "x",
+          "n106.md": "x",
+          "n107.md": "x",
+          "n108.md": "x",
+          "n109.md": "x",
+          "n11.md": "x",
+          "n110.md": "x",
+          "n111.md": "x",
+          "n112.md": "x",
+          "n113.md": "x",
+          "n114.md": "x",
+          "n115.md": "x",
+          "n116.md": "x",
+          "n117.md": "x",
+          "n118.md": "x",
+          "n119.md": "x",
+          "n12.md": "x",
+          "n13.md": "x",
+          "n14.md": "x",
+          "n15.md": "x",
+          "n16.md": "x",
+          "n17.md": "x",
+          "n18.md": "x",
+          "n19.md": "x",
+          "n20.md": "x",
+          "n21.md": "x",
+          "n22.md": "x",
+          "n23.md": "x",
+          "n24.md": "x",
+          "n25.md": "x",
+          "n26.md": "x",
+          "n27.md": "x",
+          "n28.md": "x",
+          "n29.md": "x",
+          "n30.md": "x",
+          "n31.md": "x",
+          "n32.md": "x",
+          "n33.md": "x",
+          "n34.md": "x",
+          "n35.md": "x",
+          "n36.md": "x",
+          "n37.md": "x",
+          "n38.md": "x",
+          "n39.md": "x",
+          "n40.md": "x",
+          "n41.md": "x",
+          "n42.md": "x",
+          "n43.md": "x",
+          "n44.md": "x",
+          "n45.md": "x",
+          "n46.md": "x",
+          "n47.md": "x",
+          "n48.md": "x",
+          "n49.md": "x",
+          "n50.md": "x",
+          "n51.md": "x",
+          "n52.md": "x",
+          "n53.md": "x",
+          "n54.md": "x",
+          "n55.md": "x",
+          "n56.md": "x",
+          "n57.md": "x",
+          "n58.md": "x",
+          "n59.md": "x",
+          "n60.md": "x",
+          "n61.md": "x",
+          "n62.md": "x",
+          "n63.md": "x",
+          "n64.md": "x",
+          "n65.md": "x",
+          "n66.md": "x",
+          "n67.md": "x",
+          "n68.md": "x",
+          "n69.md": "x",
+          "n70.md": "x",
+          "n71.md": "x",
+          "n72.md": "x",
+          "n73.md": "x",
+          "n74.md": "x",
+          "n75.md": "x",
+          "n76.md": "x",
+          "n77.md": "x",
+          "n78.md": "x",
+          "n79.md": "x",
+          "n80.md": "x",
+          "n81.md": "x",
+          "n82.md": "x",
+          "n83.md": "x",
+          "n84.md": "x",
+          "n85.md": "x",
+          "n86.md": "x",
+          "n87.md": "x",
+          "n88.md": "x",
+          "n89.md": "x",
+          "n90.md": "x",
+          "n91.md": "x",
+          "n92.md": "x",
+          "n93.md": "x",
+          "n94.md": "x",
+          "n95.md": "x",
+          "n96.md": "x",
+          "n97.md": "x",
+          "n98.md": "x",
+          "n99.md": "x"
+        }
+      },
+      "notes": "n0..n9 do not exist; entries scan only the first 100 stored items, so n10..n19 are the 10 returned."
+    },
+    {
+      "name": "clear",
+      "fn": "RecentFilesService",
+      "input": {
+        "tree": {
+          "a.md": "a"
+        },
+        "ops": [
+          {
+            "op": "record",
+            "path": "a.md",
+            "at_offset": 0
+          },
+          {
+            "op": "clear"
+          },
+          {
+            "op": "entries"
+          }
+        ],
+        "now": "2026-01-30T12:34:56.789012Z"
+      },
+      "expected": {
+        "results": [
+          true,
+          true,
+          []
+        ],
+        "entries_after": [],
+        "fed_recent_files_lines": [
+          "recent_files = []"
+        ],
+        "tree_after": {
+          ".fed": "<FED_TEMPLATE>recent_files = []\n",
+          ".frankmd-config.lock": "",
+          "a.md": "a"
+        }
+      }
+    },
+    {
+      "name": "remove file and folder scope (prefix-safe)",
+      "fn": "RecentFilesService",
+      "input": {
+        "tree": {
+          "docs/a.md": "a",
+          "docs/sub/b.md": "b",
+          "docs-x/c.md": "c",
+          "docs.md": "d"
+        },
+        "ops": [
+          {
+            "op": "record",
+            "path": "docs/a.md",
+            "at_offset": 0
+          },
+          {
+            "op": "record",
+            "path": "docs/sub/b.md",
+            "at_offset": 1
+          },
+          {
+            "op": "record",
+            "path": "docs-x/c.md",
+            "at_offset": 2
+          },
+          {
+            "op": "record",
+            "path": "docs.md",
+            "at_offset": 3
+          },
+          {
+            "op": "remove",
+            "path": "docs"
+          },
+          {
+            "op": "entries"
+          },
+          {
+            "op": "remove",
+            "path": "docs.md"
+          }
+        ],
+        "now": "2026-01-30T12:34:56.789012Z"
+      },
+      "expected": {
+        "results": [
+          true,
+          true,
+          true,
+          true,
+          true,
+          [
+            {
+              "path": "docs.md",
+              "opened_at": "2026-01-30T12:34:59.000000Z"
+            },
+            {
+              "path": "docs-x/c.md",
+              "opened_at": "2026-01-30T12:34:58.000000Z"
+            }
+          ],
+          true
+        ],
+        "entries_after": [
+          {
+            "path": "docs-x/c.md",
+            "opened_at": "2026-01-30T12:34:58.000000Z"
+          }
+        ],
+        "fed_recent_files_lines": [
+          "recent_files = [{\"path\":\"docs-x/c.md\",\"opened_at\":\"2026-01-30T12:34:58.000000Z\"}]"
+        ],
+        "tree_after": {
+          ".fed": "<FED_TEMPLATE>recent_files = [{\"path\":\"docs-x/c.md\",\"opened_at\":\"2026-01-30T12:34:58.000000Z\"}]\n",
+          ".frankmd-config.lock": "",
+          "docs/": null,
+          "docs-x/": null,
+          "docs-x/c.md": "c",
+          "docs.md": "d",
+          "docs/a.md": "a",
+          "docs/sub/": null,
+          "docs/sub/b.md": "b"
+        }
+      }
+    },
+    {
+      "name": "remap before fs move keeps entry only if new path exists",
+      "fn": "RecentFilesService",
+      "input": {
+        "tree": {
+          "a.md": "a",
+          "b/c.md": "c"
+        },
+        "ops": [
+          {
+            "op": "record",
+            "path": "a.md",
+            "at_offset": 0
+          },
+          {
+            "op": "record",
+            "path": "b/c.md",
+            "at_offset": 1
+          },
+          {
+            "op": "remap",
+            "old_path": "a.md",
+            "new_path": "z.md"
+          },
+          {
+            "op": "entries"
+          }
+        ],
+        "now": "2026-01-30T12:34:56.789012Z"
+      },
+      "expected": {
+        "results": [
+          true,
+          true,
+          true,
+          [
+            {
+              "path": "b/c.md",
+              "opened_at": "2026-01-30T12:34:57.000000Z"
+            }
+          ]
+        ],
+        "entries_after": [
+          {
+            "path": "b/c.md",
+            "opened_at": "2026-01-30T12:34:57.000000Z"
+          }
+        ],
+        "fed_recent_files_lines": [
+          "recent_files = [{\"path\":\"b/c.md\",\"opened_at\":\"2026-01-30T12:34:57.000000Z\"}]"
+        ],
+        "tree_after": {
+          ".fed": "<FED_TEMPLATE>recent_files = [{\"path\":\"b/c.md\",\"opened_at\":\"2026-01-30T12:34:57.000000Z\"}]\n",
+          ".frankmd-config.lock": "",
+          "a.md": "a",
+          "b/": null,
+          "b/c.md": "c"
+        }
+      }
+    },
+    {
+      "name": "remap after external move",
+      "fn": "RecentFilesService",
+      "input": {
+        "tree": {
+          "a.md": "a",
+          "b/c.md": "c"
+        },
+        "ops": [
+          {
+            "op": "record",
+            "path": "a.md",
+            "at_offset": 0
+          },
+          {
+            "op": "record",
+            "path": "b/c.md",
+            "at_offset": 1
+          },
+          {
+            "op": "fs_write",
+            "path": "z.md",
+            "content": "a"
+          },
+          {
+            "op": "fs_delete",
+            "path": "a.md"
+          },
+          {
+            "op": "remap",
+            "old_path": "a.md",
+            "new_path": "z.md"
+          },
+          {
+            "op": "entries"
+          }
+        ],
+        "now": "2026-01-30T12:34:56.789012Z"
+      },
+      "expected": {
+        "results": [
+          true,
+          true,
+          true,
+          true,
+          true,
+          [
+            {
+              "path": "b/c.md",
+              "opened_at": "2026-01-30T12:34:57.000000Z"
+            },
+            {
+              "path": "z.md",
+              "opened_at": "2026-01-30T12:34:56.000000Z"
+            }
+          ]
+        ],
+        "entries_after": [
+          {
+            "path": "b/c.md",
+            "opened_at": "2026-01-30T12:34:57.000000Z"
+          },
+          {
+            "path": "z.md",
+            "opened_at": "2026-01-30T12:34:56.000000Z"
+          }
+        ],
+        "fed_recent_files_lines": [
+          "recent_files = [{\"path\":\"b/c.md\",\"opened_at\":\"2026-01-30T12:34:57.000000Z\"},{\"path\":\"z.md\",\"opened_at\":\"2026-01-30T12:34:56.000000Z\"}]"
+        ],
+        "tree_after": {
+          ".fed": "<FED_TEMPLATE>recent_files = [{\"path\":\"b/c.md\",\"opened_at\":\"2026-01-30T12:34:57.000000Z\"},{\"path\":\"z.md\",\"opened_at\":\"2026-01-30T12:34:56.000000Z\"}]\n",
+          ".frankmd-config.lock": "",
+          "b/": null,
+          "b/c.md": "c",
+          "z.md": "a"
+        }
+      }
+    },
+    {
+      "name": "delete_folder (empty) removes scoped entries",
+      "fn": "RecentFilesService",
+      "input": {
+        "tree": {
+          "d/x.md": "x"
+        },
+        "ops": [
+          {
+            "op": "record",
+            "path": "d/x.md",
+            "at_offset": 0
+          },
+          {
+            "op": "fs_delete",
+            "path": "d/x.md"
+          },
+          {
+            "op": "service_delete_folder",
+            "path": "d"
+          }
+        ],
+        "now": "2026-01-30T12:34:56.789012Z"
+      },
+      "expected": {
+        "results": [
+          true,
+          true,
+          true
+        ],
+        "entries_after": [],
+        "fed_recent_files_lines": [
+          "recent_files = []"
+        ],
+        "tree_after": {
+          ".fed": "<FED_TEMPLATE>recent_files = []\n",
+          ".frankmd-config.lock": "",
+          ".frankmd-filesystem.lock": ""
+        }
+      }
+    },
+    {
+      "name": "service ops without .fed never create it",
+      "fn": "RecentFilesService",
+      "input": {
+        "tree": {
+          "a.md": "a"
+        },
+        "ops": [
+          {
+            "op": "service_rename",
+            "old_path": "a.md",
+            "new_path": "b.md"
+          },
+          {
+            "op": "service_delete",
+            "path": "b.md"
+          }
+        ],
+        "now": "2026-01-30T12:34:56.789012Z"
+      },
+      "expected": {
+        "results": [
+          true,
+          true
+        ],
+        "entries_after": [],
+        "fed_recent_files_lines": [],
+        "tree_after": {
+          ".fed": "<FED_TEMPLATE>",
+          ".frankmd-config.lock": "",
+          ".frankmd-filesystem.lock": ""
+        }
+      }
+    },
+    {
+      "name": "existing settings and comments preserved when history is written",
+      "fn": "RecentFilesService",
+      "input": {
+        "tree": {
+          ".fed": "# my comment\ntheme = nord\n\nrecent_files = []\nlocale = pt-BR\n",
+          "a.md": "a"
+        },
+        "ops": [
+          {
+            "op": "record",
+            "path": "a.md",
+            "at_offset": 0
+          }
+        ],
+        "now": "2026-01-30T12:34:56.789012Z"
+      },
+      "expected": {
+        "results": [
+          true
+        ],
+        "entries_after": [
+          {
+            "path": "a.md",
+            "opened_at": "2026-01-30T12:34:56.000000Z"
+          }
+        ],
+        "fed_recent_files_lines": [
+          "recent_files = [{\"path\":\"a.md\",\"opened_at\":\"2026-01-30T12:34:56.000000Z\"}]"
+        ],
+        "tree_after": {
+          ".fed": "# my comment\ntheme = nord\n\nrecent_files = [{\"path\":\"a.md\",\"opened_at\":\"2026-01-30T12:34:56.000000Z\"}]\nlocale = pt-BR\n\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+          ".frankmd-config.lock": "",
+          "a.md": "a"
+        }
+      }
+    },
+    {
+      "name": "commented-out recent_files key gets replaced in place",
+      "fn": "RecentFilesService",
+      "input": {
+        "tree": {
+          ".fed": "# recent_files = []\ntheme = nord\n",
+          "a.md": "a"
+        },
+        "ops": [
+          {
+            "op": "record",
+            "path": "a.md",
+            "at_offset": 0
+          }
+        ],
+        "now": "2026-01-30T12:34:56.789012Z"
+      },
+      "expected": {
+        "results": [
+          true
+        ],
+        "entries_after": [
+          {
+            "path": "a.md",
+            "opened_at": "2026-01-30T12:34:56.000000Z"
+          }
+        ],
+        "fed_recent_files_lines": [
+          "recent_files = [{\"path\":\"a.md\",\"opened_at\":\"2026-01-30T12:34:56.000000Z\"}]"
+        ],
+        "tree_after": {
+          ".fed": "recent_files = [{\"path\":\"a.md\",\"opened_at\":\"2026-01-30T12:34:56.000000Z\"}]\ntheme = nord\n\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+          ".frankmd-config.lock": "",
+          "a.md": "a"
+        }
+      }
+    },
+    {
+      "name": "uppercase key in .fed",
+      "fn": "RecentFilesService",
+      "input": {
+        "tree": {
+          ".fed": "RECENT_FILES = [{\"path\":\"a.md\",\"opened_at\":\"2026-01-01T00:00:00Z\"}]\n",
+          "a.md": "a",
+          "b.md": "b"
+        },
+        "ops": [
+          {
+            "op": "entries"
+          },
+          {
+            "op": "record",
+            "path": "b.md",
+            "at_offset": 0
+          }
+        ],
+        "now": "2026-01-30T12:34:56.789012Z"
+      },
+      "expected": {
+        "results": [
+          [
+            {
+              "path": "a.md",
+              "opened_at": "2026-01-01T00:00:00Z"
+            }
+          ],
+          true
+        ],
+        "entries_after": [
+          {
+            "path": "b.md",
+            "opened_at": "2026-01-30T12:34:56.000000Z"
+          },
+          {
+            "path": "a.md",
+            "opened_at": "2026-01-01T00:00:00Z"
+          }
+        ],
+        "fed_recent_files_lines": [
+          "recent_files = [{\"path\":\"b.md\",\"opened_at\":\"2026-01-30T12:34:56.000000Z\"},{\"path\":\"a.md\",\"opened_at\":\"2026-01-01T00:00:00Z\"}]"
+        ],
+        "tree_after": {
+          ".fed": "recent_files = [{\"path\":\"b.md\",\"opened_at\":\"2026-01-30T12:34:56.000000Z\"},{\"path\":\"a.md\",\"opened_at\":\"2026-01-01T00:00:00Z\"}]\n\n\n# AI/LLM (for grammar checking)\n# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini\n# Gemini is lowest priority for text (its key is mainly for image generation)\n\n# ai_provider = auto\n# ai_model = (uses provider-specific default if not set)\n\n# OpenAI (recommended)\n# openai_api_key = sk-...\n# openai_model = gpt-4o-mini\n\n# Anthropic (Claude models)\n# anthropic_api_key = sk-ant-...\n# anthropic_model = claude-sonnet-4-20250514\n\n# Google Gemini\n# gemini_api_key = ...\n# gemini_model = gemini-2.0-flash\n\n# OpenRouter (multiple providers, pay-per-use)\n# openrouter_api_key = sk-or-...\n# openrouter_model = openai/gpt-4o-mini\n\n# Ollama (local, free) - for privacy, requires local setup\n# ollama_api_base = http://localhost:11434\n# ollama_model = llama3.2:latest\n",
+          ".frankmd-config.lock": "",
+          "a.md": "a",
+          "b.md": "b"
+        }
+      }
+    },
+    {
+      "name": "HTTP POST/DELETE /recent_files",
+      "fn": "RecentFilesService",
+      "input": {
+        "tree": {
+          "a.md": "a",
+          "b.md": "b"
+        },
+        "ops": [
+          {
+            "op": "http",
+            "method": "POST",
+            "url": "/recent_files",
+            "params": {
+              "path": "a.md"
+            }
+          },
+          {
+            "op": "http",
+            "method": "POST",
+            "url": "/recent_files",
+            "params": {
+              "path": "missing.md"
+            },
+            "at_offset": 1
+          },
+          {
+            "op": "http",
+            "method": "POST",
+            "url": "/recent_files",
+            "params": {
+              "path": ".fed"
+            },
+            "at_offset": 2
+          },
+          {
+            "op": "http",
+            "method": "POST",
+            "url": "/recent_files",
+            "at_offset": 3
+          },
+          {
+            "op": "http",
+            "method": "POST",
+            "url": "/recent_files",
+            "params": {
+              "path": "b.md"
+            },
+            "at_offset": 4
+          },
+          {
+            "op": "entries"
+          },
+          {
+            "op": "http",
+            "method": "DELETE",
+            "url": "/recent_files",
+            "at_offset": 5
+          },
+          {
+            "op": "entries"
+          }
+        ],
+        "now": "2026-01-30T12:34:56.789012Z"
+      },
+      "expected": {
+        "results": [
+          {
+            "status": 204,
+            "body": ""
+          },
+          {
+            "status": 404,
+            "body": ""
+          },
+          {
+            "status": 404,
+            "body": ""
+          },
+          {
+            "status": 404,
+            "body": ""
+          },
+          {
+            "status": 204,
+            "body": ""
+          },
+          [
+            {
+              "path": "b.md",
+              "opened_at": "2026-01-30T12:35:00.000000Z"
+            },
+            {
+              "path": "a.md",
+              "opened_at": "2026-01-30T12:34:56.000000Z"
+            }
+          ],
+          {
+            "status": 204,
+            "body": ""
+          },
+          []
+        ],
+        "entries_after": [],
+        "fed_recent_files_lines": [
+          "recent_files = []"
+        ],
+        "tree_after": {
+          ".fed": "<FED_TEMPLATE>recent_files = []\n",
+          ".frankmd-config.lock": "",
+          "a.md": "a",
+          "b.md": "b"
+        }
+      }
+    },
+    {
+      "name": "HTTP GET /recent_files HTML panel (ages, escaping, >5 show more)",
+      "fn": "RecentFilesService",
+      "input": {
+        "tree": {
+          "dir/n1 <&\">.md": "x",
+          "dir/n2 <&\">.md": "x",
+          "dir/n3 <&\">.md": "x",
+          "dir/n4 <&\">.md": "x",
+          "dir/n5 <&\">.md": "x",
+          "dir/n6 <&\">.md": "x",
+          "dir/n7 <&\">.md": "x"
+        },
+        "ops": [
+          {
+            "op": "record",
+            "path": "dir/n1 <&\">.md",
+            "at_offset": 0
+          },
+          {
+            "op": "record",
+            "path": "dir/n2 <&\">.md",
+            "at_offset": -1
+          },
+          {
+            "op": "record",
+            "path": "dir/n3 <&\">.md",
+            "at_offset": -59
+          },
+          {
+            "op": "record",
+            "path": "dir/n4 <&\">.md",
+            "at_offset": -3600
+          },
+          {
+            "op": "record",
+            "path": "dir/n5 <&\">.md",
+            "at_offset": -86400
+          },
+          {
+            "op": "record",
+            "path": "dir/n6 <&\">.md",
+            "at_offset": -604800
+          },
+          {
+            "op": "record",
+            "path": "dir/n7 <&\">.md",
+            "at_offset": -604801
+          },
+          {
+            "op": "http",
+            "method": "GET",
+            "url": "/recent_files",
+            "headers": {
+              "Accept": "application/json"
+            }
+          }
+        ],
+        "now": "2026-01-30T12:34:56.789012Z"
+      },
+      "expected": {
+        "results": [
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          true,
+          {
+            "status": 200,
+            "body": "  <section class=\"home-recent\" aria-labelledby=\"home-recent-title\">\n    <div class=\"home-recent-heading\">\n      <h2 id=\"home-recent-title\">Recently opened</h2>\n      <button type=\"button\" class=\"home-text-button\" data-action=\"click->home#clear\">Clear history</button>\n    </div>\n    <ul class=\"home-recent-list\" id=\"home-recent-files\">\n        <li>\n          <a href=\"/notes/dir/n7%20%3C&amp;%22%3E.md\" data-action=\"click->home#open\" data-path=\"dir/n7 &lt;&amp;&quot;&gt;.md\">\n            <span class=\"home-file-details\">\n              <span class=\"home-file-name\">n7 &lt;&amp;&quot;&gt;</span>\n              <span class=\"home-file-path\">dir/n7 &lt;&amp;&quot;&gt;.md</span>\n            </span>\n              <time class=\"home-file-time\" datetime=\"2026-01-23T12:34:55Z\" title=\"2026-01-23T12:34:55Z\">Over a week ago</time>\n          </a>\n        </li>\n        <li>\n          <a href=\"/notes/dir/n6%20%3C&amp;%22%3E.md\" data-action=\"click->home#open\" data-path=\"dir/n6 &lt;&amp;&quot;&gt;.md\">\n            <span class=\"home-file-details\">\n              <span class=\"home-file-name\">n6 &lt;&amp;&quot;&gt;</span>\n              <span class=\"home-file-path\">dir/n6 &lt;&amp;&quot;&gt;.md</span>\n            </span>\n              <time class=\"home-file-time\" datetime=\"2026-01-23T12:34:56Z\" title=\"2026-01-23T12:34:56Z\">7 days ago</time>\n          </a>\n        </li>\n        <li>\n          <a href=\"/notes/dir/n5%20%3C&amp;%22%3E.md\" data-action=\"click->home#open\" data-path=\"dir/n5 &lt;&amp;&quot;&gt;.md\">\n            <span class=\"home-file-details\">\n              <span class=\"home-file-name\">n5 &lt;&amp;&quot;&gt;</span>\n              <span class=\"home-file-path\">dir/n5 &lt;&amp;&quot;&gt;.md</span>\n            </span>\n              <time class=\"home-file-time\" datetime=\"2026-01-29T12:34:56Z\" title=\"2026-01-29T12:34:56Z\">1 day ago</time>\n          </a>\n        </li>\n        <li>\n          <a href=\"/notes/dir/n4%20%3C&amp;%22%3E.md\" data-action=\"click->home#open\" data-path=\"dir/n4 &lt;&amp;&quot;&gt;.md\">\n            <span class=\"home-file-details\">\n              <span class=\"home-file-name\">n4 &lt;&amp;&quot;&gt;</span>\n              <span class=\"home-file-path\">dir/n4 &lt;&amp;&quot;&gt;.md</span>\n            </span>\n              <time class=\"home-file-time\" datetime=\"2026-01-30T11:34:56Z\" title=\"2026-01-30T11:34:56Z\">1 hour ago</time>\n          </a>\n        </li>\n        <li>\n          <a href=\"/notes/dir/n3%20%3C&amp;%22%3E.md\" data-action=\"click->home#open\" data-path=\"dir/n3 &lt;&amp;&quot;&gt;.md\">\n            <span class=\"home-file-details\">\n              <span class=\"home-file-name\">n3 &lt;&amp;&quot;&gt;</span>\n              <span class=\"home-file-path\">dir/n3 &lt;&amp;&quot;&gt;.md</span>\n            </span>\n              <time class=\"home-file-time\" datetime=\"2026-01-30T12:33:57Z\" title=\"2026-01-30T12:33:57Z\">59 seconds ago</time>\n          </a>\n        </li>\n        <li hidden data-home-target=\"extraFile\">\n          <a href=\"/notes/dir/n2%20%3C&amp;%22%3E.md\" data-action=\"click->home#open\" data-path=\"dir/n2 &lt;&amp;&quot;&gt;.md\">\n            <span class=\"home-file-details\">\n              <span class=\"home-file-name\">n2 &lt;&amp;&quot;&gt;</span>\n              <span class=\"home-file-path\">dir/n2 &lt;&amp;&quot;&gt;.md</span>\n            </span>\n              <time class=\"home-file-time\" datetime=\"2026-01-30T12:34:55Z\" title=\"2026-01-30T12:34:55Z\">1 second ago</time>\n          </a>\n        </li>\n        <li hidden data-home-target=\"extraFile\">\n          <a href=\"/notes/dir/n1%20%3C&amp;%22%3E.md\" data-action=\"click->home#open\" data-path=\"dir/n1 &lt;&amp;&quot;&gt;.md\">\n            <span class=\"home-file-details\">\n              <span class=\"home-file-name\">n1 &lt;&amp;&quot;&gt;</span>\n              <span class=\"home-file-path\">dir/n1 &lt;&amp;&quot;&gt;.md</span>\n            </span>\n              <time class=\"home-file-time\" datetime=\"2026-01-30T12:34:56Z\" title=\"2026-01-30T12:34:56Z\">Just now</time>\n          </a>\n        </li>\n    </ul>\n      <div class=\"home-recent-footer\">\n        <button type=\"button\" class=\"home-text-button\" data-home-target=\"showMore\" data-action=\"home#showMore\" aria-controls=\"home-recent-files\" aria-expanded=\"false\">Show more</button>\n        <button type=\"button\" class=\"home-text-button\" data-home-target=\"showLess\" data-action=\"home#showLess\" aria-controls=\"home-recent-files\" aria-expanded=\"true\" hidden>Show less</button>\n      </div>\n  </section>\n"
+          }
+        ],
+        "entries_after": [
+          {
+            "path": "dir/n7 <&\">.md",
+            "opened_at": "2026-01-23T12:34:55.000000Z"
+          },
+          {
+            "path": "dir/n6 <&\">.md",
+            "opened_at": "2026-01-23T12:34:56.000000Z"
+          },
+          {
+            "path": "dir/n5 <&\">.md",
+            "opened_at": "2026-01-29T12:34:56.000000Z"
+          },
+          {
+            "path": "dir/n4 <&\">.md",
+            "opened_at": "2026-01-30T11:34:56.000000Z"
+          },
+          {
+            "path": "dir/n3 <&\">.md",
+            "opened_at": "2026-01-30T12:33:57.000000Z"
+          },
+          {
+            "path": "dir/n2 <&\">.md",
+            "opened_at": "2026-01-30T12:34:55.000000Z"
+          },
+          {
+            "path": "dir/n1 <&\">.md",
+            "opened_at": "2026-01-30T12:34:56.000000Z"
+          }
+        ],
+        "fed_recent_files_lines": [
+          "recent_files = [{\"path\":\"dir/n7 <&\\\">.md\",\"opened_at\":\"2026-01-23T12:34:55.000000Z\"},{\"path\":\"dir/n6 <&\\\">.md\",\"opened_at\":\"2026-01-23T12:34:56.000000Z\"},{\"path\":\"dir/n5 <&\\\">.md\",\"opened_at\":\"2026-01-29T12:34:56.000000Z\"},{\"path\":\"dir/n4 <&\\\">.md\",\"opened_at\":\"2026-01-30T11:34:56.000000Z\"},{\"path\":\"dir/n3 <&\\\">.md\",\"opened_at\":\"2026-01-30T12:33:57.000000Z\"},{\"path\":\"dir/n2 <&\\\">.md\",\"opened_at\":\"2026-01-30T12:34:55.000000Z\"},{\"path\":\"dir/n1 <&\\\">.md\",\"opened_at\":\"2026-01-30T12:34:56.000000Z\"}]"
+        ],
+        "tree_after": {
+          ".fed": "<FED_TEMPLATE>recent_files = [{\"path\":\"dir/n7 <&\\\">.md\",\"opened_at\":\"2026-01-23T12:34:55.000000Z\"},{\"path\":\"dir/n6 <&\\\">.md\",\"opened_at\":\"2026-01-23T12:34:56.000000Z\"},{\"path\":\"dir/n5 <&\\\">.md\",\"opened_at\":\"2026-01-29T12:34:56.000000Z\"},{\"path\":\"dir/n4 <&\\\">.md\",\"opened_at\":\"2026-01-30T11:34:56.000000Z\"},{\"path\":\"dir/n3 <&\\\">.md\",\"opened_at\":\"2026-01-30T12:33:57.000000Z\"},{\"path\":\"dir/n2 <&\\\">.md\",\"opened_at\":\"2026-01-30T12:34:55.000000Z\"},{\"path\":\"dir/n1 <&\\\">.md\",\"opened_at\":\"2026-01-30T12:34:56.000000Z\"}]\n",
+          ".frankmd-config.lock": "",
+          "dir/": null,
+          "dir/n1 <&\">.md": "x",
+          "dir/n2 <&\">.md": "x",
+          "dir/n3 <&\">.md": "x",
+          "dir/n4 <&\">.md": "x",
+          "dir/n5 <&\">.md": "x",
+          "dir/n6 <&\">.md": "x",
+          "dir/n7 <&\">.md": "x"
+        }
+      },
+      "notes": "Records are made at negative offsets from now (2026-01-30T12:34:56.789012Z) so the panel shows 'Just now', seconds, minutes, ... 'Over a week ago'. Only the 7 most recent within LIMIT 10 are present; first 5 visible."
+    },
+    {
+      "name": "HTTP GET /recent_files empty history renders empty body",
+      "fn": "RecentFilesService",
+      "input": {
+        "tree": {},
+        "ops": [
+          {
+            "op": "http",
+            "method": "GET",
+            "url": "/recent_files"
+          }
+        ],
+        "now": "2026-01-30T12:34:56.789012Z"
+      },
+      "expected": {
+        "results": [
+          {
+            "status": 200,
+            "body": ""
+          }
+        ],
+        "entries_after": [],
+        "fed_recent_files_lines": [],
+        "tree_after": {
+          ".fed": "<FED_TEMPLATE>",
+          ".frankmd-config.lock": ""
+        }
+      }
+    }
+  ]
+}

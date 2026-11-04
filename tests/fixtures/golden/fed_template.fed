@@ -1,0 +1,101 @@
+# FrankMD Configuration
+# Uncomment and modify values as needed.
+# Environment variables are used as defaults if not specified here.
+
+# UI Settings
+
+# Theme: light, dark, gruvbox, tokyo-night, solarized-dark,
+#        solarized-light, nord, cappuccino, osaka, hackerman
+# theme = dark
+
+# Editor font: cascadia-code, jetbrains-mono, fira-code,
+#              source-code-pro, ubuntu-mono, roboto-mono, hack
+# editor_font = cascadia-code
+
+# editor_font_size = 14
+# preview_zoom = 100
+# sidebar_visible = true
+# typewriter_mode = false
+# cursor_recenter_on_click = false
+# show_stats = false
+
+# Vim mode: hjkl navigation, modal editing, and : ex-commands (default: false)
+# vim_mode = false
+
+# Editor indent: 0 = tab, 1-6 = spaces (default: 2)
+# editor_indent = 2
+
+# Editor width in characters (default: 72, minimum: 72)
+# Increase for wider text area, e.g., 100, 120, or 150
+# editor_width = 72
+
+# Local Images
+
+# images_path = /path/to/images
+
+# Media Uploads (drag-and-drop)
+
+# Destination for new media: local or s3 (requires AWS S3 configuration).
+# media_storage_provider = local
+
+# Comma-separated file extensions accepted by the image/video drop tabs.
+# image_upload_extensions = .jpg,.jpeg,.png,.gif,.webp,.bmp
+# video_upload_extensions = .mp4,.webm,.mkv,.mov,.avi,.m4v,.ogv
+
+# AWS S3 (for image uploads)
+
+# aws_access_key_id = your-access-key
+# aws_secret_access_key = your-secret-key
+# aws_s3_bucket = your-bucket-name
+# aws_region = us-east-1
+
+# S3-compatible services (MinIO, SeaweedFS, ...): set a custom endpoint
+# and force path-style URLs (bucket in the path).
+# aws_s3_endpoint = http://localhost:9000
+# aws_s3_force_path_style = true
+
+# YouTube API (for video search)
+
+# youtube_api_key = your-youtube-api-key
+
+# Google Custom Search (for image search)
+
+# google_api_key = your-google-api-key
+# google_cse_id = your-custom-search-engine-id
+
+# Hugo Blog Posts
+
+# Path style: dated = YYYY/MM/DD/slug/index.md (default)
+#             flat  = slug.md (in current folder)
+# hugo_path_style = dated
+
+# Custom frontmatter: create a .hugo_template.md file at the notes root
+# to override the generated frontmatter. Placeholders {{title}}, {{slug}}
+# and {{date}} are substituted. Leave unset to use the built-in template.
+
+# AI/LLM (for grammar checking)
+# Provider priority when ai_provider = auto: openai > anthropic > openrouter > ollama > gemini
+# Gemini is lowest priority for text (its key is mainly for image generation)
+
+# ai_provider = auto
+# ai_model = (uses provider-specific default if not set)
+
+# OpenAI (recommended)
+# openai_api_key = sk-...
+# openai_model = gpt-4o-mini
+
+# Anthropic (Claude models)
+# anthropic_api_key = sk-ant-...
+# anthropic_model = claude-sonnet-4-20250514
+
+# Google Gemini
+# gemini_api_key = ...
+# gemini_model = gemini-2.0-flash
+
+# OpenRouter (multiple providers, pay-per-use)
+# openrouter_api_key = sk-or-...
+# openrouter_model = openai/gpt-4o-mini
+
+# Ollama (local, free) - for privacy, requires local setup
+# ollama_api_base = http://localhost:11434
+# ollama_model = llama3.2:latest

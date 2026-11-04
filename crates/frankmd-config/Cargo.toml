@@ -1,0 +1,27 @@
+[package]
+name = "frankmd-config"
+description = "FrankMD configuration: byte-compatible .fed parser/writer, .fed > ENV > default resolution with provenance, XDG app dirs."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+frankmd-core.workspace = true
+frankmd-fs.workspace = true
+frankmd-theme.workspace = true
+thiserror.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+secrecy.workspace = true
+etcetera.workspace = true
+
+[dev-dependencies]
+frankmd-testkit.workspace = true
+serde_json.workspace = true
+tempfile.workspace = true
+secrecy.workspace = true
+
+[lints]
+workspace = true

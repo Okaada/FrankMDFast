@@ -1,0 +1,22 @@
+# HP-004 / HP-015: every filesystem mutation goes through `frankmd-fs`
+# (atomic write, no-clobber create/rename, compat lock files). Other crates get
+# a hard clippy error if they reach for std's writers directly. frankmd-fs opts
+# out with `#![allow(clippy::disallowed_methods)]`.
+disallowed-methods = [
+    { path = "std::fs::write", reason = "use frankmd_fs (atomic, no-clobber writes)" },
+    { path = "std::fs::rename", reason = "use frankmd_fs::Vault::rename (no-clobber)" },
+    { path = "std::fs::remove_file", reason = "use frankmd_fs" },
+    { path = "std::fs::remove_dir", reason = "use frankmd_fs" },
+    { path = "std::fs::remove_dir_all", reason = "use frankmd_fs" },
+    { path = "std::fs::create_dir", reason = "use frankmd_fs" },
+    { path = "std::fs::create_dir_all", reason = "use frankmd_fs" },
+    { path = "std::fs::File::create", reason = "use frankmd_fs" },
+    { path = "std::fs::File::create_new", reason = "use frankmd_fs" },
+    { path = "std::fs::OpenOptions::new", reason = "use frankmd_fs" },
+    { path = "tokio::fs::write", reason = "use frankmd_fs" },
+    { path = "std::env::set_var", reason = "config is resolved once by frankmd_config; never mutate ENV" },
+]
+# HP-010: one egress-guarded HTTP client.
+disallowed-types = [
+    { path = "reqwest::Client", reason = "use frankmd_net::{TrustedClient, EgressClient}" },
+]

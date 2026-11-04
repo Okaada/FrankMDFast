@@ -1,0 +1,1401 @@
+{
+  "source": "app/services/custom_theme.rb#parse @ d47a89e92d89f807878d318182fa5dcea0329ec4",
+  "frankmd_sha": "d47a89e92d89f807878d318182fa5dcea0329ec4",
+  "generator": "tools/golden/ruby/config.rb",
+  "notes": "input.raw_json is passed as a String (JSON-parsed by parse); input.raw is passed as an already-decoded value (Hash etc., not size-checked). Errors: ArgumentError (validation) or JSON::ParserError (malformed JSON; message text from Ruby json gem).",
+  "version": 1,
+  "max_bytes": 16384,
+  "base_themes": [
+    "light",
+    "dark",
+    "catppuccin",
+    "catppuccin-latte",
+    "ethereal",
+    "everforest",
+    "flexoki-light",
+    "gruvbox",
+    "hackerman",
+    "kanagawa",
+    "matte-black",
+    "nord",
+    "osaka-jade",
+    "ristretto",
+    "rose-pine",
+    "solarized-dark",
+    "solarized-light",
+    "tokyo-night"
+  ],
+  "color_keys": [
+    "bg-primary",
+    "bg-secondary",
+    "bg-tertiary",
+    "bg-hover",
+    "text-primary",
+    "text-secondary",
+    "text-muted",
+    "text-faint",
+    "border",
+    "accent",
+    "accent-hover",
+    "accent-text",
+    "selection",
+    "selection-text",
+    "scrollbar",
+    "scrollbar-hover",
+    "success",
+    "warning",
+    "error",
+    "code-bg",
+    "heading-1",
+    "heading-2",
+    "heading-3",
+    "folder-icon",
+    "file-icon",
+    "config-icon",
+    "syntax-keyword",
+    "syntax-function",
+    "syntax-type",
+    "syntax-string",
+    "syntax-number",
+    "syntax-constant",
+    "syntax-identifier",
+    "syntax-property",
+    "syntax-operator",
+    "syntax-comment",
+    "syntax-punctuation",
+    "syntax-invalid"
+  ],
+  "cases": [
+    {
+      "name": "normalizes bounded palette (test)",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\" My colors \",\"base\":\"nord\",\"colors\":{\"accent\":\"#AABBCC\"}}"
+      },
+      "expected": {
+        "version": 1,
+        "name": "My colors",
+        "base": "nord",
+        "colors": {
+          "accent": "#aabbcc"
+        }
+      }
+    },
+    {
+      "name": "null JSON -> nil (test)",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "null"
+      },
+      "expected": null
+    },
+    {
+      "name": "unsafe color red (test)",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\" My colors \",\"base\":\"nord\",\"colors\":{\"accent\":\"red\"}}"
+      },
+      "expected": {
+        "error": "ArgumentError",
+        "message": "Invalid theme colors"
+      }
+    },
+    {
+      "name": "unsafe color #123 (test)",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\" My colors \",\"base\":\"nord\",\"colors\":{\"accent\":\"#123\"}}"
+      },
+      "expected": {
+        "error": "ArgumentError",
+        "message": "Invalid theme colors"
+      }
+    },
+    {
+      "name": "unsafe color url(https://example.com) (test)",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\" My colors \",\"base\":\"nord\",\"colors\":{\"accent\":\"url(https://example.com)\"}}"
+      },
+      "expected": {
+        "error": "ArgumentError",
+        "message": "Invalid theme colors"
+      }
+    },
+    {
+      "name": "unsafe color #aabbcc;display:none (test)",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\" My colors \",\"base\":\"nord\",\"colors\":{\"accent\":\"#aabbcc;display:none\"}}"
+      },
+      "expected": {
+        "error": "ArgumentError",
+        "message": "Invalid theme colors"
+      }
+    },
+    {
+      "name": "unsafe color var(--secret) (test)",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\" My colors \",\"base\":\"nord\",\"colors\":{\"accent\":\"var(--secret)\"}}"
+      },
+      "expected": {
+        "error": "ArgumentError",
+        "message": "Invalid theme colors"
+      }
+    },
+    {
+      "name": "unknown color key (test)",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\" My colors \",\"base\":\"nord\",\"colors\":{\"font-family\":\"#aabbcc\"}}"
+      },
+      "expected": {
+        "error": "ArgumentError",
+        "message": "Invalid theme colors"
+      }
+    },
+    {
+      "name": "base omarchy (test)",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\" My colors \",\"base\":\"omarchy\",\"colors\":{\"accent\":\"#AABBCC\"}}"
+      },
+      "expected": {
+        "error": "ArgumentError",
+        "message": "Invalid base theme"
+      }
+    },
+    {
+      "name": "version 2 (test)",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":2,\"name\":\" My colors \",\"base\":\"nord\",\"colors\":{\"accent\":\"#AABBCC\"}}"
+      },
+      "expected": {
+        "error": "ArgumentError",
+        "message": "Invalid theme format"
+      }
+    },
+    {
+      "name": "empty name (test)",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\"\",\"base\":\"nord\",\"colors\":{\"accent\":\"#AABBCC\"}}"
+      },
+      "expected": {
+        "error": "ArgumentError",
+        "message": "Invalid theme name"
+      }
+    },
+    {
+      "name": "61-char name (test)",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\",\"base\":\"nord\",\"colors\":{\"accent\":\"#AABBCC\"}}"
+      },
+      "expected": {
+        "error": "ArgumentError",
+        "message": "Invalid theme name"
+      }
+    },
+    {
+      "name": "newline in name (test)",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\"bad\\nname\",\"base\":\"nord\",\"colors\":{\"accent\":\"#AABBCC\"}}"
+      },
+      "expected": {
+        "error": "ArgumentError",
+        "message": "Invalid theme name"
+      }
+    },
+    {
+      "name": "extra css key (test)",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\" My colors \",\"base\":\"nord\",\"colors\":{\"accent\":\"#AABBCC\"},\"css\":\"body{}\"}"
+      },
+      "expected": {
+        "error": "ArgumentError",
+        "message": "Invalid theme format"
+      }
+    },
+    {
+      "name": "oversized whitespace string (test)",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 "
+      },
+      "expected": {
+        "error": "ArgumentError",
+        "message": "Theme is too large"
+      }
+    },
+    {
+      "name": "exactly MAX_BYTES whitespace (passes size, fails JSON)",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                "
+      },
+      "expected": {
+        "error": "JSON::ParserError",
+        "message": "unexpected end of input at line 1 column 16385"
+      }
+    },
+    {
+      "name": "controller test theme with quotes in name",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\"My \\\"theme\\\"\",\"base\":\"dark\",\"colors\":{\"accent\":\"#AABBCC\"}}"
+      },
+      "expected": {
+        "version": 1,
+        "name": "My \"theme\"",
+        "base": "dark",
+        "colors": {
+          "accent": "#aabbcc"
+        }
+      }
+    },
+    {
+      "name": "all color keys",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\" My colors \",\"base\":\"nord\",\"colors\":{\"bg-primary\":\"#000000\",\"bg-secondary\":\"#018697\",\"bg-tertiary\":\"#030D2E\",\"bg-hover\":\"#0493C5\",\"text-primary\":\"#061A5C\",\"text-secondary\":\"#07A0F3\",\"text-muted\":\"#09278A\",\"text-faint\":\"#0AAE21\",\"border\":\"#0C34B8\",\"accent\":\"#0DBB4F\",\"accent-hover\":\"#0F41E6\",\"accent-text\":\"#10C87D\",\"selection\":\"#124F14\",\"selection-text\":\"#13D5AB\",\"scrollbar\":\"#155C42\",\"scrollbar-hover\":\"#16E2D9\",\"success\":\"#186970\",\"warning\":\"#19F007\",\"error\":\"#1B769E\",\"code-bg\":\"#1CFD35\",\"heading-1\":\"#1E83CC\",\"heading-2\":\"#200A63\",\"heading-3\":\"#2190FA\",\"folder-icon\":\"#231791\",\"file-icon\":\"#249E28\",\"config-icon\":\"#2624BF\",\"syntax-keyword\":\"#27AB56\",\"syntax-function\":\"#2931ED\",\"syntax-type\":\"#2AB884\",\"syntax-string\":\"#2C3F1B\",\"syntax-number\":\"#2DC5B2\",\"syntax-constant\":\"#2F4C49\",\"syntax-identifier\":\"#30D2E0\",\"syntax-property\":\"#325977\",\"syntax-operator\":\"#33E00E\",\"syntax-comment\":\"#3566A5\",\"syntax-punctuation\":\"#36ED3C\",\"syntax-invalid\":\"#3873D3\"}}"
+      },
+      "expected": {
+        "version": 1,
+        "name": "My colors",
+        "base": "nord",
+        "colors": {
+          "bg-primary": "#000000",
+          "bg-secondary": "#018697",
+          "bg-tertiary": "#030d2e",
+          "bg-hover": "#0493c5",
+          "text-primary": "#061a5c",
+          "text-secondary": "#07a0f3",
+          "text-muted": "#09278a",
+          "text-faint": "#0aae21",
+          "border": "#0c34b8",
+          "accent": "#0dbb4f",
+          "accent-hover": "#0f41e6",
+          "accent-text": "#10c87d",
+          "selection": "#124f14",
+          "selection-text": "#13d5ab",
+          "scrollbar": "#155c42",
+          "scrollbar-hover": "#16e2d9",
+          "success": "#186970",
+          "warning": "#19f007",
+          "error": "#1b769e",
+          "code-bg": "#1cfd35",
+          "heading-1": "#1e83cc",
+          "heading-2": "#200a63",
+          "heading-3": "#2190fa",
+          "folder-icon": "#231791",
+          "file-icon": "#249e28",
+          "config-icon": "#2624bf",
+          "syntax-keyword": "#27ab56",
+          "syntax-function": "#2931ed",
+          "syntax-type": "#2ab884",
+          "syntax-string": "#2c3f1b",
+          "syntax-number": "#2dc5b2",
+          "syntax-constant": "#2f4c49",
+          "syntax-identifier": "#30d2e0",
+          "syntax-property": "#325977",
+          "syntax-operator": "#33e00e",
+          "syntax-comment": "#3566a5",
+          "syntax-punctuation": "#36ed3c",
+          "syntax-invalid": "#3873d3"
+        }
+      }
+    },
+    {
+      "name": "empty colors",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\" My colors \",\"base\":\"nord\",\"colors\":{}}"
+      },
+      "expected": {
+        "version": 1,
+        "name": "My colors",
+        "base": "nord",
+        "colors": {}
+      }
+    },
+    {
+      "name": "colors not a hash",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\" My colors \",\"base\":\"nord\",\"colors\":[\"#aabbcc\"]}"
+      },
+      "expected": {
+        "error": "ArgumentError",
+        "message": "Invalid theme colors"
+      }
+    },
+    {
+      "name": "colors missing",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\" My colors \",\"base\":\"nord\"}"
+      },
+      "expected": {
+        "error": "ArgumentError",
+        "message": "Invalid theme colors"
+      }
+    },
+    {
+      "name": "colors null",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\" My colors \",\"base\":\"nord\",\"colors\":null}"
+      },
+      "expected": {
+        "error": "ArgumentError",
+        "message": "Invalid theme colors"
+      }
+    },
+    {
+      "name": "color \"#aabbcc\"",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\" My colors \",\"base\":\"nord\",\"colors\":{\"accent\":\"#aabbcc\"}}"
+      },
+      "expected": {
+        "version": 1,
+        "name": "My colors",
+        "base": "nord",
+        "colors": {
+          "accent": "#aabbcc"
+        }
+      }
+    },
+    {
+      "name": "color \"#AaBbCc\"",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\" My colors \",\"base\":\"nord\",\"colors\":{\"accent\":\"#AaBbCc\"}}"
+      },
+      "expected": {
+        "version": 1,
+        "name": "My colors",
+        "base": "nord",
+        "colors": {
+          "accent": "#aabbcc"
+        }
+      }
+    },
+    {
+      "name": "color \"#000000\"",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\" My colors \",\"base\":\"nord\",\"colors\":{\"accent\":\"#000000\"}}"
+      },
+      "expected": {
+        "version": 1,
+        "name": "My colors",
+        "base": "nord",
+        "colors": {
+          "accent": "#000000"
+        }
+      }
+    },
+    {
+      "name": "color \"#ffffff\"",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\" My colors \",\"base\":\"nord\",\"colors\":{\"accent\":\"#ffffff\"}}"
+      },
+      "expected": {
+        "version": 1,
+        "name": "My colors",
+        "base": "nord",
+        "colors": {
+          "accent": "#ffffff"
+        }
+      }
+    },
+    {
+      "name": "color \"aabbcc\"",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\" My colors \",\"base\":\"nord\",\"colors\":{\"accent\":\"aabbcc\"}}"
+      },
+      "expected": {
+        "error": "ArgumentError",
+        "message": "Invalid theme colors"
+      }
+    },
+    {
+      "name": "color \"#aabbc\"",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\" My colors \",\"base\":\"nord\",\"colors\":{\"accent\":\"#aabbc\"}}"
+      },
+      "expected": {
+        "error": "ArgumentError",
+        "message": "Invalid theme colors"
+      }
+    },
+    {
+      "name": "color \"#aabbccd\"",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\" My colors \",\"base\":\"nord\",\"colors\":{\"accent\":\"#aabbccd\"}}"
+      },
+      "expected": {
+        "error": "ArgumentError",
+        "message": "Invalid theme colors"
+      }
+    },
+    {
+      "name": "color \"#aabbccdd\"",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\" My colors \",\"base\":\"nord\",\"colors\":{\"accent\":\"#aabbccdd\"}}"
+      },
+      "expected": {
+        "error": "ArgumentError",
+        "message": "Invalid theme colors"
+      }
+    },
+    {
+      "name": "color \"#gggggg\"",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\" My colors \",\"base\":\"nord\",\"colors\":{\"accent\":\"#gggggg\"}}"
+      },
+      "expected": {
+        "error": "ArgumentError",
+        "message": "Invalid theme colors"
+      }
+    },
+    {
+      "name": "color \" #aabbcc\"",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\" My colors \",\"base\":\"nord\",\"colors\":{\"accent\":\" #aabbcc\"}}"
+      },
+      "expected": {
+        "error": "ArgumentError",
+        "message": "Invalid theme colors"
+      }
+    },
+    {
+      "name": "color \"#aabbcc \"",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\" My colors \",\"base\":\"nord\",\"colors\":{\"accent\":\"#aabbcc \"}}"
+      },
+      "expected": {
+        "error": "ArgumentError",
+        "message": "Invalid theme colors"
+      }
+    },
+    {
+      "name": "color \"#aabbcc\\n\"",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\" My colors \",\"base\":\"nord\",\"colors\":{\"accent\":\"#aabbcc\\n\"}}"
+      },
+      "expected": {
+        "error": "ArgumentError",
+        "message": "Invalid theme colors"
+      }
+    },
+    {
+      "name": "color \"\\n#aabbcc\"",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\" My colors \",\"base\":\"nord\",\"colors\":{\"accent\":\"\\n#aabbcc\"}}"
+      },
+      "expected": {
+        "error": "ArgumentError",
+        "message": "Invalid theme colors"
+      }
+    },
+    {
+      "name": "color \"#ａａｂｂｃｃ\"",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\" My colors \",\"base\":\"nord\",\"colors\":{\"accent\":\"#ａａｂｂｃｃ\"}}"
+      },
+      "expected": {
+        "error": "ArgumentError",
+        "message": "Invalid theme colors"
+      }
+    },
+    {
+      "name": "color \"##aabbc\"",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\" My colors \",\"base\":\"nord\",\"colors\":{\"accent\":\"##aabbc\"}}"
+      },
+      "expected": {
+        "error": "ArgumentError",
+        "message": "Invalid theme colors"
+      }
+    },
+    {
+      "name": "color as integer",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\" My colors \",\"base\":\"nord\",\"colors\":{\"accent\":11189196}}"
+      },
+      "expected": {
+        "error": "ArgumentError",
+        "message": "Invalid theme colors"
+      }
+    },
+    {
+      "name": "color null",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\" My colors \",\"base\":\"nord\",\"colors\":{\"accent\":null}}"
+      },
+      "expected": {
+        "error": "ArgumentError",
+        "message": "Invalid theme colors"
+      }
+    },
+    {
+      "name": "color key uppercase",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\" My colors \",\"base\":\"nord\",\"colors\":{\"ACCENT\":\"#aabbcc\"}}"
+      },
+      "expected": {
+        "error": "ArgumentError",
+        "message": "Invalid theme colors"
+      }
+    },
+    {
+      "name": "color key order preserved",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\" My colors \",\"base\":\"nord\",\"colors\":{\"text-primary\":\"#111111\",\"accent\":\"#222222\",\"bg-primary\":\"#333333\"}}"
+      },
+      "expected": {
+        "version": 1,
+        "name": "My colors",
+        "base": "nord",
+        "colors": {
+          "text-primary": "#111111",
+          "accent": "#222222",
+          "bg-primary": "#333333"
+        }
+      }
+    },
+    {
+      "name": "name exactly 60 chars",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\"nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn\",\"base\":\"nord\",\"colors\":{\"accent\":\"#AABBCC\"}}"
+      },
+      "expected": {
+        "version": 1,
+        "name": "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn",
+        "base": "nord",
+        "colors": {
+          "accent": "#aabbcc"
+        }
+      }
+    },
+    {
+      "name": "name 60 chars plus surrounding spaces",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\"  nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn  \",\"base\":\"nord\",\"colors\":{\"accent\":\"#AABBCC\"}}"
+      },
+      "expected": {
+        "version": 1,
+        "name": "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn",
+        "base": "nord",
+        "colors": {
+          "accent": "#aabbcc"
+        }
+      }
+    },
+    {
+      "name": "name 60 multibyte chars",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\"çççççççççççççççççççççççççççççççççççççççççççççççççççççççççççç\",\"base\":\"nord\",\"colors\":{\"accent\":\"#AABBCC\"}}"
+      },
+      "expected": {
+        "version": 1,
+        "name": "çççççççççççççççççççççççççççççççççççççççççççççççççççççççççççç",
+        "base": "nord",
+        "colors": {
+          "accent": "#aabbcc"
+        }
+      }
+    },
+    {
+      "name": "name 61 multibyte chars",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\"日日日日日日日日日日日日日日日日日日日日日日日日日日日日日日日日日日日日日日日日日日日日日日日日日日日日日日日日日日日日日\",\"base\":\"nord\",\"colors\":{\"accent\":\"#AABBCC\"}}"
+      },
+      "expected": {
+        "error": "ArgumentError",
+        "message": "Invalid theme name"
+      }
+    },
+    {
+      "name": "name emoji ZWJ",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\"👨‍👩‍👧 family\",\"base\":\"nord\",\"colors\":{\"accent\":\"#AABBCC\"}}"
+      },
+      "expected": {
+        "version": 1,
+        "name": "👨‍👩‍👧 family",
+        "base": "nord",
+        "colors": {
+          "accent": "#aabbcc"
+        }
+      }
+    },
+    {
+      "name": "name combining",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\"Café\",\"base\":\"nord\",\"colors\":{\"accent\":\"#AABBCC\"}}"
+      },
+      "expected": {
+        "version": 1,
+        "name": "Café",
+        "base": "nord",
+        "colors": {
+          "accent": "#aabbcc"
+        }
+      }
+    },
+    {
+      "name": "name RTL",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\"שלום\",\"base\":\"nord\",\"colors\":{\"accent\":\"#AABBCC\"}}"
+      },
+      "expected": {
+        "version": 1,
+        "name": "שלום",
+        "base": "nord",
+        "colors": {
+          "accent": "#aabbcc"
+        }
+      }
+    },
+    {
+      "name": "name only spaces",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\"   \",\"base\":\"nord\",\"colors\":{\"accent\":\"#AABBCC\"}}"
+      },
+      "expected": {
+        "error": "ArgumentError",
+        "message": "Invalid theme name"
+      }
+    },
+    {
+      "name": "name only NBSP (not stripped)",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\" \",\"base\":\"nord\",\"colors\":{\"accent\":\"#AABBCC\"}}"
+      },
+      "expected": {
+        "version": 1,
+        "name": " ",
+        "base": "nord",
+        "colors": {
+          "accent": "#aabbcc"
+        }
+      }
+    },
+    {
+      "name": "name with tab",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\"a\\tb\",\"base\":\"nord\",\"colors\":{\"accent\":\"#AABBCC\"}}"
+      },
+      "expected": {
+        "error": "ArgumentError",
+        "message": "Invalid theme name"
+      }
+    },
+    {
+      "name": "name with DEL",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\"ab\",\"base\":\"nord\",\"colors\":{\"accent\":\"#AABBCC\"}}"
+      },
+      "expected": {
+        "error": "ArgumentError",
+        "message": "Invalid theme name"
+      }
+    },
+    {
+      "name": "name with C1 control U+0085",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\"ab\",\"base\":\"nord\",\"colors\":{\"accent\":\"#AABBCC\"}}"
+      },
+      "expected": {
+        "error": "ArgumentError",
+        "message": "Invalid theme name"
+      }
+    },
+    {
+      "name": "name with zero-width space",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\"a​b\",\"base\":\"nord\",\"colors\":{\"accent\":\"#AABBCC\"}}"
+      },
+      "expected": {
+        "version": 1,
+        "name": "a​b",
+        "base": "nord",
+        "colors": {
+          "accent": "#aabbcc"
+        }
+      }
+    },
+    {
+      "name": "name with leading tab stripped? (tab is cntrl)",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\"\\tname\",\"base\":\"nord\",\"colors\":{\"accent\":\"#AABBCC\"}}"
+      },
+      "expected": {
+        "error": "ArgumentError",
+        "message": "Invalid theme name"
+      }
+    },
+    {
+      "name": "name trailing newline",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\"name\\n\",\"base\":\"nord\",\"colors\":{\"accent\":\"#AABBCC\"}}"
+      },
+      "expected": {
+        "error": "ArgumentError",
+        "message": "Invalid theme name"
+      }
+    },
+    {
+      "name": "name integer",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":5,\"base\":\"nord\",\"colors\":{\"accent\":\"#AABBCC\"}}"
+      },
+      "expected": {
+        "error": "ArgumentError",
+        "message": "Invalid theme name"
+      }
+    },
+    {
+      "name": "name missing",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"base\":\"nord\",\"colors\":{\"accent\":\"#AABBCC\"}}"
+      },
+      "expected": {
+        "error": "ArgumentError",
+        "message": "Invalid theme name"
+      }
+    },
+    {
+      "name": "name with html",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\"<script>alert(1)</script>\",\"base\":\"nord\",\"colors\":{\"accent\":\"#AABBCC\"}}"
+      },
+      "expected": {
+        "version": 1,
+        "name": "<script>alert(1)</script>",
+        "base": "nord",
+        "colors": {
+          "accent": "#aabbcc"
+        }
+      }
+    },
+    {
+      "name": "base light",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\" My colors \",\"base\":\"light\",\"colors\":{\"accent\":\"#AABBCC\"}}"
+      },
+      "expected": {
+        "version": 1,
+        "name": "My colors",
+        "base": "light",
+        "colors": {
+          "accent": "#aabbcc"
+        }
+      }
+    },
+    {
+      "name": "base dark",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\" My colors \",\"base\":\"dark\",\"colors\":{\"accent\":\"#AABBCC\"}}"
+      },
+      "expected": {
+        "version": 1,
+        "name": "My colors",
+        "base": "dark",
+        "colors": {
+          "accent": "#aabbcc"
+        }
+      }
+    },
+    {
+      "name": "base catppuccin",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\" My colors \",\"base\":\"catppuccin\",\"colors\":{\"accent\":\"#AABBCC\"}}"
+      },
+      "expected": {
+        "version": 1,
+        "name": "My colors",
+        "base": "catppuccin",
+        "colors": {
+          "accent": "#aabbcc"
+        }
+      }
+    },
+    {
+      "name": "base catppuccin-latte",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\" My colors \",\"base\":\"catppuccin-latte\",\"colors\":{\"accent\":\"#AABBCC\"}}"
+      },
+      "expected": {
+        "version": 1,
+        "name": "My colors",
+        "base": "catppuccin-latte",
+        "colors": {
+          "accent": "#aabbcc"
+        }
+      }
+    },
+    {
+      "name": "base ethereal",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\" My colors \",\"base\":\"ethereal\",\"colors\":{\"accent\":\"#AABBCC\"}}"
+      },
+      "expected": {
+        "version": 1,
+        "name": "My colors",
+        "base": "ethereal",
+        "colors": {
+          "accent": "#aabbcc"
+        }
+      }
+    },
+    {
+      "name": "base everforest",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\" My colors \",\"base\":\"everforest\",\"colors\":{\"accent\":\"#AABBCC\"}}"
+      },
+      "expected": {
+        "version": 1,
+        "name": "My colors",
+        "base": "everforest",
+        "colors": {
+          "accent": "#aabbcc"
+        }
+      }
+    },
+    {
+      "name": "base flexoki-light",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\" My colors \",\"base\":\"flexoki-light\",\"colors\":{\"accent\":\"#AABBCC\"}}"
+      },
+      "expected": {
+        "version": 1,
+        "name": "My colors",
+        "base": "flexoki-light",
+        "colors": {
+          "accent": "#aabbcc"
+        }
+      }
+    },
+    {
+      "name": "base gruvbox",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\" My colors \",\"base\":\"gruvbox\",\"colors\":{\"accent\":\"#AABBCC\"}}"
+      },
+      "expected": {
+        "version": 1,
+        "name": "My colors",
+        "base": "gruvbox",
+        "colors": {
+          "accent": "#aabbcc"
+        }
+      }
+    },
+    {
+      "name": "base hackerman",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\" My colors \",\"base\":\"hackerman\",\"colors\":{\"accent\":\"#AABBCC\"}}"
+      },
+      "expected": {
+        "version": 1,
+        "name": "My colors",
+        "base": "hackerman",
+        "colors": {
+          "accent": "#aabbcc"
+        }
+      }
+    },
+    {
+      "name": "base kanagawa",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\" My colors \",\"base\":\"kanagawa\",\"colors\":{\"accent\":\"#AABBCC\"}}"
+      },
+      "expected": {
+        "version": 1,
+        "name": "My colors",
+        "base": "kanagawa",
+        "colors": {
+          "accent": "#aabbcc"
+        }
+      }
+    },
+    {
+      "name": "base matte-black",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\" My colors \",\"base\":\"matte-black\",\"colors\":{\"accent\":\"#AABBCC\"}}"
+      },
+      "expected": {
+        "version": 1,
+        "name": "My colors",
+        "base": "matte-black",
+        "colors": {
+          "accent": "#aabbcc"
+        }
+      }
+    },
+    {
+      "name": "base nord",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\" My colors \",\"base\":\"nord\",\"colors\":{\"accent\":\"#AABBCC\"}}"
+      },
+      "expected": {
+        "version": 1,
+        "name": "My colors",
+        "base": "nord",
+        "colors": {
+          "accent": "#aabbcc"
+        }
+      }
+    },
+    {
+      "name": "base osaka-jade",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\" My colors \",\"base\":\"osaka-jade\",\"colors\":{\"accent\":\"#AABBCC\"}}"
+      },
+      "expected": {
+        "version": 1,
+        "name": "My colors",
+        "base": "osaka-jade",
+        "colors": {
+          "accent": "#aabbcc"
+        }
+      }
+    },
+    {
+      "name": "base ristretto",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\" My colors \",\"base\":\"ristretto\",\"colors\":{\"accent\":\"#AABBCC\"}}"
+      },
+      "expected": {
+        "version": 1,
+        "name": "My colors",
+        "base": "ristretto",
+        "colors": {
+          "accent": "#aabbcc"
+        }
+      }
+    },
+    {
+      "name": "base rose-pine",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\" My colors \",\"base\":\"rose-pine\",\"colors\":{\"accent\":\"#AABBCC\"}}"
+      },
+      "expected": {
+        "version": 1,
+        "name": "My colors",
+        "base": "rose-pine",
+        "colors": {
+          "accent": "#aabbcc"
+        }
+      }
+    },
+    {
+      "name": "base solarized-dark",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\" My colors \",\"base\":\"solarized-dark\",\"colors\":{\"accent\":\"#AABBCC\"}}"
+      },
+      "expected": {
+        "version": 1,
+        "name": "My colors",
+        "base": "solarized-dark",
+        "colors": {
+          "accent": "#aabbcc"
+        }
+      }
+    },
+    {
+      "name": "base solarized-light",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\" My colors \",\"base\":\"solarized-light\",\"colors\":{\"accent\":\"#AABBCC\"}}"
+      },
+      "expected": {
+        "version": 1,
+        "name": "My colors",
+        "base": "solarized-light",
+        "colors": {
+          "accent": "#aabbcc"
+        }
+      }
+    },
+    {
+      "name": "base tokyo-night",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\" My colors \",\"base\":\"tokyo-night\",\"colors\":{\"accent\":\"#AABBCC\"}}"
+      },
+      "expected": {
+        "version": 1,
+        "name": "My colors",
+        "base": "tokyo-night",
+        "colors": {
+          "accent": "#aabbcc"
+        }
+      }
+    },
+    {
+      "name": "base uppercase",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\" My colors \",\"base\":\"Dark\",\"colors\":{\"accent\":\"#AABBCC\"}}"
+      },
+      "expected": {
+        "error": "ArgumentError",
+        "message": "Invalid base theme"
+      }
+    },
+    {
+      "name": "base missing",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\" My colors \",\"colors\":{\"accent\":\"#AABBCC\"}}"
+      },
+      "expected": {
+        "error": "ArgumentError",
+        "message": "Invalid base theme"
+      }
+    },
+    {
+      "name": "base custom",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\" My colors \",\"base\":\"custom\",\"colors\":{\"accent\":\"#AABBCC\"}}"
+      },
+      "expected": {
+        "error": "ArgumentError",
+        "message": "Invalid base theme"
+      }
+    },
+    {
+      "name": "version float 1.0",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1.0,\"name\":\"x\",\"base\":\"dark\",\"colors\":{}}"
+      },
+      "expected": {
+        "version": 1,
+        "name": "x",
+        "base": "dark",
+        "colors": {}
+      }
+    },
+    {
+      "name": "version string",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":\"1\",\"name\":\" My colors \",\"base\":\"nord\",\"colors\":{\"accent\":\"#AABBCC\"}}"
+      },
+      "expected": {
+        "error": "ArgumentError",
+        "message": "Invalid theme format"
+      }
+    },
+    {
+      "name": "version missing",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"name\":\" My colors \",\"base\":\"nord\",\"colors\":{\"accent\":\"#AABBCC\"}}"
+      },
+      "expected": {
+        "error": "ArgumentError",
+        "message": "Invalid theme format"
+      }
+    },
+    {
+      "name": "version true",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":true,\"name\":\" My colors \",\"base\":\"nord\",\"colors\":{\"accent\":\"#AABBCC\"}}"
+      },
+      "expected": {
+        "error": "ArgumentError",
+        "message": "Invalid theme format"
+      }
+    },
+    {
+      "name": "top-level array",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "[]"
+      },
+      "expected": {
+        "error": "ArgumentError",
+        "message": "Invalid theme format"
+      }
+    },
+    {
+      "name": "top-level string",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "\"theme\""
+      },
+      "expected": {
+        "error": "ArgumentError",
+        "message": "Invalid theme format"
+      }
+    },
+    {
+      "name": "top-level number",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "1"
+      },
+      "expected": {
+        "error": "ArgumentError",
+        "message": "Invalid theme format"
+      }
+    },
+    {
+      "name": "top-level object empty",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{}"
+      },
+      "expected": {
+        "error": "ArgumentError",
+        "message": "Invalid theme format"
+      }
+    },
+    {
+      "name": "malformed JSON",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{broken"
+      },
+      "expected": {
+        "error": "JSON::ParserError",
+        "message": "expected object key, got 'broken' at line 1 column 2"
+      }
+    },
+    {
+      "name": "empty string",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": ""
+      },
+      "expected": {
+        "error": "JSON::ParserError",
+        "message": "unexpected end of input at line 1 column 1"
+      }
+    },
+    {
+      "name": "JSON with duplicate keys (last wins)",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\"a\",\"name\":\"b\",\"base\":\"dark\",\"colors\":{}}"
+      },
+      "expected": {
+        "version": 1,
+        "name": "b",
+        "base": "dark",
+        "colors": {}
+      }
+    },
+    {
+      "name": "JSON with surrounding whitespace",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "  {\"version\":1,\"name\":\"x\",\"base\":\"dark\",\"colors\":{}}  \n"
+      },
+      "expected": {
+        "version": 1,
+        "name": "x",
+        "base": "dark",
+        "colors": {}
+      }
+    },
+    {
+      "name": "check order: bad version and bad name -> format error",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":2,\"name\":\"\",\"base\":\"nord\",\"colors\":{\"accent\":\"#AABBCC\"}}"
+      },
+      "expected": {
+        "error": "ArgumentError",
+        "message": "Invalid theme format"
+      }
+    },
+    {
+      "name": "check order: bad name and bad base -> name error",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\"\",\"base\":\"x\",\"colors\":{\"accent\":\"#AABBCC\"}}"
+      },
+      "expected": {
+        "error": "ArgumentError",
+        "message": "Invalid theme name"
+      }
+    },
+    {
+      "name": "check order: bad base and bad colors -> base error",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\" My colors \",\"base\":\"x\",\"colors\":{\"a\":1}}"
+      },
+      "expected": {
+        "error": "ArgumentError",
+        "message": "Invalid base theme"
+      }
+    },
+    {
+      "name": "large but under limit (padded whitespace)",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\"big\",\"base\":\"nord\",\"colors\":{\"accent\":\"#AABBCC\"}}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          "
+      },
+      "expected": {
+        "version": 1,
+        "name": "big",
+        "base": "nord",
+        "colors": {
+          "accent": "#aabbcc"
+        }
+      }
+    },
+    {
+      "name": "one byte over limit",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw_json": "{\"version\":1,\"name\":\"big\",\"base\":\"nord\",\"colors\":{\"accent\":\"#AABBCC\"}}                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           "
+      },
+      "expected": {
+        "error": "ArgumentError",
+        "message": "Theme is too large"
+      }
+    },
+    {
+      "name": "hash input (not size-checked)",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw": {
+          "version": 1,
+          "name": " My colors ",
+          "base": "nord",
+          "colors": {
+            "accent": "#AABBCC"
+          }
+        }
+      },
+      "expected": {
+        "version": 1,
+        "name": "My colors",
+        "base": "nord",
+        "colors": {
+          "accent": "#aabbcc"
+        }
+      }
+    },
+    {
+      "name": "hash input large name list",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw": {
+          "version": 1,
+          "name": " My colors ",
+          "base": "nord",
+          "colors": {
+            "accent": "#ABCDEF"
+          }
+        }
+      },
+      "expected": {
+        "version": 1,
+        "name": "My colors",
+        "base": "nord",
+        "colors": {
+          "accent": "#abcdef"
+        }
+      }
+    },
+    {
+      "name": "nil input",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw": null
+      },
+      "expected": null
+    },
+    {
+      "name": "array input",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw": [
+          1
+        ]
+      },
+      "expected": {
+        "error": "ArgumentError",
+        "message": "Invalid theme format"
+      }
+    },
+    {
+      "name": "integer input",
+      "fn": "CustomTheme.parse",
+      "input": {
+        "raw": 5
+      },
+      "expected": {
+        "error": "ArgumentError",
+        "message": "Invalid theme format"
+      }
+    }
+  ]
+}

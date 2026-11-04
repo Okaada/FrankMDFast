@@ -1,0 +1,18 @@
+[package]
+name = "frankmd-vim"
+description = "GUI-free Vim emulation state machine over an abstract text buffer, scoped to FrankMD's codemirror-vim usage."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+
+[lints]
+workspace = true
+
+[dev-dependencies]
+frankmd-testkit.workspace = true
+serde_json.workspace = true
+frankmd-workspace.workspace = true

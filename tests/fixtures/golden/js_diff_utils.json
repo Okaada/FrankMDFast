@@ -1,0 +1,1095 @@
+{
+  "source": "app/javascript/lib/diff_utils.js @ d47a89e92d89f807878d318182fa5dcea0329ec4",
+  "frankmd_sha": "d47a89e92d89f807878d318182fa5dcea0329ec4",
+  "generator": "tools/golden/js/utils.mjs",
+  "notes": "input = encoded argument array (decode with golden.mjs decode: {$undefined}, {$number}, {$date}, {$regexp}, {$utf16}); expected = encoded return value, or {$error:{name,message}}. JS strings are UTF-16: all positions/lengths/indices in inputs and outputs are UTF-16 code-unit offsets; cases with non-BMP/multi-unit strings carry a `utf16` array (utf16_len/scalar_len/utf8_len per such string arg). TZ pinned to UTC for date-based helpers.",
+  "functions": [
+    "computeWordDiff",
+    "lcsWordDiff",
+    "tokenize"
+  ],
+  "cases": [
+    {
+      "name": "computeWordDiff #1 (from FrankMD vitest suite)",
+      "fn": "computeWordDiff",
+      "input": [
+        "",
+        "hello"
+      ],
+      "expected": [
+        {
+          "type": "insert",
+          "value": "hello"
+        }
+      ]
+    },
+    {
+      "name": "computeWordDiff #2 (from FrankMD vitest suite)",
+      "fn": "computeWordDiff",
+      "input": [
+        "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        ""
+      ],
+      "expected": [
+        {
+          "type": "delete",
+          "value": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        }
+      ]
+    },
+    {
+      "name": "computeWordDiff #3 (from FrankMD vitest suite)",
+      "fn": "computeWordDiff",
+      "input": [
+        "Hello wrold",
+        "Hello world"
+      ],
+      "expected": [
+        {
+          "type": "equal",
+          "value": "Hello "
+        },
+        {
+          "type": "delete",
+          "value": "wrold"
+        },
+        {
+          "type": "insert",
+          "value": "world"
+        }
+      ]
+    },
+    {
+      "name": "computeWordDiff #4 (from FrankMD vitest suite)",
+      "fn": "computeWordDiff",
+      "input": [
+        "hello world",
+        "hello world"
+      ],
+      "expected": [
+        {
+          "type": "equal",
+          "value": "hello world"
+        }
+      ]
+    },
+    {
+      "name": "computeWordDiff #5 (from FrankMD vitest suite)",
+      "fn": "computeWordDiff",
+      "input": [
+        "server content",
+        "recoverable local draft"
+      ],
+      "expected": [
+        {
+          "type": "delete",
+          "value": "server"
+        },
+        {
+          "type": "insert",
+          "value": "recoverable"
+        },
+        {
+          "type": "equal",
+          "value": " "
+        },
+        {
+          "type": "delete",
+          "value": "content"
+        },
+        {
+          "type": "insert",
+          "value": "local draft"
+        }
+      ]
+    },
+    {
+      "name": "computeWordDiff #6 (from FrankMD vitest suite)",
+      "fn": "computeWordDiff",
+      "input": [
+        "server content",
+        "backup content"
+      ],
+      "expected": [
+        {
+          "type": "delete",
+          "value": "server"
+        },
+        {
+          "type": "insert",
+          "value": "backup"
+        },
+        {
+          "type": "equal",
+          "value": " content"
+        }
+      ]
+    },
+    {
+      "name": "computeWordDiff #7 (from FrankMD vitest suite)",
+      "fn": "computeWordDiff",
+      "input": [
+        "test",
+        "test corrected"
+      ],
+      "expected": [
+        {
+          "type": "equal",
+          "value": "test"
+        },
+        {
+          "type": "insert",
+          "value": " corrected"
+        }
+      ]
+    },
+    {
+      "name": "computeWordDiff #8 (from FrankMD vitest suite)",
+      "fn": "computeWordDiff",
+      "input": [
+        "server",
+        "my backup content"
+      ],
+      "expected": [
+        {
+          "type": "delete",
+          "value": "server"
+        },
+        {
+          "type": "insert",
+          "value": "my backup content"
+        }
+      ]
+    },
+    {
+      "name": "computeWordDiff #9 (from FrankMD vitest suite)",
+      "fn": "computeWordDiff",
+      "input": [
+        "server version",
+        "moved draft"
+      ],
+      "expected": [
+        {
+          "type": "delete",
+          "value": "server"
+        },
+        {
+          "type": "insert",
+          "value": "moved"
+        },
+        {
+          "type": "equal",
+          "value": " "
+        },
+        {
+          "type": "delete",
+          "value": "version"
+        },
+        {
+          "type": "insert",
+          "value": "draft"
+        }
+      ]
+    },
+    {
+      "name": "computeWordDiff #10 (from FrankMD vitest suite)",
+      "fn": "computeWordDiff",
+      "input": [
+        "server version",
+        "original divergent draft"
+      ],
+      "expected": [
+        {
+          "type": "delete",
+          "value": "server"
+        },
+        {
+          "type": "insert",
+          "value": "original"
+        },
+        {
+          "type": "equal",
+          "value": " "
+        },
+        {
+          "type": "delete",
+          "value": "version"
+        },
+        {
+          "type": "insert",
+          "value": "divergent draft"
+        }
+      ]
+    },
+    {
+      "name": "computeWordDiff #11 (from FrankMD vitest suite)",
+      "fn": "computeWordDiff",
+      "input": [
+        "server",
+        "backup"
+      ],
+      "expected": [
+        {
+          "type": "delete",
+          "value": "server"
+        },
+        {
+          "type": "insert",
+          "value": "backup"
+        }
+      ]
+    },
+    {
+      "name": "computeWordDiff #12 (from FrankMD vitest suite)",
+      "fn": "computeWordDiff",
+      "input": [
+        "test",
+        "test"
+      ],
+      "expected": [
+        {
+          "type": "equal",
+          "value": "test"
+        }
+      ]
+    },
+    {
+      "name": "computeWordDiff #13 (from FrankMD vitest suite)",
+      "fn": "computeWordDiff",
+      "input": [
+        "saved content",
+        "source edit"
+      ],
+      "expected": [
+        {
+          "type": "delete",
+          "value": "saved"
+        },
+        {
+          "type": "insert",
+          "value": "source"
+        },
+        {
+          "type": "equal",
+          "value": " "
+        },
+        {
+          "type": "delete",
+          "value": "content"
+        },
+        {
+          "type": "insert",
+          "value": "edit"
+        }
+      ]
+    },
+    {
+      "name": "computeWordDiff #14 (from FrankMD vitest suite)",
+      "fn": "computeWordDiff",
+      "input": [
+        "saved content",
+        "recoverable local draft"
+      ],
+      "expected": [
+        {
+          "type": "delete",
+          "value": "saved"
+        },
+        {
+          "type": "insert",
+          "value": "recoverable"
+        },
+        {
+          "type": "equal",
+          "value": " "
+        },
+        {
+          "type": "delete",
+          "value": "content"
+        },
+        {
+          "type": "insert",
+          "value": "local draft"
+        }
+      ]
+    },
+    {
+      "name": "computeWordDiff #15 (from FrankMD vitest suite)",
+      "fn": "computeWordDiff",
+      "input": [
+        "hello beautiful world",
+        "hello world"
+      ],
+      "expected": [
+        {
+          "type": "equal",
+          "value": "hello"
+        },
+        {
+          "type": "delete",
+          "value": " beautiful"
+        },
+        {
+          "type": "equal",
+          "value": " world"
+        }
+      ]
+    },
+    {
+      "name": "computeWordDiff #16 (from FrankMD vitest suite)",
+      "fn": "computeWordDiff",
+      "input": [
+        "hello",
+        ""
+      ],
+      "expected": [
+        {
+          "type": "delete",
+          "value": "hello"
+        }
+      ]
+    },
+    {
+      "name": "computeWordDiff #17 (from FrankMD vitest suite)",
+      "fn": "computeWordDiff",
+      "input": [
+        "hello world",
+        "hello universe"
+      ],
+      "expected": [
+        {
+          "type": "equal",
+          "value": "hello "
+        },
+        {
+          "type": "delete",
+          "value": "world"
+        },
+        {
+          "type": "insert",
+          "value": "universe"
+        }
+      ]
+    },
+    {
+      "name": "computeWordDiff #18 (from FrankMD vitest suite)",
+      "fn": "computeWordDiff",
+      "input": [
+        "",
+        ""
+      ],
+      "expected": []
+    },
+    {
+      "name": "computeWordDiff #19 (from FrankMD vitest suite)",
+      "fn": "computeWordDiff",
+      "input": [
+        "source server",
+        "source local draft"
+      ],
+      "expected": [
+        {
+          "type": "equal",
+          "value": "source "
+        },
+        {
+          "type": "delete",
+          "value": "server"
+        },
+        {
+          "type": "insert",
+          "value": "local draft"
+        }
+      ]
+    },
+    {
+      "name": "computeWordDiff #20 (from FrankMD vitest suite)",
+      "fn": "computeWordDiff",
+      "input": [
+        "hello world",
+        "hello beautiful world"
+      ],
+      "expected": [
+        {
+          "type": "equal",
+          "value": "hello"
+        },
+        {
+          "type": "insert",
+          "value": " beautiful"
+        },
+        {
+          "type": "equal",
+          "value": " world"
+        }
+      ]
+    },
+    {
+      "name": "lcsWordDiff #1 (from FrankMD vitest suite)",
+      "fn": "lcsWordDiff",
+      "input": [
+        [
+          "a",
+          "b",
+          "c"
+        ],
+        [
+          "a",
+          "c"
+        ]
+      ],
+      "expected": [
+        {
+          "type": "equal",
+          "value": "a"
+        },
+        {
+          "type": "delete",
+          "value": "b"
+        },
+        {
+          "type": "equal",
+          "value": "c"
+        }
+      ]
+    },
+    {
+      "name": "lcsWordDiff #2 (from FrankMD vitest suite)",
+      "fn": "lcsWordDiff",
+      "input": [
+        [
+          "a",
+          "c"
+        ],
+        [
+          "a",
+          "b",
+          "c"
+        ]
+      ],
+      "expected": [
+        {
+          "type": "equal",
+          "value": "a"
+        },
+        {
+          "type": "insert",
+          "value": "b"
+        },
+        {
+          "type": "equal",
+          "value": "c"
+        }
+      ]
+    },
+    {
+      "name": "lcsWordDiff #3 (from FrankMD vitest suite)",
+      "fn": "lcsWordDiff",
+      "input": [
+        [
+          "a",
+          "x",
+          "y",
+          "b"
+        ],
+        [
+          "a",
+          "b"
+        ]
+      ],
+      "expected": [
+        {
+          "type": "equal",
+          "value": "a"
+        },
+        {
+          "type": "delete",
+          "value": "xy"
+        },
+        {
+          "type": "equal",
+          "value": "b"
+        }
+      ]
+    },
+    {
+      "name": "lcsWordDiff #4 (from FrankMD vitest suite)",
+      "fn": "lcsWordDiff",
+      "input": [
+        [
+          "a",
+          "b",
+          "c"
+        ],
+        [
+          "a",
+          "b",
+          "c"
+        ]
+      ],
+      "expected": [
+        {
+          "type": "equal",
+          "value": "abc"
+        }
+      ]
+    },
+    {
+      "name": "lcsWordDiff #5 (from FrankMD vitest suite)",
+      "fn": "lcsWordDiff",
+      "input": [
+        [],
+        []
+      ],
+      "expected": []
+    },
+    {
+      "name": "lcsWordDiff #6 (from FrankMD vitest suite)",
+      "fn": "lcsWordDiff",
+      "input": [
+        [],
+        [
+          "a",
+          "b"
+        ]
+      ],
+      "expected": [
+        {
+          "type": "insert",
+          "value": "ab"
+        }
+      ]
+    },
+    {
+      "name": "lcsWordDiff #7 (from FrankMD vitest suite)",
+      "fn": "lcsWordDiff",
+      "input": [
+        [
+          "a",
+          "b"
+        ],
+        []
+      ],
+      "expected": [
+        {
+          "type": "delete",
+          "value": "ab"
+        }
+      ]
+    },
+    {
+      "name": "tokenize #1 (from FrankMD vitest suite)",
+      "fn": "tokenize",
+      "input": [
+        "hello world"
+      ],
+      "expected": [
+        "hello",
+        " ",
+        "world"
+      ]
+    },
+    {
+      "name": "tokenize #2 (from FrankMD vitest suite)",
+      "fn": "tokenize",
+      "input": [
+        "hello  world"
+      ],
+      "expected": [
+        "hello",
+        "  ",
+        "world"
+      ]
+    },
+    {
+      "name": "tokenize #3 (from FrankMD vitest suite)",
+      "fn": "tokenize",
+      "input": [
+        "hello\nworld"
+      ],
+      "expected": [
+        "hello",
+        "\n",
+        "world"
+      ]
+    },
+    {
+      "name": "tokenize #4 (from FrankMD vitest suite)",
+      "fn": "tokenize",
+      "input": [
+        ""
+      ],
+      "expected": []
+    },
+    {
+      "name": "tokenize #5 (from FrankMD vitest suite)",
+      "fn": "tokenize",
+      "input": [
+        "  hello  "
+      ],
+      "expected": [
+        "  ",
+        "hello",
+        "  "
+      ]
+    },
+    {
+      "name": "tokenize #6 (edge corpus)",
+      "fn": "tokenize",
+      "input": [
+        " "
+      ],
+      "expected": [
+        " "
+      ]
+    },
+    {
+      "name": "tokenize #7 (edge corpus)",
+      "fn": "tokenize",
+      "input": [
+        "a b"
+      ],
+      "expected": [
+        "a",
+        " ",
+        "b"
+      ]
+    },
+    {
+      "name": "tokenize #8 (edge corpus)",
+      "fn": "tokenize",
+      "input": [
+        "  lead"
+      ],
+      "expected": [
+        "  ",
+        "lead"
+      ]
+    },
+    {
+      "name": "tokenize #9 (edge corpus)",
+      "fn": "tokenize",
+      "input": [
+        "trail  "
+      ],
+      "expected": [
+        "trail",
+        "  "
+      ]
+    },
+    {
+      "name": "tokenize #10 (edge corpus)",
+      "fn": "tokenize",
+      "input": [
+        "a\tb\nc\r\nd"
+      ],
+      "expected": [
+        "a",
+        "\t",
+        "b",
+        "\n",
+        "c",
+        "\r\n",
+        "d"
+      ]
+    },
+    {
+      "name": "tokenize #11 (edge corpus)",
+      "fn": "tokenize",
+      "input": [
+        "日本語 テキスト"
+      ],
+      "expected": [
+        "日本語",
+        " ",
+        "テキスト"
+      ]
+    },
+    {
+      "name": "tokenize #12 (edge corpus)",
+      "fn": "tokenize",
+      "input": [
+        "👨‍👩‍👧 x"
+      ],
+      "expected": [
+        "👨‍👩‍👧",
+        " ",
+        "x"
+      ],
+      "utf16": [
+        {
+          "utf16_len": 10,
+          "scalar_len": 7,
+          "utf8_len": 20
+        }
+      ]
+    },
+    {
+      "name": "tokenize #13 (edge corpus)",
+      "fn": "tokenize",
+      "input": [
+        "a b"
+      ],
+      "expected": [
+        "a",
+        " ",
+        "b"
+      ]
+    },
+    {
+      "name": "tokenize #14 (edge corpus)",
+      "fn": "tokenize",
+      "input": [
+        "word"
+      ],
+      "expected": [
+        "word"
+      ]
+    },
+    {
+      "name": "computeWordDiff #21 (edge corpus)",
+      "fn": "computeWordDiff",
+      "input": [
+        "a",
+        ""
+      ],
+      "expected": [
+        {
+          "type": "delete",
+          "value": "a"
+        }
+      ]
+    },
+    {
+      "name": "computeWordDiff #22 (edge corpus)",
+      "fn": "computeWordDiff",
+      "input": [
+        "",
+        "a"
+      ],
+      "expected": [
+        {
+          "type": "insert",
+          "value": "a"
+        }
+      ]
+    },
+    {
+      "name": "computeWordDiff #23 (edge corpus)",
+      "fn": "computeWordDiff",
+      "input": [
+        "the cat sat",
+        "the cat sat"
+      ],
+      "expected": [
+        {
+          "type": "equal",
+          "value": "the cat sat"
+        }
+      ]
+    },
+    {
+      "name": "computeWordDiff #24 (edge corpus)",
+      "fn": "computeWordDiff",
+      "input": [
+        "the cat sat",
+        "the dog sat"
+      ],
+      "expected": [
+        {
+          "type": "equal",
+          "value": "the "
+        },
+        {
+          "type": "delete",
+          "value": "cat"
+        },
+        {
+          "type": "insert",
+          "value": "dog"
+        },
+        {
+          "type": "equal",
+          "value": " sat"
+        }
+      ]
+    },
+    {
+      "name": "computeWordDiff #25 (edge corpus)",
+      "fn": "computeWordDiff",
+      "input": [
+        "I has a apple",
+        "I have an apple"
+      ],
+      "expected": [
+        {
+          "type": "equal",
+          "value": "I "
+        },
+        {
+          "type": "delete",
+          "value": "has"
+        },
+        {
+          "type": "insert",
+          "value": "have"
+        },
+        {
+          "type": "equal",
+          "value": " "
+        },
+        {
+          "type": "delete",
+          "value": "a"
+        },
+        {
+          "type": "insert",
+          "value": "an"
+        },
+        {
+          "type": "equal",
+          "value": " apple"
+        }
+      ]
+    },
+    {
+      "name": "computeWordDiff #26 (edge corpus)",
+      "fn": "computeWordDiff",
+      "input": [
+        "a b c",
+        "c b a"
+      ],
+      "expected": [
+        {
+          "type": "delete",
+          "value": "a"
+        },
+        {
+          "type": "insert",
+          "value": "c"
+        },
+        {
+          "type": "equal",
+          "value": " b "
+        },
+        {
+          "type": "delete",
+          "value": "c"
+        },
+        {
+          "type": "insert",
+          "value": "a"
+        }
+      ]
+    },
+    {
+      "name": "computeWordDiff #27 (edge corpus)",
+      "fn": "computeWordDiff",
+      "input": [
+        "teh  quick\nbrown",
+        "the quick\nbrown fox"
+      ],
+      "expected": [
+        {
+          "type": "delete",
+          "value": "teh  "
+        },
+        {
+          "type": "insert",
+          "value": "the "
+        },
+        {
+          "type": "equal",
+          "value": "quick\nbrown"
+        },
+        {
+          "type": "insert",
+          "value": " fox"
+        }
+      ]
+    },
+    {
+      "name": "computeWordDiff #28 (edge corpus)",
+      "fn": "computeWordDiff",
+      "input": [
+        "Olá mundo",
+        "Olá, mundo!"
+      ],
+      "expected": [
+        {
+          "type": "delete",
+          "value": "Olá"
+        },
+        {
+          "type": "insert",
+          "value": "Olá,"
+        },
+        {
+          "type": "equal",
+          "value": " "
+        },
+        {
+          "type": "delete",
+          "value": "mundo"
+        },
+        {
+          "type": "insert",
+          "value": "mundo!"
+        }
+      ]
+    },
+    {
+      "name": "computeWordDiff #29 (edge corpus)",
+      "fn": "computeWordDiff",
+      "input": [
+        "日本語 です",
+        "日本語 でした"
+      ],
+      "expected": [
+        {
+          "type": "equal",
+          "value": "日本語 "
+        },
+        {
+          "type": "delete",
+          "value": "です"
+        },
+        {
+          "type": "insert",
+          "value": "でした"
+        }
+      ]
+    },
+    {
+      "name": "computeWordDiff #30 (edge corpus)",
+      "fn": "computeWordDiff",
+      "input": [
+        "x x x",
+        "x x"
+      ],
+      "expected": [
+        {
+          "type": "delete",
+          "value": "x "
+        },
+        {
+          "type": "equal",
+          "value": "x x"
+        }
+      ]
+    },
+    {
+      "name": "computeWordDiff #31 (edge corpus)",
+      "fn": "computeWordDiff",
+      "input": [
+        "a\r\nb",
+        "a\nb"
+      ],
+      "expected": [
+        {
+          "type": "equal",
+          "value": "a"
+        },
+        {
+          "type": "delete",
+          "value": "\r\n"
+        },
+        {
+          "type": "insert",
+          "value": "\n"
+        },
+        {
+          "type": "equal",
+          "value": "b"
+        }
+      ]
+    },
+    {
+      "name": "computeWordDiff #32 (edge corpus)",
+      "fn": "computeWordDiff",
+      "input": [
+        "one two three four five six",
+        "one three four six seven"
+      ],
+      "expected": [
+        {
+          "type": "equal",
+          "value": "one"
+        },
+        {
+          "type": "delete",
+          "value": " two"
+        },
+        {
+          "type": "equal",
+          "value": " three four"
+        },
+        {
+          "type": "delete",
+          "value": " five"
+        },
+        {
+          "type": "equal",
+          "value": " six"
+        },
+        {
+          "type": "insert",
+          "value": " seven"
+        }
+      ]
+    },
+    {
+      "name": "lcsWordDiff #8 (edge corpus)",
+      "fn": "lcsWordDiff",
+      "input": [
+        [
+          "a",
+          " ",
+          "b"
+        ],
+        [
+          "b",
+          " ",
+          "a"
+        ]
+      ],
+      "expected": [
+        {
+          "type": "delete",
+          "value": "a "
+        },
+        {
+          "type": "equal",
+          "value": "b"
+        },
+        {
+          "type": "insert",
+          "value": " a"
+        }
+      ]
+    },
+    {
+      "name": "lcsWordDiff #9 (edge corpus)",
+      "fn": "lcsWordDiff",
+      "input": [
+        [
+          "x"
+        ],
+        [
+          "x",
+          "x"
+        ]
+      ],
+      "expected": [
+        {
+          "type": "insert",
+          "value": "x"
+        },
+        {
+          "type": "equal",
+          "value": "x"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1482 @@
+{
+  "source": "app/javascript/lib/text_editor_utils.js @ d47a89e92d89f807878d318182fa5dcea0329ec4",
+  "frankmd_sha": "d47a89e92d89f807878d318182fa5dcea0329ec4",
+  "generator": "tools/golden/js/utils.mjs",
+  "notes": "input = encoded argument array (decode with golden.mjs decode: {$undefined}, {$number}, {$date}, {$regexp}, {$utf16}); expected = encoded return value, or {$error:{name,message}}. JS strings are UTF-16: all positions/lengths/indices in inputs and outputs are UTF-16 code-unit offsets; cases with non-BMP/multi-unit strings carry a `utf16` array (utf16_len/scalar_len/utf8_len per such string arg). TZ pinned to UTC for date-based helpers.",
+  "functions": [
+    "getCursorInfo",
+    "getLineAtPosition",
+    "getLineBoundaries",
+    "getPositionForLine",
+    "insertAtPosition",
+    "replaceRange",
+    "wrapSelection"
+  ],
+  "cases": [
+    {
+      "name": "getCursorInfo #1 (from FrankMD vitest suite)",
+      "fn": "getCursorInfo",
+      "input": [
+        "",
+        0
+      ],
+      "expected": {
+        "line": 1,
+        "column": 1,
+        "totalLines": 1
+      }
+    },
+    {
+      "name": "getCursorInfo #2 (from FrankMD vitest suite)",
+      "fn": "getCursorInfo",
+      "input": [
+        "line1\nline2\nline3",
+        6
+      ],
+      "expected": {
+        "line": 2,
+        "column": 1,
+        "totalLines": 3
+      }
+    },
+    {
+      "name": "getCursorInfo #3 (from FrankMD vitest suite)",
+      "fn": "getCursorInfo",
+      "input": [
+        "line1\nline2\nline3",
+        5
+      ],
+      "expected": {
+        "line": 1,
+        "column": 6,
+        "totalLines": 3
+      }
+    },
+    {
+      "name": "getCursorInfo #4 (from FrankMD vitest suite)",
+      "fn": "getCursorInfo",
+      "input": [
+        "line1\nline2\nline3",
+        0
+      ],
+      "expected": {
+        "line": 1,
+        "column": 1,
+        "totalLines": 3
+      }
+    },
+    {
+      "name": "getCursorInfo #5 (from FrankMD vitest suite)",
+      "fn": "getCursorInfo",
+      "input": [
+        "line1\nline2\nline3",
+        8
+      ],
+      "expected": {
+        "line": 2,
+        "column": 3,
+        "totalLines": 3
+      }
+    },
+    {
+      "name": "getLineAtPosition #1 (from FrankMD vitest suite)",
+      "fn": "getLineAtPosition",
+      "input": [
+        "line1\nline2\nline3",
+        6
+      ],
+      "expected": 2
+    },
+    {
+      "name": "getLineAtPosition #2 (from FrankMD vitest suite)",
+      "fn": "getLineAtPosition",
+      "input": [
+        "line1\nline2\nline3",
+        12
+      ],
+      "expected": 3
+    },
+    {
+      "name": "getLineAtPosition #3 (from FrankMD vitest suite)",
+      "fn": "getLineAtPosition",
+      "input": [
+        "line1\nline2\nline3",
+        0
+      ],
+      "expected": 1
+    },
+    {
+      "name": "getLineBoundaries #1 (from FrankMD vitest suite)",
+      "fn": "getLineBoundaries",
+      "input": [
+        "line1\nline2\nline3\nline4",
+        0,
+        3
+      ],
+      "expected": {
+        "lineStart": 0,
+        "lineEnd": 5,
+        "lines": [
+          "line1"
+        ]
+      }
+    },
+    {
+      "name": "getLineBoundaries #2 (from FrankMD vitest suite)",
+      "fn": "getLineBoundaries",
+      "input": [
+        "line1\nline2\nline3\nline4",
+        18,
+        23
+      ],
+      "expected": {
+        "lineStart": 18,
+        "lineEnd": 23,
+        "lines": [
+          "line4"
+        ]
+      }
+    },
+    {
+      "name": "getLineBoundaries #3 (from FrankMD vitest suite)",
+      "fn": "getLineBoundaries",
+      "input": [
+        "line1\nline2\nline3\nline4",
+        7,
+        10
+      ],
+      "expected": {
+        "lineStart": 6,
+        "lineEnd": 11,
+        "lines": [
+          "line2"
+        ]
+      }
+    },
+    {
+      "name": "getLineBoundaries #4 (from FrankMD vitest suite)",
+      "fn": "getLineBoundaries",
+      "input": [
+        "line1\nline2\nline3\nline4",
+        7,
+        14
+      ],
+      "expected": {
+        "lineStart": 6,
+        "lineEnd": 17,
+        "lines": [
+          "line2",
+          "line3"
+        ]
+      }
+    },
+    {
+      "name": "getPositionForLine #1 (from FrankMD vitest suite)",
+      "fn": "getPositionForLine",
+      "input": [
+        "line1\nline2\nline3",
+        10
+      ],
+      "expected": 18
+    },
+    {
+      "name": "getPositionForLine #2 (from FrankMD vitest suite)",
+      "fn": "getPositionForLine",
+      "input": [
+        "line1\nline2\nline3",
+        1
+      ],
+      "expected": 0
+    },
+    {
+      "name": "getPositionForLine #3 (from FrankMD vitest suite)",
+      "fn": "getPositionForLine",
+      "input": [
+        "line1\nline2\nline3",
+        3
+      ],
+      "expected": 12
+    },
+    {
+      "name": "getPositionForLine #4 (from FrankMD vitest suite)",
+      "fn": "getPositionForLine",
+      "input": [
+        "line1\nline2\nline3",
+        2
+      ],
+      "expected": 6
+    },
+    {
+      "name": "insertAtPosition #1 (from FrankMD vitest suite)",
+      "fn": "insertAtPosition",
+      "input": [
+        "",
+        0,
+        "new text"
+      ],
+      "expected": {
+        "text": "new text",
+        "cursorPosition": 8
+      }
+    },
+    {
+      "name": "insertAtPosition #2 (from FrankMD vitest suite)",
+      "fn": "insertAtPosition",
+      "input": [
+        "world",
+        0,
+        "hello "
+      ],
+      "expected": {
+        "text": "hello world",
+        "cursorPosition": 6
+      }
+    },
+    {
+      "name": "insertAtPosition #3 (from FrankMD vitest suite)",
+      "fn": "insertAtPosition",
+      "input": [
+        "hello",
+        5,
+        " world"
+      ],
+      "expected": {
+        "text": "hello world",
+        "cursorPosition": 11
+      }
+    },
+    {
+      "name": "insertAtPosition #4 (from FrankMD vitest suite)",
+      "fn": "insertAtPosition",
+      "input": [
+        "hello world",
+        5,
+        " beautiful"
+      ],
+      "expected": {
+        "text": "hello beautiful world",
+        "cursorPosition": 15
+      }
+    },
+    {
+      "name": "replaceRange #1 (from FrankMD vitest suite)",
+      "fn": "replaceRange",
+      "input": [
+        "hello world",
+        0,
+        5,
+        "goodbye"
+      ],
+      "expected": {
+        "text": "goodbye world",
+        "cursorPosition": 7
+      }
+    },
+    {
+      "name": "replaceRange #2 (from FrankMD vitest suite)",
+      "fn": "replaceRange",
+      "input": [
+        "hello world",
+        6,
+        11,
+        "there"
+      ],
+      "expected": {
+        "text": "hello there",
+        "cursorPosition": 11
+      }
+    },
+    {
+      "name": "replaceRange #3 (from FrankMD vitest suite)",
+      "fn": "replaceRange",
+      "input": [
+        "hello world",
+        6,
+        11,
+        "universe"
+      ],
+      "expected": {
+        "text": "hello universe",
+        "cursorPosition": 14
+      }
+    },
+    {
+      "name": "replaceRange #4 (from FrankMD vitest suite)",
+      "fn": "replaceRange",
+      "input": [
+        "hello world",
+        5,
+        11,
+        ""
+      ],
+      "expected": {
+        "text": "hello",
+        "cursorPosition": 5
+      }
+    },
+    {
+      "name": "wrapSelection #1 (from FrankMD vitest suite)",
+      "fn": "wrapSelection",
+      "input": [
+        "hello",
+        0,
+        5,
+        "_",
+        "_"
+      ],
+      "expected": {
+        "text": "_hello_",
+        "cursorStart": 1,
+        "cursorEnd": 6
+      }
+    },
+    {
+      "name": "wrapSelection #2 (from FrankMD vitest suite)",
+      "fn": "wrapSelection",
+      "input": [
+        "line1\nline2\nline3",
+        0,
+        11,
+        "```\n",
+        "\n```"
+      ],
+      "expected": {
+        "text": "```\nline1\nline2\n```\nline3",
+        "cursorStart": 4,
+        "cursorEnd": 15
+      }
+    },
+    {
+      "name": "wrapSelection #3 (from FrankMD vitest suite)",
+      "fn": "wrapSelection",
+      "input": [
+        "hello world",
+        6,
+        11,
+        "**",
+        "**"
+      ],
+      "expected": {
+        "text": "hello **world**",
+        "cursorStart": 8,
+        "cursorEnd": 13
+      }
+    },
+    {
+      "name": "wrapSelection #4 (from FrankMD vitest suite)",
+      "fn": "wrapSelection",
+      "input": [
+        "hello",
+        3,
+        3,
+        "[",
+        "]"
+      ],
+      "expected": {
+        "text": "hel[]lo",
+        "cursorStart": 4,
+        "cursorEnd": 4
+      }
+    },
+    {
+      "name": "wrapSelection #5 (edge corpus)",
+      "fn": "wrapSelection",
+      "input": [
+        "first line\nsecond 日本\nthird 👋 line\n\nlast",
+        0,
+        5,
+        "**",
+        "**"
+      ],
+      "expected": {
+        "text": "**first** line\nsecond 日本\nthird 👋 line\n\nlast",
+        "cursorStart": 2,
+        "cursorEnd": 7
+      },
+      "utf16": [
+        {
+          "utf16_len": 40,
+          "scalar_len": 39,
+          "utf8_len": 46
+        }
+      ]
+    },
+    {
+      "name": "wrapSelection #6 (edge corpus)",
+      "fn": "wrapSelection",
+      "input": [
+        "first line\nsecond 日本\nthird 👋 line\n\nlast",
+        6,
+        10,
+        "_",
+        "_"
+      ],
+      "expected": {
+        "text": "first _line_\nsecond 日本\nthird 👋 line\n\nlast",
+        "cursorStart": 7,
+        "cursorEnd": 11
+      },
+      "utf16": [
+        {
+          "utf16_len": 40,
+          "scalar_len": 39,
+          "utf8_len": 46
+        }
+      ]
+    },
+    {
+      "name": "wrapSelection #7 (edge corpus)",
+      "fn": "wrapSelection",
+      "input": [
+        "first line\nsecond 日本\nthird 👋 line\n\nlast",
+        0,
+        0,
+        "[",
+        "]()"
+      ],
+      "expected": {
+        "text": "[]()first line\nsecond 日本\nthird 👋 line\n\nlast",
+        "cursorStart": 1,
+        "cursorEnd": 1
+      },
+      "utf16": [
+        {
+          "utf16_len": 40,
+          "scalar_len": 39,
+          "utf8_len": 46
+        }
+      ]
+    },
+    {
+      "name": "wrapSelection #8 (edge corpus)",
+      "fn": "wrapSelection",
+      "input": [
+        "first line\nsecond 日本\nthird 👋 line\n\nlast",
+        12,
+        18,
+        "`",
+        "`"
+      ],
+      "expected": {
+        "text": "first line\ns`econd `日本\nthird 👋 line\n\nlast",
+        "cursorStart": 13,
+        "cursorEnd": 19
+      },
+      "utf16": [
+        {
+          "utf16_len": 40,
+          "scalar_len": 39,
+          "utf8_len": 46
+        }
+      ]
+    },
+    {
+      "name": "wrapSelection #9 (edge corpus)",
+      "fn": "wrapSelection",
+      "input": [
+        "first line\nsecond 日本\nthird 👋 line\n\nlast",
+        40,
+        40,
+        "\n",
+        ""
+      ],
+      "expected": {
+        "text": "first line\nsecond 日本\nthird 👋 line\n\nlast\n",
+        "cursorStart": 41,
+        "cursorEnd": 41
+      },
+      "utf16": [
+        {
+          "utf16_len": 40,
+          "scalar_len": 39,
+          "utf8_len": 46
+        }
+      ]
+    },
+    {
+      "name": "wrapSelection #10 (edge corpus)",
+      "fn": "wrapSelection",
+      "input": [
+        "first line\nsecond 日本\nthird 👋 line\n\nlast",
+        24,
+        26,
+        "~~",
+        "~~"
+      ],
+      "expected": {
+        "text": "first line\nsecond 日本\nthi~~rd~~ 👋 line\n\nlast",
+        "cursorStart": 26,
+        "cursorEnd": 28
+      },
+      "utf16": [
+        {
+          "utf16_len": 40,
+          "scalar_len": 39,
+          "utf8_len": 46
+        }
+      ]
+    },
+    {
+      "name": "wrapSelection #11 (edge corpus)",
+      "fn": "wrapSelection",
+      "input": [
+        "first line\nsecond 日本\nthird 👋 line\n\nlast",
+        5,
+        3,
+        "<",
+        ">"
+      ],
+      "expected": {
+        "text": "first<st>st line\nsecond 日本\nthird 👋 line\n\nlast",
+        "cursorStart": 6,
+        "cursorEnd": 4
+      },
+      "utf16": [
+        {
+          "utf16_len": 40,
+          "scalar_len": 39,
+          "utf8_len": 46
+        }
+      ]
+    },
+    {
+      "name": "insertAtPosition #5 (edge corpus)",
+      "fn": "insertAtPosition",
+      "input": [
+        "first line\nsecond 日本\nthird 👋 line\n\nlast",
+        0,
+        "X"
+      ],
+      "expected": {
+        "text": "Xfirst line\nsecond 日本\nthird 👋 line\n\nlast",
+        "cursorPosition": 1
+      },
+      "utf16": [
+        {
+          "utf16_len": 40,
+          "scalar_len": 39,
+          "utf8_len": 46
+        }
+      ]
+    },
+    {
+      "name": "insertAtPosition #6 (edge corpus)",
+      "fn": "insertAtPosition",
+      "input": [
+        "first line\nsecond 日本\nthird 👋 line\n\nlast",
+        40,
+        "\nEND"
+      ],
+      "expected": {
+        "text": "first line\nsecond 日本\nthird 👋 line\n\nlast\nEND",
+        "cursorPosition": 44
+      },
+      "utf16": [
+        {
+          "utf16_len": 40,
+          "scalar_len": 39,
+          "utf8_len": 46
+        }
+      ]
+    },
+    {
+      "name": "insertAtPosition #7 (edge corpus)",
+      "fn": "insertAtPosition",
+      "input": [
+        "first line\nsecond 日本\nthird 👋 line\n\nlast",
+        11,
+        "👨‍👩‍👧"
+      ],
+      "expected": {
+        "text": "first line\n👨‍👩‍👧second 日本\nthird 👋 line\n\nlast",
+        "cursorPosition": 19
+      },
+      "utf16": [
+        {
+          "utf16_len": 40,
+          "scalar_len": 39,
+          "utf8_len": 46
+        },
+        {
+          "utf16_len": 8,
+          "scalar_len": 5,
+          "utf8_len": 18
+        }
+      ]
+    },
+    {
+      "name": "insertAtPosition #8 (edge corpus)",
+      "fn": "insertAtPosition",
+      "input": [
+        "first line\nsecond 日本\nthird 👋 line\n\nlast",
+        99,
+        "beyond"
+      ],
+      "expected": {
+        "text": "first line\nsecond 日本\nthird 👋 line\n\nlastbeyond",
+        "cursorPosition": 105
+      },
+      "utf16": [
+        {
+          "utf16_len": 40,
+          "scalar_len": 39,
+          "utf8_len": 46
+        }
+      ]
+    },
+    {
+      "name": "insertAtPosition #9 (edge corpus)",
+      "fn": "insertAtPosition",
+      "input": [
+        "first line\nsecond 日本\nthird 👋 line\n\nlast",
+        -3,
+        "neg"
+      ],
+      "expected": {
+        "text": "negfirst line\nsecond 日本\nthird 👋 line\n\nlast",
+        "cursorPosition": 0
+      },
+      "utf16": [
+        {
+          "utf16_len": 40,
+          "scalar_len": 39,
+          "utf8_len": 46
+        }
+      ]
+    },
+    {
+      "name": "insertAtPosition #10 (edge corpus)",
+      "fn": "insertAtPosition",
+      "input": [
+        "first line\nsecond 日本\nthird 👋 line\n\nlast",
+        5,
+        ""
+      ],
+      "expected": {
+        "text": "first line\nsecond 日本\nthird 👋 line\n\nlast",
+        "cursorPosition": 5
+      },
+      "utf16": [
+        {
+          "utf16_len": 40,
+          "scalar_len": 39,
+          "utf8_len": 46
+        }
+      ]
+    },
+    {
+      "name": "getLineBoundaries #5 (edge corpus)",
+      "fn": "getLineBoundaries",
+      "input": [
+        "first line\nsecond 日本\nthird 👋 line\n\nlast",
+        0,
+        0
+      ],
+      "expected": {
+        "lineStart": 0,
+        "lineEnd": 10,
+        "lines": [
+          "first line"
+        ]
+      },
+      "utf16": [
+        {
+          "utf16_len": 40,
+          "scalar_len": 39,
+          "utf8_len": 46
+        }
+      ]
+    },
+    {
+      "name": "getLineBoundaries #6 (edge corpus)",
+      "fn": "getLineBoundaries",
+      "input": [
+        "first line\nsecond 日本\nthird 👋 line\n\nlast",
+        3,
+        3
+      ],
+      "expected": {
+        "lineStart": 0,
+        "lineEnd": 10,
+        "lines": [
+          "first line"
+        ]
+      },
+      "utf16": [
+        {
+          "utf16_len": 40,
+          "scalar_len": 39,
+          "utf8_len": 46
+        }
+      ]
+    },
+    {
+      "name": "getLineBoundaries #7 (edge corpus)",
+      "fn": "getLineBoundaries",
+      "input": [
+        "first line\nsecond 日本\nthird 👋 line\n\nlast",
+        0,
+        40
+      ],
+      "expected": {
+        "lineStart": 0,
+        "lineEnd": 40,
+        "lines": [
+          "first line",
+          "second 日本",
+          "third 👋 line",
+          "",
+          "last"
+        ]
+      },
+      "utf16": [
+        {
+          "utf16_len": 40,
+          "scalar_len": 39,
+          "utf8_len": 46
+        }
+      ]
+    },
+    {
+      "name": "getLineBoundaries #8 (edge corpus)",
+      "fn": "getLineBoundaries",
+      "input": [
+        "first line\nsecond 日本\nthird 👋 line\n\nlast",
+        12,
+        25
+      ],
+      "expected": {
+        "lineStart": 11,
+        "lineEnd": 34,
+        "lines": [
+          "second 日本",
+          "third 👋 line"
+        ]
+      },
+      "utf16": [
+        {
+          "utf16_len": 40,
+          "scalar_len": 39,
+          "utf8_len": 46
+        }
+      ]
+    },
+    {
+      "name": "getLineBoundaries #9 (edge corpus)",
+      "fn": "getLineBoundaries",
+      "input": [
+        "first line\nsecond 日本\nthird 👋 line\n\nlast",
+        11,
+        11
+      ],
+      "expected": {
+        "lineStart": 11,
+        "lineEnd": 10,
+        "lines": [
+          "",
+          ""
+        ]
+      },
+      "utf16": [
+        {
+          "utf16_len": 40,
+          "scalar_len": 39,
+          "utf8_len": 46
+        }
+      ]
+    },
+    {
+      "name": "getLineBoundaries #10 (edge corpus)",
+      "fn": "getLineBoundaries",
+      "input": [
+        "first line\nsecond 日本\nthird 👋 line\n\nlast",
+        10,
+        11
+      ],
+      "expected": {
+        "lineStart": 0,
+        "lineEnd": 10,
+        "lines": [
+          "first line"
+        ]
+      },
+      "utf16": [
+        {
+          "utf16_len": 40,
+          "scalar_len": 39,
+          "utf8_len": 46
+        }
+      ]
+    },
+    {
+      "name": "getLineBoundaries #11 (edge corpus)",
+      "fn": "getLineBoundaries",
+      "input": [
+        "first line\nsecond 日本\nthird 👋 line\n\nlast",
+        40,
+        40
+      ],
+      "expected": {
+        "lineStart": 36,
+        "lineEnd": 40,
+        "lines": [
+          "last"
+        ]
+      },
+      "utf16": [
+        {
+          "utf16_len": 40,
+          "scalar_len": 39,
+          "utf8_len": 46
+        }
+      ]
+    },
+    {
+      "name": "getLineBoundaries #12 (edge corpus)",
+      "fn": "getLineBoundaries",
+      "input": [
+        "first line\nsecond 日本\nthird 👋 line\n\nlast",
+        35,
+        36
+      ],
+      "expected": {
+        "lineStart": 35,
+        "lineEnd": 35,
+        "lines": [
+          ""
+        ]
+      },
+      "utf16": [
+        {
+          "utf16_len": 40,
+          "scalar_len": 39,
+          "utf8_len": 46
+        }
+      ]
+    },
+    {
+      "name": "getLineBoundaries #13 (edge corpus)",
+      "fn": "getLineBoundaries",
+      "input": [
+        "first line\nsecond 日本\nthird 👋 line\n\nlast",
+        0,
+        1
+      ],
+      "expected": {
+        "lineStart": 0,
+        "lineEnd": 10,
+        "lines": [
+          "first line"
+        ]
+      },
+      "utf16": [
+        {
+          "utf16_len": 40,
+          "scalar_len": 39,
+          "utf8_len": 46
+        }
+      ]
+    },
+    {
+      "name": "getLineBoundaries #14 (edge corpus)",
+      "fn": "getLineBoundaries",
+      "input": [
+        "",
+        0,
+        0
+      ],
+      "expected": {
+        "lineStart": 0,
+        "lineEnd": 0,
+        "lines": [
+          ""
+        ]
+      }
+    },
+    {
+      "name": "getLineBoundaries #15 (edge corpus)",
+      "fn": "getLineBoundaries",
+      "input": [
+        "a\r\nb",
+        0,
+        4
+      ],
+      "expected": {
+        "lineStart": 0,
+        "lineEnd": 4,
+        "lines": [
+          "a\r",
+          "b"
+        ]
+      }
+    },
+    {
+      "name": "getCursorInfo #6 (edge corpus)",
+      "fn": "getCursorInfo",
+      "input": [
+        "first line\nsecond 日本\nthird 👋 line\n\nlast",
+        0
+      ],
+      "expected": {
+        "line": 1,
+        "column": 1,
+        "totalLines": 5
+      },
+      "utf16": [
+        {
+          "utf16_len": 40,
+          "scalar_len": 39,
+          "utf8_len": 46
+        }
+      ]
+    },
+    {
+      "name": "getLineAtPosition #4 (edge corpus)",
+      "fn": "getLineAtPosition",
+      "input": [
+        "first line\nsecond 日本\nthird 👋 line\n\nlast",
+        0
+      ],
+      "expected": 1,
+      "utf16": [
+        {
+          "utf16_len": 40,
+          "scalar_len": 39,
+          "utf8_len": 46
+        }
+      ]
+    },
+    {
+      "name": "getCursorInfo #7 (edge corpus)",
+      "fn": "getCursorInfo",
+      "input": [
+        "first line\nsecond 日本\nthird 👋 line\n\nlast",
+        1
+      ],
+      "expected": {
+        "line": 1,
+        "column": 2,
+        "totalLines": 5
+      },
+      "utf16": [
+        {
+          "utf16_len": 40,
+          "scalar_len": 39,
+          "utf8_len": 46
+        }
+      ]
+    },
+    {
+      "name": "getLineAtPosition #5 (edge corpus)",
+      "fn": "getLineAtPosition",
+      "input": [
+        "first line\nsecond 日本\nthird 👋 line\n\nlast",
+        1
+      ],
+      "expected": 1,
+      "utf16": [
+        {
+          "utf16_len": 40,
+          "scalar_len": 39,
+          "utf8_len": 46
+        }
+      ]
+    },
+    {
+      "name": "getCursorInfo #8 (edge corpus)",
+      "fn": "getCursorInfo",
+      "input": [
+        "first line\nsecond 日本\nthird 👋 line\n\nlast",
+        10
+      ],
+      "expected": {
+        "line": 1,
+        "column": 11,
+        "totalLines": 5
+      },
+      "utf16": [
+        {
+          "utf16_len": 40,
+          "scalar_len": 39,
+          "utf8_len": 46
+        }
+      ]
+    },
+    {
+      "name": "getLineAtPosition #6 (edge corpus)",
+      "fn": "getLineAtPosition",
+      "input": [
+        "first line\nsecond 日本\nthird 👋 line\n\nlast",
+        10
+      ],
+      "expected": 1,
+      "utf16": [
+        {
+          "utf16_len": 40,
+          "scalar_len": 39,
+          "utf8_len": 46
+        }
+      ]
+    },
+    {
+      "name": "getCursorInfo #9 (edge corpus)",
+      "fn": "getCursorInfo",
+      "input": [
+        "first line\nsecond 日本\nthird 👋 line\n\nlast",
+        11
+      ],
+      "expected": {
+        "line": 2,
+        "column": 1,
+        "totalLines": 5
+      },
+      "utf16": [
+        {
+          "utf16_len": 40,
+          "scalar_len": 39,
+          "utf8_len": 46
+        }
+      ]
+    },
+    {
+      "name": "getLineAtPosition #7 (edge corpus)",
+      "fn": "getLineAtPosition",
+      "input": [
+        "first line\nsecond 日本\nthird 👋 line\n\nlast",
+        11
+      ],
+      "expected": 2,
+      "utf16": [
+        {
+          "utf16_len": 40,
+          "scalar_len": 39,
+          "utf8_len": 46
+        }
+      ]
+    },
+    {
+      "name": "getCursorInfo #10 (edge corpus)",
+      "fn": "getCursorInfo",
+      "input": [
+        "first line\nsecond 日本\nthird 👋 line\n\nlast",
+        12
+      ],
+      "expected": {
+        "line": 2,
+        "column": 2,
+        "totalLines": 5
+      },
+      "utf16": [
+        {
+          "utf16_len": 40,
+          "scalar_len": 39,
+          "utf8_len": 46
+        }
+      ]
+    },
+    {
+      "name": "getLineAtPosition #8 (edge corpus)",
+      "fn": "getLineAtPosition",
+      "input": [
+        "first line\nsecond 日本\nthird 👋 line\n\nlast",
+        12
+      ],
+      "expected": 2,
+      "utf16": [
+        {
+          "utf16_len": 40,
+          "scalar_len": 39,
+          "utf8_len": 46
+        }
+      ]
+    },
+    {
+      "name": "getCursorInfo #11 (edge corpus)",
+      "fn": "getCursorInfo",
+      "input": [
+        "first line\nsecond 日本\nthird 👋 line\n\nlast",
+        25
+      ],
+      "expected": {
+        "line": 3,
+        "column": 5,
+        "totalLines": 5
+      },
+      "utf16": [
+        {
+          "utf16_len": 40,
+          "scalar_len": 39,
+          "utf8_len": 46
+        }
+      ]
+    },
+    {
+      "name": "getLineAtPosition #9 (edge corpus)",
+      "fn": "getLineAtPosition",
+      "input": [
+        "first line\nsecond 日本\nthird 👋 line\n\nlast",
+        25
+      ],
+      "expected": 3,
+      "utf16": [
+        {
+          "utf16_len": 40,
+          "scalar_len": 39,
+          "utf8_len": 46
+        }
+      ]
+    },
+    {
+      "name": "getCursorInfo #12 (edge corpus)",
+      "fn": "getCursorInfo",
+      "input": [
+        "first line\nsecond 日本\nthird 👋 line\n\nlast",
+        40
+      ],
+      "expected": {
+        "line": 5,
+        "column": 5,
+        "totalLines": 5
+      },
+      "utf16": [
+        {
+          "utf16_len": 40,
+          "scalar_len": 39,
+          "utf8_len": 46
+        }
+      ]
+    },
+    {
+      "name": "getLineAtPosition #10 (edge corpus)",
+      "fn": "getLineAtPosition",
+      "input": [
+        "first line\nsecond 日本\nthird 👋 line\n\nlast",
+        40
+      ],
+      "expected": 5,
+      "utf16": [
+        {
+          "utf16_len": 40,
+          "scalar_len": 39,
+          "utf8_len": 46
+        }
+      ]
+    },
+    {
+      "name": "getCursorInfo #13 (edge corpus)",
+      "fn": "getCursorInfo",
+      "input": [
+        "first line\nsecond 日本\nthird 👋 line\n\nlast",
+        999
+      ],
+      "expected": {
+        "line": 5,
+        "column": 964,
+        "totalLines": 5
+      },
+      "utf16": [
+        {
+          "utf16_len": 40,
+          "scalar_len": 39,
+          "utf8_len": 46
+        }
+      ]
+    },
+    {
+      "name": "getLineAtPosition #11 (edge corpus)",
+      "fn": "getLineAtPosition",
+      "input": [
+        "first line\nsecond 日本\nthird 👋 line\n\nlast",
+        999
+      ],
+      "expected": 5,
+      "utf16": [
+        {
+          "utf16_len": 40,
+          "scalar_len": 39,
+          "utf8_len": 46
+        }
+      ]
+    },
+    {
+      "name": "getCursorInfo #14 (edge corpus)",
+      "fn": "getCursorInfo",
+      "input": [
+        "a\r\nb",
+        3
+      ],
+      "expected": {
+        "line": 2,
+        "column": 1,
+        "totalLines": 2
+      }
+    },
+    {
+      "name": "getPositionForLine #5 (edge corpus)",
+      "fn": "getPositionForLine",
+      "input": [
+        "first line\nsecond 日本\nthird 👋 line\n\nlast",
+        -1
+      ],
+      "expected": 0,
+      "utf16": [
+        {
+          "utf16_len": 40,
+          "scalar_len": 39,
+          "utf8_len": 46
+        }
+      ]
+    },
+    {
+      "name": "getPositionForLine #6 (edge corpus)",
+      "fn": "getPositionForLine",
+      "input": [
+        "first line\nsecond 日本\nthird 👋 line\n\nlast",
+        0
+      ],
+      "expected": 0,
+      "utf16": [
+        {
+          "utf16_len": 40,
+          "scalar_len": 39,
+          "utf8_len": 46
+        }
+      ]
+    },
+    {
+      "name": "getPositionForLine #7 (edge corpus)",
+      "fn": "getPositionForLine",
+      "input": [
+        "first line\nsecond 日本\nthird 👋 line\n\nlast",
+        1
+      ],
+      "expected": 0,
+      "utf16": [
+        {
+          "utf16_len": 40,
+          "scalar_len": 39,
+          "utf8_len": 46
+        }
+      ]
+    },
+    {
+      "name": "getPositionForLine #8 (edge corpus)",
+      "fn": "getPositionForLine",
+      "input": [
+        "first line\nsecond 日本\nthird 👋 line\n\nlast",
+        2
+      ],
+      "expected": 11,
+      "utf16": [
+        {
+          "utf16_len": 40,
+          "scalar_len": 39,
+          "utf8_len": 46
+        }
+      ]
+    },
+    {
+      "name": "getPositionForLine #9 (edge corpus)",
+      "fn": "getPositionForLine",
+      "input": [
+        "first line\nsecond 日本\nthird 👋 line\n\nlast",
+        3
+      ],
+      "expected": 21,
+      "utf16": [
+        {
+          "utf16_len": 40,
+          "scalar_len": 39,
+          "utf8_len": 46
+        }
+      ]
+    },
+    {
+      "name": "getPositionForLine #10 (edge corpus)",
+      "fn": "getPositionForLine",
+      "input": [
+        "first line\nsecond 日本\nthird 👋 line\n\nlast",
+        4
+      ],
+      "expected": 35,
+      "utf16": [
+        {
+          "utf16_len": 40,
+          "scalar_len": 39,
+          "utf8_len": 46
+        }
+      ]
+    },
+    {
+      "name": "getPositionForLine #11 (edge corpus)",
+      "fn": "getPositionForLine",
+      "input": [
+        "first line\nsecond 日本\nthird 👋 line\n\nlast",
+        5
+      ],
+      "expected": 36,
+      "utf16": [
+        {
+          "utf16_len": 40,
+          "scalar_len": 39,
+          "utf8_len": 46
+        }
+      ]
+    },
+    {
+      "name": "getPositionForLine #12 (edge corpus)",
+      "fn": "getPositionForLine",
+      "input": [
+        "first line\nsecond 日本\nthird 👋 line\n\nlast",
+        6
+      ],
+      "expected": 41,
+      "utf16": [
+        {
+          "utf16_len": 40,
+          "scalar_len": 39,
+          "utf8_len": 46
+        }
+      ]
+    },
+    {
+      "name": "getPositionForLine #13 (edge corpus)",
+      "fn": "getPositionForLine",
+      "input": [
+        "first line\nsecond 日本\nthird 👋 line\n\nlast",
+        100
+      ],
+      "expected": 41,
+      "utf16": [
+        {
+          "utf16_len": 40,
+          "scalar_len": 39,
+          "utf8_len": 46
+        }
+      ]
+    },
+    {
+      "name": "getPositionForLine #14 (edge corpus)",
+      "fn": "getPositionForLine",
+      "input": [
+        "",
+        1
+      ],
+      "expected": 0
+    },
+    {
+      "name": "getPositionForLine #15 (edge corpus)",
+      "fn": "getPositionForLine",
+      "input": [
+        "a\r\nb",
+        2
+      ],
+      "expected": 3
+    },
+    {
+      "name": "replaceRange #5 (edge corpus)",
+      "fn": "replaceRange",
+      "input": [
+        "first line\nsecond 日本\nthird 👋 line\n\nlast",
+        0,
+        5,
+        "FIRST"
+      ],
+      "expected": {
+        "text": "FIRST line\nsecond 日本\nthird 👋 line\n\nlast",
+        "cursorPosition": 5
+      },
+      "utf16": [
+        {
+          "utf16_len": 40,
+          "scalar_len": 39,
+          "utf8_len": 46
+        }
+      ]
+    },
+    {
+      "name": "replaceRange #6 (edge corpus)",
+      "fn": "replaceRange",
+      "input": [
+        "first line\nsecond 日本\nthird 👋 line\n\nlast",
+        0,
+        40,
+        ""
+      ],
+      "expected": {
+        "text": "",
+        "cursorPosition": 0
+      },
+      "utf16": [
+        {
+          "utf16_len": 40,
+          "scalar_len": 39,
+          "utf8_len": 46
+        }
+      ]
+    },
+    {
+      "name": "replaceRange #7 (edge corpus)",
+      "fn": "replaceRange",
+      "input": [
+        "first line\nsecond 日本\nthird 👋 line\n\nlast",
+        6,
+        6,
+        "ins"
+      ],
+      "expected": {
+        "text": "first insline\nsecond 日本\nthird 👋 line\n\nlast",
+        "cursorPosition": 9
+      },
+      "utf16": [
+        {
+          "utf16_len": 40,
+          "scalar_len": 39,
+          "utf8_len": 46
+        }
+      ]
+    },
+    {
+      "name": "replaceRange #8 (edge corpus)",
+      "fn": "replaceRange",
+      "input": [
+        "first line\nsecond 日本\nthird 👋 line\n\nlast",
+        11,
+        17,
+        "2nd"
+      ],
+      "expected": {
+        "text": "first line\n2nd 日本\nthird 👋 line\n\nlast",
+        "cursorPosition": 14
+      },
+      "utf16": [
+        {
+          "utf16_len": 40,
+          "scalar_len": 39,
+          "utf8_len": 46
+        }
+      ]
+    },
+    {
+      "name": "replaceRange #9 (edge corpus)",
+      "fn": "replaceRange",
+      "input": [
+        "first line\nsecond 日本\nthird 👋 line\n\nlast",
+        8,
+        3,
+        "rev"
+      ],
+      "expected": {
+        "text": "first lirevst line\nsecond 日本\nthird 👋 line\n\nlast",
+        "cursorPosition": 11
+      },
+      "utf16": [
+        {
+          "utf16_len": 40,
+          "scalar_len": 39,
+          "utf8_len": 46
+        }
+      ]
+    }
+  ]
+}

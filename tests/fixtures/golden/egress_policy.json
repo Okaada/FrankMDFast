@@ -1,0 +1,3114 @@
+{
+  "source": "app/services/egress_policy.rb @ d47a89e92d89f807878d318182fa5dcea0329ec4",
+  "frankmd_sha": "d47a89e92d89f807878d318182fa5dcea0329ec4",
+  "generator": "tools/golden/ruby/config.rb",
+  "notes": "blocked_ip?: input string parsed with IPAddr.new (errors are IPAddr parse errors, i.e. the string is not an address); expected.normalized = IPAddr#to_s. checked_target (resolve stubbed): EgressPolicy.resolve replaced to return the given addresses and record the host it was called with (uri.host, IPv6 keeps brackets). Errors: EgressPolicy::BlockedError with exact messages. 'real resolve' cases use the system resolver with numeric hosts only (glibc inet_aton forms like 127.1/0x7f.0.0.1/2130706433 resolve) plus localhost (/etc/hosts: machine dependent order).",
+  "allowed_schemes": [
+    "http",
+    "https"
+  ],
+  "extra_blocked": [
+    "0.0.0.0/8",
+    "100.64.0.0/10",
+    "192.0.0.0/24",
+    "192.0.2.0/24",
+    "198.18.0.0/15",
+    "198.51.100.0/24",
+    "203.0.113.0/24",
+    "240.0.0.0/4",
+    "::/128",
+    "100::/64"
+  ],
+  "cases": [
+    {
+      "name": "blocked_ip? \"169.254.169.254\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "169.254.169.254"
+      },
+      "expected": {
+        "normalized": "169.254.169.254",
+        "family": "ipv4",
+        "blocked": true
+      }
+    },
+    {
+      "name": "blocked_ip? \"127.0.0.1\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "127.0.0.1"
+      },
+      "expected": {
+        "normalized": "127.0.0.1",
+        "family": "ipv4",
+        "blocked": true
+      }
+    },
+    {
+      "name": "blocked_ip? \"10.0.0.5\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "10.0.0.5"
+      },
+      "expected": {
+        "normalized": "10.0.0.5",
+        "family": "ipv4",
+        "blocked": true
+      }
+    },
+    {
+      "name": "blocked_ip? \"172.16.0.1\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "172.16.0.1"
+      },
+      "expected": {
+        "normalized": "172.16.0.1",
+        "family": "ipv4",
+        "blocked": true
+      }
+    },
+    {
+      "name": "blocked_ip? \"192.168.1.10\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "192.168.1.10"
+      },
+      "expected": {
+        "normalized": "192.168.1.10",
+        "family": "ipv4",
+        "blocked": true
+      }
+    },
+    {
+      "name": "blocked_ip? \"169.254.1.1\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "169.254.1.1"
+      },
+      "expected": {
+        "normalized": "169.254.1.1",
+        "family": "ipv4",
+        "blocked": true
+      }
+    },
+    {
+      "name": "blocked_ip? \"::1\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "::1"
+      },
+      "expected": {
+        "normalized": "::1",
+        "family": "ipv6",
+        "blocked": true
+      }
+    },
+    {
+      "name": "blocked_ip? \"fc00::1\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "fc00::1"
+      },
+      "expected": {
+        "normalized": "fc00::1",
+        "family": "ipv6",
+        "blocked": true
+      }
+    },
+    {
+      "name": "blocked_ip? \"fe80::1\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "fe80::1"
+      },
+      "expected": {
+        "normalized": "fe80::1",
+        "family": "ipv6",
+        "blocked": true
+      }
+    },
+    {
+      "name": "blocked_ip? \"0.0.0.0\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "0.0.0.0"
+      },
+      "expected": {
+        "normalized": "0.0.0.0",
+        "family": "ipv4",
+        "blocked": true
+      }
+    },
+    {
+      "name": "blocked_ip? \"100.64.0.1\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "100.64.0.1"
+      },
+      "expected": {
+        "normalized": "100.64.0.1",
+        "family": "ipv4",
+        "blocked": true
+      }
+    },
+    {
+      "name": "blocked_ip? \"192.0.2.1\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "192.0.2.1"
+      },
+      "expected": {
+        "normalized": "192.0.2.1",
+        "family": "ipv4",
+        "blocked": true
+      }
+    },
+    {
+      "name": "blocked_ip? \"198.18.0.1\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "198.18.0.1"
+      },
+      "expected": {
+        "normalized": "198.18.0.1",
+        "family": "ipv4",
+        "blocked": true
+      }
+    },
+    {
+      "name": "blocked_ip? \"203.0.113.1\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "203.0.113.1"
+      },
+      "expected": {
+        "normalized": "203.0.113.1",
+        "family": "ipv4",
+        "blocked": true
+      }
+    },
+    {
+      "name": "blocked_ip? \"240.0.0.1\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "240.0.0.1"
+      },
+      "expected": {
+        "normalized": "240.0.0.1",
+        "family": "ipv4",
+        "blocked": true
+      }
+    },
+    {
+      "name": "blocked_ip? \"224.0.0.1\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "224.0.0.1"
+      },
+      "expected": {
+        "normalized": "224.0.0.1",
+        "family": "ipv4",
+        "blocked": true
+      }
+    },
+    {
+      "name": "blocked_ip? \"ff02::1\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "ff02::1"
+      },
+      "expected": {
+        "normalized": "ff02::1",
+        "family": "ipv6",
+        "blocked": true
+      }
+    },
+    {
+      "name": "blocked_ip? \"::ffff:127.0.0.1\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "::ffff:127.0.0.1"
+      },
+      "expected": {
+        "normalized": "::ffff:127.0.0.1",
+        "family": "ipv6",
+        "blocked": true
+      }
+    },
+    {
+      "name": "blocked_ip? \"93.184.216.34\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "93.184.216.34"
+      },
+      "expected": {
+        "normalized": "93.184.216.34",
+        "family": "ipv4",
+        "blocked": false
+      }
+    },
+    {
+      "name": "blocked_ip? \"2606:2800:220:1:248:1893:25c8:1946\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "2606:2800:220:1:248:1893:25c8:1946"
+      },
+      "expected": {
+        "normalized": "2606:2800:220:1:248:1893:25c8:1946",
+        "family": "ipv6",
+        "blocked": false
+      }
+    },
+    {
+      "name": "blocked_ip? \"0.0.0.1\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "0.0.0.1"
+      },
+      "expected": {
+        "normalized": "0.0.0.1",
+        "family": "ipv4",
+        "blocked": true
+      }
+    },
+    {
+      "name": "blocked_ip? \"0.255.255.255\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "0.255.255.255"
+      },
+      "expected": {
+        "normalized": "0.255.255.255",
+        "family": "ipv4",
+        "blocked": true
+      }
+    },
+    {
+      "name": "blocked_ip? \"1.0.0.0\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "1.0.0.0"
+      },
+      "expected": {
+        "normalized": "1.0.0.0",
+        "family": "ipv4",
+        "blocked": false
+      }
+    },
+    {
+      "name": "blocked_ip? \"1.1.1.1\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "1.1.1.1"
+      },
+      "expected": {
+        "normalized": "1.1.1.1",
+        "family": "ipv4",
+        "blocked": false
+      }
+    },
+    {
+      "name": "blocked_ip? \"8.8.8.8\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "8.8.8.8"
+      },
+      "expected": {
+        "normalized": "8.8.8.8",
+        "family": "ipv4",
+        "blocked": false
+      }
+    },
+    {
+      "name": "blocked_ip? \"9.255.255.255\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "9.255.255.255"
+      },
+      "expected": {
+        "normalized": "9.255.255.255",
+        "family": "ipv4",
+        "blocked": false
+      }
+    },
+    {
+      "name": "blocked_ip? \"10.0.0.0\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "10.0.0.0"
+      },
+      "expected": {
+        "normalized": "10.0.0.0",
+        "family": "ipv4",
+        "blocked": true
+      }
+    },
+    {
+      "name": "blocked_ip? \"10.255.255.255\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "10.255.255.255"
+      },
+      "expected": {
+        "normalized": "10.255.255.255",
+        "family": "ipv4",
+        "blocked": true
+      }
+    },
+    {
+      "name": "blocked_ip? \"11.0.0.0\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "11.0.0.0"
+      },
+      "expected": {
+        "normalized": "11.0.0.0",
+        "family": "ipv4",
+        "blocked": false
+      }
+    },
+    {
+      "name": "blocked_ip? \"100.63.255.255\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "100.63.255.255"
+      },
+      "expected": {
+        "normalized": "100.63.255.255",
+        "family": "ipv4",
+        "blocked": false
+      }
+    },
+    {
+      "name": "blocked_ip? \"100.64.0.0\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "100.64.0.0"
+      },
+      "expected": {
+        "normalized": "100.64.0.0",
+        "family": "ipv4",
+        "blocked": true
+      }
+    },
+    {
+      "name": "blocked_ip? \"100.127.255.255\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "100.127.255.255"
+      },
+      "expected": {
+        "normalized": "100.127.255.255",
+        "family": "ipv4",
+        "blocked": true
+      }
+    },
+    {
+      "name": "blocked_ip? \"100.128.0.0\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "100.128.0.0"
+      },
+      "expected": {
+        "normalized": "100.128.0.0",
+        "family": "ipv4",
+        "blocked": false
+      }
+    },
+    {
+      "name": "blocked_ip? \"126.255.255.255\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "126.255.255.255"
+      },
+      "expected": {
+        "normalized": "126.255.255.255",
+        "family": "ipv4",
+        "blocked": false
+      }
+    },
+    {
+      "name": "blocked_ip? \"127.0.0.0\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "127.0.0.0"
+      },
+      "expected": {
+        "normalized": "127.0.0.0",
+        "family": "ipv4",
+        "blocked": true
+      }
+    },
+    {
+      "name": "blocked_ip? \"127.255.255.255\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "127.255.255.255"
+      },
+      "expected": {
+        "normalized": "127.255.255.255",
+        "family": "ipv4",
+        "blocked": true
+      }
+    },
+    {
+      "name": "blocked_ip? \"128.0.0.0\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "128.0.0.0"
+      },
+      "expected": {
+        "normalized": "128.0.0.0",
+        "family": "ipv4",
+        "blocked": false
+      }
+    },
+    {
+      "name": "blocked_ip? \"169.253.255.255\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "169.253.255.255"
+      },
+      "expected": {
+        "normalized": "169.253.255.255",
+        "family": "ipv4",
+        "blocked": false
+      }
+    },
+    {
+      "name": "blocked_ip? \"169.254.0.0\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "169.254.0.0"
+      },
+      "expected": {
+        "normalized": "169.254.0.0",
+        "family": "ipv4",
+        "blocked": true
+      }
+    },
+    {
+      "name": "blocked_ip? \"169.254.255.255\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "169.254.255.255"
+      },
+      "expected": {
+        "normalized": "169.254.255.255",
+        "family": "ipv4",
+        "blocked": true
+      }
+    },
+    {
+      "name": "blocked_ip? \"169.255.0.0\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "169.255.0.0"
+      },
+      "expected": {
+        "normalized": "169.255.0.0",
+        "family": "ipv4",
+        "blocked": false
+      }
+    },
+    {
+      "name": "blocked_ip? \"172.15.255.255\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "172.15.255.255"
+      },
+      "expected": {
+        "normalized": "172.15.255.255",
+        "family": "ipv4",
+        "blocked": false
+      }
+    },
+    {
+      "name": "blocked_ip? \"172.16.0.0\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "172.16.0.0"
+      },
+      "expected": {
+        "normalized": "172.16.0.0",
+        "family": "ipv4",
+        "blocked": true
+      }
+    },
+    {
+      "name": "blocked_ip? \"172.31.255.255\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "172.31.255.255"
+      },
+      "expected": {
+        "normalized": "172.31.255.255",
+        "family": "ipv4",
+        "blocked": true
+      }
+    },
+    {
+      "name": "blocked_ip? \"172.32.0.0\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "172.32.0.0"
+      },
+      "expected": {
+        "normalized": "172.32.0.0",
+        "family": "ipv4",
+        "blocked": false
+      }
+    },
+    {
+      "name": "blocked_ip? \"192.0.0.0\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "192.0.0.0"
+      },
+      "expected": {
+        "normalized": "192.0.0.0",
+        "family": "ipv4",
+        "blocked": true
+      }
+    },
+    {
+      "name": "blocked_ip? \"192.0.0.255\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "192.0.0.255"
+      },
+      "expected": {
+        "normalized": "192.0.0.255",
+        "family": "ipv4",
+        "blocked": true
+      }
+    },
+    {
+      "name": "blocked_ip? \"192.0.1.0\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "192.0.1.0"
+      },
+      "expected": {
+        "normalized": "192.0.1.0",
+        "family": "ipv4",
+        "blocked": false
+      }
+    },
+    {
+      "name": "blocked_ip? \"192.0.2.0\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "192.0.2.0"
+      },
+      "expected": {
+        "normalized": "192.0.2.0",
+        "family": "ipv4",
+        "blocked": true
+      }
+    },
+    {
+      "name": "blocked_ip? \"192.0.2.255\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "192.0.2.255"
+      },
+      "expected": {
+        "normalized": "192.0.2.255",
+        "family": "ipv4",
+        "blocked": true
+      }
+    },
+    {
+      "name": "blocked_ip? \"192.0.3.0\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "192.0.3.0"
+      },
+      "expected": {
+        "normalized": "192.0.3.0",
+        "family": "ipv4",
+        "blocked": false
+      }
+    },
+    {
+      "name": "blocked_ip? \"192.88.99.1\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "192.88.99.1"
+      },
+      "expected": {
+        "normalized": "192.88.99.1",
+        "family": "ipv4",
+        "blocked": false
+      }
+    },
+    {
+      "name": "blocked_ip? \"192.167.255.255\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "192.167.255.255"
+      },
+      "expected": {
+        "normalized": "192.167.255.255",
+        "family": "ipv4",
+        "blocked": false
+      }
+    },
+    {
+      "name": "blocked_ip? \"192.168.0.0\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "192.168.0.0"
+      },
+      "expected": {
+        "normalized": "192.168.0.0",
+        "family": "ipv4",
+        "blocked": true
+      }
+    },
+    {
+      "name": "blocked_ip? \"192.168.255.255\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "192.168.255.255"
+      },
+      "expected": {
+        "normalized": "192.168.255.255",
+        "family": "ipv4",
+        "blocked": true
+      }
+    },
+    {
+      "name": "blocked_ip? \"192.169.0.0\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "192.169.0.0"
+      },
+      "expected": {
+        "normalized": "192.169.0.0",
+        "family": "ipv4",
+        "blocked": false
+      }
+    },
+    {
+      "name": "blocked_ip? \"198.17.255.255\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "198.17.255.255"
+      },
+      "expected": {
+        "normalized": "198.17.255.255",
+        "family": "ipv4",
+        "blocked": false
+      }
+    },
+    {
+      "name": "blocked_ip? \"198.18.0.0\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "198.18.0.0"
+      },
+      "expected": {
+        "normalized": "198.18.0.0",
+        "family": "ipv4",
+        "blocked": true
+      }
+    },
+    {
+      "name": "blocked_ip? \"198.19.255.255\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "198.19.255.255"
+      },
+      "expected": {
+        "normalized": "198.19.255.255",
+        "family": "ipv4",
+        "blocked": true
+      }
+    },
+    {
+      "name": "blocked_ip? \"198.20.0.0\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "198.20.0.0"
+      },
+      "expected": {
+        "normalized": "198.20.0.0",
+        "family": "ipv4",
+        "blocked": false
+      }
+    },
+    {
+      "name": "blocked_ip? \"198.51.99.255\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "198.51.99.255"
+      },
+      "expected": {
+        "normalized": "198.51.99.255",
+        "family": "ipv4",
+        "blocked": false
+      }
+    },
+    {
+      "name": "blocked_ip? \"198.51.100.0\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "198.51.100.0"
+      },
+      "expected": {
+        "normalized": "198.51.100.0",
+        "family": "ipv4",
+        "blocked": true
+      }
+    },
+    {
+      "name": "blocked_ip? \"198.51.100.255\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "198.51.100.255"
+      },
+      "expected": {
+        "normalized": "198.51.100.255",
+        "family": "ipv4",
+        "blocked": true
+      }
+    },
+    {
+      "name": "blocked_ip? \"198.51.101.0\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "198.51.101.0"
+      },
+      "expected": {
+        "normalized": "198.51.101.0",
+        "family": "ipv4",
+        "blocked": false
+      }
+    },
+    {
+      "name": "blocked_ip? \"203.0.112.255\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "203.0.112.255"
+      },
+      "expected": {
+        "normalized": "203.0.112.255",
+        "family": "ipv4",
+        "blocked": false
+      }
+    },
+    {
+      "name": "blocked_ip? \"203.0.113.0\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "203.0.113.0"
+      },
+      "expected": {
+        "normalized": "203.0.113.0",
+        "family": "ipv4",
+        "blocked": true
+      }
+    },
+    {
+      "name": "blocked_ip? \"203.0.113.255\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "203.0.113.255"
+      },
+      "expected": {
+        "normalized": "203.0.113.255",
+        "family": "ipv4",
+        "blocked": true
+      }
+    },
+    {
+      "name": "blocked_ip? \"203.0.114.0\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "203.0.114.0"
+      },
+      "expected": {
+        "normalized": "203.0.114.0",
+        "family": "ipv4",
+        "blocked": false
+      }
+    },
+    {
+      "name": "blocked_ip? \"223.255.255.255\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "223.255.255.255"
+      },
+      "expected": {
+        "normalized": "223.255.255.255",
+        "family": "ipv4",
+        "blocked": false
+      }
+    },
+    {
+      "name": "blocked_ip? \"224.0.0.0\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "224.0.0.0"
+      },
+      "expected": {
+        "normalized": "224.0.0.0",
+        "family": "ipv4",
+        "blocked": true
+      }
+    },
+    {
+      "name": "blocked_ip? \"239.255.255.255\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "239.255.255.255"
+      },
+      "expected": {
+        "normalized": "239.255.255.255",
+        "family": "ipv4",
+        "blocked": true
+      }
+    },
+    {
+      "name": "blocked_ip? \"240.0.0.0\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "240.0.0.0"
+      },
+      "expected": {
+        "normalized": "240.0.0.0",
+        "family": "ipv4",
+        "blocked": true
+      }
+    },
+    {
+      "name": "blocked_ip? \"255.255.255.254\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "255.255.255.254"
+      },
+      "expected": {
+        "normalized": "255.255.255.254",
+        "family": "ipv4",
+        "blocked": true
+      }
+    },
+    {
+      "name": "blocked_ip? \"255.255.255.255\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "255.255.255.255"
+      },
+      "expected": {
+        "normalized": "255.255.255.255",
+        "family": "ipv4",
+        "blocked": true
+      }
+    },
+    {
+      "name": "blocked_ip? \"::\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "::"
+      },
+      "expected": {
+        "normalized": "::",
+        "family": "ipv6",
+        "blocked": true
+      }
+    },
+    {
+      "name": "blocked_ip? \"::2\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "::2"
+      },
+      "expected": {
+        "normalized": "::2",
+        "family": "ipv6",
+        "blocked": false
+      }
+    },
+    {
+      "name": "blocked_ip? \"::127.0.0.1\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "::127.0.0.1"
+      },
+      "expected": {
+        "normalized": "::127.0.0.1",
+        "family": "ipv6",
+        "blocked": false
+      }
+    },
+    {
+      "name": "blocked_ip? \"::ffff:0.0.0.0\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "::ffff:0.0.0.0"
+      },
+      "expected": {
+        "normalized": "::ffff:0.0.0.0",
+        "family": "ipv6",
+        "blocked": true
+      }
+    },
+    {
+      "name": "blocked_ip? \"::ffff:10.0.0.1\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "::ffff:10.0.0.1"
+      },
+      "expected": {
+        "normalized": "::ffff:10.0.0.1",
+        "family": "ipv6",
+        "blocked": true
+      }
+    },
+    {
+      "name": "blocked_ip? \"::ffff:8.8.8.8\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "::ffff:8.8.8.8"
+      },
+      "expected": {
+        "normalized": "::ffff:8.8.8.8",
+        "family": "ipv6",
+        "blocked": false
+      }
+    },
+    {
+      "name": "blocked_ip? \"::ffff:169.254.169.254\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "::ffff:169.254.169.254"
+      },
+      "expected": {
+        "normalized": "::ffff:169.254.169.254",
+        "family": "ipv6",
+        "blocked": true
+      }
+    },
+    {
+      "name": "blocked_ip? \"::ffff:7f00:1\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "::ffff:7f00:1"
+      },
+      "expected": {
+        "normalized": "::ffff:127.0.0.1",
+        "family": "ipv6",
+        "blocked": true
+      }
+    },
+    {
+      "name": "blocked_ip? \"::ffff:100.64.0.1\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "::ffff:100.64.0.1"
+      },
+      "expected": {
+        "normalized": "::ffff:100.64.0.1",
+        "family": "ipv6",
+        "blocked": true
+      }
+    },
+    {
+      "name": "blocked_ip? \"::ffff:224.0.0.1\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "::ffff:224.0.0.1"
+      },
+      "expected": {
+        "normalized": "::ffff:224.0.0.1",
+        "family": "ipv6",
+        "blocked": true
+      }
+    },
+    {
+      "name": "blocked_ip? \"64:ff9b::7f00:1\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "64:ff9b::7f00:1"
+      },
+      "expected": {
+        "normalized": "64:ff9b::7f00:1",
+        "family": "ipv6",
+        "blocked": false
+      }
+    },
+    {
+      "name": "blocked_ip? \"64:ff9b::808:808\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "64:ff9b::808:808"
+      },
+      "expected": {
+        "normalized": "64:ff9b::808:808",
+        "family": "ipv6",
+        "blocked": false
+      }
+    },
+    {
+      "name": "blocked_ip? \"2002:7f00:1::\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "2002:7f00:1::"
+      },
+      "expected": {
+        "normalized": "2002:7f00:1::",
+        "family": "ipv6",
+        "blocked": false
+      }
+    },
+    {
+      "name": "blocked_ip? \"2001:db8::1\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "2001:db8::1"
+      },
+      "expected": {
+        "normalized": "2001:db8::1",
+        "family": "ipv6",
+        "blocked": false
+      }
+    },
+    {
+      "name": "blocked_ip? \"2001::1\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "2001::1"
+      },
+      "expected": {
+        "normalized": "2001::1",
+        "family": "ipv6",
+        "blocked": false
+      }
+    },
+    {
+      "name": "blocked_ip? \"2606:4700:4700::1111\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "2606:4700:4700::1111"
+      },
+      "expected": {
+        "normalized": "2606:4700:4700::1111",
+        "family": "ipv6",
+        "blocked": false
+      }
+    },
+    {
+      "name": "blocked_ip? \"2a00:1450:4001:82a::200e\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "2a00:1450:4001:82a::200e"
+      },
+      "expected": {
+        "normalized": "2a00:1450:4001:82a::200e",
+        "family": "ipv6",
+        "blocked": false
+      }
+    },
+    {
+      "name": "blocked_ip? \"fc00::\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "fc00::"
+      },
+      "expected": {
+        "normalized": "fc00::",
+        "family": "ipv6",
+        "blocked": true
+      }
+    },
+    {
+      "name": "blocked_ip? \"fd00::1\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "fd00::1"
+      },
+      "expected": {
+        "normalized": "fd00::1",
+        "family": "ipv6",
+        "blocked": true
+      }
+    },
+    {
+      "name": "blocked_ip? \"fdff:ffff:ffff:ffff:ffff:ffff:ffff:ffff\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "fdff:ffff:ffff:ffff:ffff:ffff:ffff:ffff"
+      },
+      "expected": {
+        "normalized": "fdff:ffff:ffff:ffff:ffff:ffff:ffff:ffff",
+        "family": "ipv6",
+        "blocked": true
+      }
+    },
+    {
+      "name": "blocked_ip? \"fe00::1\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "fe00::1"
+      },
+      "expected": {
+        "normalized": "fe00::1",
+        "family": "ipv6",
+        "blocked": false
+      }
+    },
+    {
+      "name": "blocked_ip? \"fe7f::1\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "fe7f::1"
+      },
+      "expected": {
+        "normalized": "fe7f::1",
+        "family": "ipv6",
+        "blocked": false
+      }
+    },
+    {
+      "name": "blocked_ip? \"fe80::\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "fe80::"
+      },
+      "expected": {
+        "normalized": "fe80::",
+        "family": "ipv6",
+        "blocked": true
+      }
+    },
+    {
+      "name": "blocked_ip? \"febf:ffff:ffff:ffff:ffff:ffff:ffff:ffff\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "febf:ffff:ffff:ffff:ffff:ffff:ffff:ffff"
+      },
+      "expected": {
+        "normalized": "febf:ffff:ffff:ffff:ffff:ffff:ffff:ffff",
+        "family": "ipv6",
+        "blocked": true
+      }
+    },
+    {
+      "name": "blocked_ip? \"fec0::1\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "fec0::1"
+      },
+      "expected": {
+        "normalized": "fec0::1",
+        "family": "ipv6",
+        "blocked": false
+      }
+    },
+    {
+      "name": "blocked_ip? \"feff::1\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "feff::1"
+      },
+      "expected": {
+        "normalized": "feff::1",
+        "family": "ipv6",
+        "blocked": false
+      }
+    },
+    {
+      "name": "blocked_ip? \"ff00::\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "ff00::"
+      },
+      "expected": {
+        "normalized": "ff00::",
+        "family": "ipv6",
+        "blocked": true
+      }
+    },
+    {
+      "name": "blocked_ip? \"ff00::1\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "ff00::1"
+      },
+      "expected": {
+        "normalized": "ff00::1",
+        "family": "ipv6",
+        "blocked": true
+      }
+    },
+    {
+      "name": "blocked_ip? \"ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff"
+      },
+      "expected": {
+        "normalized": "ffff:ffff:ffff:ffff:ffff:ffff:ffff:ffff",
+        "family": "ipv6",
+        "blocked": true
+      }
+    },
+    {
+      "name": "blocked_ip? \"100::\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "100::"
+      },
+      "expected": {
+        "normalized": "100::",
+        "family": "ipv6",
+        "blocked": true
+      }
+    },
+    {
+      "name": "blocked_ip? \"100::1\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "100::1"
+      },
+      "expected": {
+        "normalized": "100::1",
+        "family": "ipv6",
+        "blocked": true
+      }
+    },
+    {
+      "name": "blocked_ip? \"100::ffff:ffff:ffff:ffff\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "100::ffff:ffff:ffff:ffff"
+      },
+      "expected": {
+        "normalized": "100::ffff:ffff:ffff:ffff",
+        "family": "ipv6",
+        "blocked": true
+      }
+    },
+    {
+      "name": "blocked_ip? \"100:0:0:1::\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "100:0:0:1::"
+      },
+      "expected": {
+        "normalized": "100:0:0:1::",
+        "family": "ipv6",
+        "blocked": false
+      }
+    },
+    {
+      "name": "blocked_ip? \"0100::0001\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "0100::0001"
+      },
+      "expected": {
+        "normalized": "100::1",
+        "family": "ipv6",
+        "blocked": true
+      }
+    },
+    {
+      "name": "blocked_ip? \"FE80::ABCD\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "FE80::ABCD"
+      },
+      "expected": {
+        "normalized": "fe80::abcd",
+        "family": "ipv6",
+        "blocked": true
+      }
+    },
+    {
+      "name": "blocked_ip? \"2001:DB8::A\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "2001:DB8::A"
+      },
+      "expected": {
+        "normalized": "2001:db8::a",
+        "family": "ipv6",
+        "blocked": false
+      }
+    },
+    {
+      "name": "blocked_ip? \"::FFFF:127.0.0.1\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "::FFFF:127.0.0.1"
+      },
+      "expected": {
+        "normalized": "::ffff:127.0.0.1",
+        "family": "ipv6",
+        "blocked": true
+      }
+    },
+    {
+      "name": "blocked_ip? \"fe80::1%eth0\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "fe80::1%eth0"
+      },
+      "expected": {
+        "normalized": "fe80::1%eth0",
+        "family": "ipv6",
+        "blocked": true
+      }
+    },
+    {
+      "name": "blocked_ip? \"fe80::1%25eth0\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "fe80::1%25eth0"
+      },
+      "expected": {
+        "normalized": "fe80::1%25eth0",
+        "family": "ipv6",
+        "blocked": true
+      }
+    },
+    {
+      "name": "blocked_ip? \"10.0.0.0/8\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "10.0.0.0/8"
+      },
+      "expected": {
+        "normalized": "10.0.0.0",
+        "family": "ipv4",
+        "blocked": true
+      }
+    },
+    {
+      "name": "blocked_ip? \"8.8.8.0/24\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "8.8.8.0/24"
+      },
+      "expected": {
+        "normalized": "8.8.8.0",
+        "family": "ipv4",
+        "blocked": false
+      }
+    },
+    {
+      "name": "blocked_ip? \"0.0.0.0/0\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "0.0.0.0/0"
+      },
+      "expected": {
+        "normalized": "0.0.0.0",
+        "family": "ipv4",
+        "blocked": true
+      }
+    },
+    {
+      "name": "blocked_ip? \"::/0\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "::/0"
+      },
+      "expected": {
+        "normalized": "::",
+        "family": "ipv6",
+        "blocked": false
+      }
+    },
+    {
+      "name": "blocked_ip? \"999.1.1.1\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "999.1.1.1"
+      },
+      "expected": {
+        "error": "IPAddr::InvalidAddressError",
+        "message": "invalid address: "
+      }
+    },
+    {
+      "name": "blocked_ip? \"1.2.3\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "1.2.3"
+      },
+      "expected": {
+        "error": "IPAddr::InvalidAddressError",
+        "message": "invalid address: "
+      }
+    },
+    {
+      "name": "blocked_ip? \"01.2.3.4\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "01.2.3.4"
+      },
+      "expected": {
+        "error": "IPAddr::InvalidAddressError",
+        "message": "zero-filled number in IPv4 address is ambiguous: "
+      }
+    },
+    {
+      "name": "blocked_ip? \"1.2.3.4.5\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "1.2.3.4.5"
+      },
+      "expected": {
+        "error": "IPAddr::InvalidAddressError",
+        "message": "invalid address: "
+      }
+    },
+    {
+      "name": "blocked_ip? \"localhost\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "localhost"
+      },
+      "expected": {
+        "error": "IPAddr::InvalidAddressError",
+        "message": "invalid address: "
+      }
+    },
+    {
+      "name": "blocked_ip? \"example.com\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "example.com"
+      },
+      "expected": {
+        "error": "IPAddr::InvalidAddressError",
+        "message": "invalid address: "
+      }
+    },
+    {
+      "name": "blocked_ip? \"127.1\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "127.1"
+      },
+      "expected": {
+        "error": "IPAddr::InvalidAddressError",
+        "message": "invalid address: "
+      }
+    },
+    {
+      "name": "blocked_ip? \"0x7f.0.0.1\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "0x7f.0.0.1"
+      },
+      "expected": {
+        "error": "IPAddr::InvalidAddressError",
+        "message": "invalid address: "
+      }
+    },
+    {
+      "name": "blocked_ip? \"2130706433\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "2130706433"
+      },
+      "expected": {
+        "error": "IPAddr::InvalidAddressError",
+        "message": "invalid address: "
+      }
+    },
+    {
+      "name": "blocked_ip? \"[::1]\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "[::1]"
+      },
+      "expected": {
+        "normalized": "::1",
+        "family": "ipv6",
+        "blocked": true
+      }
+    },
+    {
+      "name": "blocked_ip? \":::1\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": ":::1"
+      },
+      "expected": {
+        "error": "IPAddr::InvalidAddressError",
+        "message": "invalid address: "
+      }
+    },
+    {
+      "name": "blocked_ip? \"\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": ""
+      },
+      "expected": {
+        "error": "IPAddr::InvalidAddressError",
+        "message": "invalid address: "
+      }
+    },
+    {
+      "name": "blocked_ip? \" 127.0.0.1\"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": " 127.0.0.1"
+      },
+      "expected": {
+        "error": "IPAddr::InvalidAddressError",
+        "message": "invalid address: "
+      }
+    },
+    {
+      "name": "blocked_ip? \"127.0.0.1 \"",
+      "fn": "blocked_ip?",
+      "input": {
+        "ip": "127.0.0.1 "
+      },
+      "expected": {
+        "error": "IPAddr::InvalidAddressError",
+        "message": "invalid address: "
+      }
+    },
+    {
+      "name": "checked_target \"file:///etc/passwd\" -> stub [\"93.184.216.34\"]",
+      "fn": "checked_target (resolve stubbed)",
+      "input": {
+        "url": "file:///etc/passwd",
+        "resolve_returns": [
+          "93.184.216.34"
+        ]
+      },
+      "expected": {
+        "result": {
+          "error": "EgressPolicy::BlockedError",
+          "message": "Only http and https URLs can be fetched"
+        },
+        "resolve_called_with": []
+      }
+    },
+    {
+      "name": "checked_target \"http://\" -> stub [\"93.184.216.34\"]",
+      "fn": "checked_target (resolve stubbed)",
+      "input": {
+        "url": "http://",
+        "resolve_returns": [
+          "93.184.216.34"
+        ]
+      },
+      "expected": {
+        "result": {
+          "error": "EgressPolicy::BlockedError",
+          "message": "URL has no host"
+        },
+        "resolve_called_with": []
+      }
+    },
+    {
+      "name": "checked_target \"https://does-not-exist.invalid/x.png\" -> stub []",
+      "fn": "checked_target (resolve stubbed)",
+      "input": {
+        "url": "https://does-not-exist.invalid/x.png",
+        "resolve_returns": []
+      },
+      "expected": {
+        "result": {
+          "error": "EgressPolicy::BlockedError",
+          "message": "Could not resolve does-not-exist.invalid"
+        },
+        "resolve_called_with": [
+          "does-not-exist.invalid"
+        ]
+      }
+    },
+    {
+      "name": "checked_target \"http://metadata.example.com/latest/meta-data/\" -> stub [\"169.254.169.254\"]",
+      "fn": "checked_target (resolve stubbed)",
+      "input": {
+        "url": "http://metadata.example.com/latest/meta-data/",
+        "resolve_returns": [
+          "169.254.169.254"
+        ]
+      },
+      "expected": {
+        "result": {
+          "error": "EgressPolicy::BlockedError",
+          "message": "Refusing to fetch a non-public address (169.254.169.254)"
+        },
+        "resolve_called_with": [
+          "metadata.example.com"
+        ]
+      }
+    },
+    {
+      "name": "checked_target \"https://split-horizon.example.com/x.png\" -> stub [\"93.184.216.34\", \"127.0.0.1\"]",
+      "fn": "checked_target (resolve stubbed)",
+      "input": {
+        "url": "https://split-horizon.example.com/x.png",
+        "resolve_returns": [
+          "93.184.216.34",
+          "127.0.0.1"
+        ]
+      },
+      "expected": {
+        "result": {
+          "error": "EgressPolicy::BlockedError",
+          "message": "Refusing to fetch a non-public address (127.0.0.1)"
+        },
+        "resolve_called_with": [
+          "split-horizon.example.com"
+        ]
+      }
+    },
+    {
+      "name": "checked_target \"https://split-horizon2.example.com/x.png\" -> stub [\"127.0.0.1\", \"93.184.216.34\"]",
+      "fn": "checked_target (resolve stubbed)",
+      "input": {
+        "url": "https://split-horizon2.example.com/x.png",
+        "resolve_returns": [
+          "127.0.0.1",
+          "93.184.216.34"
+        ]
+      },
+      "expected": {
+        "result": {
+          "error": "EgressPolicy::BlockedError",
+          "message": "Refusing to fetch a non-public address (127.0.0.1)"
+        },
+        "resolve_called_with": [
+          "split-horizon2.example.com"
+        ]
+      }
+    },
+    {
+      "name": "checked_target \"https://example.com/image.png\" -> stub [\"93.184.216.34\"]",
+      "fn": "checked_target (resolve stubbed)",
+      "input": {
+        "url": "https://example.com/image.png",
+        "resolve_returns": [
+          "93.184.216.34"
+        ]
+      },
+      "expected": {
+        "result": {
+          "uri": "https://example.com/image.png",
+          "scheme": "https",
+          "host": "example.com",
+          "hostname": "example.com",
+          "port": 443,
+          "path": "/image.png",
+          "query": null,
+          "userinfo": null,
+          "fragment": null,
+          "ip": "93.184.216.34"
+        },
+        "resolve_called_with": [
+          "example.com"
+        ]
+      }
+    },
+    {
+      "name": "checked_target \"https://example.com/image.png\" -> stub [\"2606:2800:220:1:248:1893:25c8:1946\", \"93.184.216.34\"]",
+      "fn": "checked_target (resolve stubbed)",
+      "input": {
+        "url": "https://example.com/image.png",
+        "resolve_returns": [
+          "2606:2800:220:1:248:1893:25c8:1946",
+          "93.184.216.34"
+        ]
+      },
+      "expected": {
+        "result": {
+          "uri": "https://example.com/image.png",
+          "scheme": "https",
+          "host": "example.com",
+          "hostname": "example.com",
+          "port": 443,
+          "path": "/image.png",
+          "query": null,
+          "userinfo": null,
+          "fragment": null,
+          "ip": "2606:2800:220:1:248:1893:25c8:1946"
+        },
+        "resolve_called_with": [
+          "example.com"
+        ]
+      }
+    },
+    {
+      "name": "checked_target \"HTTPS://EXAMPLE.COM/Image.PNG\" -> stub [\"93.184.216.34\"]",
+      "fn": "checked_target (resolve stubbed)",
+      "input": {
+        "url": "HTTPS://EXAMPLE.COM/Image.PNG",
+        "resolve_returns": [
+          "93.184.216.34"
+        ]
+      },
+      "expected": {
+        "result": {
+          "uri": "https://EXAMPLE.COM/Image.PNG",
+          "scheme": "https",
+          "host": "EXAMPLE.COM",
+          "hostname": "EXAMPLE.COM",
+          "port": 443,
+          "path": "/Image.PNG",
+          "query": null,
+          "userinfo": null,
+          "fragment": null,
+          "ip": "93.184.216.34"
+        },
+        "resolve_called_with": [
+          "EXAMPLE.COM"
+        ]
+      }
+    },
+    {
+      "name": "checked_target \"Http://example.com\" -> stub [\"93.184.216.34\"]",
+      "fn": "checked_target (resolve stubbed)",
+      "input": {
+        "url": "Http://example.com",
+        "resolve_returns": [
+          "93.184.216.34"
+        ]
+      },
+      "expected": {
+        "result": {
+          "uri": "http://example.com",
+          "scheme": "http",
+          "host": "example.com",
+          "hostname": "example.com",
+          "port": 80,
+          "path": "",
+          "query": null,
+          "userinfo": null,
+          "fragment": null,
+          "ip": "93.184.216.34"
+        },
+        "resolve_called_with": [
+          "example.com"
+        ]
+      }
+    },
+    {
+      "name": "checked_target \"ftp://example.com/x\" -> stub [\"93.184.216.34\"]",
+      "fn": "checked_target (resolve stubbed)",
+      "input": {
+        "url": "ftp://example.com/x",
+        "resolve_returns": [
+          "93.184.216.34"
+        ]
+      },
+      "expected": {
+        "result": {
+          "error": "EgressPolicy::BlockedError",
+          "message": "Only http and https URLs can be fetched"
+        },
+        "resolve_called_with": []
+      }
+    },
+    {
+      "name": "checked_target \"gopher://example.com/\" -> stub [\"93.184.216.34\"]",
+      "fn": "checked_target (resolve stubbed)",
+      "input": {
+        "url": "gopher://example.com/",
+        "resolve_returns": [
+          "93.184.216.34"
+        ]
+      },
+      "expected": {
+        "result": {
+          "error": "EgressPolicy::BlockedError",
+          "message": "Only http and https URLs can be fetched"
+        },
+        "resolve_called_with": []
+      }
+    },
+    {
+      "name": "checked_target \"javascript:alert(1)\" -> stub [\"93.184.216.34\"]",
+      "fn": "checked_target (resolve stubbed)",
+      "input": {
+        "url": "javascript:alert(1)",
+        "resolve_returns": [
+          "93.184.216.34"
+        ]
+      },
+      "expected": {
+        "result": {
+          "error": "EgressPolicy::BlockedError",
+          "message": "Only http and https URLs can be fetched"
+        },
+        "resolve_called_with": []
+      }
+    },
+    {
+      "name": "checked_target \"data:image/png;base64,AAAA\" -> stub [\"93.184.216.34\"]",
+      "fn": "checked_target (resolve stubbed)",
+      "input": {
+        "url": "data:image/png;base64,AAAA",
+        "resolve_returns": [
+          "93.184.216.34"
+        ]
+      },
+      "expected": {
+        "result": {
+          "error": "EgressPolicy::BlockedError",
+          "message": "Only http and https URLs can be fetched"
+        },
+        "resolve_called_with": []
+      }
+    },
+    {
+      "name": "checked_target \"//example.com/x.png\" -> stub [\"93.184.216.34\"]",
+      "fn": "checked_target (resolve stubbed)",
+      "input": {
+        "url": "//example.com/x.png",
+        "resolve_returns": [
+          "93.184.216.34"
+        ]
+      },
+      "expected": {
+        "result": {
+          "error": "EgressPolicy::BlockedError",
+          "message": "Only http and https URLs can be fetched"
+        },
+        "resolve_called_with": []
+      }
+    },
+    {
+      "name": "checked_target \"example.com/x.png\" -> stub [\"93.184.216.34\"]",
+      "fn": "checked_target (resolve stubbed)",
+      "input": {
+        "url": "example.com/x.png",
+        "resolve_returns": [
+          "93.184.216.34"
+        ]
+      },
+      "expected": {
+        "result": {
+          "error": "EgressPolicy::BlockedError",
+          "message": "Only http and https URLs can be fetched"
+        },
+        "resolve_called_with": []
+      }
+    },
+    {
+      "name": "checked_target \"/x.png\" -> stub [\"93.184.216.34\"]",
+      "fn": "checked_target (resolve stubbed)",
+      "input": {
+        "url": "/x.png",
+        "resolve_returns": [
+          "93.184.216.34"
+        ]
+      },
+      "expected": {
+        "result": {
+          "error": "EgressPolicy::BlockedError",
+          "message": "Only http and https URLs can be fetched"
+        },
+        "resolve_called_with": []
+      }
+    },
+    {
+      "name": "checked_target \"\" -> stub [\"93.184.216.34\"]",
+      "fn": "checked_target (resolve stubbed)",
+      "input": {
+        "url": "",
+        "resolve_returns": [
+          "93.184.216.34"
+        ]
+      },
+      "expected": {
+        "result": {
+          "error": "EgressPolicy::BlockedError",
+          "message": "Only http and https URLs can be fetched"
+        },
+        "resolve_called_with": []
+      }
+    },
+    {
+      "name": "checked_target \"   \" -> stub [\"93.184.216.34\"]",
+      "fn": "checked_target (resolve stubbed)",
+      "input": {
+        "url": "   ",
+        "resolve_returns": [
+          "93.184.216.34"
+        ]
+      },
+      "expected": {
+        "result": {
+          "error": "EgressPolicy::BlockedError",
+          "message": "Invalid URL"
+        },
+        "resolve_called_with": []
+      }
+    },
+    {
+      "name": "checked_target nil -> stub [\"93.184.216.34\"]",
+      "fn": "checked_target (resolve stubbed)",
+      "input": {
+        "url": null,
+        "resolve_returns": [
+          "93.184.216.34"
+        ]
+      },
+      "expected": {
+        "result": {
+          "error": "EgressPolicy::BlockedError",
+          "message": "Only http and https URLs can be fetched"
+        },
+        "resolve_called_with": []
+      }
+    },
+    {
+      "name": "checked_target \"http:example.com\" -> stub [\"93.184.216.34\"]",
+      "fn": "checked_target (resolve stubbed)",
+      "input": {
+        "url": "http:example.com",
+        "resolve_returns": [
+          "93.184.216.34"
+        ]
+      },
+      "expected": {
+        "result": {
+          "error": "EgressPolicy::BlockedError",
+          "message": "URL has no host"
+        },
+        "resolve_called_with": []
+      }
+    },
+    {
+      "name": "checked_target \"http:/example.com\" -> stub [\"93.184.216.34\"]",
+      "fn": "checked_target (resolve stubbed)",
+      "input": {
+        "url": "http:/example.com",
+        "resolve_returns": [
+          "93.184.216.34"
+        ]
+      },
+      "expected": {
+        "result": {
+          "error": "EgressPolicy::BlockedError",
+          "message": "URL has no host"
+        },
+        "resolve_called_with": []
+      }
+    },
+    {
+      "name": "checked_target \"http:///example.com\" -> stub [\"93.184.216.34\"]",
+      "fn": "checked_target (resolve stubbed)",
+      "input": {
+        "url": "http:///example.com",
+        "resolve_returns": [
+          "93.184.216.34"
+        ]
+      },
+      "expected": {
+        "result": {
+          "error": "EgressPolicy::BlockedError",
+          "message": "URL has no host"
+        },
+        "resolve_called_with": []
+      }
+    },
+    {
+      "name": "checked_target \"https://example.com:8443/a?b=c#frag\" -> stub [\"93.184.216.34\"]",
+      "fn": "checked_target (resolve stubbed)",
+      "input": {
+        "url": "https://example.com:8443/a?b=c#frag",
+        "resolve_returns": [
+          "93.184.216.34"
+        ]
+      },
+      "expected": {
+        "result": {
+          "uri": "https://example.com:8443/a?b=c#frag",
+          "scheme": "https",
+          "host": "example.com",
+          "hostname": "example.com",
+          "port": 8443,
+          "path": "/a",
+          "query": "b=c",
+          "userinfo": null,
+          "fragment": "frag",
+          "ip": "93.184.216.34"
+        },
+        "resolve_called_with": [
+          "example.com"
+        ]
+      }
+    },
+    {
+      "name": "checked_target \"http://example.com:0/\" -> stub [\"93.184.216.34\"]",
+      "fn": "checked_target (resolve stubbed)",
+      "input": {
+        "url": "http://example.com:0/",
+        "resolve_returns": [
+          "93.184.216.34"
+        ]
+      },
+      "expected": {
+        "result": {
+          "uri": "http://example.com:0/",
+          "scheme": "http",
+          "host": "example.com",
+          "hostname": "example.com",
+          "port": 0,
+          "path": "/",
+          "query": null,
+          "userinfo": null,
+          "fragment": null,
+          "ip": "93.184.216.34"
+        },
+        "resolve_called_with": [
+          "example.com"
+        ]
+      }
+    },
+    {
+      "name": "checked_target \"http://example.com:65536/\" -> stub [\"93.184.216.34\"]",
+      "fn": "checked_target (resolve stubbed)",
+      "input": {
+        "url": "http://example.com:65536/",
+        "resolve_returns": [
+          "93.184.216.34"
+        ]
+      },
+      "expected": {
+        "result": {
+          "uri": "http://example.com:65536/",
+          "scheme": "http",
+          "host": "example.com",
+          "hostname": "example.com",
+          "port": 65536,
+          "path": "/",
+          "query": null,
+          "userinfo": null,
+          "fragment": null,
+          "ip": "93.184.216.34"
+        },
+        "resolve_called_with": [
+          "example.com"
+        ]
+      }
+    },
+    {
+      "name": "checked_target \"http://example.com:abc/\" -> stub [\"93.184.216.34\"]",
+      "fn": "checked_target (resolve stubbed)",
+      "input": {
+        "url": "http://example.com:abc/",
+        "resolve_returns": [
+          "93.184.216.34"
+        ]
+      },
+      "expected": {
+        "result": {
+          "error": "EgressPolicy::BlockedError",
+          "message": "Invalid URL"
+        },
+        "resolve_called_with": []
+      }
+    },
+    {
+      "name": "checked_target \"http://user:pass@example.com/\" -> stub [\"93.184.216.34\"]",
+      "fn": "checked_target (resolve stubbed)",
+      "input": {
+        "url": "http://user:pass@example.com/",
+        "resolve_returns": [
+          "93.184.216.34"
+        ]
+      },
+      "expected": {
+        "result": {
+          "uri": "http://user:pass@example.com/",
+          "scheme": "http",
+          "host": "example.com",
+          "hostname": "example.com",
+          "port": 80,
+          "path": "/",
+          "query": null,
+          "userinfo": "user:pass",
+          "fragment": null,
+          "ip": "93.184.216.34"
+        },
+        "resolve_called_with": [
+          "example.com"
+        ]
+      }
+    },
+    {
+      "name": "checked_target \"http://example.com@evil.com/\" -> stub [\"10.0.0.1\"]",
+      "fn": "checked_target (resolve stubbed)",
+      "input": {
+        "url": "http://example.com@evil.com/",
+        "resolve_returns": [
+          "10.0.0.1"
+        ]
+      },
+      "expected": {
+        "result": {
+          "error": "EgressPolicy::BlockedError",
+          "message": "Refusing to fetch a non-public address (10.0.0.1)"
+        },
+        "resolve_called_with": [
+          "evil.com"
+        ]
+      }
+    },
+    {
+      "name": "checked_target \"http://exämple.com/\" -> stub [\"93.184.216.34\"]",
+      "fn": "checked_target (resolve stubbed)",
+      "input": {
+        "url": "http://exämple.com/",
+        "resolve_returns": [
+          "93.184.216.34"
+        ]
+      },
+      "expected": {
+        "result": {
+          "error": "EgressPolicy::BlockedError",
+          "message": "Invalid URL"
+        },
+        "resolve_called_with": []
+      }
+    },
+    {
+      "name": "checked_target \"http://xn--exmple-cua.com/\" -> stub [\"93.184.216.34\"]",
+      "fn": "checked_target (resolve stubbed)",
+      "input": {
+        "url": "http://xn--exmple-cua.com/",
+        "resolve_returns": [
+          "93.184.216.34"
+        ]
+      },
+      "expected": {
+        "result": {
+          "uri": "http://xn--exmple-cua.com/",
+          "scheme": "http",
+          "host": "xn--exmple-cua.com",
+          "hostname": "xn--exmple-cua.com",
+          "port": 80,
+          "path": "/",
+          "query": null,
+          "userinfo": null,
+          "fragment": null,
+          "ip": "93.184.216.34"
+        },
+        "resolve_called_with": [
+          "xn--exmple-cua.com"
+        ]
+      }
+    },
+    {
+      "name": "checked_target \"http://例え.jp/\" -> stub [\"93.184.216.34\"]",
+      "fn": "checked_target (resolve stubbed)",
+      "input": {
+        "url": "http://例え.jp/",
+        "resolve_returns": [
+          "93.184.216.34"
+        ]
+      },
+      "expected": {
+        "result": {
+          "error": "EgressPolicy::BlockedError",
+          "message": "Invalid URL"
+        },
+        "resolve_called_with": []
+      }
+    },
+    {
+      "name": "checked_target \"http://example.com/ção.png\" -> stub [\"93.184.216.34\"]",
+      "fn": "checked_target (resolve stubbed)",
+      "input": {
+        "url": "http://example.com/ção.png",
+        "resolve_returns": [
+          "93.184.216.34"
+        ]
+      },
+      "expected": {
+        "result": {
+          "error": "EgressPolicy::BlockedError",
+          "message": "Invalid URL"
+        },
+        "resolve_called_with": []
+      }
+    },
+    {
+      "name": "checked_target \"http://example.com/a b.png\" -> stub [\"93.184.216.34\"]",
+      "fn": "checked_target (resolve stubbed)",
+      "input": {
+        "url": "http://example.com/a b.png",
+        "resolve_returns": [
+          "93.184.216.34"
+        ]
+      },
+      "expected": {
+        "result": {
+          "error": "EgressPolicy::BlockedError",
+          "message": "Invalid URL"
+        },
+        "resolve_called_with": []
+      }
+    },
+    {
+      "name": "checked_target \"http://example.com/%2e%2e/x\" -> stub [\"93.184.216.34\"]",
+      "fn": "checked_target (resolve stubbed)",
+      "input": {
+        "url": "http://example.com/%2e%2e/x",
+        "resolve_returns": [
+          "93.184.216.34"
+        ]
+      },
+      "expected": {
+        "result": {
+          "uri": "http://example.com/%2e%2e/x",
+          "scheme": "http",
+          "host": "example.com",
+          "hostname": "example.com",
+          "port": 80,
+          "path": "/%2e%2e/x",
+          "query": null,
+          "userinfo": null,
+          "fragment": null,
+          "ip": "93.184.216.34"
+        },
+        "resolve_called_with": [
+          "example.com"
+        ]
+      }
+    },
+    {
+      "name": "checked_target \"http://exa mple.com/\" -> stub [\"93.184.216.34\"]",
+      "fn": "checked_target (resolve stubbed)",
+      "input": {
+        "url": "http://exa mple.com/",
+        "resolve_returns": [
+          "93.184.216.34"
+        ]
+      },
+      "expected": {
+        "result": {
+          "error": "EgressPolicy::BlockedError",
+          "message": "Invalid URL"
+        },
+        "resolve_called_with": []
+      }
+    },
+    {
+      "name": "checked_target \"http://[::1]/\" -> stub [\"::1\"]",
+      "fn": "checked_target (resolve stubbed)",
+      "input": {
+        "url": "http://[::1]/",
+        "resolve_returns": [
+          "::1"
+        ]
+      },
+      "expected": {
+        "result": {
+          "error": "EgressPolicy::BlockedError",
+          "message": "Refusing to fetch a non-public address (::1)"
+        },
+        "resolve_called_with": [
+          "[::1]"
+        ]
+      }
+    },
+    {
+      "name": "checked_target \"http://[2606:2800:220:1:248:1893:25c8:1946]/\" -> stub [\"2606:2800:220:1:248:1893:25c8:1946\"]",
+      "fn": "checked_target (resolve stubbed)",
+      "input": {
+        "url": "http://[2606:2800:220:1:248:1893:25c8:1946]/",
+        "resolve_returns": [
+          "2606:2800:220:1:248:1893:25c8:1946"
+        ]
+      },
+      "expected": {
+        "result": {
+          "uri": "http://[2606:2800:220:1:248:1893:25c8:1946]/",
+          "scheme": "http",
+          "host": "[2606:2800:220:1:248:1893:25c8:1946]",
+          "hostname": "2606:2800:220:1:248:1893:25c8:1946",
+          "port": 80,
+          "path": "/",
+          "query": null,
+          "userinfo": null,
+          "fragment": null,
+          "ip": "2606:2800:220:1:248:1893:25c8:1946"
+        },
+        "resolve_called_with": [
+          "[2606:2800:220:1:248:1893:25c8:1946]"
+        ]
+      }
+    },
+    {
+      "name": "checked_target \"http://example.com./\" -> stub [\"93.184.216.34\"]",
+      "fn": "checked_target (resolve stubbed)",
+      "input": {
+        "url": "http://example.com./",
+        "resolve_returns": [
+          "93.184.216.34"
+        ]
+      },
+      "expected": {
+        "result": {
+          "uri": "http://example.com./",
+          "scheme": "http",
+          "host": "example.com.",
+          "hostname": "example.com.",
+          "port": 80,
+          "path": "/",
+          "query": null,
+          "userinfo": null,
+          "fragment": null,
+          "ip": "93.184.216.34"
+        },
+        "resolve_called_with": [
+          "example.com."
+        ]
+      }
+    },
+    {
+      "name": "checked_target \"http://.example.com/\" -> stub [\"93.184.216.34\"]",
+      "fn": "checked_target (resolve stubbed)",
+      "input": {
+        "url": "http://.example.com/",
+        "resolve_returns": [
+          "93.184.216.34"
+        ]
+      },
+      "expected": {
+        "result": {
+          "uri": "http://.example.com/",
+          "scheme": "http",
+          "host": ".example.com",
+          "hostname": ".example.com",
+          "port": 80,
+          "path": "/",
+          "query": null,
+          "userinfo": null,
+          "fragment": null,
+          "ip": "93.184.216.34"
+        },
+        "resolve_called_with": [
+          ".example.com"
+        ]
+      }
+    },
+    {
+      "name": "checked_target \"http://-example-.com/\" -> stub [\"93.184.216.34\"]",
+      "fn": "checked_target (resolve stubbed)",
+      "input": {
+        "url": "http://-example-.com/",
+        "resolve_returns": [
+          "93.184.216.34"
+        ]
+      },
+      "expected": {
+        "result": {
+          "uri": "http://-example-.com/",
+          "scheme": "http",
+          "host": "-example-.com",
+          "hostname": "-example-.com",
+          "port": 80,
+          "path": "/",
+          "query": null,
+          "userinfo": null,
+          "fragment": null,
+          "ip": "93.184.216.34"
+        },
+        "resolve_called_with": [
+          "-example-.com"
+        ]
+      }
+    },
+    {
+      "name": "checked_target \"http://example_underscore.com/\" -> stub [\"93.184.216.34\"]",
+      "fn": "checked_target (resolve stubbed)",
+      "input": {
+        "url": "http://example_underscore.com/",
+        "resolve_returns": [
+          "93.184.216.34"
+        ]
+      },
+      "expected": {
+        "result": {
+          "uri": "http://example_underscore.com/",
+          "scheme": "http",
+          "host": "example_underscore.com",
+          "hostname": "example_underscore.com",
+          "port": 80,
+          "path": "/",
+          "query": null,
+          "userinfo": null,
+          "fragment": null,
+          "ip": "93.184.216.34"
+        },
+        "resolve_called_with": [
+          "example_underscore.com"
+        ]
+      }
+    },
+    {
+      "name": "checked_target \"http://localhost/\" -> stub [\"127.0.0.1\", \"::1\"]",
+      "fn": "checked_target (resolve stubbed)",
+      "input": {
+        "url": "http://localhost/",
+        "resolve_returns": [
+          "127.0.0.1",
+          "::1"
+        ]
+      },
+      "expected": {
+        "result": {
+          "error": "EgressPolicy::BlockedError",
+          "message": "Refusing to fetch a non-public address (127.0.0.1)"
+        },
+        "resolve_called_with": [
+          "localhost"
+        ]
+      }
+    },
+    {
+      "name": "checked_target \"http://LOCALHOST./\" -> stub [\"127.0.0.1\"]",
+      "fn": "checked_target (resolve stubbed)",
+      "input": {
+        "url": "http://LOCALHOST./",
+        "resolve_returns": [
+          "127.0.0.1"
+        ]
+      },
+      "expected": {
+        "result": {
+          "error": "EgressPolicy::BlockedError",
+          "message": "Refusing to fetch a non-public address (127.0.0.1)"
+        },
+        "resolve_called_with": [
+          "LOCALHOST."
+        ]
+      }
+    },
+    {
+      "name": "checked_target \"https://example.com/\\u0000\" -> stub [\"93.184.216.34\"]",
+      "fn": "checked_target (resolve stubbed)",
+      "input": {
+        "url": "https://example.com/\u0000",
+        "resolve_returns": [
+          "93.184.216.34"
+        ]
+      },
+      "expected": {
+        "result": {
+          "error": "EgressPolicy::BlockedError",
+          "message": "Invalid URL"
+        },
+        "resolve_called_with": []
+      }
+    },
+    {
+      "name": "checked_target \"https://example.com/\\n\" -> stub [\"93.184.216.34\"]",
+      "fn": "checked_target (resolve stubbed)",
+      "input": {
+        "url": "https://example.com/\n",
+        "resolve_returns": [
+          "93.184.216.34"
+        ]
+      },
+      "expected": {
+        "result": {
+          "error": "EgressPolicy::BlockedError",
+          "message": "Invalid URL"
+        },
+        "resolve_called_with": []
+      }
+    },
+    {
+      "name": "checked_target \" https://example.com/\" -> stub [\"93.184.216.34\"]",
+      "fn": "checked_target (resolve stubbed)",
+      "input": {
+        "url": " https://example.com/",
+        "resolve_returns": [
+          "93.184.216.34"
+        ]
+      },
+      "expected": {
+        "result": {
+          "error": "EgressPolicy::BlockedError",
+          "message": "Invalid URL"
+        },
+        "resolve_called_with": []
+      }
+    },
+    {
+      "name": "checked_target \"https://example.com/ \" -> stub [\"93.184.216.34\"]",
+      "fn": "checked_target (resolve stubbed)",
+      "input": {
+        "url": "https://example.com/ ",
+        "resolve_returns": [
+          "93.184.216.34"
+        ]
+      },
+      "expected": {
+        "result": {
+          "error": "EgressPolicy::BlockedError",
+          "message": "Invalid URL"
+        },
+        "resolve_called_with": []
+      }
+    },
+    {
+      "name": "checked_target \"http://a.com/x.png\" -> stub [\"::ffff:127.0.0.1\"]",
+      "fn": "checked_target (resolve stubbed)",
+      "input": {
+        "url": "http://a.com/x.png",
+        "resolve_returns": [
+          "::ffff:127.0.0.1"
+        ]
+      },
+      "expected": {
+        "result": {
+          "error": "EgressPolicy::BlockedError",
+          "message": "Refusing to fetch a non-public address (::ffff:127.0.0.1)"
+        },
+        "resolve_called_with": [
+          "a.com"
+        ]
+      }
+    },
+    {
+      "name": "checked_target \"http://a.com/x.png\" -> stub [\"fe80::1\"]",
+      "fn": "checked_target (resolve stubbed)",
+      "input": {
+        "url": "http://a.com/x.png",
+        "resolve_returns": [
+          "fe80::1"
+        ]
+      },
+      "expected": {
+        "result": {
+          "error": "EgressPolicy::BlockedError",
+          "message": "Refusing to fetch a non-public address (fe80::1)"
+        },
+        "resolve_called_with": [
+          "a.com"
+        ]
+      }
+    },
+    {
+      "name": "checked_target \"http://a.com/x.png\" -> stub [\"100.64.1.1\"]",
+      "fn": "checked_target (resolve stubbed)",
+      "input": {
+        "url": "http://a.com/x.png",
+        "resolve_returns": [
+          "100.64.1.1"
+        ]
+      },
+      "expected": {
+        "result": {
+          "error": "EgressPolicy::BlockedError",
+          "message": "Refusing to fetch a non-public address (100.64.1.1)"
+        },
+        "resolve_called_with": [
+          "a.com"
+        ]
+      }
+    },
+    {
+      "name": "checked_target \"http://a.com/x.png\" -> stub [\"0.0.0.0\"]",
+      "fn": "checked_target (resolve stubbed)",
+      "input": {
+        "url": "http://a.com/x.png",
+        "resolve_returns": [
+          "0.0.0.0"
+        ]
+      },
+      "expected": {
+        "result": {
+          "error": "EgressPolicy::BlockedError",
+          "message": "Refusing to fetch a non-public address (0.0.0.0)"
+        },
+        "resolve_called_with": [
+          "a.com"
+        ]
+      }
+    },
+    {
+      "name": "checked_target \"http://a.com/x.png\" -> stub [\"239.1.1.1\"]",
+      "fn": "checked_target (resolve stubbed)",
+      "input": {
+        "url": "http://a.com/x.png",
+        "resolve_returns": [
+          "239.1.1.1"
+        ]
+      },
+      "expected": {
+        "result": {
+          "error": "EgressPolicy::BlockedError",
+          "message": "Refusing to fetch a non-public address (239.1.1.1)"
+        },
+        "resolve_called_with": [
+          "a.com"
+        ]
+      }
+    },
+    {
+      "name": "checked_target \"http://a.com/x.png\" -> stub [\"2001:db8::1\"]",
+      "fn": "checked_target (resolve stubbed)",
+      "input": {
+        "url": "http://a.com/x.png",
+        "resolve_returns": [
+          "2001:db8::1"
+        ]
+      },
+      "expected": {
+        "result": {
+          "uri": "http://a.com/x.png",
+          "scheme": "http",
+          "host": "a.com",
+          "hostname": "a.com",
+          "port": 80,
+          "path": "/x.png",
+          "query": null,
+          "userinfo": null,
+          "fragment": null,
+          "ip": "2001:db8::1"
+        },
+        "resolve_called_with": [
+          "a.com"
+        ]
+      }
+    },
+    {
+      "name": "checked_target real resolve http://127.0.0.1/",
+      "fn": "checked_target (real resolve)",
+      "input": {
+        "url": "http://127.0.0.1/"
+      },
+      "expected": {
+        "result": {
+          "error": "EgressPolicy::BlockedError",
+          "message": "Refusing to fetch a non-public address (127.0.0.1)"
+        }
+      }
+    },
+    {
+      "name": "checked_target real resolve http://127.1/",
+      "fn": "checked_target (real resolve)",
+      "input": {
+        "url": "http://127.1/"
+      },
+      "expected": {
+        "result": {
+          "error": "EgressPolicy::BlockedError",
+          "message": "Refusing to fetch a non-public address (127.0.0.1)"
+        }
+      }
+    },
+    {
+      "name": "checked_target real resolve http://0x7f.0.0.1/",
+      "fn": "checked_target (real resolve)",
+      "input": {
+        "url": "http://0x7f.0.0.1/"
+      },
+      "expected": {
+        "result": {
+          "error": "EgressPolicy::BlockedError",
+          "message": "Refusing to fetch a non-public address (127.0.0.1)"
+        }
+      }
+    },
+    {
+      "name": "checked_target real resolve http://0x7f000001/",
+      "fn": "checked_target (real resolve)",
+      "input": {
+        "url": "http://0x7f000001/"
+      },
+      "expected": {
+        "result": {
+          "error": "EgressPolicy::BlockedError",
+          "message": "Refusing to fetch a non-public address (127.0.0.1)"
+        }
+      }
+    },
+    {
+      "name": "checked_target real resolve http://2130706433/",
+      "fn": "checked_target (real resolve)",
+      "input": {
+        "url": "http://2130706433/"
+      },
+      "expected": {
+        "result": {
+          "error": "EgressPolicy::BlockedError",
+          "message": "Refusing to fetch a non-public address (127.0.0.1)"
+        }
+      }
+    },
+    {
+      "name": "checked_target real resolve http://017700000001/",
+      "fn": "checked_target (real resolve)",
+      "input": {
+        "url": "http://017700000001/"
+      },
+      "expected": {
+        "result": {
+          "error": "EgressPolicy::BlockedError",
+          "message": "Refusing to fetch a non-public address (127.0.0.1)"
+        }
+      }
+    },
+    {
+      "name": "checked_target real resolve http://0177.0.0.1/",
+      "fn": "checked_target (real resolve)",
+      "input": {
+        "url": "http://0177.0.0.1/"
+      },
+      "expected": {
+        "result": {
+          "error": "EgressPolicy::BlockedError",
+          "message": "Refusing to fetch a non-public address (127.0.0.1)"
+        }
+      }
+    },
+    {
+      "name": "checked_target real resolve http://0/",
+      "fn": "checked_target (real resolve)",
+      "input": {
+        "url": "http://0/"
+      },
+      "expected": {
+        "result": {
+          "error": "EgressPolicy::BlockedError",
+          "message": "Refusing to fetch a non-public address (0.0.0.0)"
+        }
+      }
+    },
+    {
+      "name": "checked_target real resolve http://0.0.0.0/",
+      "fn": "checked_target (real resolve)",
+      "input": {
+        "url": "http://0.0.0.0/"
+      },
+      "expected": {
+        "result": {
+          "error": "EgressPolicy::BlockedError",
+          "message": "Refusing to fetch a non-public address (0.0.0.0)"
+        }
+      }
+    },
+    {
+      "name": "checked_target real resolve http://10.1/",
+      "fn": "checked_target (real resolve)",
+      "input": {
+        "url": "http://10.1/"
+      },
+      "expected": {
+        "result": {
+          "error": "EgressPolicy::BlockedError",
+          "message": "Refusing to fetch a non-public address (10.0.0.1)"
+        }
+      }
+    },
+    {
+      "name": "checked_target real resolve http://169.254.169.254/latest",
+      "fn": "checked_target (real resolve)",
+      "input": {
+        "url": "http://169.254.169.254/latest"
+      },
+      "expected": {
+        "result": {
+          "error": "EgressPolicy::BlockedError",
+          "message": "Refusing to fetch a non-public address (169.254.169.254)"
+        }
+      }
+    },
+    {
+      "name": "checked_target real resolve http://8.8.8.8/",
+      "fn": "checked_target (real resolve)",
+      "input": {
+        "url": "http://8.8.8.8/"
+      },
+      "expected": {
+        "result": {
+          "uri": "http://8.8.8.8/",
+          "scheme": "http",
+          "host": "8.8.8.8",
+          "hostname": "8.8.8.8",
+          "port": 80,
+          "path": "/",
+          "query": null,
+          "userinfo": null,
+          "fragment": null,
+          "ip": "8.8.8.8"
+        }
+      }
+    },
+    {
+      "name": "checked_target real resolve http://1.1.1.1:8080/x",
+      "fn": "checked_target (real resolve)",
+      "input": {
+        "url": "http://1.1.1.1:8080/x"
+      },
+      "expected": {
+        "result": {
+          "uri": "http://1.1.1.1:8080/x",
+          "scheme": "http",
+          "host": "1.1.1.1",
+          "hostname": "1.1.1.1",
+          "port": 8080,
+          "path": "/x",
+          "query": null,
+          "userinfo": null,
+          "fragment": null,
+          "ip": "1.1.1.1"
+        }
+      }
+    },
+    {
+      "name": "checked_target real resolve http://[::1]/",
+      "fn": "checked_target (real resolve)",
+      "input": {
+        "url": "http://[::1]/"
+      },
+      "expected": {
+        "result": {
+          "error": "EgressPolicy::BlockedError",
+          "message": "Could not resolve [::1]"
+        }
+      }
+    },
+    {
+      "name": "checked_target real resolve http://[::ffff:127.0.0.1]/",
+      "fn": "checked_target (real resolve)",
+      "input": {
+        "url": "http://[::ffff:127.0.0.1]/"
+      },
+      "expected": {
+        "result": {
+          "error": "EgressPolicy::BlockedError",
+          "message": "Could not resolve [::ffff:127.0.0.1]"
+        }
+      }
+    },
+    {
+      "name": "checked_target real resolve http://[2606:4700:4700::1111]/",
+      "fn": "checked_target (real resolve)",
+      "input": {
+        "url": "http://[2606:4700:4700::1111]/"
+      },
+      "expected": {
+        "result": {
+          "error": "EgressPolicy::BlockedError",
+          "message": "Could not resolve [2606:4700:4700::1111]"
+        }
+      }
+    },
+    {
+      "name": "checked_target real resolve http://[fe80::1]/",
+      "fn": "checked_target (real resolve)",
+      "input": {
+        "url": "http://[fe80::1]/"
+      },
+      "expected": {
+        "result": {
+          "error": "EgressPolicy::BlockedError",
+          "message": "Could not resolve [fe80::1]"
+        }
+      }
+    },
+    {
+      "name": "checked_target real resolve http://localhost/",
+      "fn": "checked_target (real resolve)",
+      "input": {
+        "url": "http://localhost/"
+      },
+      "expected": {
+        "result": {
+          "error": "EgressPolicy::BlockedError",
+          "message": "Refusing to fetch a non-public address (::1)"
+        }
+      }
+    },
+    {
+      "name": "checked_target real resolve http://[::]/",
+      "fn": "checked_target (real resolve)",
+      "input": {
+        "url": "http://[::]/"
+      },
+      "expected": {
+        "result": {
+          "error": "EgressPolicy::BlockedError",
+          "message": "Could not resolve [::]"
+        }
+      }
+    },
+    {
+      "name": "checked_target real resolve http://255.255.255.255/",
+      "fn": "checked_target (real resolve)",
+      "input": {
+        "url": "http://255.255.255.255/"
+      },
+      "expected": {
+        "result": {
+          "error": "EgressPolicy::BlockedError",
+          "message": "Refusing to fetch a non-public address (255.255.255.255)"
+        }
+      }
+    },
+    {
+      "name": "resolve 127.0.0.1",
+      "fn": "resolve (real)",
+      "input": {
+        "host": "127.0.0.1"
+      },
+      "expected": [
+        "127.0.0.1"
+      ]
+    },
+    {
+      "name": "resolve 127.1",
+      "fn": "resolve (real)",
+      "input": {
+        "host": "127.1"
+      },
+      "expected": [
+        "127.0.0.1"
+      ]
+    },
+    {
+      "name": "resolve 0x7f.0.0.1",
+      "fn": "resolve (real)",
+      "input": {
+        "host": "0x7f.0.0.1"
+      },
+      "expected": [
+        "127.0.0.1"
+      ]
+    },
+    {
+      "name": "resolve 0x7f000001",
+      "fn": "resolve (real)",
+      "input": {
+        "host": "0x7f000001"
+      },
+      "expected": [
+        "127.0.0.1"
+      ]
+    },
+    {
+      "name": "resolve 2130706433",
+      "fn": "resolve (real)",
+      "input": {
+        "host": "2130706433"
+      },
+      "expected": [
+        "127.0.0.1"
+      ]
+    },
+    {
+      "name": "resolve 017700000001",
+      "fn": "resolve (real)",
+      "input": {
+        "host": "017700000001"
+      },
+      "expected": [
+        "127.0.0.1"
+      ]
+    },
+    {
+      "name": "resolve 0177.0.0.1",
+      "fn": "resolve (real)",
+      "input": {
+        "host": "0177.0.0.1"
+      },
+      "expected": [
+        "127.0.0.1"
+      ]
+    },
+    {
+      "name": "resolve 0",
+      "fn": "resolve (real)",
+      "input": {
+        "host": "0"
+      },
+      "expected": [
+        "0.0.0.0"
+      ]
+    },
+    {
+      "name": "resolve 10.1",
+      "fn": "resolve (real)",
+      "input": {
+        "host": "10.1"
+      },
+      "expected": [
+        "10.0.0.1"
+      ]
+    },
+    {
+      "name": "resolve 8.8.8.8",
+      "fn": "resolve (real)",
+      "input": {
+        "host": "8.8.8.8"
+      },
+      "expected": [
+        "8.8.8.8"
+      ]
+    },
+    {
+      "name": "resolve ::1",
+      "fn": "resolve (real)",
+      "input": {
+        "host": "::1"
+      },
+      "expected": [
+        "::1"
+      ]
+    },
+    {
+      "name": "resolve [::1]",
+      "fn": "resolve (real)",
+      "input": {
+        "host": "[::1]"
+      },
+      "expected": []
+    },
+    {
+      "name": "resolve ::ffff:127.0.0.1",
+      "fn": "resolve (real)",
+      "input": {
+        "host": "::ffff:127.0.0.1"
+      },
+      "expected": [
+        "::ffff:127.0.0.1"
+      ]
+    },
+    {
+      "name": "resolve fe80::1",
+      "fn": "resolve (real)",
+      "input": {
+        "host": "fe80::1"
+      },
+      "expected": [
+        "fe80::1"
+      ]
+    },
+    {
+      "name": "resolve localhost",
+      "fn": "resolve (real)",
+      "input": {
+        "host": "localhost"
+      },
+      "expected": [
+        "::1",
+        "127.0.0.1"
+      ]
+    }
+  ]
+}

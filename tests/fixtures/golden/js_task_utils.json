@@ -1,0 +1,909 @@
+{
+  "source": "app/javascript/lib/task_utils.js @ d47a89e92d89f807878d318182fa5dcea0329ec4",
+  "frankmd_sha": "d47a89e92d89f807878d318182fa5dcea0329ec4",
+  "generator": "tools/golden/js/utils.mjs",
+  "notes": "input = encoded argument array (decode with golden.mjs decode: {$undefined}, {$number}, {$date}, {$regexp}, {$utf16}); expected = encoded return value, or {$error:{name,message}}. JS strings are UTF-16: all positions/lengths/indices in inputs and outputs are UTF-16 code-unit offsets; cases with non-BMP/multi-unit strings carry a `utf16` array (utf16_len/scalar_len/utf8_len per such string arg). TZ pinned to UTC for date-based helpers.",
+  "functions": [
+    "applyTaskToggle",
+    "taskMarkerRange",
+    "toggleTaskMarker"
+  ],
+  "cases": [
+    {
+      "name": "applyTaskToggle #1 (from FrankMD vitest suite)",
+      "fn": "applyTaskToggle",
+      "input": [
+        "- [x] a"
+      ],
+      "expected": "- [ ] a"
+    },
+    {
+      "name": "applyTaskToggle #2 (from FrankMD vitest suite)",
+      "fn": "applyTaskToggle",
+      "input": [
+        "  indented"
+      ],
+      "expected": "  - [ ] indented"
+    },
+    {
+      "name": "applyTaskToggle #3 (from FrankMD vitest suite)",
+      "fn": "applyTaskToggle",
+      "input": [
+        ""
+      ],
+      "expected": "- [ ]"
+    },
+    {
+      "name": "applyTaskToggle #4 (from FrankMD vitest suite)",
+      "fn": "applyTaskToggle",
+      "input": [
+        "plain"
+      ],
+      "expected": "- [ ] plain"
+    },
+    {
+      "name": "applyTaskToggle #5 (from FrankMD vitest suite)",
+      "fn": "applyTaskToggle",
+      "input": [
+        "   "
+      ],
+      "expected": "   - [ ]"
+    },
+    {
+      "name": "applyTaskToggle #6 (from FrankMD vitest suite)",
+      "fn": "applyTaskToggle",
+      "input": [
+        "buy milk"
+      ],
+      "expected": "- [ ] buy milk"
+    },
+    {
+      "name": "applyTaskToggle #7 (from FrankMD vitest suite)",
+      "fn": "applyTaskToggle",
+      "input": [
+        "- [ ] a"
+      ],
+      "expected": "- [x] a"
+    },
+    {
+      "name": "taskMarkerRange #1 (from FrankMD vitest suite)",
+      "fn": "taskMarkerRange",
+      "input": [
+        "plain"
+      ],
+      "expected": null
+    },
+    {
+      "name": "taskMarkerRange #2 (from FrankMD vitest suite)",
+      "fn": "taskMarkerRange",
+      "input": [
+        "plain text"
+      ],
+      "expected": null
+    },
+    {
+      "name": "taskMarkerRange #3 (from FrankMD vitest suite)",
+      "fn": "taskMarkerRange",
+      "input": [
+        ""
+      ],
+      "expected": null
+    },
+    {
+      "name": "taskMarkerRange #4 (from FrankMD vitest suite)",
+      "fn": "taskMarkerRange",
+      "input": [
+        "buy milk"
+      ],
+      "expected": null
+    },
+    {
+      "name": "taskMarkerRange #5 (from FrankMD vitest suite)",
+      "fn": "taskMarkerRange",
+      "input": [
+        "- [ ] a"
+      ],
+      "expected": {
+        "from": 2,
+        "to": 5,
+        "insert": "[x]"
+      }
+    },
+    {
+      "name": "taskMarkerRange #6 (from FrankMD vitest suite)",
+      "fn": "taskMarkerRange",
+      "input": [
+        "- [x] done"
+      ],
+      "expected": {
+        "from": 2,
+        "to": 5,
+        "insert": "[ ]"
+      }
+    },
+    {
+      "name": "taskMarkerRange #7 (from FrankMD vitest suite)",
+      "fn": "taskMarkerRange",
+      "input": [
+        "- [ ] open"
+      ],
+      "expected": {
+        "from": 2,
+        "to": 5,
+        "insert": "[x]"
+      }
+    },
+    {
+      "name": "taskMarkerRange #8 (from FrankMD vitest suite)",
+      "fn": "taskMarkerRange",
+      "input": [
+        "- [x] c"
+      ],
+      "expected": {
+        "from": 2,
+        "to": 5,
+        "insert": "[ ]"
+      }
+    },
+    {
+      "name": "toggleTaskMarker #1 (from FrankMD vitest suite)",
+      "fn": "toggleTaskMarker",
+      "input": [
+        "+ [x] a"
+      ],
+      "expected": "+ [ ] a"
+    },
+    {
+      "name": "toggleTaskMarker #2 (from FrankMD vitest suite)",
+      "fn": "toggleTaskMarker",
+      "input": [
+        "- [x] buy milk"
+      ],
+      "expected": "- [ ] buy milk"
+    },
+    {
+      "name": "toggleTaskMarker #3 (from FrankMD vitest suite)",
+      "fn": "toggleTaskMarker",
+      "input": [
+        "  - [ ] nested"
+      ],
+      "expected": "  - [x] nested"
+    },
+    {
+      "name": "toggleTaskMarker #4 (from FrankMD vitest suite)",
+      "fn": "toggleTaskMarker",
+      "input": [
+        "- no marker"
+      ],
+      "expected": null
+    },
+    {
+      "name": "toggleTaskMarker #5 (from FrankMD vitest suite)",
+      "fn": "toggleTaskMarker",
+      "input": [
+        "- [ ] buy milk"
+      ],
+      "expected": "- [x] buy milk"
+    },
+    {
+      "name": "toggleTaskMarker #6 (from FrankMD vitest suite)",
+      "fn": "toggleTaskMarker",
+      "input": [
+        "- [x]"
+      ],
+      "expected": "- [ ]"
+    },
+    {
+      "name": "toggleTaskMarker #7 (from FrankMD vitest suite)",
+      "fn": "toggleTaskMarker",
+      "input": [
+        "- [y] not gfm"
+      ],
+      "expected": null
+    },
+    {
+      "name": "toggleTaskMarker #8 (from FrankMD vitest suite)",
+      "fn": "toggleTaskMarker",
+      "input": [
+        "- [X] done"
+      ],
+      "expected": "- [ ] done"
+    },
+    {
+      "name": "toggleTaskMarker #9 (from FrankMD vitest suite)",
+      "fn": "toggleTaskMarker",
+      "input": [
+        "3. [ ] a"
+      ],
+      "expected": "3. [x] a"
+    },
+    {
+      "name": "toggleTaskMarker #10 (from FrankMD vitest suite)",
+      "fn": "toggleTaskMarker",
+      "input": [
+        "1) [x] a"
+      ],
+      "expected": "1) [ ] a"
+    },
+    {
+      "name": "toggleTaskMarker #11 (from FrankMD vitest suite)",
+      "fn": "toggleTaskMarker",
+      "input": [
+        "* [ ] a"
+      ],
+      "expected": "* [x] a"
+    },
+    {
+      "name": "toggleTaskMarker #12 (from FrankMD vitest suite)",
+      "fn": "toggleTaskMarker",
+      "input": [
+        "[ ] no bullet"
+      ],
+      "expected": null
+    },
+    {
+      "name": "toggleTaskMarker #13 (from FrankMD vitest suite)",
+      "fn": "toggleTaskMarker",
+      "input": [
+        ""
+      ],
+      "expected": null
+    },
+    {
+      "name": "toggleTaskMarker #14 (from FrankMD vitest suite)",
+      "fn": "toggleTaskMarker",
+      "input": [
+        "plain text"
+      ],
+      "expected": null
+    },
+    {
+      "name": "taskMarkerRange #9 (edge corpus)",
+      "fn": "taskMarkerRange",
+      "input": [
+        "- [ ] task"
+      ],
+      "expected": {
+        "from": 2,
+        "to": 5,
+        "insert": "[x]"
+      }
+    },
+    {
+      "name": "toggleTaskMarker #15 (edge corpus)",
+      "fn": "toggleTaskMarker",
+      "input": [
+        "- [ ] task"
+      ],
+      "expected": "- [x] task"
+    },
+    {
+      "name": "applyTaskToggle #8 (edge corpus)",
+      "fn": "applyTaskToggle",
+      "input": [
+        "- [ ] task"
+      ],
+      "expected": "- [x] task"
+    },
+    {
+      "name": "toggleTaskMarker #16 (edge corpus)",
+      "fn": "toggleTaskMarker",
+      "input": [
+        "- [x] done"
+      ],
+      "expected": "- [ ] done"
+    },
+    {
+      "name": "applyTaskToggle #9 (edge corpus)",
+      "fn": "applyTaskToggle",
+      "input": [
+        "- [x] done"
+      ],
+      "expected": "- [ ] done"
+    },
+    {
+      "name": "taskMarkerRange #10 (edge corpus)",
+      "fn": "taskMarkerRange",
+      "input": [
+        "- [X] DONE"
+      ],
+      "expected": {
+        "from": 2,
+        "to": 5,
+        "insert": "[ ]"
+      }
+    },
+    {
+      "name": "toggleTaskMarker #17 (edge corpus)",
+      "fn": "toggleTaskMarker",
+      "input": [
+        "- [X] DONE"
+      ],
+      "expected": "- [ ] DONE"
+    },
+    {
+      "name": "applyTaskToggle #10 (edge corpus)",
+      "fn": "applyTaskToggle",
+      "input": [
+        "- [X] DONE"
+      ],
+      "expected": "- [ ] DONE"
+    },
+    {
+      "name": "taskMarkerRange #11 (edge corpus)",
+      "fn": "taskMarkerRange",
+      "input": [
+        "* [ ] star"
+      ],
+      "expected": {
+        "from": 2,
+        "to": 5,
+        "insert": "[x]"
+      }
+    },
+    {
+      "name": "toggleTaskMarker #18 (edge corpus)",
+      "fn": "toggleTaskMarker",
+      "input": [
+        "* [ ] star"
+      ],
+      "expected": "* [x] star"
+    },
+    {
+      "name": "applyTaskToggle #11 (edge corpus)",
+      "fn": "applyTaskToggle",
+      "input": [
+        "* [ ] star"
+      ],
+      "expected": "* [x] star"
+    },
+    {
+      "name": "taskMarkerRange #12 (edge corpus)",
+      "fn": "taskMarkerRange",
+      "input": [
+        "+ [ ] plus"
+      ],
+      "expected": {
+        "from": 2,
+        "to": 5,
+        "insert": "[x]"
+      }
+    },
+    {
+      "name": "toggleTaskMarker #19 (edge corpus)",
+      "fn": "toggleTaskMarker",
+      "input": [
+        "+ [ ] plus"
+      ],
+      "expected": "+ [x] plus"
+    },
+    {
+      "name": "applyTaskToggle #12 (edge corpus)",
+      "fn": "applyTaskToggle",
+      "input": [
+        "+ [ ] plus"
+      ],
+      "expected": "+ [x] plus"
+    },
+    {
+      "name": "taskMarkerRange #13 (edge corpus)",
+      "fn": "taskMarkerRange",
+      "input": [
+        "1. [ ] ordered"
+      ],
+      "expected": {
+        "from": 3,
+        "to": 6,
+        "insert": "[x]"
+      }
+    },
+    {
+      "name": "toggleTaskMarker #20 (edge corpus)",
+      "fn": "toggleTaskMarker",
+      "input": [
+        "1. [ ] ordered"
+      ],
+      "expected": "1. [x] ordered"
+    },
+    {
+      "name": "applyTaskToggle #13 (edge corpus)",
+      "fn": "applyTaskToggle",
+      "input": [
+        "1. [ ] ordered"
+      ],
+      "expected": "1. [x] ordered"
+    },
+    {
+      "name": "taskMarkerRange #14 (edge corpus)",
+      "fn": "taskMarkerRange",
+      "input": [
+        "12) [x] paren"
+      ],
+      "expected": {
+        "from": 4,
+        "to": 7,
+        "insert": "[ ]"
+      }
+    },
+    {
+      "name": "toggleTaskMarker #21 (edge corpus)",
+      "fn": "toggleTaskMarker",
+      "input": [
+        "12) [x] paren"
+      ],
+      "expected": "12) [ ] paren"
+    },
+    {
+      "name": "applyTaskToggle #14 (edge corpus)",
+      "fn": "applyTaskToggle",
+      "input": [
+        "12) [x] paren"
+      ],
+      "expected": "12) [ ] paren"
+    },
+    {
+      "name": "taskMarkerRange #15 (edge corpus)",
+      "fn": "taskMarkerRange",
+      "input": [
+        "1234567890. [ ] too many digits"
+      ],
+      "expected": null
+    },
+    {
+      "name": "toggleTaskMarker #22 (edge corpus)",
+      "fn": "toggleTaskMarker",
+      "input": [
+        "1234567890. [ ] too many digits"
+      ],
+      "expected": null
+    },
+    {
+      "name": "applyTaskToggle #15 (edge corpus)",
+      "fn": "applyTaskToggle",
+      "input": [
+        "1234567890. [ ] too many digits"
+      ],
+      "expected": "- [ ] 1234567890. [ ] too many digits"
+    },
+    {
+      "name": "taskMarkerRange #16 (edge corpus)",
+      "fn": "taskMarkerRange",
+      "input": [
+        "  - [ ] indented"
+      ],
+      "expected": {
+        "from": 4,
+        "to": 7,
+        "insert": "[x]"
+      }
+    },
+    {
+      "name": "toggleTaskMarker #23 (edge corpus)",
+      "fn": "toggleTaskMarker",
+      "input": [
+        "  - [ ] indented"
+      ],
+      "expected": "  - [x] indented"
+    },
+    {
+      "name": "applyTaskToggle #16 (edge corpus)",
+      "fn": "applyTaskToggle",
+      "input": [
+        "  - [ ] indented"
+      ],
+      "expected": "  - [x] indented"
+    },
+    {
+      "name": "taskMarkerRange #17 (edge corpus)",
+      "fn": "taskMarkerRange",
+      "input": [
+        "\t- [ ] tab"
+      ],
+      "expected": {
+        "from": 3,
+        "to": 6,
+        "insert": "[x]"
+      }
+    },
+    {
+      "name": "toggleTaskMarker #24 (edge corpus)",
+      "fn": "toggleTaskMarker",
+      "input": [
+        "\t- [ ] tab"
+      ],
+      "expected": "\t- [x] tab"
+    },
+    {
+      "name": "applyTaskToggle #17 (edge corpus)",
+      "fn": "applyTaskToggle",
+      "input": [
+        "\t- [ ] tab"
+      ],
+      "expected": "\t- [x] tab"
+    },
+    {
+      "name": "taskMarkerRange #18 (edge corpus)",
+      "fn": "taskMarkerRange",
+      "input": [
+        "- [ ]"
+      ],
+      "expected": {
+        "from": 2,
+        "to": 5,
+        "insert": "[x]"
+      }
+    },
+    {
+      "name": "toggleTaskMarker #25 (edge corpus)",
+      "fn": "toggleTaskMarker",
+      "input": [
+        "- [ ]"
+      ],
+      "expected": "- [x]"
+    },
+    {
+      "name": "applyTaskToggle #18 (edge corpus)",
+      "fn": "applyTaskToggle",
+      "input": [
+        "- [ ]"
+      ],
+      "expected": "- [x]"
+    },
+    {
+      "name": "taskMarkerRange #19 (edge corpus)",
+      "fn": "taskMarkerRange",
+      "input": [
+        "- [ ]x"
+      ],
+      "expected": null
+    },
+    {
+      "name": "toggleTaskMarker #26 (edge corpus)",
+      "fn": "toggleTaskMarker",
+      "input": [
+        "- [ ]x"
+      ],
+      "expected": null
+    },
+    {
+      "name": "applyTaskToggle #19 (edge corpus)",
+      "fn": "applyTaskToggle",
+      "input": [
+        "- [ ]x"
+      ],
+      "expected": "- [ ] - [ ]x"
+    },
+    {
+      "name": "taskMarkerRange #20 (edge corpus)",
+      "fn": "taskMarkerRange",
+      "input": [
+        "- [x]\ttab after"
+      ],
+      "expected": {
+        "from": 2,
+        "to": 5,
+        "insert": "[ ]"
+      }
+    },
+    {
+      "name": "toggleTaskMarker #27 (edge corpus)",
+      "fn": "toggleTaskMarker",
+      "input": [
+        "- [x]\ttab after"
+      ],
+      "expected": "- [ ]\ttab after"
+    },
+    {
+      "name": "applyTaskToggle #20 (edge corpus)",
+      "fn": "applyTaskToggle",
+      "input": [
+        "- [x]\ttab after"
+      ],
+      "expected": "- [ ]\ttab after"
+    },
+    {
+      "name": "taskMarkerRange #21 (edge corpus)",
+      "fn": "taskMarkerRange",
+      "input": [
+        "-[ ] nospace"
+      ],
+      "expected": null
+    },
+    {
+      "name": "toggleTaskMarker #28 (edge corpus)",
+      "fn": "toggleTaskMarker",
+      "input": [
+        "-[ ] nospace"
+      ],
+      "expected": null
+    },
+    {
+      "name": "applyTaskToggle #21 (edge corpus)",
+      "fn": "applyTaskToggle",
+      "input": [
+        "-[ ] nospace"
+      ],
+      "expected": "- [ ] -[ ] nospace"
+    },
+    {
+      "name": "taskMarkerRange #22 (edge corpus)",
+      "fn": "taskMarkerRange",
+      "input": [
+        "- [  ] two spaces"
+      ],
+      "expected": null
+    },
+    {
+      "name": "toggleTaskMarker #29 (edge corpus)",
+      "fn": "toggleTaskMarker",
+      "input": [
+        "- [  ] two spaces"
+      ],
+      "expected": null
+    },
+    {
+      "name": "applyTaskToggle #22 (edge corpus)",
+      "fn": "applyTaskToggle",
+      "input": [
+        "- [  ] two spaces"
+      ],
+      "expected": "- [ ] - [  ] two spaces"
+    },
+    {
+      "name": "taskMarkerRange #23 (edge corpus)",
+      "fn": "taskMarkerRange",
+      "input": [
+        "- [y] other"
+      ],
+      "expected": null
+    },
+    {
+      "name": "toggleTaskMarker #30 (edge corpus)",
+      "fn": "toggleTaskMarker",
+      "input": [
+        "- [y] other"
+      ],
+      "expected": null
+    },
+    {
+      "name": "applyTaskToggle #23 (edge corpus)",
+      "fn": "applyTaskToggle",
+      "input": [
+        "- [y] other"
+      ],
+      "expected": "- [ ] - [y] other"
+    },
+    {
+      "name": "taskMarkerRange #24 (edge corpus)",
+      "fn": "taskMarkerRange",
+      "input": [
+        "- [ ] 日本語"
+      ],
+      "expected": {
+        "from": 2,
+        "to": 5,
+        "insert": "[x]"
+      }
+    },
+    {
+      "name": "toggleTaskMarker #31 (edge corpus)",
+      "fn": "toggleTaskMarker",
+      "input": [
+        "- [ ] 日本語"
+      ],
+      "expected": "- [x] 日本語"
+    },
+    {
+      "name": "applyTaskToggle #24 (edge corpus)",
+      "fn": "applyTaskToggle",
+      "input": [
+        "- [ ] 日本語"
+      ],
+      "expected": "- [x] 日本語"
+    },
+    {
+      "name": "taskMarkerRange #25 (edge corpus)",
+      "fn": "taskMarkerRange",
+      "input": [
+        "> - [ ] quoted"
+      ],
+      "expected": null
+    },
+    {
+      "name": "toggleTaskMarker #32 (edge corpus)",
+      "fn": "toggleTaskMarker",
+      "input": [
+        "> - [ ] quoted"
+      ],
+      "expected": null
+    },
+    {
+      "name": "applyTaskToggle #25 (edge corpus)",
+      "fn": "applyTaskToggle",
+      "input": [
+        "> - [ ] quoted"
+      ],
+      "expected": "- [ ] > - [ ] quoted"
+    },
+    {
+      "name": "taskMarkerRange #26 (edge corpus)",
+      "fn": "taskMarkerRange",
+      "input": [
+        "- plain item"
+      ],
+      "expected": null
+    },
+    {
+      "name": "toggleTaskMarker #33 (edge corpus)",
+      "fn": "toggleTaskMarker",
+      "input": [
+        "- plain item"
+      ],
+      "expected": null
+    },
+    {
+      "name": "applyTaskToggle #26 (edge corpus)",
+      "fn": "applyTaskToggle",
+      "input": [
+        "- plain item"
+      ],
+      "expected": "- [ ] - plain item"
+    },
+    {
+      "name": "applyTaskToggle #27 (edge corpus)",
+      "fn": "applyTaskToggle",
+      "input": [
+        "plain text"
+      ],
+      "expected": "- [ ] plain text"
+    },
+    {
+      "name": "taskMarkerRange #27 (edge corpus)",
+      "fn": "taskMarkerRange",
+      "input": [
+        "   "
+      ],
+      "expected": null
+    },
+    {
+      "name": "toggleTaskMarker #34 (edge corpus)",
+      "fn": "toggleTaskMarker",
+      "input": [
+        "   "
+      ],
+      "expected": null
+    },
+    {
+      "name": "taskMarkerRange #28 (edge corpus)",
+      "fn": "taskMarkerRange",
+      "input": [
+        "  hello  "
+      ],
+      "expected": null
+    },
+    {
+      "name": "toggleTaskMarker #35 (edge corpus)",
+      "fn": "toggleTaskMarker",
+      "input": [
+        "  hello  "
+      ],
+      "expected": null
+    },
+    {
+      "name": "applyTaskToggle #28 (edge corpus)",
+      "fn": "applyTaskToggle",
+      "input": [
+        "  hello  "
+      ],
+      "expected": "  - [ ] hello"
+    },
+    {
+      "name": "taskMarkerRange #29 (edge corpus)",
+      "fn": "taskMarkerRange",
+      "input": [
+        "- [ ] - [ ] nested"
+      ],
+      "expected": {
+        "from": 2,
+        "to": 5,
+        "insert": "[x]"
+      }
+    },
+    {
+      "name": "toggleTaskMarker #36 (edge corpus)",
+      "fn": "toggleTaskMarker",
+      "input": [
+        "- [ ] - [ ] nested"
+      ],
+      "expected": "- [x] - [ ] nested"
+    },
+    {
+      "name": "applyTaskToggle #29 (edge corpus)",
+      "fn": "applyTaskToggle",
+      "input": [
+        "- [ ] - [ ] nested"
+      ],
+      "expected": "- [x] - [ ] nested"
+    },
+    {
+      "name": "taskMarkerRange #30 (edge corpus)",
+      "fn": "taskMarkerRange",
+      "input": [
+        "• [ ] bullet"
+      ],
+      "expected": null
+    },
+    {
+      "name": "toggleTaskMarker #37 (edge corpus)",
+      "fn": "toggleTaskMarker",
+      "input": [
+        "• [ ] bullet"
+      ],
+      "expected": null
+    },
+    {
+      "name": "applyTaskToggle #30 (edge corpus)",
+      "fn": "applyTaskToggle",
+      "input": [
+        "• [ ] bullet"
+      ],
+      "expected": "- [ ] • [ ] bullet"
+    },
+    {
+      "name": "taskMarkerRange #31 (edge corpus)",
+      "fn": "taskMarkerRange",
+      "input": [
+        "- [ ]\r"
+      ],
+      "expected": {
+        "from": 2,
+        "to": 5,
+        "insert": "[x]"
+      }
+    },
+    {
+      "name": "toggleTaskMarker #38 (edge corpus)",
+      "fn": "toggleTaskMarker",
+      "input": [
+        "- [ ]\r"
+      ],
+      "expected": "- [x]\r"
+    },
+    {
+      "name": "applyTaskToggle #31 (edge corpus)",
+      "fn": "applyTaskToggle",
+      "input": [
+        "- [ ]\r"
+      ],
+      "expected": "- [x]\r"
+    },
+    {
+      "name": "taskMarkerRange #32 (edge corpus)",
+      "fn": "taskMarkerRange",
+      "input": [
+        " - [ ] nbsp"
+      ],
+      "expected": {
+        "from": 3,
+        "to": 6,
+        "insert": "[x]"
+      }
+    },
+    {
+      "name": "toggleTaskMarker #39 (edge corpus)",
+      "fn": "toggleTaskMarker",
+      "input": [
+        " - [ ] nbsp"
+      ],
+      "expected": " - [x] nbsp"
+    },
+    {
+      "name": "applyTaskToggle #32 (edge corpus)",
+      "fn": "applyTaskToggle",
+      "input": [
+        " - [ ] nbsp"
+      ],
+      "expected": " - [x] nbsp"
+    }
+  ]
+}

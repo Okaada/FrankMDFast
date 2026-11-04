@@ -1,0 +1,2619 @@
+{
+  "source": "app/javascript/lib/marked_extensions.js @ d47a89e92d89f807878d318182fa5dcea0329ec4",
+  "frankmd_sha": "d47a89e92d89f807878d318182fa5dcea0329ec4",
+  "generator": "tools/golden/js/render.mjs",
+  "notes": "Extensions called directly (start/tokenizer/renderer) plus marked.parse/parseInline with the app's global config marked.use({breaks:true,gfm:true,extensions:allExtensions}) from app_controller.js, using vendored marked@15.0.6 (vendor/javascript/marked.js). marked.parse output is RAW (unsanitized) — see js_preview_pipeline for the full sanitized pipeline. Emoji/icon lookups use the real EMOJI_DATA/ICON_DATA.",
+  "cases": [
+    {
+      "name": "superscript.start \"^text^\"",
+      "fn": "superscriptExtension.start",
+      "input": [
+        "^text^"
+      ],
+      "expected": 0
+    },
+    {
+      "name": "superscript.tokenizer \"^text^\"",
+      "fn": "superscriptExtension.tokenizer",
+      "input": [
+        "^text^"
+      ],
+      "expected": {
+        "type": "superscript",
+        "raw": "^text^",
+        "text": "text"
+      }
+    },
+    {
+      "name": "superscript.start \"^a b^ rest\"",
+      "fn": "superscriptExtension.start",
+      "input": [
+        "^a b^ rest"
+      ],
+      "expected": 0
+    },
+    {
+      "name": "superscript.tokenizer \"^a b^ rest\"",
+      "fn": "superscriptExtension.tokenizer",
+      "input": [
+        "^a b^ rest"
+      ],
+      "expected": {
+        "type": "superscript",
+        "raw": "^a b^",
+        "text": "a b"
+      }
+    },
+    {
+      "name": "superscript.start \"^^\"",
+      "fn": "superscriptExtension.start",
+      "input": [
+        "^^"
+      ],
+      "expected": 0
+    },
+    {
+      "name": "superscript.tokenizer \"^^\"",
+      "fn": "superscriptExtension.tokenizer",
+      "input": [
+        "^^"
+      ],
+      "expected": {
+        "$undefined": true
+      }
+    },
+    {
+      "name": "superscript.start \"^^double^^\"",
+      "fn": "superscriptExtension.start",
+      "input": [
+        "^^double^^"
+      ],
+      "expected": 0
+    },
+    {
+      "name": "superscript.tokenizer \"^^double^^\"",
+      "fn": "superscriptExtension.tokenizer",
+      "input": [
+        "^^double^^"
+      ],
+      "expected": {
+        "$undefined": true
+      }
+    },
+    {
+      "name": "superscript.start \"x^2^\"",
+      "fn": "superscriptExtension.start",
+      "input": [
+        "x^2^"
+      ],
+      "expected": 1
+    },
+    {
+      "name": "superscript.tokenizer \"x^2^\"",
+      "fn": "superscriptExtension.tokenizer",
+      "input": [
+        "x^2^"
+      ],
+      "expected": {
+        "$undefined": true
+      }
+    },
+    {
+      "name": "superscript.start \"^unclosed\"",
+      "fn": "superscriptExtension.start",
+      "input": [
+        "^unclosed"
+      ],
+      "expected": 0
+    },
+    {
+      "name": "superscript.tokenizer \"^unclosed\"",
+      "fn": "superscriptExtension.tokenizer",
+      "input": [
+        "^unclosed"
+      ],
+      "expected": {
+        "$undefined": true
+      }
+    },
+    {
+      "name": "superscript.start \"^<b>&\\\"</b>^\"",
+      "fn": "superscriptExtension.start",
+      "input": [
+        "^<b>&\"</b>^"
+      ],
+      "expected": 0
+    },
+    {
+      "name": "superscript.tokenizer \"^<b>&\\\"</b>^\"",
+      "fn": "superscriptExtension.tokenizer",
+      "input": [
+        "^<b>&\"</b>^"
+      ],
+      "expected": {
+        "type": "superscript",
+        "raw": "^<b>&\"</b>^",
+        "text": "<b>&\"</b>"
+      }
+    },
+    {
+      "name": "superscript.start \"^多^\"",
+      "fn": "superscriptExtension.start",
+      "input": [
+        "^多^"
+      ],
+      "expected": 0
+    },
+    {
+      "name": "superscript.tokenizer \"^多^\"",
+      "fn": "superscriptExtension.tokenizer",
+      "input": [
+        "^多^"
+      ],
+      "expected": {
+        "type": "superscript",
+        "raw": "^多^",
+        "text": "多"
+      }
+    },
+    {
+      "name": "superscript.start \"^\\n^\"",
+      "fn": "superscriptExtension.start",
+      "input": [
+        "^\n^"
+      ],
+      "expected": 0
+    },
+    {
+      "name": "superscript.tokenizer \"^\\n^\"",
+      "fn": "superscriptExtension.tokenizer",
+      "input": [
+        "^\n^"
+      ],
+      "expected": {
+        "type": "superscript",
+        "raw": "^\n^",
+        "text": "\n"
+      }
+    },
+    {
+      "name": "subscript.start \"~text~\"",
+      "fn": "subscriptExtension.start",
+      "input": [
+        "~text~"
+      ],
+      "expected": 0
+    },
+    {
+      "name": "subscript.tokenizer \"~text~\"",
+      "fn": "subscriptExtension.tokenizer",
+      "input": [
+        "~text~"
+      ],
+      "expected": {
+        "type": "subscript",
+        "raw": "~text~",
+        "text": "text"
+      }
+    },
+    {
+      "name": "subscript.start \"~~strike~~\"",
+      "fn": "subscriptExtension.start",
+      "input": [
+        "~~strike~~"
+      ],
+      "expected": 0
+    },
+    {
+      "name": "subscript.tokenizer \"~~strike~~\"",
+      "fn": "subscriptExtension.tokenizer",
+      "input": [
+        "~~strike~~"
+      ],
+      "expected": {
+        "$undefined": true
+      }
+    },
+    {
+      "name": "subscript.start \"~a~~\"",
+      "fn": "subscriptExtension.start",
+      "input": [
+        "~a~~"
+      ],
+      "expected": 0
+    },
+    {
+      "name": "subscript.tokenizer \"~a~~\"",
+      "fn": "subscriptExtension.tokenizer",
+      "input": [
+        "~a~~"
+      ],
+      "expected": {
+        "$undefined": true
+      }
+    },
+    {
+      "name": "subscript.start \"~2~O\"",
+      "fn": "subscriptExtension.start",
+      "input": [
+        "~2~O"
+      ],
+      "expected": 0
+    },
+    {
+      "name": "subscript.tokenizer \"~2~O\"",
+      "fn": "subscriptExtension.tokenizer",
+      "input": [
+        "~2~O"
+      ],
+      "expected": {
+        "type": "subscript",
+        "raw": "~2~",
+        "text": "2"
+      }
+    },
+    {
+      "name": "subscript.start \"~unclosed\"",
+      "fn": "subscriptExtension.start",
+      "input": [
+        "~unclosed"
+      ],
+      "expected": 0
+    },
+    {
+      "name": "subscript.tokenizer \"~unclosed\"",
+      "fn": "subscriptExtension.tokenizer",
+      "input": [
+        "~unclosed"
+      ],
+      "expected": {
+        "$undefined": true
+      }
+    },
+    {
+      "name": "subscript.start \"~<i>~\"",
+      "fn": "subscriptExtension.start",
+      "input": [
+        "~<i>~"
+      ],
+      "expected": 0
+    },
+    {
+      "name": "subscript.tokenizer \"~<i>~\"",
+      "fn": "subscriptExtension.tokenizer",
+      "input": [
+        "~<i>~"
+      ],
+      "expected": {
+        "type": "subscript",
+        "raw": "~<i>~",
+        "text": "<i>"
+      }
+    },
+    {
+      "name": "subscript.start \"~ ~\"",
+      "fn": "subscriptExtension.start",
+      "input": [
+        "~ ~"
+      ],
+      "expected": 0
+    },
+    {
+      "name": "subscript.tokenizer \"~ ~\"",
+      "fn": "subscriptExtension.tokenizer",
+      "input": [
+        "~ ~"
+      ],
+      "expected": {
+        "type": "subscript",
+        "raw": "~ ~",
+        "text": " "
+      }
+    },
+    {
+      "name": "subscript.start \"~a\\nb~\"",
+      "fn": "subscriptExtension.start",
+      "input": [
+        "~a\nb~"
+      ],
+      "expected": 0
+    },
+    {
+      "name": "subscript.tokenizer \"~a\\nb~\"",
+      "fn": "subscriptExtension.tokenizer",
+      "input": [
+        "~a\nb~"
+      ],
+      "expected": {
+        "type": "subscript",
+        "raw": "~a\nb~",
+        "text": "a\nb"
+      }
+    },
+    {
+      "name": "highlight.start \"==text==\"",
+      "fn": "highlightExtension.start",
+      "input": [
+        "==text=="
+      ],
+      "expected": 0
+    },
+    {
+      "name": "highlight.tokenizer \"==text==\"",
+      "fn": "highlightExtension.tokenizer",
+      "input": [
+        "==text=="
+      ],
+      "expected": {
+        "type": "highlight",
+        "raw": "==text==",
+        "text": "text"
+      }
+    },
+    {
+      "name": "highlight.start \"==a=b==\"",
+      "fn": "highlightExtension.start",
+      "input": [
+        "==a=b=="
+      ],
+      "expected": 0
+    },
+    {
+      "name": "highlight.tokenizer \"==a=b==\"",
+      "fn": "highlightExtension.tokenizer",
+      "input": [
+        "==a=b=="
+      ],
+      "expected": {
+        "$undefined": true
+      }
+    },
+    {
+      "name": "highlight.start \"====\"",
+      "fn": "highlightExtension.start",
+      "input": [
+        "===="
+      ],
+      "expected": 0
+    },
+    {
+      "name": "highlight.tokenizer \"====\"",
+      "fn": "highlightExtension.tokenizer",
+      "input": [
+        "===="
+      ],
+      "expected": {
+        "$undefined": true
+      }
+    },
+    {
+      "name": "highlight.start \"==unclosed\"",
+      "fn": "highlightExtension.start",
+      "input": [
+        "==unclosed"
+      ],
+      "expected": 0
+    },
+    {
+      "name": "highlight.tokenizer \"==unclosed\"",
+      "fn": "highlightExtension.tokenizer",
+      "input": [
+        "==unclosed"
+      ],
+      "expected": {
+        "$undefined": true
+      }
+    },
+    {
+      "name": "highlight.start \"== spaced ==\"",
+      "fn": "highlightExtension.start",
+      "input": [
+        "== spaced =="
+      ],
+      "expected": 0
+    },
+    {
+      "name": "highlight.tokenizer \"== spaced ==\"",
+      "fn": "highlightExtension.tokenizer",
+      "input": [
+        "== spaced =="
+      ],
+      "expected": {
+        "type": "highlight",
+        "raw": "== spaced ==",
+        "text": " spaced "
+      }
+    },
+    {
+      "name": "highlight.start \"==<b>x</b>==\"",
+      "fn": "highlightExtension.start",
+      "input": [
+        "==<b>x</b>=="
+      ],
+      "expected": 0
+    },
+    {
+      "name": "highlight.tokenizer \"==<b>x</b>==\"",
+      "fn": "highlightExtension.tokenizer",
+      "input": [
+        "==<b>x</b>=="
+      ],
+      "expected": {
+        "type": "highlight",
+        "raw": "==<b>x</b>==",
+        "text": "<b>x</b>"
+      }
+    },
+    {
+      "name": "highlight.start \"==\\n==\"",
+      "fn": "highlightExtension.start",
+      "input": [
+        "==\n=="
+      ],
+      "expected": 0
+    },
+    {
+      "name": "highlight.tokenizer \"==\\n==\"",
+      "fn": "highlightExtension.tokenizer",
+      "input": [
+        "==\n=="
+      ],
+      "expected": {
+        "type": "highlight",
+        "raw": "==\n==",
+        "text": "\n"
+      }
+    },
+    {
+      "name": "emoji.start \":smile:\"",
+      "fn": "emojiExtension.start",
+      "input": [
+        ":smile:"
+      ],
+      "expected": 0
+    },
+    {
+      "name": "emoji.tokenizer \":smile:\"",
+      "fn": "emojiExtension.tokenizer",
+      "input": [
+        ":smile:"
+      ],
+      "expected": {
+        "type": "emoji",
+        "raw": ":smile:",
+        "emoji": "😄"
+      }
+    },
+    {
+      "name": "emoji.start \":+1:\"",
+      "fn": "emojiExtension.start",
+      "input": [
+        ":+1:"
+      ],
+      "expected": 0
+    },
+    {
+      "name": "emoji.tokenizer \":+1:\"",
+      "fn": "emojiExtension.tokenizer",
+      "input": [
+        ":+1:"
+      ],
+      "expected": {
+        "type": "emoji",
+        "raw": ":+1:",
+        "emoji": "👍"
+      }
+    },
+    {
+      "name": "emoji.start \":-1:\"",
+      "fn": "emojiExtension.start",
+      "input": [
+        ":-1:"
+      ],
+      "expected": 0
+    },
+    {
+      "name": "emoji.tokenizer \":-1:\"",
+      "fn": "emojiExtension.tokenizer",
+      "input": [
+        ":-1:"
+      ],
+      "expected": {
+        "type": "emoji",
+        "raw": ":-1:",
+        "emoji": "👎"
+      }
+    },
+    {
+      "name": "emoji.start \":not_real:\"",
+      "fn": "emojiExtension.start",
+      "input": [
+        ":not_real:"
+      ],
+      "expected": 0
+    },
+    {
+      "name": "emoji.tokenizer \":not_real:\"",
+      "fn": "emojiExtension.tokenizer",
+      "input": [
+        ":not_real:"
+      ],
+      "expected": {
+        "$undefined": true
+      }
+    },
+    {
+      "name": "emoji.start \":SMILE:\"",
+      "fn": "emojiExtension.start",
+      "input": [
+        ":SMILE:"
+      ],
+      "expected": 0
+    },
+    {
+      "name": "emoji.tokenizer \":SMILE:\"",
+      "fn": "emojiExtension.tokenizer",
+      "input": [
+        ":SMILE:"
+      ],
+      "expected": {
+        "$undefined": true
+      }
+    },
+    {
+      "name": "emoji.start \":smile\"",
+      "fn": "emojiExtension.start",
+      "input": [
+        ":smile"
+      ],
+      "expected": 0
+    },
+    {
+      "name": "emoji.tokenizer \":smile\"",
+      "fn": "emojiExtension.tokenizer",
+      "input": [
+        ":smile"
+      ],
+      "expected": {
+        "$undefined": true
+      }
+    },
+    {
+      "name": "emoji.start \"smile:\"",
+      "fn": "emojiExtension.start",
+      "input": [
+        "smile:"
+      ],
+      "expected": 5
+    },
+    {
+      "name": "emoji.tokenizer \"smile:\"",
+      "fn": "emojiExtension.tokenizer",
+      "input": [
+        "smile:"
+      ],
+      "expected": {
+        "$undefined": true
+      }
+    },
+    {
+      "name": "emoji.start \":heart: rest\"",
+      "fn": "emojiExtension.start",
+      "input": [
+        ":heart: rest"
+      ],
+      "expected": 0
+    },
+    {
+      "name": "emoji.tokenizer \":heart: rest\"",
+      "fn": "emojiExtension.tokenizer",
+      "input": [
+        ":heart: rest"
+      ],
+      "expected": {
+        "type": "emoji",
+        "raw": ":heart:",
+        "emoji": "❤️"
+      }
+    },
+    {
+      "name": "emoji.start \":ph-heart:\"",
+      "fn": "emojiExtension.start",
+      "input": [
+        ":ph-heart:"
+      ],
+      "expected": 0
+    },
+    {
+      "name": "emoji.tokenizer \":ph-heart:\"",
+      "fn": "emojiExtension.tokenizer",
+      "input": [
+        ":ph-heart:"
+      ],
+      "expected": {
+        "$undefined": true
+      }
+    },
+    {
+      "name": "emoji.start \":tada:x\"",
+      "fn": "emojiExtension.start",
+      "input": [
+        ":tada:x"
+      ],
+      "expected": 0
+    },
+    {
+      "name": "emoji.tokenizer \":tada:x\"",
+      "fn": "emojiExtension.tokenizer",
+      "input": [
+        ":tada:x"
+      ],
+      "expected": {
+        "type": "emoji",
+        "raw": ":tada:",
+        "emoji": "🎉"
+      }
+    },
+    {
+      "name": "emoji.start \"::\"",
+      "fn": "emojiExtension.start",
+      "input": [
+        "::"
+      ],
+      "expected": 0
+    },
+    {
+      "name": "emoji.tokenizer \"::\"",
+      "fn": "emojiExtension.tokenizer",
+      "input": [
+        "::"
+      ],
+      "expected": {
+        "$undefined": true
+      }
+    },
+    {
+      "name": "icon.start \":ph-heart: rest\"",
+      "fn": "iconExtension.start",
+      "input": [
+        ":ph-heart: rest"
+      ],
+      "expected": 0
+    },
+    {
+      "name": "icon.tokenizer \":ph-heart: rest\"",
+      "fn": "iconExtension.tokenizer",
+      "input": [
+        ":ph-heart: rest"
+      ],
+      "expected": {
+        "type": "icon",
+        "raw": ":ph-heart:",
+        "path": "M178,40c-20.65,0-38.73,8.88-50,23.89C116.73,48.88,98.65,40,78,40a62.07,62.07,0,0,0-62,62c0,70,103.79,126.66,108.21,129a8,8,0,0,0,7.58,0C136.21,228.66,240,172,240,102A62.07,62.07,0,0,0,178,40ZM128,214.8C109.74,204.16,32,155.69,32,102A46.06,46.06,0,0,1,78,56c19.45,0,35.78,10.36,42.6,27a8,8,0,0,0,14.8,0c6.82-16.67,23.15-27,42.6-27a46.06,46.06,0,0,1,46,46C224,155.61,146.24,204.15,128,214.8Z",
+        "viewBox": "0 0 256 256"
+      }
+    },
+    {
+      "name": "icon.start \":ph-not-a-real-icon:\"",
+      "fn": "iconExtension.start",
+      "input": [
+        ":ph-not-a-real-icon:"
+      ],
+      "expected": 0
+    },
+    {
+      "name": "icon.tokenizer \":ph-not-a-real-icon:\"",
+      "fn": "iconExtension.tokenizer",
+      "input": [
+        ":ph-not-a-real-icon:"
+      ],
+      "expected": {
+        "$undefined": true
+      }
+    },
+    {
+      "name": "icon.start \"not an icon\"",
+      "fn": "iconExtension.start",
+      "input": [
+        "not an icon"
+      ],
+      "expected": -1
+    },
+    {
+      "name": "icon.tokenizer \"not an icon\"",
+      "fn": "iconExtension.tokenizer",
+      "input": [
+        "not an icon"
+      ],
+      "expected": {
+        "$undefined": true
+      }
+    },
+    {
+      "name": "icon.start \":ph-check:\"",
+      "fn": "iconExtension.start",
+      "input": [
+        ":ph-check:"
+      ],
+      "expected": 0
+    },
+    {
+      "name": "icon.tokenizer \":ph-check:\"",
+      "fn": "iconExtension.tokenizer",
+      "input": [
+        ":ph-check:"
+      ],
+      "expected": {
+        "type": "icon",
+        "raw": ":ph-check:",
+        "path": "M229.66,77.66l-128,128a8,8,0,0,1-11.32,0l-56-56a8,8,0,0,1,11.32-11.32L96,188.69,218.34,66.34a8,8,0,0,1,11.32,11.32Z",
+        "viewBox": "0 0 256 256"
+      }
+    },
+    {
+      "name": "icon.start \":ph-:\"",
+      "fn": "iconExtension.start",
+      "input": [
+        ":ph-:"
+      ],
+      "expected": 0
+    },
+    {
+      "name": "icon.tokenizer \":ph-:\"",
+      "fn": "iconExtension.tokenizer",
+      "input": [
+        ":ph-:"
+      ],
+      "expected": {
+        "$undefined": true
+      }
+    },
+    {
+      "name": "icon.start \":ph-Heart:\"",
+      "fn": "iconExtension.start",
+      "input": [
+        ":ph-Heart:"
+      ],
+      "expected": 0
+    },
+    {
+      "name": "icon.tokenizer \":ph-Heart:\"",
+      "fn": "iconExtension.tokenizer",
+      "input": [
+        ":ph-Heart:"
+      ],
+      "expected": {
+        "$undefined": true
+      }
+    },
+    {
+      "name": "icon.start \"hello :ph-heart: world\"",
+      "fn": "iconExtension.start",
+      "input": [
+        "hello :ph-heart: world"
+      ],
+      "expected": 6
+    },
+    {
+      "name": "icon.tokenizer \"hello :ph-heart: world\"",
+      "fn": "iconExtension.tokenizer",
+      "input": [
+        "hello :ph-heart: world"
+      ],
+      "expected": {
+        "$undefined": true
+      }
+    },
+    {
+      "name": "icon.start \"no icons here, just :smile:\"",
+      "fn": "iconExtension.start",
+      "input": [
+        "no icons here, just :smile:"
+      ],
+      "expected": -1
+    },
+    {
+      "name": "icon.tokenizer \"no icons here, just :smile:\"",
+      "fn": "iconExtension.tokenizer",
+      "input": [
+        "no icons here, just :smile:"
+      ],
+      "expected": {
+        "$undefined": true
+      }
+    },
+    {
+      "name": "wikilink.start \"[[My Note]] rest\"",
+      "fn": "wikilinkExtension.start",
+      "input": [
+        "[[My Note]] rest"
+      ],
+      "expected": 0
+    },
+    {
+      "name": "wikilink.tokenizer \"[[My Note]] rest\"",
+      "fn": "wikilinkExtension.tokenizer",
+      "input": [
+        "[[My Note]] rest"
+      ],
+      "expected": {
+        "type": "wikilink",
+        "raw": "[[My Note]]",
+        "target": "My Note",
+        "displayText": null
+      }
+    },
+    {
+      "name": "wikilink.start \"[[My Note|Custom Label]] rest\"",
+      "fn": "wikilinkExtension.start",
+      "input": [
+        "[[My Note|Custom Label]] rest"
+      ],
+      "expected": 0
+    },
+    {
+      "name": "wikilink.tokenizer \"[[My Note|Custom Label]] rest\"",
+      "fn": "wikilinkExtension.tokenizer",
+      "input": [
+        "[[My Note|Custom Label]] rest"
+      ],
+      "expected": {
+        "type": "wikilink",
+        "raw": "[[My Note|Custom Label]]",
+        "target": "My Note",
+        "displayText": "Custom Label"
+      }
+    },
+    {
+      "name": "wikilink.start \"[[projects/My Note]] rest\"",
+      "fn": "wikilinkExtension.start",
+      "input": [
+        "[[projects/My Note]] rest"
+      ],
+      "expected": 0
+    },
+    {
+      "name": "wikilink.tokenizer \"[[projects/My Note]] rest\"",
+      "fn": "wikilinkExtension.tokenizer",
+      "input": [
+        "[[projects/My Note]] rest"
+      ],
+      "expected": {
+        "type": "wikilink",
+        "raw": "[[projects/My Note]]",
+        "target": "projects/My Note",
+        "displayText": null
+      }
+    },
+    {
+      "name": "wikilink.start \"[[  My Note  |  Label  ]] rest\"",
+      "fn": "wikilinkExtension.start",
+      "input": [
+        "[[  My Note  |  Label  ]] rest"
+      ],
+      "expected": 0
+    },
+    {
+      "name": "wikilink.tokenizer \"[[  My Note  |  Label  ]] rest\"",
+      "fn": "wikilinkExtension.tokenizer",
+      "input": [
+        "[[  My Note  |  Label  ]] rest"
+      ],
+      "expected": {
+        "type": "wikilink",
+        "raw": "[[  My Note  |  Label  ]]",
+        "target": "My Note",
+        "displayText": "Label"
+      }
+    },
+    {
+      "name": "wikilink.start \"[[unclosed\"",
+      "fn": "wikilinkExtension.start",
+      "input": [
+        "[[unclosed"
+      ],
+      "expected": 0
+    },
+    {
+      "name": "wikilink.tokenizer \"[[unclosed\"",
+      "fn": "wikilinkExtension.tokenizer",
+      "input": [
+        "[[unclosed"
+      ],
+      "expected": {
+        "$undefined": true
+      }
+    },
+    {
+      "name": "wikilink.start \"not a wikilink\"",
+      "fn": "wikilinkExtension.start",
+      "input": [
+        "not a wikilink"
+      ],
+      "expected": -1
+    },
+    {
+      "name": "wikilink.tokenizer \"not a wikilink\"",
+      "fn": "wikilinkExtension.tokenizer",
+      "input": [
+        "not a wikilink"
+      ],
+      "expected": {
+        "$undefined": true
+      }
+    },
+    {
+      "name": "wikilink.start \"[[]]\"",
+      "fn": "wikilinkExtension.start",
+      "input": [
+        "[[]]"
+      ],
+      "expected": 0
+    },
+    {
+      "name": "wikilink.tokenizer \"[[]]\"",
+      "fn": "wikilinkExtension.tokenizer",
+      "input": [
+        "[[]]"
+      ],
+      "expected": {
+        "$undefined": true
+      }
+    },
+    {
+      "name": "wikilink.start \"[[|x]]\"",
+      "fn": "wikilinkExtension.start",
+      "input": [
+        "[[|x]]"
+      ],
+      "expected": 0
+    },
+    {
+      "name": "wikilink.tokenizer \"[[|x]]\"",
+      "fn": "wikilinkExtension.tokenizer",
+      "input": [
+        "[[|x]]"
+      ],
+      "expected": {
+        "$undefined": true
+      }
+    },
+    {
+      "name": "wikilink.start \"[[a|]]\"",
+      "fn": "wikilinkExtension.start",
+      "input": [
+        "[[a|]]"
+      ],
+      "expected": 0
+    },
+    {
+      "name": "wikilink.tokenizer \"[[a|]]\"",
+      "fn": "wikilinkExtension.tokenizer",
+      "input": [
+        "[[a|]]"
+      ],
+      "expected": {
+        "$undefined": true
+      }
+    },
+    {
+      "name": "wikilink.start \"[[a|b|c]]\"",
+      "fn": "wikilinkExtension.start",
+      "input": [
+        "[[a|b|c]]"
+      ],
+      "expected": 0
+    },
+    {
+      "name": "wikilink.tokenizer \"[[a|b|c]]\"",
+      "fn": "wikilinkExtension.tokenizer",
+      "input": [
+        "[[a|b|c]]"
+      ],
+      "expected": {
+        "type": "wikilink",
+        "raw": "[[a|b|c]]",
+        "target": "a",
+        "displayText": "b|c"
+      }
+    },
+    {
+      "name": "wikilink.start \"[[a]b]]\"",
+      "fn": "wikilinkExtension.start",
+      "input": [
+        "[[a]b]]"
+      ],
+      "expected": 0
+    },
+    {
+      "name": "wikilink.tokenizer \"[[a]b]]\"",
+      "fn": "wikilinkExtension.tokenizer",
+      "input": [
+        "[[a]b]]"
+      ],
+      "expected": {
+        "$undefined": true
+      }
+    },
+    {
+      "name": "wikilink.start \"[[ação/日本]]\"",
+      "fn": "wikilinkExtension.start",
+      "input": [
+        "[[ação/日本]]"
+      ],
+      "expected": 0
+    },
+    {
+      "name": "wikilink.tokenizer \"[[ação/日本]]\"",
+      "fn": "wikilinkExtension.tokenizer",
+      "input": [
+        "[[ação/日本]]"
+      ],
+      "expected": {
+        "type": "wikilink",
+        "raw": "[[ação/日本]]",
+        "target": "ação/日本",
+        "displayText": null
+      }
+    },
+    {
+      "name": "wikilink.start \"[[<script>alert(1)</script>]]\"",
+      "fn": "wikilinkExtension.start",
+      "input": [
+        "[[<script>alert(1)</script>]]"
+      ],
+      "expected": 0
+    },
+    {
+      "name": "wikilink.tokenizer \"[[<script>alert(1)</script>]]\"",
+      "fn": "wikilinkExtension.tokenizer",
+      "input": [
+        "[[<script>alert(1)</script>]]"
+      ],
+      "expected": {
+        "type": "wikilink",
+        "raw": "[[<script>alert(1)</script>]]",
+        "target": "<script>alert(1)</script>",
+        "displayText": null
+      }
+    },
+    {
+      "name": "wikilink.start \"[[a\\nb]]\"",
+      "fn": "wikilinkExtension.start",
+      "input": [
+        "[[a\nb]]"
+      ],
+      "expected": 0
+    },
+    {
+      "name": "wikilink.tokenizer \"[[a\\nb]]\"",
+      "fn": "wikilinkExtension.tokenizer",
+      "input": [
+        "[[a\nb]]"
+      ],
+      "expected": {
+        "type": "wikilink",
+        "raw": "[[a\nb]]",
+        "target": "a\nb",
+        "displayText": null
+      }
+    },
+    {
+      "name": "wikilink.start \"hello [[world]]\"",
+      "fn": "wikilinkExtension.start",
+      "input": [
+        "hello [[world]]"
+      ],
+      "expected": 6
+    },
+    {
+      "name": "wikilink.tokenizer \"hello [[world]]\"",
+      "fn": "wikilinkExtension.tokenizer",
+      "input": [
+        "hello [[world]]"
+      ],
+      "expected": {
+        "$undefined": true
+      }
+    },
+    {
+      "name": "wikilink.start \"no wikilinks here\"",
+      "fn": "wikilinkExtension.start",
+      "input": [
+        "no wikilinks here"
+      ],
+      "expected": -1
+    },
+    {
+      "name": "wikilink.tokenizer \"no wikilinks here\"",
+      "fn": "wikilinkExtension.tokenizer",
+      "input": [
+        "no wikilinks here"
+      ],
+      "expected": {
+        "$undefined": true
+      }
+    },
+    {
+      "name": "mathBlock.start \"$$block$$\"",
+      "fn": "mathBlockExtension.start",
+      "input": [
+        "$$block$$"
+      ],
+      "expected": 0
+    },
+    {
+      "name": "mathBlock.tokenizer \"$$block$$\"",
+      "fn": "mathBlockExtension.tokenizer",
+      "input": [
+        "$$block$$"
+      ],
+      "expected": {
+        "type": "mathBlock",
+        "raw": "$$block$$",
+        "text": "block"
+      }
+    },
+    {
+      "name": "mathBlock.start \"$$E=mc^2$$\"",
+      "fn": "mathBlockExtension.start",
+      "input": [
+        "$$E=mc^2$$"
+      ],
+      "expected": 0
+    },
+    {
+      "name": "mathBlock.tokenizer \"$$E=mc^2$$\"",
+      "fn": "mathBlockExtension.tokenizer",
+      "input": [
+        "$$E=mc^2$$"
+      ],
+      "expected": {
+        "type": "mathBlock",
+        "raw": "$$E=mc^2$$",
+        "text": "E=mc^2"
+      }
+    },
+    {
+      "name": "mathBlock.start \"$$\\nx = \\\\frac{-b}{2a}\\n$$\\nmore\"",
+      "fn": "mathBlockExtension.start",
+      "input": [
+        "$$\nx = \\frac{-b}{2a}\n$$\nmore"
+      ],
+      "expected": 0
+    },
+    {
+      "name": "mathBlock.tokenizer \"$$\\nx = \\\\frac{-b}{2a}\\n$$\\nmore\"",
+      "fn": "mathBlockExtension.tokenizer",
+      "input": [
+        "$$\nx = \\frac{-b}{2a}\n$$\nmore"
+      ],
+      "expected": {
+        "type": "mathBlock",
+        "raw": "$$\nx = \\frac{-b}{2a}\n$$\n",
+        "text": "x = \\frac{-b}{2a}"
+      }
+    },
+    {
+      "name": "mathBlock.start \"$$\\nx = y\\n\"",
+      "fn": "mathBlockExtension.start",
+      "input": [
+        "$$\nx = y\n"
+      ],
+      "expected": 0
+    },
+    {
+      "name": "mathBlock.tokenizer \"$$\\nx = y\\n\"",
+      "fn": "mathBlockExtension.tokenizer",
+      "input": [
+        "$$\nx = y\n"
+      ],
+      "expected": {
+        "$undefined": true
+      }
+    },
+    {
+      "name": "mathBlock.start \"$$   $$\"",
+      "fn": "mathBlockExtension.start",
+      "input": [
+        "$$   $$"
+      ],
+      "expected": 0
+    },
+    {
+      "name": "mathBlock.tokenizer \"$$   $$\"",
+      "fn": "mathBlockExtension.tokenizer",
+      "input": [
+        "$$   $$"
+      ],
+      "expected": {
+        "$undefined": true
+      }
+    },
+    {
+      "name": "mathBlock.start \"$$a$$\\n\\n\\nnext\"",
+      "fn": "mathBlockExtension.start",
+      "input": [
+        "$$a$$\n\n\nnext"
+      ],
+      "expected": 0
+    },
+    {
+      "name": "mathBlock.tokenizer \"$$a$$\\n\\n\\nnext\"",
+      "fn": "mathBlockExtension.tokenizer",
+      "input": [
+        "$$a$$\n\n\nnext"
+      ],
+      "expected": {
+        "type": "mathBlock",
+        "raw": "$$a$$\n\n\n",
+        "text": "a"
+      }
+    },
+    {
+      "name": "mathBlock.start \" $$x$$\"",
+      "fn": "mathBlockExtension.start",
+      "input": [
+        " $$x$$"
+      ],
+      "expected": 1
+    },
+    {
+      "name": "mathBlock.tokenizer \" $$x$$\"",
+      "fn": "mathBlockExtension.tokenizer",
+      "input": [
+        " $$x$$"
+      ],
+      "expected": {
+        "$undefined": true
+      }
+    },
+    {
+      "name": "mathBlock.start \"no block here\"",
+      "fn": "mathBlockExtension.start",
+      "input": [
+        "no block here"
+      ],
+      "expected": {
+        "$undefined": true
+      }
+    },
+    {
+      "name": "mathBlock.tokenizer \"no block here\"",
+      "fn": "mathBlockExtension.tokenizer",
+      "input": [
+        "no block here"
+      ],
+      "expected": {
+        "$undefined": true
+      }
+    },
+    {
+      "name": "mathBlock.start \"text\\n$$\\nx=y\\n$$\"",
+      "fn": "mathBlockExtension.start",
+      "input": [
+        "text\n$$\nx=y\n$$"
+      ],
+      "expected": 5
+    },
+    {
+      "name": "mathBlock.tokenizer \"text\\n$$\\nx=y\\n$$\"",
+      "fn": "mathBlockExtension.tokenizer",
+      "input": [
+        "text\n$$\nx=y\n$$"
+      ],
+      "expected": {
+        "$undefined": true
+      }
+    },
+    {
+      "name": "mathBlock.start \"$$a$$b$$\"",
+      "fn": "mathBlockExtension.start",
+      "input": [
+        "$$a$$b$$"
+      ],
+      "expected": 0
+    },
+    {
+      "name": "mathBlock.tokenizer \"$$a$$b$$\"",
+      "fn": "mathBlockExtension.tokenizer",
+      "input": [
+        "$$a$$b$$"
+      ],
+      "expected": {
+        "type": "mathBlock",
+        "raw": "$$a$$b$$",
+        "text": "a$$b"
+      }
+    },
+    {
+      "name": "mathBlock.start \"$$\\r\\nx\\r\\n$$\\r\\n\"",
+      "fn": "mathBlockExtension.start",
+      "input": [
+        "$$\r\nx\r\n$$\r\n"
+      ],
+      "expected": 0
+    },
+    {
+      "name": "mathBlock.tokenizer \"$$\\r\\nx\\r\\n$$\\r\\n\"",
+      "fn": "mathBlockExtension.tokenizer",
+      "input": [
+        "$$\r\nx\r\n$$\r\n"
+      ],
+      "expected": {
+        "$undefined": true
+      }
+    },
+    {
+      "name": "mathInline.start \"$x$\"",
+      "fn": "mathInlineExtension.start",
+      "input": [
+        "$x$"
+      ],
+      "expected": 0
+    },
+    {
+      "name": "mathInline.tokenizer \"$x$\"",
+      "fn": "mathInlineExtension.tokenizer",
+      "input": [
+        "$x$"
+      ],
+      "expected": {
+        "type": "mathInline",
+        "raw": "$x$",
+        "text": "x"
+      }
+    },
+    {
+      "name": "mathInline.start \"$E = mc^2$ rest\"",
+      "fn": "mathInlineExtension.start",
+      "input": [
+        "$E = mc^2$ rest"
+      ],
+      "expected": 0
+    },
+    {
+      "name": "mathInline.tokenizer \"$E = mc^2$ rest\"",
+      "fn": "mathInlineExtension.tokenizer",
+      "input": [
+        "$E = mc^2$ rest"
+      ],
+      "expected": {
+        "type": "mathInline",
+        "raw": "$E = mc^2$",
+        "text": "E = mc^2"
+      }
+    },
+    {
+      "name": "mathInline.start \"$a$ and $b$\"",
+      "fn": "mathInlineExtension.start",
+      "input": [
+        "$a$ and $b$"
+      ],
+      "expected": 0
+    },
+    {
+      "name": "mathInline.tokenizer \"$a$ and $b$\"",
+      "fn": "mathInlineExtension.tokenizer",
+      "input": [
+        "$a$ and $b$"
+      ],
+      "expected": {
+        "type": "mathInline",
+        "raw": "$a$",
+        "text": "a"
+      }
+    },
+    {
+      "name": "mathInline.start \"$a \\\\$ b$ rest\"",
+      "fn": "mathInlineExtension.start",
+      "input": [
+        "$a \\$ b$ rest"
+      ],
+      "expected": 0
+    },
+    {
+      "name": "mathInline.tokenizer \"$a \\\\$ b$ rest\"",
+      "fn": "mathInlineExtension.tokenizer",
+      "input": [
+        "$a \\$ b$ rest"
+      ],
+      "expected": {
+        "type": "mathInline",
+        "raw": "$a \\$ b$",
+        "text": "a \\$ b"
+      }
+    },
+    {
+      "name": "mathInline.start \"$ x$\"",
+      "fn": "mathInlineExtension.start",
+      "input": [
+        "$ x$"
+      ],
+      "expected": 0
+    },
+    {
+      "name": "mathInline.tokenizer \"$ x$\"",
+      "fn": "mathInlineExtension.tokenizer",
+      "input": [
+        "$ x$"
+      ],
+      "expected": {
+        "$undefined": true
+      }
+    },
+    {
+      "name": "mathInline.start \"$x $\"",
+      "fn": "mathInlineExtension.start",
+      "input": [
+        "$x $"
+      ],
+      "expected": 0
+    },
+    {
+      "name": "mathInline.tokenizer \"$x $\"",
+      "fn": "mathInlineExtension.tokenizer",
+      "input": [
+        "$x $"
+      ],
+      "expected": {
+        "$undefined": true
+      }
+    },
+    {
+      "name": "mathInline.start \"$10.\"",
+      "fn": "mathInlineExtension.start",
+      "input": [
+        "$10."
+      ],
+      "expected": 0
+    },
+    {
+      "name": "mathInline.tokenizer \"$10.\"",
+      "fn": "mathInlineExtension.tokenizer",
+      "input": [
+        "$10."
+      ],
+      "expected": {
+        "$undefined": true
+      }
+    },
+    {
+      "name": "mathInline.start \"$100 to $200\"",
+      "fn": "mathInlineExtension.start",
+      "input": [
+        "$100 to $200"
+      ],
+      "expected": 0
+    },
+    {
+      "name": "mathInline.tokenizer \"$100 to $200\"",
+      "fn": "mathInlineExtension.tokenizer",
+      "input": [
+        "$100 to $200"
+      ],
+      "expected": {
+        "$undefined": true
+      }
+    },
+    {
+      "name": "mathInline.start \"$10 and that costs $20.\"",
+      "fn": "mathInlineExtension.start",
+      "input": [
+        "$10 and that costs $20."
+      ],
+      "expected": 0
+    },
+    {
+      "name": "mathInline.tokenizer \"$10 and that costs $20.\"",
+      "fn": "mathInlineExtension.tokenizer",
+      "input": [
+        "$10 and that costs $20."
+      ],
+      "expected": {
+        "$undefined": true
+      }
+    },
+    {
+      "name": "mathInline.start \"$x$1\"",
+      "fn": "mathInlineExtension.start",
+      "input": [
+        "$x$1"
+      ],
+      "expected": 0
+    },
+    {
+      "name": "mathInline.tokenizer \"$x$1\"",
+      "fn": "mathInlineExtension.tokenizer",
+      "input": [
+        "$x$1"
+      ],
+      "expected": {
+        "$undefined": true
+      }
+    },
+    {
+      "name": "mathInline.start \"$$x$$\"",
+      "fn": "mathInlineExtension.start",
+      "input": [
+        "$$x$$"
+      ],
+      "expected": 0
+    },
+    {
+      "name": "mathInline.tokenizer \"$$x$$\"",
+      "fn": "mathInlineExtension.tokenizer",
+      "input": [
+        "$$x$$"
+      ],
+      "expected": {
+        "$undefined": true
+      }
+    },
+    {
+      "name": "mathInline.start \"costs \\\\$5 today\"",
+      "fn": "mathInlineExtension.start",
+      "input": [
+        "costs \\$5 today"
+      ],
+      "expected": {
+        "$undefined": true
+      }
+    },
+    {
+      "name": "mathInline.tokenizer \"costs \\\\$5 today\"",
+      "fn": "mathInlineExtension.tokenizer",
+      "input": [
+        "costs \\$5 today"
+      ],
+      "expected": {
+        "$undefined": true
+      }
+    },
+    {
+      "name": "mathInline.start \"no dollars here\"",
+      "fn": "mathInlineExtension.start",
+      "input": [
+        "no dollars here"
+      ],
+      "expected": {
+        "$undefined": true
+      }
+    },
+    {
+      "name": "mathInline.tokenizer \"no dollars here\"",
+      "fn": "mathInlineExtension.tokenizer",
+      "input": [
+        "no dollars here"
+      ],
+      "expected": {
+        "$undefined": true
+      }
+    },
+    {
+      "name": "mathInline.start \"The equation is $E=mc^2$\"",
+      "fn": "mathInlineExtension.start",
+      "input": [
+        "The equation is $E=mc^2$"
+      ],
+      "expected": 16
+    },
+    {
+      "name": "mathInline.tokenizer \"The equation is $E=mc^2$\"",
+      "fn": "mathInlineExtension.tokenizer",
+      "input": [
+        "The equation is $E=mc^2$"
+      ],
+      "expected": {
+        "$undefined": true
+      }
+    },
+    {
+      "name": "mathInline.start \"$\\\\$$\"",
+      "fn": "mathInlineExtension.start",
+      "input": [
+        "$\\$$"
+      ],
+      "expected": 0
+    },
+    {
+      "name": "mathInline.tokenizer \"$\\\\$$\"",
+      "fn": "mathInlineExtension.tokenizer",
+      "input": [
+        "$\\$$"
+      ],
+      "expected": {
+        "type": "mathInline",
+        "raw": "$\\$$",
+        "text": "\\$"
+      }
+    },
+    {
+      "name": "mathInline.start \"$a\\\\\\\\$\"",
+      "fn": "mathInlineExtension.start",
+      "input": [
+        "$a\\\\$"
+      ],
+      "expected": 0
+    },
+    {
+      "name": "mathInline.tokenizer \"$a\\\\\\\\$\"",
+      "fn": "mathInlineExtension.tokenizer",
+      "input": [
+        "$a\\\\$"
+      ],
+      "expected": {
+        "type": "mathInline",
+        "raw": "$a\\\\$",
+        "text": "a\\\\"
+      }
+    },
+    {
+      "name": "mathInline.start \"$日本$\"",
+      "fn": "mathInlineExtension.start",
+      "input": [
+        "$日本$"
+      ],
+      "expected": 0
+    },
+    {
+      "name": "mathInline.tokenizer \"$日本$\"",
+      "fn": "mathInlineExtension.tokenizer",
+      "input": [
+        "$日本$"
+      ],
+      "expected": {
+        "type": "mathInline",
+        "raw": "$日本$",
+        "text": "日本"
+      }
+    },
+    {
+      "name": "mathInline.start \"$x\\ny$\"",
+      "fn": "mathInlineExtension.start",
+      "input": [
+        "$x\ny$"
+      ],
+      "expected": 0
+    },
+    {
+      "name": "mathInline.tokenizer \"$x\\ny$\"",
+      "fn": "mathInlineExtension.tokenizer",
+      "input": [
+        "$x\ny$"
+      ],
+      "expected": {
+        "type": "mathInline",
+        "raw": "$x\ny$",
+        "text": "x\ny"
+      }
+    },
+    {
+      "name": "superscript.renderer {\"text\":\"x\"}",
+      "fn": "superscriptExtension.renderer",
+      "input": [
+        {
+          "text": "x"
+        }
+      ],
+      "expected": "<sup>x</sup>"
+    },
+    {
+      "name": "superscript.renderer {\"text\":\"<a href=\\\"&\\\">\"}",
+      "fn": "superscriptExtension.renderer",
+      "input": [
+        {
+          "text": "<a href=\"&\">"
+        }
+      ],
+      "expected": "<sup>&lt;a href=&quot;&amp;&quot;&gt;</sup>"
+    },
+    {
+      "name": "subscript.renderer {\"text\":\"2\"}",
+      "fn": "subscriptExtension.renderer",
+      "input": [
+        {
+          "text": "2"
+        }
+      ],
+      "expected": "<sub>2</sub>"
+    },
+    {
+      "name": "subscript.renderer {\"text\":\"'q'\"}",
+      "fn": "subscriptExtension.renderer",
+      "input": [
+        {
+          "text": "'q'"
+        }
+      ],
+      "expected": "<sub>'q'</sub>"
+    },
+    {
+      "name": "highlight.renderer {\"text\":\"m\"}",
+      "fn": "highlightExtension.renderer",
+      "input": [
+        {
+          "text": "m"
+        }
+      ],
+      "expected": "<mark>m</mark>"
+    },
+    {
+      "name": "highlight.renderer {\"text\":\"<script>\"}",
+      "fn": "highlightExtension.renderer",
+      "input": [
+        {
+          "text": "<script>"
+        }
+      ],
+      "expected": "<mark>&lt;script&gt;</mark>"
+    },
+    {
+      "name": "emoji.renderer {\"emoji\":\"😄\"}",
+      "fn": "emojiExtension.renderer",
+      "input": [
+        {
+          "emoji": "😄"
+        }
+      ],
+      "expected": "😄"
+    },
+    {
+      "name": "icon.renderer {\"path\":\"M1 2 3\",\"viewBox\":\"0 0 256 256\"}",
+      "fn": "iconExtension.renderer",
+      "input": [
+        {
+          "path": "M1 2 3",
+          "viewBox": "0 0 256 256"
+        }
+      ],
+      "expected": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 256 256\" fill=\"currentColor\" width=\"1em\" height=\"1em\" class=\"frankmd-inline-icon\" aria-hidden=\"true\"><path d=\"M1 2 3\"/></svg>"
+    },
+    {
+      "name": "icon.renderer {\"path\":\"\\\"><script>\",\"viewBox\":\"0 0 1 1\"}",
+      "fn": "iconExtension.renderer",
+      "input": [
+        {
+          "path": "\"><script>",
+          "viewBox": "0 0 1 1"
+        }
+      ],
+      "expected": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 1 1\" fill=\"currentColor\" width=\"1em\" height=\"1em\" class=\"frankmd-inline-icon\" aria-hidden=\"true\"><path d=\"\"><script>\"/></svg>"
+    },
+    {
+      "name": "wikilink.renderer {\"target\":\"My Note\",\"displayText\":\"Click here\"}",
+      "fn": "wikilinkExtension.renderer",
+      "input": [
+        {
+          "target": "My Note",
+          "displayText": "Click here"
+        }
+      ],
+      "expected": "<a class=\"wikilink\" data-wikilink-path=\"My Note\" data-action=\"click->app#openWikilink\">Click here</a>"
+    },
+    {
+      "name": "wikilink.renderer {\"target\":\"My Note\",\"displayText\":null}",
+      "fn": "wikilinkExtension.renderer",
+      "input": [
+        {
+          "target": "My Note",
+          "displayText": null
+        }
+      ],
+      "expected": "<a class=\"wikilink\" data-wikilink-path=\"My Note\" data-action=\"click->app#openWikilink\">My Note</a>"
+    },
+    {
+      "name": "wikilink.renderer {\"target\":\"Note\",\"displayText\":\"<script>alert(1)</",
+      "fn": "wikilinkExtension.renderer",
+      "input": [
+        {
+          "target": "Note",
+          "displayText": "<script>alert(1)</script>"
+        }
+      ],
+      "expected": "<a class=\"wikilink\" data-wikilink-path=\"Note\" data-action=\"click->app#openWikilink\">&lt;script&gt;alert(1)&lt;/script&gt;</a>"
+    },
+    {
+      "name": "wikilink.renderer {\"target\":\"Notes & Ideas\",\"displayText\":\"R&D Notes",
+      "fn": "wikilinkExtension.renderer",
+      "input": [
+        {
+          "target": "Notes & Ideas",
+          "displayText": "R&D Notes"
+        }
+      ],
+      "expected": "<a class=\"wikilink\" data-wikilink-path=\"Notes &amp; Ideas\" data-action=\"click->app#openWikilink\">R&amp;D Notes</a>"
+    },
+    {
+      "name": "wikilink.renderer {\"target\":\"Note \\\"with\\\" quotes\",\"displayText\":nul",
+      "fn": "wikilinkExtension.renderer",
+      "input": [
+        {
+          "target": "Note \"with\" quotes",
+          "displayText": null
+        }
+      ],
+      "expected": "<a class=\"wikilink\" data-wikilink-path=\"Note &quot;with&quot; quotes\" data-action=\"click->app#openWikilink\">Note &quot;with&quot; quotes</a>"
+    },
+    {
+      "name": "wikilink.renderer {\"target\":\"projects/My Note\",\"displayText\":null}",
+      "fn": "wikilinkExtension.renderer",
+      "input": [
+        {
+          "target": "projects/My Note",
+          "displayText": null
+        }
+      ],
+      "expected": "<a class=\"wikilink\" data-wikilink-path=\"projects/My Note\" data-action=\"click->app#openWikilink\">My Note</a>"
+    },
+    {
+      "name": "wikilink.renderer {\"target\":\"a/b/\",\"displayText\":null}",
+      "fn": "wikilinkExtension.renderer",
+      "input": [
+        {
+          "target": "a/b/",
+          "displayText": null
+        }
+      ],
+      "expected": "<a class=\"wikilink\" data-wikilink-path=\"a/b/\" data-action=\"click->app#openWikilink\"></a>"
+    },
+    {
+      "name": "wikilink.renderer {\"target\":\"x'y\",\"displayText\":\"\"}",
+      "fn": "wikilinkExtension.renderer",
+      "input": [
+        {
+          "target": "x'y",
+          "displayText": ""
+        }
+      ],
+      "expected": "<a class=\"wikilink\" data-wikilink-path=\"x'y\" data-action=\"click->app#openWikilink\">x'y</a>"
+    },
+    {
+      "name": "mathBlock.renderer {\"text\":\"</div><script>alert(1)</script>\"}",
+      "fn": "mathBlockExtension.renderer",
+      "input": [
+        {
+          "text": "</div><script>alert(1)</script>"
+        }
+      ],
+      "expected": "<div class=\"math-block\">&lt;/div&gt;&lt;script&gt;alert(1)&lt;/script&gt;</div>\n"
+    },
+    {
+      "name": "mathBlock.renderer {\"text\":\"x = y\"}",
+      "fn": "mathBlockExtension.renderer",
+      "input": [
+        {
+          "text": "x = y"
+        }
+      ],
+      "expected": "<div class=\"math-block\">x = y</div>\n"
+    },
+    {
+      "name": "mathBlock.renderer {\"text\":\"a & b\"}",
+      "fn": "mathBlockExtension.renderer",
+      "input": [
+        {
+          "text": "a & b"
+        }
+      ],
+      "expected": "<div class=\"math-block\">a &amp; b</div>\n"
+    },
+    {
+      "name": "mathInline.renderer {\"text\":\"E = mc^2\"}",
+      "fn": "mathInlineExtension.renderer",
+      "input": [
+        {
+          "text": "E = mc^2"
+        }
+      ],
+      "expected": "<span class=\"math-inline\">E = mc^2</span>"
+    },
+    {
+      "name": "mathInline.renderer {\"text\":\"<img src=x onerror=alert(1)>\"}",
+      "fn": "mathInlineExtension.renderer",
+      "input": [
+        {
+          "text": "<img src=x onerror=alert(1)>"
+        }
+      ],
+      "expected": "<span class=\"math-inline\">&lt;img src=x onerror=alert(1)&gt;</span>"
+    },
+    {
+      "name": "mathInline.renderer {\"text\":\"\\\"'\"}",
+      "fn": "mathInlineExtension.renderer",
+      "input": [
+        {
+          "text": "\"'"
+        }
+      ],
+      "expected": "<span class=\"math-inline\">&quot;'</span>"
+    },
+    {
+      "name": "allExtensions order",
+      "fn": "allExtensions",
+      "input": [],
+      "expected": [
+        {
+          "name": "superscript",
+          "level": "inline"
+        },
+        {
+          "name": "subscript",
+          "level": "inline"
+        },
+        {
+          "name": "highlight",
+          "level": "inline"
+        },
+        {
+          "name": "emoji",
+          "level": "inline"
+        },
+        {
+          "name": "icon",
+          "level": "inline"
+        },
+        {
+          "name": "wikilink",
+          "level": "inline"
+        },
+        {
+          "name": "mathBlock",
+          "level": "block"
+        },
+        {
+          "name": "mathInline",
+          "level": "inline"
+        }
+      ]
+    },
+    {
+      "name": "marked.parse empty",
+      "fn": "marked.parse",
+      "input": [
+        ""
+      ],
+      "expected": ""
+    },
+    {
+      "name": "marked.parse heading_levels",
+      "fn": "marked.parse",
+      "input": [
+        "# H1\n## H2\n### H3\n#### H4\n##### H5\n###### H6\n####### not a heading"
+      ],
+      "expected": "<h1>H1</h1>\n<h2>H2</h2>\n<h3>H3</h3>\n<h4>H4</h4>\n<h5>H5</h5>\n<h6>H6</h6>\n<p>####### not a heading</p>\n"
+    },
+    {
+      "name": "marked.parse setext",
+      "fn": "marked.parse",
+      "input": [
+        "Title\n=====\n\nSub\n---\n"
+      ],
+      "expected": "<h1>Title</h1>\n<h2>Sub</h2>\n"
+    },
+    {
+      "name": "marked.parse heading_trailing_hashes",
+      "fn": "marked.parse",
+      "input": [
+        "# Title #\n\n#NoSpace\n\n  # indented"
+      ],
+      "expected": "<h1>Title</h1>\n<p>#NoSpace</p>\n<h1>indented</h1>\n"
+    },
+    {
+      "name": "marked.parse paragraphs_breaks",
+      "fn": "marked.parse",
+      "input": [
+        "line one\nline two (breaks:true -> <br>)\n\nnew para  \nhard break"
+      ],
+      "expected": "<p>line one<br>line two (breaks:true -&gt; <br>)</p>\n<p>new para<br>hard break</p>\n"
+    },
+    {
+      "name": "marked.parse emphasis",
+      "fn": "marked.parse",
+      "input": [
+        "*em* _em_ **strong** __strong__ ***both*** ~~strike~~ `code` ``co`de``"
+      ],
+      "expected": "<p><em>em</em> <em>em</em> <strong>strong</strong> <strong>strong</strong> <em><strong>both</strong></em> <del>strike</del> <code>code</code> <code>co`de</code></p>\n"
+    },
+    {
+      "name": "marked.parse sup_sub_mark",
+      "fn": "marked.parse",
+      "input": [
+        "x^2^ H~2~O ==marked== ~~strike~~ ~a~~ ^^double^^ ==a=b== ^<b>x</b>^"
+      ],
+      "expected": "<p>x<sup>2</sup> H<sub>2</sub>O <mark>marked</mark> <del>strike</del> ~a~~ ^<sup>double</sup><sup> ==a=b== </sup><b>x</b>^</p>\n"
+    },
+    {
+      "name": "marked.parse emoji_shortcodes",
+      "fn": "marked.parse",
+      "input": [
+        ":smile: :+1: :-1: :heart: :not_a_real_emoji: :tada::rocket: 10:30:45 :SMILE:"
+      ],
+      "expected": "<p>😄 👍 👎 ❤️ :not_a_real_emoji: 🎉🚀 10:30:45 :SMILE:</p>\n"
+    },
+    {
+      "name": "marked.parse icons",
+      "fn": "marked.parse",
+      "input": [
+        ":ph-heart: :ph-check: :ph-not-real: :ph-: :ph-heart-fill:"
+      ],
+      "expected": "<p><svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 256 256\" fill=\"currentColor\" width=\"1em\" height=\"1em\" class=\"frankmd-inline-icon\" aria-hidden=\"true\"><path d=\"M178,40c-20.65,0-38.73,8.88-50,23.89C116.73,48.88,98.65,40,78,40a62.07,62.07,0,0,0-62,62c0,70,103.79,126.66,108.21,129a8,8,0,0,0,7.58,0C136.21,228.66,240,172,240,102A62.07,62.07,0,0,0,178,40ZM128,214.8C109.74,204.16,32,155.69,32,102A46.06,46.06,0,0,1,78,56c19.45,0,35.78,10.36,42.6,27a8,8,0,0,0,14.8,0c6.82-16.67,23.15-27,42.6-27a46.06,46.06,0,0,1,46,46C224,155.61,146.24,204.15,128,214.8Z\"/></svg> <svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 256 256\" fill=\"currentColor\" width=\"1em\" height=\"1em\" class=\"frankmd-inline-icon\" aria-hidden=\"true\"><path d=\"M229.66,77.66l-128,128a8,8,0,0,1-11.32,0l-56-56a8,8,0,0,1,11.32-11.32L96,188.69,218.34,66.34a8,8,0,0,1,11.32,11.32Z\"/></svg> :ph-not-real: :ph-: :ph-heart-fill:</p>\n"
+    },
+    {
+      "name": "marked.parse wikilinks",
+      "fn": "marked.parse",
+      "input": [
+        "See [[My Note]], [[folder/Sub Note|Label]], [[  spaced  |  disp  ]], [[a|]], [[unclosed and [[x]]] and [[<script>|<b>]] and [[Notes & \"Ideas\"]]"
+      ],
+      "expected": "<p>See <a class=\"wikilink\" data-wikilink-path=\"My Note\" data-action=\"click->app#openWikilink\">My Note</a>, <a class=\"wikilink\" data-wikilink-path=\"folder/Sub Note\" data-action=\"click->app#openWikilink\">Label</a>, <a class=\"wikilink\" data-wikilink-path=\"spaced\" data-action=\"click->app#openWikilink\">disp</a>, [[a|]], <a class=\"wikilink\" data-wikilink-path=\"unclosed and [[x\" data-action=\"click->app#openWikilink\">unclosed and [[x</a>] and <a class=\"wikilink\" data-wikilink-path=\"&lt;script&gt;\" data-action=\"click->app#openWikilink\">&lt;b&gt;</a> and <a class=\"wikilink\" data-wikilink-path=\"Notes &amp; &quot;Ideas&quot;\" data-action=\"click->app#openWikilink\">Notes &amp; &quot;Ideas&quot;</a></p>\n"
+    },
+    {
+      "name": "marked.parse wikilink_in_code",
+      "fn": "marked.parse",
+      "input": [
+        "`[[not a link]]` and ```\n[[block]]\n```"
+      ],
+      "expected": "<p><code>[[not a link]]</code> and <code>[[block]]</code></p>\n"
+    },
+    {
+      "name": "marked.parse links",
+      "fn": "marked.parse",
+      "input": [
+        "[text](https://example.com \"T\") <https://auto.link> www.example.com https://bare.example.com/path?q=1 [ref][1]\n\n[1]: https://ref.example.com"
+      ],
+      "expected": "<p><a href=\"https://example.com\" title=\"T\">text</a> <a href=\"https://auto.link\">https://auto.link</a> <a href=\"http://www.example.com\">www.example.com</a> https://bare.example.com/path?q=1 <a href=\"https://ref.example.com\">ref</a></p>\n"
+    },
+    {
+      "name": "marked.parse link_xss",
+      "fn": "marked.parse",
+      "input": [
+        "[x](javascript:alert(1)) [y](JaVaScRiPt:alert(1)) [z](data:text/html;base64,PHNjcmlwdD4=) [w](vbscript:msgbox) [ok](/relative) [mail](mailto:a@b.c)"
+      ],
+      "expected": "<p><a href=\"javascript:alert(1)\">x</a> <a href=\"JaVaScRiPt:alert(1)\">y</a> <a href=\"data:text/html;base64,PHNjcmlwdD4=\">z</a> <a href=\"vbscript:msgbox\">w</a> <a href=\"/relative\">ok</a> <a href=\"mailto:a@b.c\">mail</a></p>\n"
+    },
+    {
+      "name": "marked.parse images",
+      "fn": "marked.parse",
+      "input": [
+        "![alt](/images/a.png \"title\") ![](https://x.y/z.jpg) ![x](javascript:alert(1)) [![nested](/i.png)](https://l.ink)"
+      ],
+      "expected": "<p><img src=\"/images/a.png\" alt=\"alt\" title=\"title\"> <img src=\"https://x.y/z.jpg\" alt=\"\"> <img src=\"javascript:alert(1)\" alt=\"x\"> <a href=\"https://l.ink\"><img src=\"/i.png\" alt=\"nested\"></a></p>\n"
+    },
+    {
+      "name": "marked.parse unordered_list",
+      "fn": "marked.parse",
+      "input": [
+        "- a\n- b\n  - nested\n    - deeper\n- c\n\n* star\n+ plus"
+      ],
+      "expected": "<ul>\n<li>a</li>\n<li>b<ul>\n<li>nested<ul>\n<li>deeper</li>\n</ul>\n</li>\n</ul>\n</li>\n<li>c</li>\n</ul>\n<ul>\n<li>star</li>\n</ul>\n<ul>\n<li>plus</li>\n</ul>\n"
+    },
+    {
+      "name": "marked.parse ordered_list",
+      "fn": "marked.parse",
+      "input": [
+        "1. one\n2. two\n10. ten\n\n3) paren start\n4) next"
+      ],
+      "expected": "<ol>\n<li>one</li>\n<li>two</li>\n<li>ten</li>\n</ol>\n<ol start=\"3\">\n<li>paren start</li>\n<li>next</li>\n</ol>\n"
+    },
+    {
+      "name": "marked.parse loose_list",
+      "fn": "marked.parse",
+      "input": [
+        "- a\n\n- b\n\n  para in b\n- c"
+      ],
+      "expected": "<ul>\n<li><p>a</p>\n</li>\n<li><p>b</p>\n<p>para in b</p>\n</li>\n<li><p>c</p>\n</li>\n</ul>\n"
+    },
+    {
+      "name": "marked.parse tasks",
+      "fn": "marked.parse",
+      "input": [
+        "- [ ] todo\n- [x] done\n- [X] upper\n  - [ ] child\n- plain\n1. [ ] ordered task\n- [ ]\n- [] not a task"
+      ],
+      "expected": "<ul>\n<li><input disabled=\"\" type=\"checkbox\"> todo</li>\n<li><input checked=\"\" disabled=\"\" type=\"checkbox\"> done</li>\n<li><input checked=\"\" disabled=\"\" type=\"checkbox\"> upper<ul>\n<li><input disabled=\"\" type=\"checkbox\"> child</li>\n</ul>\n</li>\n<li>plain</li>\n</ul>\n<ol>\n<li><input disabled=\"\" type=\"checkbox\"> ordered task</li>\n</ol>\n<ul>\n<li>[ ]</li>\n<li>[] not a task</li>\n</ul>\n"
+    },
+    {
+      "name": "marked.parse tasks_after_heading",
+      "fn": "marked.parse",
+      "input": [
+        "# Intro\n\n- [ ] a\n- plain\n- parent\n  - [x] child\n"
+      ],
+      "expected": "<h1>Intro</h1>\n<ul>\n<li><input disabled=\"\" type=\"checkbox\"> a</li>\n<li>plain</li>\n<li>parent<ul>\n<li><input checked=\"\" disabled=\"\" type=\"checkbox\"> child</li>\n</ul>\n</li>\n</ul>\n"
+    },
+    {
+      "name": "marked.parse blockquote",
+      "fn": "marked.parse",
+      "input": [
+        "> quote\n> > nested\n>\n> - list in quote\n\n> lazy\ncontinuation"
+      ],
+      "expected": "<blockquote>\n<p>quote</p>\n<blockquote>\n<p>nested</p>\n</blockquote>\n<ul>\n<li>list in quote</li>\n</ul>\n</blockquote>\n<blockquote>\n<p>lazy<br>continuation</p>\n</blockquote>\n"
+    },
+    {
+      "name": "marked.parse hr",
+      "fn": "marked.parse",
+      "input": [
+        "---\n\n***\n\n___\n\n- - -"
+      ],
+      "expected": "<hr>\n<hr>\n<hr>\n<hr>\n"
+    },
+    {
+      "name": "marked.parse table",
+      "fn": "marked.parse",
+      "input": [
+        "| a | b | c |\n|:--|:-:|--:|\n| 1 | **2** | `3` |\n| x \\| pipe | | ç |"
+      ],
+      "expected": "<table>\n<thead>\n<tr>\n<th align=\"left\">a</th>\n<th align=\"center\">b</th>\n<th align=\"right\">c</th>\n</tr>\n</thead>\n<tbody><tr>\n<td align=\"left\">1</td>\n<td align=\"center\"><strong>2</strong></td>\n<td align=\"right\"><code>3</code></td>\n</tr>\n<tr>\n<td align=\"left\">x | pipe</td>\n<td align=\"center\"></td>\n<td align=\"right\">ç</td>\n</tr>\n</tbody></table>\n"
+    },
+    {
+      "name": "marked.parse table_no_body",
+      "fn": "marked.parse",
+      "input": [
+        "| h1 | h2 |\n| --- | --- |"
+      ],
+      "expected": "<table>\n<thead>\n<tr>\n<th>h1</th>\n<th>h2</th>\n</tr>\n</thead>\n</table>\n"
+    },
+    {
+      "name": "marked.parse table_ragged",
+      "fn": "marked.parse",
+      "input": [
+        "a | b\n--|--\n1\n1 | 2 | 3"
+      ],
+      "expected": "<table>\n<thead>\n<tr>\n<th>a</th>\n<th>b</th>\n</tr>\n</thead>\n<tbody><tr>\n<td>1</td>\n<td></td>\n</tr>\n<tr>\n<td>1</td>\n<td>2</td>\n</tr>\n</tbody></table>\n"
+    },
+    {
+      "name": "marked.parse code_fences",
+      "fn": "marked.parse",
+      "input": [
+        "```js\nconst a = 1 // c\n```\n\n```python\ndef f(x):\n    return x * 2\n```\n\n~~~ruby\nputs 'hi'\n~~~\n\n```\nno lang <b>\n```\n\n    indented code"
+      ],
+      "expected": "<pre><code class=\"language-js\">const a = 1 // c\n</code></pre>\n<pre><code class=\"language-python\">def f(x):\n    return x * 2\n</code></pre>\n<pre><code class=\"language-ruby\">puts &#39;hi&#39;\n</code></pre>\n<pre><code>no lang &lt;b&gt;\n</code></pre>\n<pre><code>indented code\n</code></pre>\n"
+    },
+    {
+      "name": "marked.parse code_fence_langs_many",
+      "fn": "marked.parse",
+      "input": [
+        "```ts\nx = 1\n```\n\n```tsx\nx = 1\n```\n\n```jsx\nx = 1\n```\n\n```html\nx = 1\n```\n\n```css\nx = 1\n```\n\n```json\nx = 1\n```\n\n```yaml\nx = 1\n```\n\n```rb\nx = 1\n```\n\n```sh\nx = 1\n```\n\n```sql\nx = 1\n```\n\n```toml\nx = 1\n```\n\n```tf\nx = 1\n```\n\n```rs\nx = 1\n```\n\n```go\nx = 1\n```\n\n```java\nx = 1\n```\n\n```c\nx = 1\n```\n\n```cpp\nx = 1\n```\n\n```cs\nx = 1\n```\n\n```kotlin\nx = 1\n```\n\n```php\nx = 1\n```\n\n```dockerfile\nx = 1\n```\n\n```unknownlang\nx = 1\n```\n\n```JS\nx = 1\n```\n\n```c++\nx = 1\n```\n\n```c#\nx = 1\n```"
+      ],
+      "expected": "<pre><code class=\"language-ts\">x = 1\n</code></pre>\n<pre><code class=\"language-tsx\">x = 1\n</code></pre>\n<pre><code class=\"language-jsx\">x = 1\n</code></pre>\n<pre><code class=\"language-html\">x = 1\n</code></pre>\n<pre><code class=\"language-css\">x = 1\n</code></pre>\n<pre><code class=\"language-json\">x = 1\n</code></pre>\n<pre><code class=\"language-yaml\">x = 1\n</code></pre>\n<pre><code class=\"language-rb\">x = 1\n</code></pre>\n<pre><code class=\"language-sh\">x = 1\n</code></pre>\n<pre><code class=\"language-sql\">x = 1\n</code></pre>\n<pre><code class=\"language-toml\">x = 1\n</code></pre>\n<pre><code class=\"language-tf\">x = 1\n</code></pre>\n<pre><code class=\"language-rs\">x = 1\n</code></pre>\n<pre><code class=\"language-go\">x = 1\n</code></pre>\n<pre><code class=\"language-java\">x = 1\n</code></pre>\n<pre><code class=\"language-c\">x = 1\n</code></pre>\n<pre><code class=\"language-cpp\">x = 1\n</code></pre>\n<pre><code class=\"language-cs\">x = 1\n</code></pre>\n<pre><code class=\"language-kotlin\">x = 1\n</code></pre>\n<pre><code class=\"language-php\">x = 1\n</code></pre>\n<pre><code class=\"language-dockerfile\">x = 1\n</code></pre>\n<pre><code class=\"language-unknownlang\">x = 1\n</code></pre>\n<pre><code class=\"language-JS\">x = 1\n</code></pre>\n<pre><code class=\"language-c++\">x = 1\n</code></pre>\n<pre><code class=\"language-c#\">x = 1\n</code></pre>\n"
+    },
+    {
+      "name": "marked.parse code_fence_info_string",
+      "fn": "marked.parse",
+      "input": [
+        "```js title=\"a.js\" {1,3}\nlet x\n```\n\n```<script>\nx\n```\n\n``` js\nspace before\n```"
+      ],
+      "expected": "<pre><code class=\"language-js\">let x\n</code></pre>\n<pre><code class=\"language-&lt;script&gt;\">x\n</code></pre>\n<pre><code class=\"language-js\">space before\n</code></pre>\n"
+    },
+    {
+      "name": "marked.parse code_unclosed",
+      "fn": "marked.parse",
+      "input": [
+        "```js\nconst a = 1\nnever closed"
+      ],
+      "expected": "<pre><code class=\"language-js\">const a = 1\nnever closed\n</code></pre>\n"
+    },
+    {
+      "name": "marked.parse math_inline",
+      "fn": "marked.parse",
+      "input": [
+        "Euler $e^{i\\pi}+1=0$ and $x$ and $5 and $10, \\$ literal, $ x$ no, $x $ no, $a \\$ b$ yes, $x$1 no"
+      ],
+      "expected": "<p>Euler <span class=\"math-inline\">e^{i\\pi}+1=0</span> and <span class=\"math-inline\">x</span> and $5 and $10, $ literal, $ x$ no, $x $ no, <span class=\"math-inline\">a \\$ b</span> yes, $x$1 no</p>\n"
+    },
+    {
+      "name": "marked.parse math_block",
+      "fn": "marked.parse",
+      "input": [
+        "Before\n\n$$\nx = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}\n$$\n\nAfter\n\n$$E=mc^2$$\n\n$$   $$\n\ninline $$x$$ mid"
+      ],
+      "expected": "<p>Before</p>\n<div class=\"math-block\">x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}</div>\n<p>After</p>\n<div class=\"math-block\">E=mc^2</div>\n<p>$$<br>$$</p>\n<p>inline<br>$$x<br>$$ mid</p>\n"
+    },
+    {
+      "name": "marked.parse math_errors",
+      "fn": "marked.parse",
+      "input": [
+        "$\\frac{1}$ and $\\href{javascript:alert(1)}{x}$ and $\\htmlId{a}{b}$ and $$\\undefinedcommand$$"
+      ],
+      "expected": "<p><span class=\"math-inline\">\\frac{1}</span> and <span class=\"math-inline\">\\href{javascript:alert(1)}{x}</span> and <span class=\"math-inline\">\\htmlId{a}{b}</span> and </p>\n<div class=\"math-block\">\\undefinedcommand</div>\n"
+    },
+    {
+      "name": "marked.parse math_in_code",
+      "fn": "marked.parse",
+      "input": [
+        "`$x$` and\n\n```\n$$y$$\n```"
+      ],
+      "expected": "<p><code>$x$</code> and</p>\n<pre><code>$$y$$\n</code></pre>\n"
+    },
+    {
+      "name": "marked.parse footnotes",
+      "fn": "marked.parse",
+      "input": [
+        "Text with footnote[^1] and [^note].\n\n[^1]: The footnote.\n[^note]: Named."
+      ],
+      "expected": "<p>Text with footnote[<sup>1] and [</sup>note].</p>\n<p>[<sup>1]: The footnote.\n[</sup>note]: Named.</p>\n"
+    },
+    {
+      "name": "marked.parse definition_like",
+      "fn": "marked.parse",
+      "input": [
+        "Term\n: definition (not supported)"
+      ],
+      "expected": "<p>Term<br>: definition (not supported)</p>\n"
+    },
+    {
+      "name": "marked.parse raw_html_block",
+      "fn": "marked.parse",
+      "input": [
+        "<div class=\"note\">\n**not md inside**\n</div>\n\n<details><summary>S</summary>\n\nHidden *md*\n\n</details>"
+      ],
+      "expected": "<div class=\"note\">\n**not md inside**\n</div>\n\n<details><summary>S</summary>\n\n<p>Hidden <em>md</em></p>\n</details>"
+    },
+    {
+      "name": "marked.parse raw_html_inline",
+      "fn": "marked.parse",
+      "input": [
+        "a <b>bold</b> <span style=\"color:red\" class=\"x\">s</span> <kbd>Ctrl</kbd> <u>u</u> <!-- comment --> end"
+      ],
+      "expected": "<p>a <b>bold</b> <span style=\"color:red\" class=\"x\">s</span> <kbd>Ctrl</kbd> <u>u</u> <!-- comment --> end</p>\n"
+    },
+    {
+      "name": "marked.parse xss_script",
+      "fn": "marked.parse",
+      "input": [
+        "<script>alert(1)</script>\n\nok <script src=\"https://evil/x.js\"></script>"
+      ],
+      "expected": "<script>alert(1)</script>\n\n<p>ok <script src=\"https://evil/x.js\"></script></p>\n"
+    },
+    {
+      "name": "marked.parse xss_handlers",
+      "fn": "marked.parse",
+      "input": [
+        "<img src=x onerror=alert(1)> <a href=\"#\" onclick=\"alert(1)\">c</a> <body onload=alert(1)> <div onmouseover=\"x()\">d</div>"
+      ],
+      "expected": "<p><img src=x onerror=alert(1)> <a href=\"#\" onclick=\"alert(1)\">c</a> <body onload=alert(1)> <div onmouseover=\"x()\">d</div></p>\n"
+    },
+    {
+      "name": "marked.parse xss_js_urls",
+      "fn": "marked.parse",
+      "input": [
+        "<a href=\"javascript:alert(1)\">j</a> <a href=\" javascript:alert(1)\">sp</a> <a href=\"jav&#x09;ascript:alert(1)\">ent</a> <img src=\"javascript:alert(1)\"> <a href=\"data:text/html,<script>alert(1)</script>\">d</a>"
+      ],
+      "expected": "<p><a href=\"javascript:alert(1)\">j</a> <a href=\" javascript:alert(1)\">sp</a> <a href=\"jav&#x09;ascript:alert(1)\">ent</a> <img src=\"javascript:alert(1)\"> <a href=\"data:text/html,<script>alert(1)</script>\">d</a></p>\n"
+    },
+    {
+      "name": "marked.parse xss_svg",
+      "fn": "marked.parse",
+      "input": [
+        "<svg onload=alert(1)><script>alert(1)</script><circle r=\"5\"/></svg>\n\n<svg><a xlink:href=\"javascript:alert(1)\"><text>x</text></a></svg>\n\n<math><mi xlink:href=\"javascript:alert(1)\">m</mi></math>"
+      ],
+      "expected": "<p><svg onload=alert(1)><script>alert(1)</script><circle r=\"5\"/></svg></p>\n<p><svg><a xlink:href=\"javascript:alert(1)\"><text>x</text></a></svg></p>\n<p><math><mi xlink:href=\"javascript:alert(1)\">m</mi></math></p>\n"
+    },
+    {
+      "name": "marked.parse xss_iframes",
+      "fn": "marked.parse",
+      "input": [
+        "<iframe src=\"https://www.youtube.com/embed/abc123\" width=\"560\" height=\"315\" frameborder=\"0\" allow=\"autoplay; encrypted-media\" allowfullscreen referrerpolicy=\"strict-origin\"></iframe>\n\n<iframe src=\"https://youtube-nocookie.com/embed/x\"></iframe>\n\n<iframe src=\"https://player.vimeo.com/video/1\"></iframe>\n\n<iframe src=\"http://www.youtube.com/embed/insecure\"></iframe>\n\n<iframe src=\"https://evil.com/embed\"></iframe>\n\n<iframe src=\"https://www.youtube.com.evil.com/x\"></iframe>\n\n<iframe srcdoc=\"<script>alert(1)</script>\" src=\"https://www.youtube.com/embed/x\"></iframe>\n\n<iframe src=\"javascript:alert(1)\"></iframe>\n\n<iframe></iframe>\n\n<iframe src=\"//www.youtube.com/embed/protorel\"></iframe>"
+      ],
+      "expected": "<iframe src=\"https://www.youtube.com/embed/abc123\" width=\"560\" height=\"315\" frameborder=\"0\" allow=\"autoplay; encrypted-media\" allowfullscreen referrerpolicy=\"strict-origin\"></iframe>\n\n<iframe src=\"https://youtube-nocookie.com/embed/x\"></iframe>\n\n<iframe src=\"https://player.vimeo.com/video/1\"></iframe>\n\n<iframe src=\"http://www.youtube.com/embed/insecure\"></iframe>\n\n<iframe src=\"https://evil.com/embed\"></iframe>\n\n<iframe src=\"https://www.youtube.com.evil.com/x\"></iframe>\n\n<iframe srcdoc=\"<script>alert(1)</script>\" src=\"https://www.youtube.com/embed/x\"></iframe>\n\n<iframe src=\"javascript:alert(1)\"></iframe>\n\n<iframe></iframe>\n\n<iframe src=\"//www.youtube.com/embed/protorel\"></iframe>"
+    },
+    {
+      "name": "marked.parse xss_forms",
+      "fn": "marked.parse",
+      "input": [
+        "<form action=\"/x\"><input type=\"text\" name=\"p\"><input type=\"password\"><input type=\"checkbox\" checked disabled onclick=\"x()\" data-x=\"1\"><button>Go</button><textarea>t</textarea><select><option>o</option></select></form><input type=\"hidden\" value=\"h\"><input>"
+      ],
+      "expected": "<form action=\"/x\"><input type=\"text\" name=\"p\"><input type=\"password\"><input type=\"checkbox\" checked disabled onclick=\"x()\" data-x=\"1\"><button>Go</button><textarea>t</textarea><select><option>o</option></select></form><input type=\"hidden\" value=\"h\"><input>"
+    },
+    {
+      "name": "marked.parse xss_style",
+      "fn": "marked.parse",
+      "input": [
+        "<style>body{display:none}</style><p style=\"position:fixed\">s</p><link rel=\"stylesheet\" href=\"x.css\"><meta http-equiv=\"refresh\" content=\"0;url=http://evil\"><base href=\"http://evil/\">"
+      ],
+      "expected": "<style>body{display:none}</style><p style=\"position:fixed\">s</p><link rel=\"stylesheet\" href=\"x.css\"><meta http-equiv=\"refresh\" content=\"0;url=http://evil\"><base href=\"http://evil/\">"
+    },
+    {
+      "name": "marked.parse xss_misc",
+      "fn": "marked.parse",
+      "input": [
+        "<object data=\"x.swf\"></object><embed src=\"x\"><a href=\"https://ok.com\" target=\"_blank\" rel=\"noopener\">ok</a> <img src=\"https://ok/a.png\" srcset=\"a.png 1x\" alt=\"a\" width=\"10\"> <video src=\"v.mp4\" controls></video> <audio src=\"a.mp3\"></audio> <noscript><p title=\"</noscript><img src=x onerror=alert(1)>\"></noscript>"
+      ],
+      "expected": "<p><object data=\"x.swf\"></object><embed src=\"x\"><a href=\"https://ok.com\" target=\"_blank\" rel=\"noopener\">ok</a> <img src=\"https://ok/a.png\" srcset=\"a.png 1x\" alt=\"a\" width=\"10\"> <video src=\"v.mp4\" controls></video> <audio src=\"a.mp3\"></audio> <noscript><p title=\"</noscript><img src=x onerror=alert(1)>\"></noscript></p>\n"
+    },
+    {
+      "name": "marked.parse html_entities",
+      "fn": "marked.parse",
+      "input": [
+        "&amp; &lt; &gt; &quot; &copy; &#169; &#x1F600; &nbsp; & < > \" '"
+      ],
+      "expected": "<p>&amp; &lt; &gt; &quot; &copy; &#169; &#x1F600; &nbsp; &amp; &lt; &gt; &quot; &#39;</p>\n"
+    },
+    {
+      "name": "marked.parse escapes",
+      "fn": "marked.parse",
+      "input": [
+        "\\*not em\\* \\# \\[not link\\] \\` \\\\ \\$ \\^ \\~ \\="
+      ],
+      "expected": "<p>*not em* # [not link] ` \\ $ ^ ~ =</p>\n"
+    },
+    {
+      "name": "marked.parse unicode_mix",
+      "fn": "marked.parse",
+      "input": [
+        "# Título com ação\n\nCafé ü 日本語 中文 한국어 שלום עולם 👨‍👩‍👧 é NBSP: end\ttab"
+      ],
+      "expected": "<h1>Título com ação</h1>\n<p>Café ü 日本語 中文 한국어 שלום עולם 👨‍👩‍👧 é NBSP: end\ttab</p>\n"
+    },
+    {
+      "name": "marked.parse rtl_heading",
+      "fn": "marked.parse",
+      "input": [
+        "# שלום\n\n- פריט\n- [ ] משימה"
+      ],
+      "expected": "<h1>שלום</h1>\n<ul>\n<li>פריט</li>\n<li><input disabled=\"\" type=\"checkbox\"> משימה</li>\n</ul>\n"
+    },
+    {
+      "name": "marked.parse crlf",
+      "fn": "marked.parse",
+      "input": [
+        "# Title\r\n\r\npara line1\r\nline2\r\n\r\n- a\r\n- [x] b\r\n\r\n```js\r\nlet x\r\n```\r\n"
+      ],
+      "expected": "<h1>Title</h1>\n<p>para line1<br>line2</p>\n<ul>\n<li>a</li>\n<li><input checked=\"\" disabled=\"\" type=\"checkbox\"> b</li>\n</ul>\n<pre><code class=\"language-js\">let x\n</code></pre>\n"
+    },
+    {
+      "name": "marked.parse lone_cr",
+      "fn": "marked.parse",
+      "input": [
+        "# Title\rpara\r\r- a"
+      ],
+      "expected": "<h1>Title</h1>\n<p>para</p>\n<ul>\n<li>a</li>\n</ul>\n"
+    },
+    {
+      "name": "marked.parse trailing_newlines",
+      "fn": "marked.parse",
+      "input": [
+        "para\n\n\n\n"
+      ],
+      "expected": "<p>para</p>\n"
+    },
+    {
+      "name": "marked.parse no_trailing_newline",
+      "fn": "marked.parse",
+      "input": [
+        "# h\npara"
+      ],
+      "expected": "<h1>h</h1>\n<p>para</p>\n"
+    },
+    {
+      "name": "marked.parse only_whitespace",
+      "fn": "marked.parse",
+      "input": [
+        "   \n\t\n  "
+      ],
+      "expected": ""
+    },
+    {
+      "name": "marked.parse frontmatter_yaml",
+      "fn": "marked.parse",
+      "input": [
+        "---\ntitle: Hello\ntags: [a, b]\n---\n\n# Body\n\ntext"
+      ],
+      "expected": "<hr>\n<h2>title: Hello<br>tags: [a, b]</h2>\n<h1>Body</h1>\n<p>text</p>\n"
+    },
+    {
+      "name": "marked.parse frontmatter_toml",
+      "fn": "marked.parse",
+      "input": [
+        "+++\ntitle = \"Hello\"\n+++\n# Body"
+      ],
+      "expected": "<p>+++<br>title = &quot;Hello&quot;<br>+++</p>\n<h1>Body</h1>\n"
+    },
+    {
+      "name": "marked.parse frontmatter_unclosed",
+      "fn": "marked.parse",
+      "input": [
+        "---\ntitle: x\n\n# Body"
+      ],
+      "expected": "<hr>\n<p>title: x</p>\n<h1>Body</h1>\n"
+    },
+    {
+      "name": "marked.parse frontmatter_at_eof",
+      "fn": "marked.parse",
+      "input": [
+        "---\ntitle: x\n---"
+      ],
+      "expected": "<hr>\n<h2>title: x</h2>\n"
+    },
+    {
+      "name": "marked.parse frontmatter_not_at_start",
+      "fn": "marked.parse",
+      "input": [
+        "\n---\ntitle: x\n---\n# Body"
+      ],
+      "expected": "<hr>\n<h2>title: x</h2>\n<h1>Body</h1>\n"
+    },
+    {
+      "name": "marked.parse hr_then_text",
+      "fn": "marked.parse",
+      "input": [
+        "---\nnot frontmatter? closing below\n---\n\nbody"
+      ],
+      "expected": "<hr>\n<h2>not frontmatter? closing below</h2>\n<p>body</p>\n"
+    },
+    {
+      "name": "marked.parse nested_mix",
+      "fn": "marked.parse",
+      "input": [
+        "1. Step with `code`\n   ```sh\n   echo hi\n   ```\n2. > quote in list\n3. | t | u |\n   |---|---|\n   | 1 | 2 |"
+      ],
+      "expected": "<ol>\n<li>Step with <code>code</code><pre><code class=\"language-sh\">echo hi\n</code></pre>\n</li>\n<li><blockquote>\n<p>quote in list</p>\n</blockquote>\n</li>\n<li><table>\n<thead>\n<tr>\n<th>t</th>\n<th>u</th>\n</tr>\n</thead>\n<tbody><tr>\n<td>1</td>\n<td>2</td>\n</tr>\n</tbody></table>\n</li>\n</ol>\n"
+    },
+    {
+      "name": "marked.parse html_in_list_li",
+      "fn": "marked.parse",
+      "input": [
+        "- <li>raw li</li>\n- <link rel=x>\n\n```html\n<li>in code</li>\n<ul><li>x</li></ul>\n```"
+      ],
+      "expected": "<ul>\n<li><li>raw li</li></li>\n<li><link rel=x></li>\n</ul>\n<pre><code class=\"language-html\">&lt;li&gt;in code&lt;/li&gt;\n&lt;ul&gt;&lt;li&gt;x&lt;/li&gt;&lt;/ul&gt;\n</code></pre>\n"
+    },
+    {
+      "name": "marked.parse long_doc",
+      "fn": "marked.parse",
+      "input": [
+        "## Section 0\n\nParagraph 1 with **bold** and [[Link 1]] and $x_1$.\n\nParagraph 2 with **bold** and [[Link 2]] and $x_2$.\n\nParagraph 3 with **bold** and [[Link 3]] and $x_3$.\n\nParagraph 4 with **bold** and [[Link 4]] and $x_4$.\n\n## Section 5\n\nParagraph 6 with **bold** and [[Link 6]] and $x_6$.\n\nParagraph 7 with **bold** and [[Link 7]] and $x_7$.\n\nParagraph 8 with **bold** and [[Link 8]] and $x_8$.\n\nParagraph 9 with **bold** and [[Link 9]] and $x_9$.\n\n## Section 10\n\nParagraph 11 with **bold** and [[Link 11]] and $x_11$.\n\nParagraph 12 with **bold** and [[Link 12]] and $x_12$.\n\nParagraph 13 with **bold** and [[Link 13]] and $x_13$.\n\nParagraph 14 with **bold** and [[Link 14]] and $x_14$.\n\n## Section 15\n\nParagraph 16 with **bold** and [[Link 16]] and $x_16$.\n\nParagraph 17 with **bold** and [[Link 17]] and $x_17$.\n\nParagraph 18 with **bold** and [[Link 18]] and $x_18$.\n\nParagraph 19 with **bold** and [[Link 19]] and $x_19$.\n\n## Section 20\n\nParagraph 21 with **bold** and [[Link 21]] and $x_21$.\n\nParagraph 22 with **bold** and [[Link 22]] and $x_22$.\n\nParagraph 23 with **bold** and [[Link 23]] and $x_23$.\n\nParagraph 24 with **bold** and [[Link 24]] and $x_24$.\n\n## Section 25\n\nParagraph 26 with **bold** and [[Link 26]] and $x_26$.\n\nParagraph 27 with **bold** and [[Link 27]] and $x_27$.\n\nParagraph 28 with **bold** and [[Link 28]] and $x_28$.\n\nParagraph 29 with **bold** and [[Link 29]] and $x_29$.\n\n## Section 30\n\nParagraph 31 with **bold** and [[Link 31]] and $x_31$.\n\nParagraph 32 with **bold** and [[Link 32]] and $x_32$.\n\nParagraph 33 with **bold** and [[Link 33]] and $x_33$.\n\nParagraph 34 with **bold** and [[Link 34]] and $x_34$.\n\n## Section 35\n\nParagraph 36 with **bold** and [[Link 36]] and $x_36$.\n\nParagraph 37 with **bold** and [[Link 37]] and $x_37$.\n\nParagraph 38 with **bold** and [[Link 38]] and $x_38$.\n\nParagraph 39 with **bold** and [[Link 39]] and $x_39$.\n\n## Section 40\n\nParagraph 41 with **bold** and [[Link 41]] and $x_41$.\n\nParagraph 42 with **bold** and [[Link 42]] and $x_42$.\n\nParagraph 43 with **bold** and [[Link 43]] and $x_43$.\n\nParagraph 44 with **bold** and [[Link 44]] and $x_44$.\n\n## Section 45\n\nParagraph 46 with **bold** and [[Link 46]] and $x_46$.\n\nParagraph 47 with **bold** and [[Link 47]] and $x_47$.\n\nParagraph 48 with **bold** and [[Link 48]] and $x_48$.\n\nParagraph 49 with **bold** and [[Link 49]] and $x_49$.\n\n## Section 50\n\nParagraph 51 with **bold** and [[Link 51]] and $x_51$.\n\nParagraph 52 with **bold** and [[Link 52]] and $x_52$.\n\nParagraph 53 with **bold** and [[Link 53]] and $x_53$.\n\nParagraph 54 with **bold** and [[Link 54]] and $x_54$.\n\n## Section 55\n\nParagraph 56 with **bold** and [[Link 56]] and $x_56$.\n\nParagraph 57 with **bold** and [[Link 57]] and $x_57$.\n\nParagraph 58 with **bold** and [[Link 58]] and $x_58$.\n\nParagraph 59 with **bold** and [[Link 59]] and $x_59$.\n"
+      ],
+      "expected": "<h2>Section 0</h2>\n<p>Paragraph 1 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 1\" data-action=\"click->app#openWikilink\">Link 1</a> and <span class=\"math-inline\">x_1</span>.</p>\n<p>Paragraph 2 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 2\" data-action=\"click->app#openWikilink\">Link 2</a> and <span class=\"math-inline\">x_2</span>.</p>\n<p>Paragraph 3 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 3\" data-action=\"click->app#openWikilink\">Link 3</a> and <span class=\"math-inline\">x_3</span>.</p>\n<p>Paragraph 4 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 4\" data-action=\"click->app#openWikilink\">Link 4</a> and <span class=\"math-inline\">x_4</span>.</p>\n<h2>Section 5</h2>\n<p>Paragraph 6 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 6\" data-action=\"click->app#openWikilink\">Link 6</a> and <span class=\"math-inline\">x_6</span>.</p>\n<p>Paragraph 7 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 7\" data-action=\"click->app#openWikilink\">Link 7</a> and <span class=\"math-inline\">x_7</span>.</p>\n<p>Paragraph 8 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 8\" data-action=\"click->app#openWikilink\">Link 8</a> and <span class=\"math-inline\">x_8</span>.</p>\n<p>Paragraph 9 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 9\" data-action=\"click->app#openWikilink\">Link 9</a> and <span class=\"math-inline\">x_9</span>.</p>\n<h2>Section 10</h2>\n<p>Paragraph 11 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 11\" data-action=\"click->app#openWikilink\">Link 11</a> and <span class=\"math-inline\">x_11</span>.</p>\n<p>Paragraph 12 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 12\" data-action=\"click->app#openWikilink\">Link 12</a> and <span class=\"math-inline\">x_12</span>.</p>\n<p>Paragraph 13 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 13\" data-action=\"click->app#openWikilink\">Link 13</a> and <span class=\"math-inline\">x_13</span>.</p>\n<p>Paragraph 14 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 14\" data-action=\"click->app#openWikilink\">Link 14</a> and <span class=\"math-inline\">x_14</span>.</p>\n<h2>Section 15</h2>\n<p>Paragraph 16 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 16\" data-action=\"click->app#openWikilink\">Link 16</a> and <span class=\"math-inline\">x_16</span>.</p>\n<p>Paragraph 17 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 17\" data-action=\"click->app#openWikilink\">Link 17</a> and <span class=\"math-inline\">x_17</span>.</p>\n<p>Paragraph 18 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 18\" data-action=\"click->app#openWikilink\">Link 18</a> and <span class=\"math-inline\">x_18</span>.</p>\n<p>Paragraph 19 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 19\" data-action=\"click->app#openWikilink\">Link 19</a> and <span class=\"math-inline\">x_19</span>.</p>\n<h2>Section 20</h2>\n<p>Paragraph 21 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 21\" data-action=\"click->app#openWikilink\">Link 21</a> and <span class=\"math-inline\">x_21</span>.</p>\n<p>Paragraph 22 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 22\" data-action=\"click->app#openWikilink\">Link 22</a> and <span class=\"math-inline\">x_22</span>.</p>\n<p>Paragraph 23 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 23\" data-action=\"click->app#openWikilink\">Link 23</a> and <span class=\"math-inline\">x_23</span>.</p>\n<p>Paragraph 24 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 24\" data-action=\"click->app#openWikilink\">Link 24</a> and <span class=\"math-inline\">x_24</span>.</p>\n<h2>Section 25</h2>\n<p>Paragraph 26 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 26\" data-action=\"click->app#openWikilink\">Link 26</a> and <span class=\"math-inline\">x_26</span>.</p>\n<p>Paragraph 27 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 27\" data-action=\"click->app#openWikilink\">Link 27</a> and <span class=\"math-inline\">x_27</span>.</p>\n<p>Paragraph 28 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 28\" data-action=\"click->app#openWikilink\">Link 28</a> and <span class=\"math-inline\">x_28</span>.</p>\n<p>Paragraph 29 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 29\" data-action=\"click->app#openWikilink\">Link 29</a> and <span class=\"math-inline\">x_29</span>.</p>\n<h2>Section 30</h2>\n<p>Paragraph 31 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 31\" data-action=\"click->app#openWikilink\">Link 31</a> and <span class=\"math-inline\">x_31</span>.</p>\n<p>Paragraph 32 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 32\" data-action=\"click->app#openWikilink\">Link 32</a> and <span class=\"math-inline\">x_32</span>.</p>\n<p>Paragraph 33 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 33\" data-action=\"click->app#openWikilink\">Link 33</a> and <span class=\"math-inline\">x_33</span>.</p>\n<p>Paragraph 34 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 34\" data-action=\"click->app#openWikilink\">Link 34</a> and <span class=\"math-inline\">x_34</span>.</p>\n<h2>Section 35</h2>\n<p>Paragraph 36 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 36\" data-action=\"click->app#openWikilink\">Link 36</a> and <span class=\"math-inline\">x_36</span>.</p>\n<p>Paragraph 37 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 37\" data-action=\"click->app#openWikilink\">Link 37</a> and <span class=\"math-inline\">x_37</span>.</p>\n<p>Paragraph 38 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 38\" data-action=\"click->app#openWikilink\">Link 38</a> and <span class=\"math-inline\">x_38</span>.</p>\n<p>Paragraph 39 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 39\" data-action=\"click->app#openWikilink\">Link 39</a> and <span class=\"math-inline\">x_39</span>.</p>\n<h2>Section 40</h2>\n<p>Paragraph 41 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 41\" data-action=\"click->app#openWikilink\">Link 41</a> and <span class=\"math-inline\">x_41</span>.</p>\n<p>Paragraph 42 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 42\" data-action=\"click->app#openWikilink\">Link 42</a> and <span class=\"math-inline\">x_42</span>.</p>\n<p>Paragraph 43 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 43\" data-action=\"click->app#openWikilink\">Link 43</a> and <span class=\"math-inline\">x_43</span>.</p>\n<p>Paragraph 44 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 44\" data-action=\"click->app#openWikilink\">Link 44</a> and <span class=\"math-inline\">x_44</span>.</p>\n<h2>Section 45</h2>\n<p>Paragraph 46 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 46\" data-action=\"click->app#openWikilink\">Link 46</a> and <span class=\"math-inline\">x_46</span>.</p>\n<p>Paragraph 47 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 47\" data-action=\"click->app#openWikilink\">Link 47</a> and <span class=\"math-inline\">x_47</span>.</p>\n<p>Paragraph 48 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 48\" data-action=\"click->app#openWikilink\">Link 48</a> and <span class=\"math-inline\">x_48</span>.</p>\n<p>Paragraph 49 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 49\" data-action=\"click->app#openWikilink\">Link 49</a> and <span class=\"math-inline\">x_49</span>.</p>\n<h2>Section 50</h2>\n<p>Paragraph 51 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 51\" data-action=\"click->app#openWikilink\">Link 51</a> and <span class=\"math-inline\">x_51</span>.</p>\n<p>Paragraph 52 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 52\" data-action=\"click->app#openWikilink\">Link 52</a> and <span class=\"math-inline\">x_52</span>.</p>\n<p>Paragraph 53 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 53\" data-action=\"click->app#openWikilink\">Link 53</a> and <span class=\"math-inline\">x_53</span>.</p>\n<p>Paragraph 54 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 54\" data-action=\"click->app#openWikilink\">Link 54</a> and <span class=\"math-inline\">x_54</span>.</p>\n<h2>Section 55</h2>\n<p>Paragraph 56 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 56\" data-action=\"click->app#openWikilink\">Link 56</a> and <span class=\"math-inline\">x_56</span>.</p>\n<p>Paragraph 57 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 57\" data-action=\"click->app#openWikilink\">Link 57</a> and <span class=\"math-inline\">x_57</span>.</p>\n<p>Paragraph 58 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 58\" data-action=\"click->app#openWikilink\">Link 58</a> and <span class=\"math-inline\">x_58</span>.</p>\n<p>Paragraph 59 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 59\" data-action=\"click->app#openWikilink\">Link 59</a> and <span class=\"math-inline\">x_59</span>.</p>\n"
+    },
+    {
+      "name": "marked.parse very_long_line",
+      "fn": "marked.parse",
+      "input": [
+        "word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word "
+      ],
+      "expected": "<p>word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word </p>\n"
+    },
+    {
+      "name": "marked.parse deep_nesting",
+      "fn": "marked.parse",
+      "input": [
+        "- level 0\n  - level 1\n    - level 2\n      - level 3\n        - level 4\n          - level 5\n            - level 6\n              - level 7\n                - level 8\n                  - level 9\n                    - level 10\n                      - level 11"
+      ],
+      "expected": "<ul>\n<li>level 0<ul>\n<li>level 1<ul>\n<li>level 2<ul>\n<li>level 3<ul>\n<li>level 4<ul>\n<li>level 5<ul>\n<li>level 6<ul>\n<li>level 7<ul>\n<li>level 8<ul>\n<li>level 9<ul>\n<li>level 10<ul>\n<li>level 11</li>\n</ul>\n</li>\n</ul>\n</li>\n</ul>\n</li>\n</ul>\n</li>\n</ul>\n</li>\n</ul>\n</li>\n</ul>\n</li>\n</ul>\n</li>\n</ul>\n</li>\n</ul>\n</li>\n</ul>\n</li>\n</ul>\n"
+    },
+    {
+      "name": "marked.parse deep_quote",
+      "fn": "marked.parse",
+      "input": [
+        ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>> deep"
+      ],
+      "expected": "<blockquote>\n<blockquote>\n<blockquote>\n<blockquote>\n<blockquote>\n<blockquote>\n<blockquote>\n<blockquote>\n<blockquote>\n<blockquote>\n<blockquote>\n<blockquote>\n<blockquote>\n<blockquote>\n<blockquote>\n<blockquote>\n<blockquote>\n<blockquote>\n<blockquote>\n<blockquote>\n<blockquote>\n<blockquote>\n<blockquote>\n<blockquote>\n<blockquote>\n<blockquote>\n<blockquote>\n<blockquote>\n<blockquote>\n<blockquote>\n<p>deep</p>\n</blockquote>\n</blockquote>\n</blockquote>\n</blockquote>\n</blockquote>\n</blockquote>\n</blockquote>\n</blockquote>\n</blockquote>\n</blockquote>\n</blockquote>\n</blockquote>\n</blockquote>\n</blockquote>\n</blockquote>\n</blockquote>\n</blockquote>\n</blockquote>\n</blockquote>\n</blockquote>\n</blockquote>\n</blockquote>\n</blockquote>\n</blockquote>\n</blockquote>\n</blockquote>\n</blockquote>\n</blockquote>\n</blockquote>\n</blockquote>\n"
+    },
+    {
+      "name": "marked.parse autolinks_gfm",
+      "fn": "marked.parse",
+      "input": [
+        "Visit www.commonmark.org/help or https://github.com. Email foo@bar.baz. Not a link: http:/broken"
+      ],
+      "expected": "<p>Visit <a href=\"http://www.commonmark.org/help\">www.commonmark.org/help</a> or https://github.com. Email <a href=\"mailto:foo@bar.baz\">foo@bar.baz</a>. Not a link: http:/broken</p>\n"
+    },
+    {
+      "name": "marked.parse strikethrough_tilde",
+      "fn": "marked.parse",
+      "input": [
+        "~~two~~ ~one~ ~~~three~~~ a~b~c"
+      ],
+      "expected": "<p><del>two</del> <sub>one</sub> ~~<del>three~~~ a</del>b~c</p>\n"
+    },
+    {
+      "name": "marked.parse hard_line_break_backslash",
+      "fn": "marked.parse",
+      "input": [
+        "line\\\nnext"
+      ],
+      "expected": "<p>line<br>next</p>\n"
+    },
+    {
+      "name": "marked.parse heading_ids",
+      "fn": "marked.parse",
+      "input": [
+        "# Same\n# Same\n## Ça va?"
+      ],
+      "expected": "<h1>Same</h1>\n<h1>Same</h1>\n<h2>Ça va?</h2>\n"
+    },
+    {
+      "name": "marked.parse emoji_inside_link",
+      "fn": "marked.parse",
+      "input": [
+        "[:smile: link](https://x.y) **:tada:**"
+      ],
+      "expected": "<p><a href=\"https://x.y\">😄 link</a> <strong>🎉</strong></p>\n"
+    },
+    {
+      "name": "marked.parse mixed_extensions",
+      "fn": "marked.parse",
+      "input": [
+        "==**bold mark**== ^[[wiki]]^ ~$x$~ :ph-check: $a^2$"
+      ],
+      "expected": "<p><mark>**bold mark**</mark> <sup>[[wiki]]</sup> <sub>$x$</sub> <svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 256 256\" fill=\"currentColor\" width=\"1em\" height=\"1em\" class=\"frankmd-inline-icon\" aria-hidden=\"true\"><path d=\"M229.66,77.66l-128,128a8,8,0,0,1-11.32,0l-56-56a8,8,0,0,1,11.32-11.32L96,188.69,218.34,66.34a8,8,0,0,1,11.32,11.32Z\"/></svg> <span class=\"math-inline\">a^2</span></p>\n"
+    },
+    {
+      "name": "marked.parseInline x^2^",
+      "fn": "marked.parseInline",
+      "input": [
+        "x^2^"
+      ],
+      "expected": "x<sup>2</sup>"
+    },
+    {
+      "name": "marked.parseInline H~2~O",
+      "fn": "marked.parseInline",
+      "input": [
+        "H~2~O"
+      ],
+      "expected": "H<sub>2</sub>O"
+    },
+    {
+      "name": "marked.parseInline ==m==",
+      "fn": "marked.parseInline",
+      "input": [
+        "==m=="
+      ],
+      "expected": "<mark>m</mark>"
+    },
+    {
+      "name": "marked.parseInline :smile:",
+      "fn": "marked.parseInline",
+      "input": [
+        ":smile:"
+      ],
+      "expected": "😄"
+    },
+    {
+      "name": "marked.parseInline :ph-heart:",
+      "fn": "marked.parseInline",
+      "input": [
+        ":ph-heart:"
+      ],
+      "expected": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 256 256\" fill=\"currentColor\" width=\"1em\" height=\"1em\" class=\"frankmd-inline-icon\" aria-hidden=\"true\"><path d=\"M178,40c-20.65,0-38.73,8.88-50,23.89C116.73,48.88,98.65,40,78,40a62.07,62.07,0,0,0-62,62c0,70,103.79,126.66,108.21,129a8,8,0,0,0,7.58,0C136.21,228.66,240,172,240,102A62.07,62.07,0,0,0,178,40ZM128,214.8C109.74,204.16,32,155.69,32,102A46.06,46.06,0,0,1,78,56c19.45,0,35.78,10.36,42.6,27a8,8,0,0,0,14.8,0c6.82-16.67,23.15-27,42.6-27a46.06,46.06,0,0,1,46,46C224,155.61,146.24,204.15,128,214.8Z\"/></svg>"
+    },
+    {
+      "name": "marked.parseInline [[a|b]]",
+      "fn": "marked.parseInline",
+      "input": [
+        "[[a|b]]"
+      ],
+      "expected": "<a class=\"wikilink\" data-wikilink-path=\"a\" data-action=\"click->app#openWikilink\">b</a>"
+    },
+    {
+      "name": "marked.parseInline $x$",
+      "fn": "marked.parseInline",
+      "input": [
+        "$x$"
+      ],
+      "expected": "<span class=\"math-inline\">x</span>"
+    },
+    {
+      "name": "marked.parseInline ~~s~~",
+      "fn": "marked.parseInline",
+      "input": [
+        "~~s~~"
+      ],
+      "expected": "<del>s</del>"
+    },
+    {
+      "name": "marked.parseInline a $5 b $6",
+      "fn": "marked.parseInline",
+      "input": [
+        "a $5 b $6"
+      ],
+      "expected": "a $5 b $6"
+    },
+    {
+      "name": "marked.parseInline ==a== ^b^ ~c~",
+      "fn": "marked.parseInline",
+      "input": [
+        "==a== ^b^ ~c~"
+      ],
+      "expected": "<mark>a</mark> <sup>b</sup> <sub>c</sub>"
+    }
+  ]
+}

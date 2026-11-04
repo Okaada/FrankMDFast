@@ -1,0 +1,541 @@
+{
+  "source": "app/helpers/tree_helper.rb#render_tree_items @ d47a89e92d89f807878d318182fa5dcea0329ec4",
+  "frankmd_sha": "d47a89e92d89f807878d318182fa5dcea0329ec4",
+  "generator": "tools/golden/ruby/helpers.rb",
+  "notes": "expected is the exact HTML string produced by Rails content_tag/tag helpers (attribute order and escaping as Rails emits, data-action '->' escaped as '-&gt;'). items accept symbol or string keys (input shows JSON form; string-key cases used string keys in Ruby, others symbols). Empty top-level list renders the localized sidebar.no_notes_yet div; empty nested children render ''.",
+  "cases": [
+    {
+      "name": "empty state",
+      "fn": "render_tree_items",
+      "input": {
+        "items": [],
+        "expanded_folders": [],
+        "selected_file": "",
+        "locale": "en"
+      },
+      "expected": "<div class=\"text-sm text-[var(--theme-text-muted)] p-2\">No notes yet</div>"
+    },
+    {
+      "name": "file item",
+      "fn": "render_tree_items",
+      "input": {
+        "items": [
+          {
+            "name": "test",
+            "path": "test.md",
+            "type": "file",
+            "file_type": "markdown"
+          }
+        ],
+        "expanded_folders": [],
+        "selected_file": "",
+        "locale": "en"
+      },
+      "expected": "<div class=\"tree-item\" draggable=\"true\" tabindex=\"0\" data-action=\"pointerdown-&gt;app#onExplorerItemPointerDown click-&gt;app#selectFile focus-&gt;app#onExplorerItemFocus keydown-&gt;app#deleteSelectedExplorerItem keydown-&gt;app#renameSelectedExplorerItem contextmenu-&gt;app#showContextMenu dragstart-&gt;drag-drop#onDragStart dragend-&gt;drag-drop#onDragEnd\" data-path=\"test.md\" data-type=\"file\" data-file-type=\"markdown\"><svg class=\"tree-icon text-[var(--theme-file-icon)]\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z\"></path></svg><span class=\"truncate\">test</span></div>"
+    },
+    {
+      "name": "selected file",
+      "fn": "render_tree_items",
+      "input": {
+        "items": [
+          {
+            "name": "test",
+            "path": "test.md",
+            "type": "file",
+            "file_type": "markdown"
+          }
+        ],
+        "expanded_folders": [],
+        "selected_file": "test.md",
+        "locale": "en"
+      },
+      "expected": "<div class=\"tree-item selected\" draggable=\"true\" tabindex=\"0\" data-action=\"pointerdown-&gt;app#onExplorerItemPointerDown click-&gt;app#selectFile focus-&gt;app#onExplorerItemFocus keydown-&gt;app#deleteSelectedExplorerItem keydown-&gt;app#renameSelectedExplorerItem contextmenu-&gt;app#showContextMenu dragstart-&gt;drag-drop#onDragStart dragend-&gt;drag-drop#onDragEnd\" data-path=\"test.md\" data-type=\"file\" data-file-type=\"markdown\"><svg class=\"tree-icon text-[var(--theme-file-icon)]\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z\"></path></svg><span class=\"truncate\">test</span></div>"
+    },
+    {
+      "name": "folder no children",
+      "fn": "render_tree_items",
+      "input": {
+        "items": [
+          {
+            "name": "folder1",
+            "path": "folder1",
+            "type": "folder",
+            "children": []
+          }
+        ],
+        "expanded_folders": [],
+        "selected_file": "",
+        "locale": "en"
+      },
+      "expected": "<div class=\"tree-folder\" data-path=\"folder1\"><div class=\"tree-item drop-target\" draggable=\"true\" tabindex=\"0\" data-action=\"pointerdown-&gt;app#onExplorerItemPointerDown click-&gt;app#toggleFolder focus-&gt;app#onExplorerItemFocus keydown-&gt;app#deleteSelectedExplorerItem keydown-&gt;app#renameSelectedExplorerItem contextmenu-&gt;app#showContextMenu dragstart-&gt;drag-drop#onDragStart dragover-&gt;drag-drop#onDragOver drop-&gt;drag-drop#onDrop dragend-&gt;drag-drop#onDragEnd\" data-path=\"folder1\" data-drop-id=\"folder1\" data-type=\"folder\"><svg class=\"tree-chevron\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M9 5l7 7-7 7\"></path></svg><svg class=\"tree-icon text-[var(--theme-folder-icon)]\" fill=\"currentColor\" viewBox=\"0 0 20 20\"><path d=\"M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z\"></path></svg><span class=\"truncate\">folder1</span></div><div class=\"tree-children hidden\"></div></div>"
+    },
+    {
+      "name": "folder with child collapsed",
+      "fn": "render_tree_items",
+      "input": {
+        "items": [
+          {
+            "name": "folder1",
+            "path": "folder1",
+            "type": "folder",
+            "children": [
+              {
+                "name": "note",
+                "path": "folder1/note.md",
+                "type": "file",
+                "file_type": "markdown"
+              }
+            ]
+          }
+        ],
+        "expanded_folders": [],
+        "selected_file": "",
+        "locale": "en"
+      },
+      "expected": "<div class=\"tree-folder\" data-path=\"folder1\"><div class=\"tree-item drop-target\" draggable=\"true\" tabindex=\"0\" data-action=\"pointerdown-&gt;app#onExplorerItemPointerDown click-&gt;app#toggleFolder focus-&gt;app#onExplorerItemFocus keydown-&gt;app#deleteSelectedExplorerItem keydown-&gt;app#renameSelectedExplorerItem contextmenu-&gt;app#showContextMenu dragstart-&gt;drag-drop#onDragStart dragover-&gt;drag-drop#onDragOver drop-&gt;drag-drop#onDrop dragend-&gt;drag-drop#onDragEnd\" data-path=\"folder1\" data-drop-id=\"folder1\" data-type=\"folder\"><svg class=\"tree-chevron\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M9 5l7 7-7 7\"></path></svg><svg class=\"tree-icon text-[var(--theme-folder-icon)]\" fill=\"currentColor\" viewBox=\"0 0 20 20\"><path d=\"M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z\"></path></svg><span class=\"truncate\">folder1</span></div><div class=\"tree-children hidden\"><div class=\"tree-item\" draggable=\"true\" tabindex=\"0\" data-action=\"pointerdown-&gt;app#onExplorerItemPointerDown click-&gt;app#selectFile focus-&gt;app#onExplorerItemFocus keydown-&gt;app#deleteSelectedExplorerItem keydown-&gt;app#renameSelectedExplorerItem contextmenu-&gt;app#showContextMenu dragstart-&gt;drag-drop#onDragStart dragend-&gt;drag-drop#onDragEnd\" data-path=\"folder1/note.md\" data-type=\"file\" data-file-type=\"markdown\"><svg class=\"tree-icon text-[var(--theme-file-icon)]\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z\"></path></svg><span class=\"truncate\">note</span></div></div></div>"
+    },
+    {
+      "name": "folder expanded",
+      "fn": "render_tree_items",
+      "input": {
+        "items": [
+          {
+            "name": "folder1",
+            "path": "folder1",
+            "type": "folder",
+            "children": [
+              {
+                "name": "note",
+                "path": "folder1/note.md",
+                "type": "file",
+                "file_type": "markdown"
+              }
+            ]
+          }
+        ],
+        "expanded_folders": [
+          "folder1"
+        ],
+        "selected_file": "",
+        "locale": "en"
+      },
+      "expected": "<div class=\"tree-folder\" data-path=\"folder1\"><div class=\"tree-item drop-target\" draggable=\"true\" tabindex=\"0\" data-action=\"pointerdown-&gt;app#onExplorerItemPointerDown click-&gt;app#toggleFolder focus-&gt;app#onExplorerItemFocus keydown-&gt;app#deleteSelectedExplorerItem keydown-&gt;app#renameSelectedExplorerItem contextmenu-&gt;app#showContextMenu dragstart-&gt;drag-drop#onDragStart dragover-&gt;drag-drop#onDragOver drop-&gt;drag-drop#onDrop dragend-&gt;drag-drop#onDragEnd\" data-path=\"folder1\" data-drop-id=\"folder1\" data-type=\"folder\"><svg class=\"tree-chevron expanded\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M9 5l7 7-7 7\"></path></svg><svg class=\"tree-icon text-[var(--theme-folder-icon)]\" fill=\"currentColor\" viewBox=\"0 0 20 20\"><path d=\"M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z\"></path></svg><span class=\"truncate\">folder1</span></div><div class=\"tree-children\"><div class=\"tree-item\" draggable=\"true\" tabindex=\"0\" data-action=\"pointerdown-&gt;app#onExplorerItemPointerDown click-&gt;app#selectFile focus-&gt;app#onExplorerItemFocus keydown-&gt;app#deleteSelectedExplorerItem keydown-&gt;app#renameSelectedExplorerItem contextmenu-&gt;app#showContextMenu dragstart-&gt;drag-drop#onDragStart dragend-&gt;drag-drop#onDragEnd\" data-path=\"folder1/note.md\" data-type=\"file\" data-file-type=\"markdown\"><svg class=\"tree-icon text-[var(--theme-file-icon)]\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z\"></path></svg><span class=\"truncate\">note</span></div></div></div>"
+    },
+    {
+      "name": "config file item",
+      "fn": "render_tree_items",
+      "input": {
+        "items": [
+          {
+            "name": ".fed",
+            "path": ".fed",
+            "type": "file",
+            "file_type": "config"
+          }
+        ],
+        "expanded_folders": [],
+        "selected_file": "",
+        "locale": "en"
+      },
+      "expected": "<div class=\"tree-item\" tabindex=\"0\" data-action=\"pointerdown-&gt;app#onExplorerItemPointerDown click-&gt;app#selectFile focus-&gt;app#onExplorerItemFocus keydown-&gt;app#deleteSelectedExplorerItem keydown-&gt;app#renameSelectedExplorerItem\" data-path=\".fed\" data-type=\"file\" data-file-type=\"config\"><svg class=\"tree-icon text-[var(--theme-config-icon)]\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z\"></path><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M15 12a3 3 0 11-6 0 3 3 0 016 0z\"></path></svg><span class=\"truncate\">.fed</span></div>"
+    },
+    {
+      "name": "config file selected",
+      "fn": "render_tree_items",
+      "input": {
+        "items": [
+          {
+            "name": ".fed",
+            "path": ".fed",
+            "type": "file",
+            "file_type": "config"
+          }
+        ],
+        "expanded_folders": [],
+        "selected_file": ".fed",
+        "locale": "en"
+      },
+      "expected": "<div class=\"tree-item selected\" tabindex=\"0\" data-action=\"pointerdown-&gt;app#onExplorerItemPointerDown click-&gt;app#selectFile focus-&gt;app#onExplorerItemFocus keydown-&gt;app#deleteSelectedExplorerItem keydown-&gt;app#renameSelectedExplorerItem\" data-path=\".fed\" data-type=\"file\" data-file-type=\"config\"><svg class=\"tree-icon text-[var(--theme-config-icon)]\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z\"></path><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M15 12a3 3 0 11-6 0 3 3 0 016 0z\"></path></svg><span class=\"truncate\">.fed</span></div>"
+    },
+    {
+      "name": "string keys",
+      "fn": "render_tree_items",
+      "input": {
+        "items": [
+          {
+            "name": "test",
+            "path": "test.md",
+            "type": "file",
+            "file_type": "markdown"
+          }
+        ],
+        "expanded_folders": [],
+        "selected_file": "",
+        "locale": "en"
+      },
+      "expected": "<div class=\"tree-item\" draggable=\"true\" tabindex=\"0\" data-action=\"pointerdown-&gt;app#onExplorerItemPointerDown click-&gt;app#selectFile focus-&gt;app#onExplorerItemFocus keydown-&gt;app#deleteSelectedExplorerItem keydown-&gt;app#renameSelectedExplorerItem contextmenu-&gt;app#showContextMenu dragstart-&gt;drag-drop#onDragStart dragend-&gt;drag-drop#onDragEnd\" data-path=\"test.md\" data-type=\"file\" data-file-type=\"markdown\"><svg class=\"tree-icon text-[var(--theme-file-icon)]\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z\"></path></svg><span class=\"truncate\">test</span></div>"
+    },
+    {
+      "name": "string-key folder",
+      "fn": "render_tree_items",
+      "input": {
+        "items": [
+          {
+            "name": "f",
+            "path": "f",
+            "type": "folder",
+            "children": [
+              {
+                "name": "n",
+                "path": "f/n.md",
+                "type": "file"
+              }
+            ]
+          }
+        ],
+        "expanded_folders": [
+          "f"
+        ],
+        "selected_file": "f/n.md",
+        "locale": "en"
+      },
+      "expected": "<div class=\"tree-folder\" data-path=\"f\"><div class=\"tree-item drop-target\" draggable=\"true\" tabindex=\"0\" data-action=\"pointerdown-&gt;app#onExplorerItemPointerDown click-&gt;app#toggleFolder focus-&gt;app#onExplorerItemFocus keydown-&gt;app#deleteSelectedExplorerItem keydown-&gt;app#renameSelectedExplorerItem contextmenu-&gt;app#showContextMenu dragstart-&gt;drag-drop#onDragStart dragover-&gt;drag-drop#onDragOver drop-&gt;drag-drop#onDrop dragend-&gt;drag-drop#onDragEnd\" data-path=\"f\" data-drop-id=\"f\" data-type=\"folder\"><svg class=\"tree-chevron expanded\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M9 5l7 7-7 7\"></path></svg><svg class=\"tree-icon text-[var(--theme-folder-icon)]\" fill=\"currentColor\" viewBox=\"0 0 20 20\"><path d=\"M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z\"></path></svg><span class=\"truncate\">f</span></div><div class=\"tree-children\"><div class=\"tree-item selected\" draggable=\"true\" tabindex=\"0\" data-action=\"pointerdown-&gt;app#onExplorerItemPointerDown click-&gt;app#selectFile focus-&gt;app#onExplorerItemFocus keydown-&gt;app#deleteSelectedExplorerItem keydown-&gt;app#renameSelectedExplorerItem contextmenu-&gt;app#showContextMenu dragstart-&gt;drag-drop#onDragStart dragend-&gt;drag-drop#onDragEnd\" data-path=\"f/n.md\" data-type=\"file\" data-file-type=\"markdown\"><svg class=\"tree-icon text-[var(--theme-file-icon)]\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z\"></path></svg><span class=\"truncate\">n</span></div></div></div>"
+    },
+    {
+      "name": "file with mtime",
+      "fn": "render_tree_items",
+      "input": {
+        "items": [
+          {
+            "name": "m",
+            "path": "m.md",
+            "type": "file",
+            "file_type": "markdown",
+            "mtime": 1700000000
+          }
+        ],
+        "expanded_folders": [],
+        "selected_file": "",
+        "locale": "en"
+      },
+      "expected": "<div class=\"tree-item\" draggable=\"true\" tabindex=\"0\" data-action=\"pointerdown-&gt;app#onExplorerItemPointerDown click-&gt;app#selectFile focus-&gt;app#onExplorerItemFocus keydown-&gt;app#deleteSelectedExplorerItem keydown-&gt;app#renameSelectedExplorerItem contextmenu-&gt;app#showContextMenu dragstart-&gt;drag-drop#onDragStart dragend-&gt;drag-drop#onDragEnd\" data-path=\"m.md\" data-type=\"file\" data-file-type=\"markdown\" data-mtime=\"1700000000\"><svg class=\"tree-icon text-[var(--theme-file-icon)]\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z\"></path></svg><span class=\"truncate\">m</span></div>"
+    },
+    {
+      "name": "file without file_type defaults to markdown",
+      "fn": "render_tree_items",
+      "input": {
+        "items": [
+          {
+            "name": "x",
+            "path": "x.md",
+            "type": "file"
+          }
+        ],
+        "expanded_folders": [],
+        "selected_file": "",
+        "locale": "en"
+      },
+      "expected": "<div class=\"tree-item\" draggable=\"true\" tabindex=\"0\" data-action=\"pointerdown-&gt;app#onExplorerItemPointerDown click-&gt;app#selectFile focus-&gt;app#onExplorerItemFocus keydown-&gt;app#deleteSelectedExplorerItem keydown-&gt;app#renameSelectedExplorerItem contextmenu-&gt;app#showContextMenu dragstart-&gt;drag-drop#onDragStart dragend-&gt;drag-drop#onDragEnd\" data-path=\"x.md\" data-type=\"file\" data-file-type=\"markdown\"><svg class=\"tree-icon text-[var(--theme-file-icon)]\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z\"></path></svg><span class=\"truncate\">x</span></div>"
+    },
+    {
+      "name": "folder with nil children",
+      "fn": "render_tree_items",
+      "input": {
+        "items": [
+          {
+            "name": "n",
+            "path": "n",
+            "type": "folder",
+            "children": null
+          }
+        ],
+        "expanded_folders": [
+          "n"
+        ],
+        "selected_file": "",
+        "locale": "en"
+      },
+      "expected": "<div class=\"tree-folder\" data-path=\"n\"><div class=\"tree-item drop-target\" draggable=\"true\" tabindex=\"0\" data-action=\"pointerdown-&gt;app#onExplorerItemPointerDown click-&gt;app#toggleFolder focus-&gt;app#onExplorerItemFocus keydown-&gt;app#deleteSelectedExplorerItem keydown-&gt;app#renameSelectedExplorerItem contextmenu-&gt;app#showContextMenu dragstart-&gt;drag-drop#onDragStart dragover-&gt;drag-drop#onDragOver drop-&gt;drag-drop#onDrop dragend-&gt;drag-drop#onDragEnd\" data-path=\"n\" data-drop-id=\"n\" data-type=\"folder\"><svg class=\"tree-chevron expanded\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M9 5l7 7-7 7\"></path></svg><svg class=\"tree-icon text-[var(--theme-folder-icon)]\" fill=\"currentColor\" viewBox=\"0 0 20 20\"><path d=\"M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z\"></path></svg><span class=\"truncate\">n</span></div><div class=\"tree-children\"></div></div>"
+    },
+    {
+      "name": "HTML escaping in names and paths",
+      "fn": "render_tree_items",
+      "input": {
+        "items": [
+          {
+            "name": "<b>&\"'</b>",
+            "path": "<b>&\"'</b>.md",
+            "type": "file",
+            "file_type": "markdown"
+          },
+          {
+            "name": "a&b",
+            "path": "a&b",
+            "type": "folder",
+            "children": []
+          }
+        ],
+        "expanded_folders": [],
+        "selected_file": "<b>&\"'</b>.md",
+        "locale": "en"
+      },
+      "expected": "<div class=\"tree-item selected\" draggable=\"true\" tabindex=\"0\" data-action=\"pointerdown-&gt;app#onExplorerItemPointerDown click-&gt;app#selectFile focus-&gt;app#onExplorerItemFocus keydown-&gt;app#deleteSelectedExplorerItem keydown-&gt;app#renameSelectedExplorerItem contextmenu-&gt;app#showContextMenu dragstart-&gt;drag-drop#onDragStart dragend-&gt;drag-drop#onDragEnd\" data-path=\"&lt;b&gt;&amp;&quot;&#39;&lt;/b&gt;.md\" data-type=\"file\" data-file-type=\"markdown\"><svg class=\"tree-icon text-[var(--theme-file-icon)]\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z\"></path></svg><span class=\"truncate\">&lt;b&gt;&amp;&quot;&#39;&lt;/b&gt;</span></div><div class=\"tree-folder\" data-path=\"a&amp;b\"><div class=\"tree-item drop-target\" draggable=\"true\" tabindex=\"0\" data-action=\"pointerdown-&gt;app#onExplorerItemPointerDown click-&gt;app#toggleFolder focus-&gt;app#onExplorerItemFocus keydown-&gt;app#deleteSelectedExplorerItem keydown-&gt;app#renameSelectedExplorerItem contextmenu-&gt;app#showContextMenu dragstart-&gt;drag-drop#onDragStart dragover-&gt;drag-drop#onDragOver drop-&gt;drag-drop#onDrop dragend-&gt;drag-drop#onDragEnd\" data-path=\"a&amp;b\" data-drop-id=\"a&amp;b\" data-type=\"folder\"><svg class=\"tree-chevron\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M9 5l7 7-7 7\"></path></svg><svg class=\"tree-icon text-[var(--theme-folder-icon)]\" fill=\"currentColor\" viewBox=\"0 0 20 20\"><path d=\"M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z\"></path></svg><span class=\"truncate\">a&amp;b</span></div><div class=\"tree-children hidden\"></div></div>"
+    },
+    {
+      "name": "unicode names",
+      "fn": "render_tree_items",
+      "input": {
+        "items": [
+          {
+            "name": "日本語",
+            "path": "日本語",
+            "type": "folder",
+            "children": [
+              {
+                "name": "ノート",
+                "path": "日本語/ノート.md",
+                "type": "file",
+                "file_type": "markdown"
+              }
+            ]
+          },
+          {
+            "name": "שלום",
+            "path": "שלום.md",
+            "type": "file",
+            "file_type": "markdown"
+          },
+          {
+            "name": "👨‍👩‍👧",
+            "path": "👨‍👩‍👧.md",
+            "type": "file",
+            "file_type": "markdown"
+          },
+          {
+            "name": "é",
+            "path": "é.md",
+            "type": "file",
+            "file_type": "markdown"
+          }
+        ],
+        "expanded_folders": [
+          "日本語"
+        ],
+        "selected_file": "שלום.md",
+        "locale": "en"
+      },
+      "expected": "<div class=\"tree-folder\" data-path=\"日本語\"><div class=\"tree-item drop-target\" draggable=\"true\" tabindex=\"0\" data-action=\"pointerdown-&gt;app#onExplorerItemPointerDown click-&gt;app#toggleFolder focus-&gt;app#onExplorerItemFocus keydown-&gt;app#deleteSelectedExplorerItem keydown-&gt;app#renameSelectedExplorerItem contextmenu-&gt;app#showContextMenu dragstart-&gt;drag-drop#onDragStart dragover-&gt;drag-drop#onDragOver drop-&gt;drag-drop#onDrop dragend-&gt;drag-drop#onDragEnd\" data-path=\"日本語\" data-drop-id=\"日本語\" data-type=\"folder\"><svg class=\"tree-chevron expanded\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M9 5l7 7-7 7\"></path></svg><svg class=\"tree-icon text-[var(--theme-folder-icon)]\" fill=\"currentColor\" viewBox=\"0 0 20 20\"><path d=\"M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z\"></path></svg><span class=\"truncate\">日本語</span></div><div class=\"tree-children\"><div class=\"tree-item\" draggable=\"true\" tabindex=\"0\" data-action=\"pointerdown-&gt;app#onExplorerItemPointerDown click-&gt;app#selectFile focus-&gt;app#onExplorerItemFocus keydown-&gt;app#deleteSelectedExplorerItem keydown-&gt;app#renameSelectedExplorerItem contextmenu-&gt;app#showContextMenu dragstart-&gt;drag-drop#onDragStart dragend-&gt;drag-drop#onDragEnd\" data-path=\"日本語/ノート.md\" data-type=\"file\" data-file-type=\"markdown\"><svg class=\"tree-icon text-[var(--theme-file-icon)]\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z\"></path></svg><span class=\"truncate\">ノート</span></div></div></div><div class=\"tree-item selected\" draggable=\"true\" tabindex=\"0\" data-action=\"pointerdown-&gt;app#onExplorerItemPointerDown click-&gt;app#selectFile focus-&gt;app#onExplorerItemFocus keydown-&gt;app#deleteSelectedExplorerItem keydown-&gt;app#renameSelectedExplorerItem contextmenu-&gt;app#showContextMenu dragstart-&gt;drag-drop#onDragStart dragend-&gt;drag-drop#onDragEnd\" data-path=\"שלום.md\" data-type=\"file\" data-file-type=\"markdown\"><svg class=\"tree-icon text-[var(--theme-file-icon)]\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z\"></path></svg><span class=\"truncate\">שלום</span></div><div class=\"tree-item\" draggable=\"true\" tabindex=\"0\" data-action=\"pointerdown-&gt;app#onExplorerItemPointerDown click-&gt;app#selectFile focus-&gt;app#onExplorerItemFocus keydown-&gt;app#deleteSelectedExplorerItem keydown-&gt;app#renameSelectedExplorerItem contextmenu-&gt;app#showContextMenu dragstart-&gt;drag-drop#onDragStart dragend-&gt;drag-drop#onDragEnd\" data-path=\"👨‍👩‍👧.md\" data-type=\"file\" data-file-type=\"markdown\"><svg class=\"tree-icon text-[var(--theme-file-icon)]\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z\"></path></svg><span class=\"truncate\">👨‍👩‍👧</span></div><div class=\"tree-item\" draggable=\"true\" tabindex=\"0\" data-action=\"pointerdown-&gt;app#onExplorerItemPointerDown click-&gt;app#selectFile focus-&gt;app#onExplorerItemFocus keydown-&gt;app#deleteSelectedExplorerItem keydown-&gt;app#renameSelectedExplorerItem contextmenu-&gt;app#showContextMenu dragstart-&gt;drag-drop#onDragStart dragend-&gt;drag-drop#onDragEnd\" data-path=\"é.md\" data-type=\"file\" data-file-type=\"markdown\"><svg class=\"tree-icon text-[var(--theme-file-icon)]\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z\"></path></svg><span class=\"truncate\">é</span></div>"
+    },
+    {
+      "name": "nested 3 levels mixed expansion",
+      "fn": "render_tree_items",
+      "input": {
+        "items": [
+          {
+            "name": "a",
+            "path": "a",
+            "type": "folder",
+            "children": [
+              {
+                "name": "b",
+                "path": "a/b",
+                "type": "folder",
+                "children": [
+                  {
+                    "name": "c",
+                    "path": "a/b/c",
+                    "type": "folder",
+                    "children": [
+                      {
+                        "name": "deep",
+                        "path": "a/b/c/deep.md",
+                        "type": "file",
+                        "file_type": "markdown"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "x",
+                "path": "a/x.md",
+                "type": "file",
+                "file_type": "markdown"
+              }
+            ]
+          }
+        ],
+        "expanded_folders": [
+          "a",
+          "a/b/c"
+        ],
+        "selected_file": "a/b/c/deep.md",
+        "locale": "en"
+      },
+      "expected": "<div class=\"tree-folder\" data-path=\"a\"><div class=\"tree-item drop-target\" draggable=\"true\" tabindex=\"0\" data-action=\"pointerdown-&gt;app#onExplorerItemPointerDown click-&gt;app#toggleFolder focus-&gt;app#onExplorerItemFocus keydown-&gt;app#deleteSelectedExplorerItem keydown-&gt;app#renameSelectedExplorerItem contextmenu-&gt;app#showContextMenu dragstart-&gt;drag-drop#onDragStart dragover-&gt;drag-drop#onDragOver drop-&gt;drag-drop#onDrop dragend-&gt;drag-drop#onDragEnd\" data-path=\"a\" data-drop-id=\"a\" data-type=\"folder\"><svg class=\"tree-chevron expanded\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M9 5l7 7-7 7\"></path></svg><svg class=\"tree-icon text-[var(--theme-folder-icon)]\" fill=\"currentColor\" viewBox=\"0 0 20 20\"><path d=\"M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z\"></path></svg><span class=\"truncate\">a</span></div><div class=\"tree-children\"><div class=\"tree-folder\" data-path=\"a/b\"><div class=\"tree-item drop-target\" draggable=\"true\" tabindex=\"0\" data-action=\"pointerdown-&gt;app#onExplorerItemPointerDown click-&gt;app#toggleFolder focus-&gt;app#onExplorerItemFocus keydown-&gt;app#deleteSelectedExplorerItem keydown-&gt;app#renameSelectedExplorerItem contextmenu-&gt;app#showContextMenu dragstart-&gt;drag-drop#onDragStart dragover-&gt;drag-drop#onDragOver drop-&gt;drag-drop#onDrop dragend-&gt;drag-drop#onDragEnd\" data-path=\"a/b\" data-drop-id=\"a/b\" data-type=\"folder\"><svg class=\"tree-chevron\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M9 5l7 7-7 7\"></path></svg><svg class=\"tree-icon text-[var(--theme-folder-icon)]\" fill=\"currentColor\" viewBox=\"0 0 20 20\"><path d=\"M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z\"></path></svg><span class=\"truncate\">b</span></div><div class=\"tree-children hidden\"><div class=\"tree-folder\" data-path=\"a/b/c\"><div class=\"tree-item drop-target\" draggable=\"true\" tabindex=\"0\" data-action=\"pointerdown-&gt;app#onExplorerItemPointerDown click-&gt;app#toggleFolder focus-&gt;app#onExplorerItemFocus keydown-&gt;app#deleteSelectedExplorerItem keydown-&gt;app#renameSelectedExplorerItem contextmenu-&gt;app#showContextMenu dragstart-&gt;drag-drop#onDragStart dragover-&gt;drag-drop#onDragOver drop-&gt;drag-drop#onDrop dragend-&gt;drag-drop#onDragEnd\" data-path=\"a/b/c\" data-drop-id=\"a/b/c\" data-type=\"folder\"><svg class=\"tree-chevron expanded\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M9 5l7 7-7 7\"></path></svg><svg class=\"tree-icon text-[var(--theme-folder-icon)]\" fill=\"currentColor\" viewBox=\"0 0 20 20\"><path d=\"M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z\"></path></svg><span class=\"truncate\">c</span></div><div class=\"tree-children\"><div class=\"tree-item selected\" draggable=\"true\" tabindex=\"0\" data-action=\"pointerdown-&gt;app#onExplorerItemPointerDown click-&gt;app#selectFile focus-&gt;app#onExplorerItemFocus keydown-&gt;app#deleteSelectedExplorerItem keydown-&gt;app#renameSelectedExplorerItem contextmenu-&gt;app#showContextMenu dragstart-&gt;drag-drop#onDragStart dragend-&gt;drag-drop#onDragEnd\" data-path=\"a/b/c/deep.md\" data-type=\"file\" data-file-type=\"markdown\"><svg class=\"tree-icon text-[var(--theme-file-icon)]\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z\"></path></svg><span class=\"truncate\">deep</span></div></div></div></div></div><div class=\"tree-item\" draggable=\"true\" tabindex=\"0\" data-action=\"pointerdown-&gt;app#onExplorerItemPointerDown click-&gt;app#selectFile focus-&gt;app#onExplorerItemFocus keydown-&gt;app#deleteSelectedExplorerItem keydown-&gt;app#renameSelectedExplorerItem contextmenu-&gt;app#showContextMenu dragstart-&gt;drag-drop#onDragStart dragend-&gt;drag-drop#onDragEnd\" data-path=\"a/x.md\" data-type=\"file\" data-file-type=\"markdown\"><svg class=\"tree-icon text-[var(--theme-file-icon)]\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z\"></path></svg><span class=\"truncate\">x</span></div></div></div>"
+    },
+    {
+      "name": "unknown type rendered as file",
+      "fn": "render_tree_items",
+      "input": {
+        "items": [
+          {
+            "name": "u",
+            "path": "u",
+            "type": "weird"
+          }
+        ],
+        "expanded_folders": [],
+        "selected_file": "",
+        "locale": "en"
+      },
+      "expected": "<div class=\"tree-item\" draggable=\"true\" tabindex=\"0\" data-action=\"pointerdown-&gt;app#onExplorerItemPointerDown click-&gt;app#selectFile focus-&gt;app#onExplorerItemFocus keydown-&gt;app#deleteSelectedExplorerItem keydown-&gt;app#renameSelectedExplorerItem contextmenu-&gt;app#showContextMenu dragstart-&gt;drag-drop#onDragStart dragend-&gt;drag-drop#onDragEnd\" data-path=\"u\" data-type=\"file\" data-file-type=\"markdown\"><svg class=\"tree-icon text-[var(--theme-file-icon)]\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z\"></path></svg><span class=\"truncate\">u</span></div>"
+    },
+    {
+      "name": "selected folder path does not mark folder",
+      "fn": "render_tree_items",
+      "input": {
+        "items": [
+          {
+            "name": "f",
+            "path": "f",
+            "type": "folder",
+            "children": []
+          }
+        ],
+        "expanded_folders": [],
+        "selected_file": "f",
+        "locale": "en"
+      },
+      "expected": "<div class=\"tree-folder\" data-path=\"f\"><div class=\"tree-item drop-target\" draggable=\"true\" tabindex=\"0\" data-action=\"pointerdown-&gt;app#onExplorerItemPointerDown click-&gt;app#toggleFolder focus-&gt;app#onExplorerItemFocus keydown-&gt;app#deleteSelectedExplorerItem keydown-&gt;app#renameSelectedExplorerItem contextmenu-&gt;app#showContextMenu dragstart-&gt;drag-drop#onDragStart dragover-&gt;drag-drop#onDragOver drop-&gt;drag-drop#onDrop dragend-&gt;drag-drop#onDragEnd\" data-path=\"f\" data-drop-id=\"f\" data-type=\"folder\"><svg class=\"tree-chevron\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M9 5l7 7-7 7\"></path></svg><svg class=\"tree-icon text-[var(--theme-folder-icon)]\" fill=\"currentColor\" viewBox=\"0 0 20 20\"><path d=\"M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z\"></path></svg><span class=\"truncate\">f</span></div><div class=\"tree-children hidden\"></div></div>"
+    },
+    {
+      "name": "empty state locale pt-BR",
+      "fn": "render_tree_items",
+      "input": {
+        "items": [],
+        "expanded_folders": [],
+        "selected_file": "",
+        "locale": "pt-BR"
+      },
+      "expected": "<div class=\"text-sm text-[var(--theme-text-muted)] p-2\">Nenhuma nota ainda</div>"
+    },
+    {
+      "name": "empty state locale pt-PT",
+      "fn": "render_tree_items",
+      "input": {
+        "items": [],
+        "expanded_folders": [],
+        "selected_file": "",
+        "locale": "pt-PT"
+      },
+      "expected": "<div class=\"text-sm text-[var(--theme-text-muted)] p-2\">Ainda não há notas</div>"
+    },
+    {
+      "name": "empty state locale es",
+      "fn": "render_tree_items",
+      "input": {
+        "items": [],
+        "expanded_folders": [],
+        "selected_file": "",
+        "locale": "es"
+      },
+      "expected": "<div class=\"text-sm text-[var(--theme-text-muted)] p-2\">Aún no hay notas</div>"
+    },
+    {
+      "name": "empty state locale he",
+      "fn": "render_tree_items",
+      "input": {
+        "items": [],
+        "expanded_folders": [],
+        "selected_file": "",
+        "locale": "he"
+      },
+      "expected": "<div class=\"text-sm text-[var(--theme-text-muted)] p-2\">אין עדיין הערות</div>"
+    },
+    {
+      "name": "empty state locale ja",
+      "fn": "render_tree_items",
+      "input": {
+        "items": [],
+        "expanded_folders": [],
+        "selected_file": "",
+        "locale": "ja"
+      },
+      "expected": "<div class=\"text-sm text-[var(--theme-text-muted)] p-2\">ノートがありません</div>"
+    },
+    {
+      "name": "empty state locale ko",
+      "fn": "render_tree_items",
+      "input": {
+        "items": [],
+        "expanded_folders": [],
+        "selected_file": "",
+        "locale": "ko"
+      },
+      "expected": "<div class=\"text-sm text-[var(--theme-text-muted)] p-2\">노트가 없습니다</div>"
+    },
+    {
+      "name": "render list_tree output",
+      "fn": "render_tree_items",
+      "input": {
+        "items": [
+          {
+            "name": "e",
+            "path": "e",
+            "type": "folder",
+            "children": []
+          },
+          {
+            "name": "Inbox",
+            "path": "Inbox",
+            "type": "folder",
+            "children": [
+              {
+                "name": "todo",
+                "path": "Inbox/todo.md",
+                "type": "file",
+                "file_type": "markdown",
+                "mtime": 1700000000
+              }
+            ]
+          },
+          {
+            "name": "Projects",
+            "path": "Projects",
+            "type": "folder",
+            "children": [
+              {
+                "name": "a",
+                "path": "Projects/a",
+                "type": "folder",
+                "children": [
+                  {
+                    "name": "spec",
+                    "path": "Projects/a/spec.md",
+                    "type": "file",
+                    "file_type": "markdown",
+                    "mtime": 1699999900
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "journal",
+            "path": "journal.md",
+            "type": "file",
+            "file_type": "markdown",
+            "mtime": 1699999800
+          }
+        ],
+        "expanded_folders": [
+          "Projects"
+        ],
+        "selected_file": "journal.md",
+        "locale": "en"
+      },
+      "expected": "<div class=\"tree-folder\" data-path=\"e\"><div class=\"tree-item drop-target\" draggable=\"true\" tabindex=\"0\" data-action=\"pointerdown-&gt;app#onExplorerItemPointerDown click-&gt;app#toggleFolder focus-&gt;app#onExplorerItemFocus keydown-&gt;app#deleteSelectedExplorerItem keydown-&gt;app#renameSelectedExplorerItem contextmenu-&gt;app#showContextMenu dragstart-&gt;drag-drop#onDragStart dragover-&gt;drag-drop#onDragOver drop-&gt;drag-drop#onDrop dragend-&gt;drag-drop#onDragEnd\" data-path=\"e\" data-drop-id=\"e\" data-type=\"folder\"><svg class=\"tree-chevron\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M9 5l7 7-7 7\"></path></svg><svg class=\"tree-icon text-[var(--theme-folder-icon)]\" fill=\"currentColor\" viewBox=\"0 0 20 20\"><path d=\"M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z\"></path></svg><span class=\"truncate\">e</span></div><div class=\"tree-children hidden\"></div></div><div class=\"tree-folder\" data-path=\"Inbox\"><div class=\"tree-item drop-target\" draggable=\"true\" tabindex=\"0\" data-action=\"pointerdown-&gt;app#onExplorerItemPointerDown click-&gt;app#toggleFolder focus-&gt;app#onExplorerItemFocus keydown-&gt;app#deleteSelectedExplorerItem keydown-&gt;app#renameSelectedExplorerItem contextmenu-&gt;app#showContextMenu dragstart-&gt;drag-drop#onDragStart dragover-&gt;drag-drop#onDragOver drop-&gt;drag-drop#onDrop dragend-&gt;drag-drop#onDragEnd\" data-path=\"Inbox\" data-drop-id=\"Inbox\" data-type=\"folder\"><svg class=\"tree-chevron\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M9 5l7 7-7 7\"></path></svg><svg class=\"tree-icon text-[var(--theme-folder-icon)]\" fill=\"currentColor\" viewBox=\"0 0 20 20\"><path d=\"M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z\"></path></svg><span class=\"truncate\">Inbox</span></div><div class=\"tree-children hidden\"><div class=\"tree-item\" draggable=\"true\" tabindex=\"0\" data-action=\"pointerdown-&gt;app#onExplorerItemPointerDown click-&gt;app#selectFile focus-&gt;app#onExplorerItemFocus keydown-&gt;app#deleteSelectedExplorerItem keydown-&gt;app#renameSelectedExplorerItem contextmenu-&gt;app#showContextMenu dragstart-&gt;drag-drop#onDragStart dragend-&gt;drag-drop#onDragEnd\" data-path=\"Inbox/todo.md\" data-type=\"file\" data-file-type=\"markdown\" data-mtime=\"1700000000\"><svg class=\"tree-icon text-[var(--theme-file-icon)]\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z\"></path></svg><span class=\"truncate\">todo</span></div></div></div><div class=\"tree-folder\" data-path=\"Projects\"><div class=\"tree-item drop-target\" draggable=\"true\" tabindex=\"0\" data-action=\"pointerdown-&gt;app#onExplorerItemPointerDown click-&gt;app#toggleFolder focus-&gt;app#onExplorerItemFocus keydown-&gt;app#deleteSelectedExplorerItem keydown-&gt;app#renameSelectedExplorerItem contextmenu-&gt;app#showContextMenu dragstart-&gt;drag-drop#onDragStart dragover-&gt;drag-drop#onDragOver drop-&gt;drag-drop#onDrop dragend-&gt;drag-drop#onDragEnd\" data-path=\"Projects\" data-drop-id=\"Projects\" data-type=\"folder\"><svg class=\"tree-chevron expanded\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M9 5l7 7-7 7\"></path></svg><svg class=\"tree-icon text-[var(--theme-folder-icon)]\" fill=\"currentColor\" viewBox=\"0 0 20 20\"><path d=\"M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z\"></path></svg><span class=\"truncate\">Projects</span></div><div class=\"tree-children\"><div class=\"tree-folder\" data-path=\"Projects/a\"><div class=\"tree-item drop-target\" draggable=\"true\" tabindex=\"0\" data-action=\"pointerdown-&gt;app#onExplorerItemPointerDown click-&gt;app#toggleFolder focus-&gt;app#onExplorerItemFocus keydown-&gt;app#deleteSelectedExplorerItem keydown-&gt;app#renameSelectedExplorerItem contextmenu-&gt;app#showContextMenu dragstart-&gt;drag-drop#onDragStart dragover-&gt;drag-drop#onDragOver drop-&gt;drag-drop#onDrop dragend-&gt;drag-drop#onDragEnd\" data-path=\"Projects/a\" data-drop-id=\"Projects/a\" data-type=\"folder\"><svg class=\"tree-chevron\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M9 5l7 7-7 7\"></path></svg><svg class=\"tree-icon text-[var(--theme-folder-icon)]\" fill=\"currentColor\" viewBox=\"0 0 20 20\"><path d=\"M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z\"></path></svg><span class=\"truncate\">a</span></div><div class=\"tree-children hidden\"><div class=\"tree-item\" draggable=\"true\" tabindex=\"0\" data-action=\"pointerdown-&gt;app#onExplorerItemPointerDown click-&gt;app#selectFile focus-&gt;app#onExplorerItemFocus keydown-&gt;app#deleteSelectedExplorerItem keydown-&gt;app#renameSelectedExplorerItem contextmenu-&gt;app#showContextMenu dragstart-&gt;drag-drop#onDragStart dragend-&gt;drag-drop#onDragEnd\" data-path=\"Projects/a/spec.md\" data-type=\"file\" data-file-type=\"markdown\" data-mtime=\"1699999900\"><svg class=\"tree-icon text-[var(--theme-file-icon)]\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z\"></path></svg><span class=\"truncate\">spec</span></div></div></div></div></div><div class=\"tree-item selected\" draggable=\"true\" tabindex=\"0\" data-action=\"pointerdown-&gt;app#onExplorerItemPointerDown click-&gt;app#selectFile focus-&gt;app#onExplorerItemFocus keydown-&gt;app#deleteSelectedExplorerItem keydown-&gt;app#renameSelectedExplorerItem contextmenu-&gt;app#showContextMenu dragstart-&gt;drag-drop#onDragStart dragend-&gt;drag-drop#onDragEnd\" data-path=\"journal.md\" data-type=\"file\" data-file-type=\"markdown\" data-mtime=\"1699999800\"><svg class=\"tree-icon text-[var(--theme-file-icon)]\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\"><path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z\"></path></svg><span class=\"truncate\">journal</span></div>"
+    }
+  ]
+}

@@ -1,0 +1,3372 @@
+{
+  "source": "app/javascript/lib/markdown_utils.js @ d47a89e92d89f807878d318182fa5dcea0329ec4",
+  "frankmd_sha": "d47a89e92d89f807878d318182fa5dcea0329ec4",
+  "generator": "tools/golden/js/utils.mjs",
+  "notes": "input = encoded argument array (decode with golden.mjs decode: {$undefined}, {$number}, {$date}, {$regexp}, {$utf16}); expected = encoded return value, or {$error:{name,message}}. JS strings are UTF-16: all positions/lengths/indices in inputs and outputs are UTF-16 code-unit offsets; cases with non-BMP/multi-unit strings carry a `utf16` array (utf16_len/scalar_len/utf8_len per such string arg). TZ pinned to UTC for date-based helpers.",
+  "functions": [
+    "findCodeBlockAtPosition",
+    "findTableAtPosition"
+  ],
+  "cases": [
+    {
+      "name": "findCodeBlockAtPosition #1 (from FrankMD vitest suite)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "Some text\n\n```javascript\nconst x = 1\n```\n\nMore text",
+        0
+      ],
+      "expected": null
+    },
+    {
+      "name": "findCodeBlockAtPosition #2 (from FrankMD vitest suite)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "Some text\n\n```javascript\nconst x = 1\n```\n\nMore text",
+        25
+      ],
+      "expected": {
+        "startPos": 11,
+        "endPos": 40,
+        "language": "javascript",
+        "content": "const x = 1\n"
+      }
+    },
+    {
+      "name": "findCodeBlockAtPosition #3 (from FrankMD vitest suite)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "```\nplain code\n```",
+        10
+      ],
+      "expected": {
+        "startPos": 0,
+        "endPos": 18,
+        "language": "",
+        "content": "plain code\n"
+      }
+    },
+    {
+      "name": "findCodeBlockAtPosition #4 (from FrankMD vitest suite)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "```javascript\nfirst\n```\n\n```python\nsecond\n```",
+        35
+      ],
+      "expected": {
+        "startPos": 25,
+        "endPos": 45,
+        "language": "python",
+        "content": "second\n"
+      }
+    },
+    {
+      "name": "findTableAtPosition #1 (from FrankMD vitest suite)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| Just | One | Line |",
+        5
+      ],
+      "expected": null
+    },
+    {
+      "name": "findTableAtPosition #2 (from FrankMD vitest suite)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| Header |\n| --- |\n| Value |\nSome other text",
+        0
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 2,
+        "startPos": 0,
+        "endPos": 28,
+        "lines": [
+          "| Header |",
+          "| --- |",
+          "| Value |"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #3 (from FrankMD vitest suite)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| foo |\n| bar |",
+        0
+      ],
+      "expected": null
+    },
+    {
+      "name": "findTableAtPosition #4 (from FrankMD vitest suite)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| H1 | H2 |\n| --- | --- |\n| V1 | V2 |",
+        12
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 2,
+        "startPos": 0,
+        "endPos": 37,
+        "lines": [
+          "| H1 | H2 |",
+          "| --- | --- |",
+          "| V1 | V2 |"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #5 (from FrankMD vitest suite)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "Some text\n| this is not\n| a real table\nMore text",
+        10
+      ],
+      "expected": null
+    },
+    {
+      "name": "findTableAtPosition #6 (from FrankMD vitest suite)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "Some text\n\n| Name | Age |\n| --- | --- |\n| Alice | 30 |\n\nMore text",
+        0
+      ],
+      "expected": null
+    },
+    {
+      "name": "findTableAtPosition #7 (from FrankMD vitest suite)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| A | B |\n|---|---|\n| /table | value |",
+        1
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 2,
+        "startPos": 0,
+        "endPos": 38,
+        "lines": [
+          "| A | B |",
+          "|---|---|",
+          "| /table | value |"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #8 (from FrankMD vitest suite)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| A | B |\n| - | - |\n| 1 | 2 |",
+        5
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 2,
+        "startPos": 0,
+        "endPos": 29,
+        "lines": [
+          "| A | B |",
+          "| - | - |",
+          "| 1 | 2 |"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #9 (from FrankMD vitest suite)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "before /image after",
+        1
+      ],
+      "expected": null
+    },
+    {
+      "name": "findTableAtPosition #10 (from FrankMD vitest suite)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "Some text\n\n| Name | Age |\n| --- | --- |\n| Alice | 30 |\n\nMore text",
+        40
+      ],
+      "expected": {
+        "startLine": 2,
+        "endLine": 4,
+        "startPos": 11,
+        "endPos": 54,
+        "lines": [
+          "| Name | Age |",
+          "| --- | --- |",
+          "| Alice | 30 |"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #11 (from FrankMD vitest suite)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "Some text\n| Header |\n| --- |\n| Value |",
+        37
+      ],
+      "expected": {
+        "startLine": 1,
+        "endLine": 3,
+        "startPos": 10,
+        "endPos": 38,
+        "lines": [
+          "| Header |",
+          "| --- |",
+          "| Value |"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #12 (from FrankMD vitest suite)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| Left | Center | Right |\n| :--- | :---: | ---: |\n| a | b | c |",
+        0
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 2,
+        "startPos": 0,
+        "endPos": 63,
+        "lines": [
+          "| Left | Center | Right |",
+          "| :--- | :---: | ---: |",
+          "| a | b | c |"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #13 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| A | B |\n| --- | --- |\n| 1 | 2 |",
+        0
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 2,
+        "startPos": 0,
+        "endPos": 33,
+        "lines": [
+          "| A | B |",
+          "| --- | --- |",
+          "| 1 | 2 |"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #14 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| A | B |\n| --- | --- |\n| 1 | 2 |",
+        1
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 2,
+        "startPos": 0,
+        "endPos": 33,
+        "lines": [
+          "| A | B |",
+          "| --- | --- |",
+          "| 1 | 2 |"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #15 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| A | B |\n| --- | --- |\n| 1 | 2 |",
+        16
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 2,
+        "startPos": 0,
+        "endPos": 33,
+        "lines": [
+          "| A | B |",
+          "| --- | --- |",
+          "| 1 | 2 |"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #16 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| A | B |\n| --- | --- |\n| 1 | 2 |",
+        32
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 2,
+        "startPos": 0,
+        "endPos": 33,
+        "lines": [
+          "| A | B |",
+          "| --- | --- |",
+          "| 1 | 2 |"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #17 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| A | B |\n| --- | --- |\n| 1 | 2 |",
+        33
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 2,
+        "startPos": 0,
+        "endPos": 33,
+        "lines": [
+          "| A | B |",
+          "| --- | --- |",
+          "| 1 | 2 |"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #18 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| A | B |\n| --- | --- |\n| 1 | 2 |",
+        38
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 2,
+        "startPos": 0,
+        "endPos": 33,
+        "lines": [
+          "| A | B |",
+          "| --- | --- |",
+          "| 1 | 2 |"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #19 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| A | B |\n| --- | --- |\n| 1 | 2 |",
+        -1
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 2,
+        "startPos": 0,
+        "endPos": 33,
+        "lines": [
+          "| A | B |",
+          "| --- | --- |",
+          "| 1 | 2 |"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #20 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| A | B |\n| --- | --- |\n| 1 | 2 |",
+        10
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 2,
+        "startPos": 0,
+        "endPos": 33,
+        "lines": [
+          "| A | B |",
+          "| --- | --- |",
+          "| 1 | 2 |"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #21 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "intro\n\n| A | B |\n| --- | --- |\n| 1 | 2 |\n\noutro",
+        0
+      ],
+      "expected": null
+    },
+    {
+      "name": "findTableAtPosition #22 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "intro\n\n| A | B |\n| --- | --- |\n| 1 | 2 |\n\noutro",
+        1
+      ],
+      "expected": null
+    },
+    {
+      "name": "findTableAtPosition #23 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "intro\n\n| A | B |\n| --- | --- |\n| 1 | 2 |\n\noutro",
+        23
+      ],
+      "expected": {
+        "startLine": 2,
+        "endLine": 4,
+        "startPos": 7,
+        "endPos": 40,
+        "lines": [
+          "| A | B |",
+          "| --- | --- |",
+          "| 1 | 2 |"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #24 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "intro\n\n| A | B |\n| --- | --- |\n| 1 | 2 |\n\noutro",
+        46
+      ],
+      "expected": null
+    },
+    {
+      "name": "findTableAtPosition #25 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "intro\n\n| A | B |\n| --- | --- |\n| 1 | 2 |\n\noutro",
+        47
+      ],
+      "expected": null
+    },
+    {
+      "name": "findTableAtPosition #26 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "intro\n\n| A | B |\n| --- | --- |\n| 1 | 2 |\n\noutro",
+        52
+      ],
+      "expected": null
+    },
+    {
+      "name": "findTableAtPosition #27 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "intro\n\n| A | B |\n| --- | --- |\n| 1 | 2 |\n\noutro",
+        -1
+      ],
+      "expected": null
+    },
+    {
+      "name": "findTableAtPosition #28 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "intro\n\n| A | B |\n| --- | --- |\n| 1 | 2 |\n\noutro",
+        6
+      ],
+      "expected": null
+    },
+    {
+      "name": "findTableAtPosition #29 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| A |\n|---|\n| 1 |",
+        0
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 2,
+        "startPos": 0,
+        "endPos": 17,
+        "lines": [
+          "| A |",
+          "|---|",
+          "| 1 |"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #30 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| A |\n|---|\n| 1 |",
+        1
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 2,
+        "startPos": 0,
+        "endPos": 17,
+        "lines": [
+          "| A |",
+          "|---|",
+          "| 1 |"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #31 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| A |\n|---|\n| 1 |",
+        8
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 2,
+        "startPos": 0,
+        "endPos": 17,
+        "lines": [
+          "| A |",
+          "|---|",
+          "| 1 |"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #32 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| A |\n|---|\n| 1 |",
+        16
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 2,
+        "startPos": 0,
+        "endPos": 17,
+        "lines": [
+          "| A |",
+          "|---|",
+          "| 1 |"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #33 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| A |\n|---|\n| 1 |",
+        17
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 2,
+        "startPos": 0,
+        "endPos": 17,
+        "lines": [
+          "| A |",
+          "|---|",
+          "| 1 |"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #34 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| A |\n|---|\n| 1 |",
+        22
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 2,
+        "startPos": 0,
+        "endPos": 17,
+        "lines": [
+          "| A |",
+          "|---|",
+          "| 1 |"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #35 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| A |\n|---|\n| 1 |",
+        -1
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 2,
+        "startPos": 0,
+        "endPos": 17,
+        "lines": [
+          "| A |",
+          "|---|",
+          "| 1 |"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #36 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| A |\n|---|\n| 1 |",
+        6
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 2,
+        "startPos": 0,
+        "endPos": 17,
+        "lines": [
+          "| A |",
+          "|---|",
+          "| 1 |"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #37 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "|A|B|\n|:-|-:|\n|1|2|",
+        0
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 2,
+        "startPos": 0,
+        "endPos": 19,
+        "lines": [
+          "|A|B|",
+          "|:-|-:|",
+          "|1|2|"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #38 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "|A|B|\n|:-|-:|\n|1|2|",
+        1
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 2,
+        "startPos": 0,
+        "endPos": 19,
+        "lines": [
+          "|A|B|",
+          "|:-|-:|",
+          "|1|2|"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #39 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "|A|B|\n|:-|-:|\n|1|2|",
+        9
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 2,
+        "startPos": 0,
+        "endPos": 19,
+        "lines": [
+          "|A|B|",
+          "|:-|-:|",
+          "|1|2|"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #40 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "|A|B|\n|:-|-:|\n|1|2|",
+        18
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 2,
+        "startPos": 0,
+        "endPos": 19,
+        "lines": [
+          "|A|B|",
+          "|:-|-:|",
+          "|1|2|"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #41 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "|A|B|\n|:-|-:|\n|1|2|",
+        19
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 2,
+        "startPos": 0,
+        "endPos": 19,
+        "lines": [
+          "|A|B|",
+          "|:-|-:|",
+          "|1|2|"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #42 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "|A|B|\n|:-|-:|\n|1|2|",
+        24
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 2,
+        "startPos": 0,
+        "endPos": 19,
+        "lines": [
+          "|A|B|",
+          "|:-|-:|",
+          "|1|2|"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #43 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "|A|B|\n|:-|-:|\n|1|2|",
+        -1
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 2,
+        "startPos": 0,
+        "endPos": 19,
+        "lines": [
+          "|A|B|",
+          "|:-|-:|",
+          "|1|2|"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #44 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "|A|B|\n|:-|-:|\n|1|2|",
+        6
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 2,
+        "startPos": 0,
+        "endPos": 19,
+        "lines": [
+          "|A|B|",
+          "|:-|-:|",
+          "|1|2|"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #45 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| A | B |\n| --- | --- |",
+        0
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 1,
+        "startPos": 0,
+        "endPos": 23,
+        "lines": [
+          "| A | B |",
+          "| --- | --- |"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #46 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| A | B |\n| --- | --- |",
+        1
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 1,
+        "startPos": 0,
+        "endPos": 23,
+        "lines": [
+          "| A | B |",
+          "| --- | --- |"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #47 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| A | B |\n| --- | --- |",
+        11
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 1,
+        "startPos": 0,
+        "endPos": 23,
+        "lines": [
+          "| A | B |",
+          "| --- | --- |"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #48 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| A | B |\n| --- | --- |",
+        22
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 1,
+        "startPos": 0,
+        "endPos": 23,
+        "lines": [
+          "| A | B |",
+          "| --- | --- |"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #49 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| A | B |\n| --- | --- |",
+        23
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 1,
+        "startPos": 0,
+        "endPos": 23,
+        "lines": [
+          "| A | B |",
+          "| --- | --- |"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #50 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| A | B |\n| --- | --- |",
+        28
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 1,
+        "startPos": 0,
+        "endPos": 23,
+        "lines": [
+          "| A | B |",
+          "| --- | --- |"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #51 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| A | B |\n| --- | --- |",
+        -1
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 1,
+        "startPos": 0,
+        "endPos": 23,
+        "lines": [
+          "| A | B |",
+          "| --- | --- |"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #52 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| A | B |\n| --- | --- |",
+        10
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 1,
+        "startPos": 0,
+        "endPos": 23,
+        "lines": [
+          "| A | B |",
+          "| --- | --- |"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #53 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "  | A | B |\n  | --- | --- |\n  | 1 | 2 |",
+        0
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 2,
+        "startPos": 0,
+        "endPos": 39,
+        "lines": [
+          "  | A | B |",
+          "  | --- | --- |",
+          "  | 1 | 2 |"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #54 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "  | A | B |\n  | --- | --- |\n  | 1 | 2 |",
+        1
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 2,
+        "startPos": 0,
+        "endPos": 39,
+        "lines": [
+          "  | A | B |",
+          "  | --- | --- |",
+          "  | 1 | 2 |"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #55 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "  | A | B |\n  | --- | --- |\n  | 1 | 2 |",
+        19
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 2,
+        "startPos": 0,
+        "endPos": 39,
+        "lines": [
+          "  | A | B |",
+          "  | --- | --- |",
+          "  | 1 | 2 |"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #56 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "  | A | B |\n  | --- | --- |\n  | 1 | 2 |",
+        38
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 2,
+        "startPos": 0,
+        "endPos": 39,
+        "lines": [
+          "  | A | B |",
+          "  | --- | --- |",
+          "  | 1 | 2 |"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #57 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "  | A | B |\n  | --- | --- |\n  | 1 | 2 |",
+        39
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 2,
+        "startPos": 0,
+        "endPos": 39,
+        "lines": [
+          "  | A | B |",
+          "  | --- | --- |",
+          "  | 1 | 2 |"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #58 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "  | A | B |\n  | --- | --- |\n  | 1 | 2 |",
+        44
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 2,
+        "startPos": 0,
+        "endPos": 39,
+        "lines": [
+          "  | A | B |",
+          "  | --- | --- |",
+          "  | 1 | 2 |"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #59 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "  | A | B |\n  | --- | --- |\n  | 1 | 2 |",
+        -1
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 2,
+        "startPos": 0,
+        "endPos": 39,
+        "lines": [
+          "  | A | B |",
+          "  | --- | --- |",
+          "  | 1 | 2 |"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #60 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "  | A | B |\n  | --- | --- |\n  | 1 | 2 |",
+        12
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 2,
+        "startPos": 0,
+        "endPos": 39,
+        "lines": [
+          "  | A | B |",
+          "  | --- | --- |",
+          "  | 1 | 2 |"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #61 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| A | B |\r\n| --- | --- |\r\n| 1 | 2 |",
+        0
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 2,
+        "startPos": 0,
+        "endPos": 35,
+        "lines": [
+          "| A | B |\r",
+          "| --- | --- |\r",
+          "| 1 | 2 |"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #62 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| A | B |\r\n| --- | --- |\r\n| 1 | 2 |",
+        1
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 2,
+        "startPos": 0,
+        "endPos": 35,
+        "lines": [
+          "| A | B |\r",
+          "| --- | --- |\r",
+          "| 1 | 2 |"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #63 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| A | B |\r\n| --- | --- |\r\n| 1 | 2 |",
+        17
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 2,
+        "startPos": 0,
+        "endPos": 35,
+        "lines": [
+          "| A | B |\r",
+          "| --- | --- |\r",
+          "| 1 | 2 |"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #64 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| A | B |\r\n| --- | --- |\r\n| 1 | 2 |",
+        34
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 2,
+        "startPos": 0,
+        "endPos": 35,
+        "lines": [
+          "| A | B |\r",
+          "| --- | --- |\r",
+          "| 1 | 2 |"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #65 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| A | B |\r\n| --- | --- |\r\n| 1 | 2 |",
+        35
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 2,
+        "startPos": 0,
+        "endPos": 35,
+        "lines": [
+          "| A | B |\r",
+          "| --- | --- |\r",
+          "| 1 | 2 |"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #66 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| A | B |\r\n| --- | --- |\r\n| 1 | 2 |",
+        40
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 2,
+        "startPos": 0,
+        "endPos": 35,
+        "lines": [
+          "| A | B |\r",
+          "| --- | --- |\r",
+          "| 1 | 2 |"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #67 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| A | B |\r\n| --- | --- |\r\n| 1 | 2 |",
+        -1
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 2,
+        "startPos": 0,
+        "endPos": 35,
+        "lines": [
+          "| A | B |\r",
+          "| --- | --- |\r",
+          "| 1 | 2 |"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #68 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| A | B |\r\n| --- | --- |\r\n| 1 | 2 |",
+        11
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 2,
+        "startPos": 0,
+        "endPos": 35,
+        "lines": [
+          "| A | B |\r",
+          "| --- | --- |\r",
+          "| 1 | 2 |"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #69 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| A | B |\n|---|---\n| 1 | 2 |",
+        0
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 2,
+        "startPos": 0,
+        "endPos": 28,
+        "lines": [
+          "| A | B |",
+          "|---|---",
+          "| 1 | 2 |"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #70 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| A | B |\n|---|---\n| 1 | 2 |",
+        1
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 2,
+        "startPos": 0,
+        "endPos": 28,
+        "lines": [
+          "| A | B |",
+          "|---|---",
+          "| 1 | 2 |"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #71 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| A | B |\n|---|---\n| 1 | 2 |",
+        14
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 2,
+        "startPos": 0,
+        "endPos": 28,
+        "lines": [
+          "| A | B |",
+          "|---|---",
+          "| 1 | 2 |"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #72 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| A | B |\n|---|---\n| 1 | 2 |",
+        27
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 2,
+        "startPos": 0,
+        "endPos": 28,
+        "lines": [
+          "| A | B |",
+          "|---|---",
+          "| 1 | 2 |"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #73 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| A | B |\n|---|---\n| 1 | 2 |",
+        28
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 2,
+        "startPos": 0,
+        "endPos": 28,
+        "lines": [
+          "| A | B |",
+          "|---|---",
+          "| 1 | 2 |"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #74 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| A | B |\n|---|---\n| 1 | 2 |",
+        33
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 2,
+        "startPos": 0,
+        "endPos": 28,
+        "lines": [
+          "| A | B |",
+          "|---|---",
+          "| 1 | 2 |"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #75 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| A | B |\n|---|---\n| 1 | 2 |",
+        -1
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 2,
+        "startPos": 0,
+        "endPos": 28,
+        "lines": [
+          "| A | B |",
+          "|---|---",
+          "| 1 | 2 |"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #76 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| A | B |\n|---|---\n| 1 | 2 |",
+        10
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 2,
+        "startPos": 0,
+        "endPos": 28,
+        "lines": [
+          "| A | B |",
+          "|---|---",
+          "| 1 | 2 |"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #77 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| A | B |\n| - - | - |\n| 1 | 2 |",
+        0
+      ],
+      "expected": null
+    },
+    {
+      "name": "findTableAtPosition #78 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| A | B |\n| - - | - |\n| 1 | 2 |",
+        1
+      ],
+      "expected": null
+    },
+    {
+      "name": "findTableAtPosition #79 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| A | B |\n| - - | - |\n| 1 | 2 |",
+        15
+      ],
+      "expected": null
+    },
+    {
+      "name": "findTableAtPosition #80 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| A | B |\n| - - | - |\n| 1 | 2 |",
+        30
+      ],
+      "expected": null
+    },
+    {
+      "name": "findTableAtPosition #81 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| A | B |\n| - - | - |\n| 1 | 2 |",
+        31
+      ],
+      "expected": null
+    },
+    {
+      "name": "findTableAtPosition #82 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| A | B |\n| - - | - |\n| 1 | 2 |",
+        36
+      ],
+      "expected": null
+    },
+    {
+      "name": "findTableAtPosition #83 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| A | B |\n| - - | - |\n| 1 | 2 |",
+        -1
+      ],
+      "expected": null
+    },
+    {
+      "name": "findTableAtPosition #84 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| A | B |\n| - - | - |\n| 1 | 2 |",
+        10
+      ],
+      "expected": null
+    },
+    {
+      "name": "findTableAtPosition #85 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| A | B |\n| ::: | --- |\n| 1 | 2 |",
+        0
+      ],
+      "expected": null
+    },
+    {
+      "name": "findTableAtPosition #86 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| A | B |\n| ::: | --- |\n| 1 | 2 |",
+        1
+      ],
+      "expected": null
+    },
+    {
+      "name": "findTableAtPosition #87 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| A | B |\n| ::: | --- |\n| 1 | 2 |",
+        16
+      ],
+      "expected": null
+    },
+    {
+      "name": "findTableAtPosition #88 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| A | B |\n| ::: | --- |\n| 1 | 2 |",
+        32
+      ],
+      "expected": null
+    },
+    {
+      "name": "findTableAtPosition #89 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| A | B |\n| ::: | --- |\n| 1 | 2 |",
+        33
+      ],
+      "expected": null
+    },
+    {
+      "name": "findTableAtPosition #90 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| A | B |\n| ::: | --- |\n| 1 | 2 |",
+        38
+      ],
+      "expected": null
+    },
+    {
+      "name": "findTableAtPosition #91 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| A | B |\n| ::: | --- |\n| 1 | 2 |",
+        -1
+      ],
+      "expected": null
+    },
+    {
+      "name": "findTableAtPosition #92 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| A | B |\n| ::: | --- |\n| 1 | 2 |",
+        10
+      ],
+      "expected": null
+    },
+    {
+      "name": "findTableAtPosition #93 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| 日本 | שלום |\n| --- | --- |\n| 👨‍👩‍👧 | é |",
+        0
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 2,
+        "startPos": 0,
+        "endPos": 44,
+        "lines": [
+          "| 日本 | שלום |",
+          "| --- | --- |",
+          "| 👨‍👩‍👧 | é |"
+        ]
+      },
+      "utf16": [
+        {
+          "utf16_len": 44,
+          "scalar_len": 41,
+          "utf8_len": 63
+        }
+      ]
+    },
+    {
+      "name": "findTableAtPosition #94 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| 日本 | שלום |\n| --- | --- |\n| 👨‍👩‍👧 | é |",
+        1
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 2,
+        "startPos": 0,
+        "endPos": 44,
+        "lines": [
+          "| 日本 | שלום |",
+          "| --- | --- |",
+          "| 👨‍👩‍👧 | é |"
+        ]
+      },
+      "utf16": [
+        {
+          "utf16_len": 44,
+          "scalar_len": 41,
+          "utf8_len": 63
+        }
+      ]
+    },
+    {
+      "name": "findTableAtPosition #95 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| 日本 | שלום |\n| --- | --- |\n| 👨‍👩‍👧 | é |",
+        22
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 2,
+        "startPos": 0,
+        "endPos": 44,
+        "lines": [
+          "| 日本 | שלום |",
+          "| --- | --- |",
+          "| 👨‍👩‍👧 | é |"
+        ]
+      },
+      "utf16": [
+        {
+          "utf16_len": 44,
+          "scalar_len": 41,
+          "utf8_len": 63
+        }
+      ]
+    },
+    {
+      "name": "findTableAtPosition #96 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| 日本 | שלום |\n| --- | --- |\n| 👨‍👩‍👧 | é |",
+        43
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 2,
+        "startPos": 0,
+        "endPos": 44,
+        "lines": [
+          "| 日本 | שלום |",
+          "| --- | --- |",
+          "| 👨‍👩‍👧 | é |"
+        ]
+      },
+      "utf16": [
+        {
+          "utf16_len": 44,
+          "scalar_len": 41,
+          "utf8_len": 63
+        }
+      ]
+    },
+    {
+      "name": "findTableAtPosition #97 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| 日本 | שלום |\n| --- | --- |\n| 👨‍👩‍👧 | é |",
+        44
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 2,
+        "startPos": 0,
+        "endPos": 44,
+        "lines": [
+          "| 日本 | שלום |",
+          "| --- | --- |",
+          "| 👨‍👩‍👧 | é |"
+        ]
+      },
+      "utf16": [
+        {
+          "utf16_len": 44,
+          "scalar_len": 41,
+          "utf8_len": 63
+        }
+      ]
+    },
+    {
+      "name": "findTableAtPosition #98 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| 日本 | שלום |\n| --- | --- |\n| 👨‍👩‍👧 | é |",
+        49
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 2,
+        "startPos": 0,
+        "endPos": 44,
+        "lines": [
+          "| 日本 | שלום |",
+          "| --- | --- |",
+          "| 👨‍👩‍👧 | é |"
+        ]
+      },
+      "utf16": [
+        {
+          "utf16_len": 44,
+          "scalar_len": 41,
+          "utf8_len": 63
+        }
+      ]
+    },
+    {
+      "name": "findTableAtPosition #99 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| 日本 | שלום |\n| --- | --- |\n| 👨‍👩‍👧 | é |",
+        -1
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 2,
+        "startPos": 0,
+        "endPos": 44,
+        "lines": [
+          "| 日本 | שלום |",
+          "| --- | --- |",
+          "| 👨‍👩‍👧 | é |"
+        ]
+      },
+      "utf16": [
+        {
+          "utf16_len": 44,
+          "scalar_len": 41,
+          "utf8_len": 63
+        }
+      ]
+    },
+    {
+      "name": "findTableAtPosition #100 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| 日本 | שלום |\n| --- | --- |\n| 👨‍👩‍👧 | é |",
+        14
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 2,
+        "startPos": 0,
+        "endPos": 44,
+        "lines": [
+          "| 日本 | שלום |",
+          "| --- | --- |",
+          "| 👨‍👩‍👧 | é |"
+        ]
+      },
+      "utf16": [
+        {
+          "utf16_len": 44,
+          "scalar_len": 41,
+          "utf8_len": 63
+        }
+      ]
+    },
+    {
+      "name": "findTableAtPosition #101 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "text | not table\n---|---",
+        0
+      ],
+      "expected": null
+    },
+    {
+      "name": "findTableAtPosition #102 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "text | not table\n---|---",
+        1
+      ],
+      "expected": null
+    },
+    {
+      "name": "findTableAtPosition #103 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "text | not table\n---|---",
+        12
+      ],
+      "expected": null
+    },
+    {
+      "name": "findTableAtPosition #104 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "text | not table\n---|---",
+        23
+      ],
+      "expected": null
+    },
+    {
+      "name": "findTableAtPosition #105 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "text | not table\n---|---",
+        24
+      ],
+      "expected": null
+    },
+    {
+      "name": "findTableAtPosition #106 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "text | not table\n---|---",
+        29
+      ],
+      "expected": null
+    },
+    {
+      "name": "findTableAtPosition #107 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "text | not table\n---|---",
+        -1
+      ],
+      "expected": null
+    },
+    {
+      "name": "findTableAtPosition #108 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "text | not table\n---|---",
+        17
+      ],
+      "expected": null
+    },
+    {
+      "name": "findTableAtPosition #109 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| a |\n| b |\n| --- |\n| c |",
+        0
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 3,
+        "startPos": 0,
+        "endPos": 25,
+        "lines": [
+          "| a |",
+          "| b |",
+          "| --- |",
+          "| c |"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #110 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| a |\n| b |\n| --- |\n| c |",
+        1
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 3,
+        "startPos": 0,
+        "endPos": 25,
+        "lines": [
+          "| a |",
+          "| b |",
+          "| --- |",
+          "| c |"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #111 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| a |\n| b |\n| --- |\n| c |",
+        12
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 3,
+        "startPos": 0,
+        "endPos": 25,
+        "lines": [
+          "| a |",
+          "| b |",
+          "| --- |",
+          "| c |"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #112 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| a |\n| b |\n| --- |\n| c |",
+        24
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 3,
+        "startPos": 0,
+        "endPos": 25,
+        "lines": [
+          "| a |",
+          "| b |",
+          "| --- |",
+          "| c |"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #113 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| a |\n| b |\n| --- |\n| c |",
+        25
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 3,
+        "startPos": 0,
+        "endPos": 25,
+        "lines": [
+          "| a |",
+          "| b |",
+          "| --- |",
+          "| c |"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #114 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| a |\n| b |\n| --- |\n| c |",
+        30
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 3,
+        "startPos": 0,
+        "endPos": 25,
+        "lines": [
+          "| a |",
+          "| b |",
+          "| --- |",
+          "| c |"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #115 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| a |\n| b |\n| --- |\n| c |",
+        -1
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 3,
+        "startPos": 0,
+        "endPos": 25,
+        "lines": [
+          "| a |",
+          "| b |",
+          "| --- |",
+          "| c |"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #116 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| a |\n| b |\n| --- |\n| c |",
+        6
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 3,
+        "startPos": 0,
+        "endPos": 25,
+        "lines": [
+          "| a |",
+          "| b |",
+          "| --- |",
+          "| c |"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #117 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "",
+        0
+      ],
+      "expected": null
+    },
+    {
+      "name": "findTableAtPosition #118 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "",
+        1
+      ],
+      "expected": null
+    },
+    {
+      "name": "findTableAtPosition #119 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "",
+        -1
+      ],
+      "expected": null
+    },
+    {
+      "name": "findTableAtPosition #120 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "",
+        5
+      ],
+      "expected": null
+    },
+    {
+      "name": "findTableAtPosition #121 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "|",
+        0
+      ],
+      "expected": null
+    },
+    {
+      "name": "findTableAtPosition #122 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "|",
+        1
+      ],
+      "expected": null
+    },
+    {
+      "name": "findTableAtPosition #123 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "|",
+        6
+      ],
+      "expected": null
+    },
+    {
+      "name": "findTableAtPosition #124 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "|",
+        -1
+      ],
+      "expected": null
+    },
+    {
+      "name": "findTableAtPosition #125 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "|\n|",
+        0
+      ],
+      "expected": null
+    },
+    {
+      "name": "findTableAtPosition #126 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "|\n|",
+        1
+      ],
+      "expected": null
+    },
+    {
+      "name": "findTableAtPosition #127 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "|\n|",
+        2
+      ],
+      "expected": null
+    },
+    {
+      "name": "findTableAtPosition #128 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "|\n|",
+        3
+      ],
+      "expected": null
+    },
+    {
+      "name": "findTableAtPosition #129 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "|\n|",
+        8
+      ],
+      "expected": null
+    },
+    {
+      "name": "findTableAtPosition #130 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "|\n|",
+        -1
+      ],
+      "expected": null
+    },
+    {
+      "name": "findTableAtPosition #131 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| A |\n| --- |\n\n| B |\n| --- |",
+        0
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 1,
+        "startPos": 0,
+        "endPos": 13,
+        "lines": [
+          "| A |",
+          "| --- |"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #132 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| A |\n| --- |\n\n| B |\n| --- |",
+        1
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 1,
+        "startPos": 0,
+        "endPos": 13,
+        "lines": [
+          "| A |",
+          "| --- |"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #133 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| A |\n| --- |\n\n| B |\n| --- |",
+        14
+      ],
+      "expected": null
+    },
+    {
+      "name": "findTableAtPosition #134 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| A |\n| --- |\n\n| B |\n| --- |",
+        27
+      ],
+      "expected": {
+        "startLine": 3,
+        "endLine": 4,
+        "startPos": 15,
+        "endPos": 28,
+        "lines": [
+          "| B |",
+          "| --- |"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #135 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| A |\n| --- |\n\n| B |\n| --- |",
+        28
+      ],
+      "expected": {
+        "startLine": 3,
+        "endLine": 4,
+        "startPos": 15,
+        "endPos": 28,
+        "lines": [
+          "| B |",
+          "| --- |"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #136 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| A |\n| --- |\n\n| B |\n| --- |",
+        33
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 1,
+        "startPos": 0,
+        "endPos": 13,
+        "lines": [
+          "| A |",
+          "| --- |"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #137 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| A |\n| --- |\n\n| B |\n| --- |",
+        -1
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 1,
+        "startPos": 0,
+        "endPos": 13,
+        "lines": [
+          "| A |",
+          "| --- |"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #138 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| A |\n| --- |\n\n| B |\n| --- |",
+        6
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 1,
+        "startPos": 0,
+        "endPos": 13,
+        "lines": [
+          "| A |",
+          "| --- |"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #139 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "A | B\n--- | ---\n1 | 2",
+        0
+      ],
+      "expected": null
+    },
+    {
+      "name": "findTableAtPosition #140 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "A | B\n--- | ---\n1 | 2",
+        1
+      ],
+      "expected": null
+    },
+    {
+      "name": "findTableAtPosition #141 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "A | B\n--- | ---\n1 | 2",
+        10
+      ],
+      "expected": null
+    },
+    {
+      "name": "findTableAtPosition #142 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "A | B\n--- | ---\n1 | 2",
+        20
+      ],
+      "expected": null
+    },
+    {
+      "name": "findTableAtPosition #143 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "A | B\n--- | ---\n1 | 2",
+        21
+      ],
+      "expected": null
+    },
+    {
+      "name": "findTableAtPosition #144 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "A | B\n--- | ---\n1 | 2",
+        26
+      ],
+      "expected": null
+    },
+    {
+      "name": "findTableAtPosition #145 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "A | B\n--- | ---\n1 | 2",
+        -1
+      ],
+      "expected": null
+    },
+    {
+      "name": "findTableAtPosition #146 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "A | B\n--- | ---\n1 | 2",
+        6
+      ],
+      "expected": null
+    },
+    {
+      "name": "findTableAtPosition #147 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| A | B |\n|-----|-----|\n| 1 | 2 |\nnot a row\n| x | y |",
+        0
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 2,
+        "startPos": 0,
+        "endPos": 33,
+        "lines": [
+          "| A | B |",
+          "|-----|-----|",
+          "| 1 | 2 |"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #148 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| A | B |\n|-----|-----|\n| 1 | 2 |\nnot a row\n| x | y |",
+        1
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 2,
+        "startPos": 0,
+        "endPos": 33,
+        "lines": [
+          "| A | B |",
+          "|-----|-----|",
+          "| 1 | 2 |"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #149 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| A | B |\n|-----|-----|\n| 1 | 2 |\nnot a row\n| x | y |",
+        26
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 2,
+        "startPos": 0,
+        "endPos": 33,
+        "lines": [
+          "| A | B |",
+          "|-----|-----|",
+          "| 1 | 2 |"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #150 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| A | B |\n|-----|-----|\n| 1 | 2 |\nnot a row\n| x | y |",
+        52
+      ],
+      "expected": null
+    },
+    {
+      "name": "findTableAtPosition #151 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| A | B |\n|-----|-----|\n| 1 | 2 |\nnot a row\n| x | y |",
+        53
+      ],
+      "expected": null
+    },
+    {
+      "name": "findTableAtPosition #152 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| A | B |\n|-----|-----|\n| 1 | 2 |\nnot a row\n| x | y |",
+        58
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 2,
+        "startPos": 0,
+        "endPos": 33,
+        "lines": [
+          "| A | B |",
+          "|-----|-----|",
+          "| 1 | 2 |"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #153 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| A | B |\n|-----|-----|\n| 1 | 2 |\nnot a row\n| x | y |",
+        -1
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 2,
+        "startPos": 0,
+        "endPos": 33,
+        "lines": [
+          "| A | B |",
+          "|-----|-----|",
+          "| 1 | 2 |"
+        ]
+      }
+    },
+    {
+      "name": "findTableAtPosition #154 (edge corpus)",
+      "fn": "findTableAtPosition",
+      "input": [
+        "| A | B |\n|-----|-----|\n| 1 | 2 |\nnot a row\n| x | y |",
+        10
+      ],
+      "expected": {
+        "startLine": 0,
+        "endLine": 2,
+        "startPos": 0,
+        "endPos": 33,
+        "lines": [
+          "| A | B |",
+          "|-----|-----|",
+          "| 1 | 2 |"
+        ]
+      }
+    },
+    {
+      "name": "findCodeBlockAtPosition #5 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "```js\nconst x = 1\n```",
+        0
+      ],
+      "expected": {
+        "startPos": 0,
+        "endPos": 21,
+        "language": "js",
+        "content": "const x = 1\n"
+      }
+    },
+    {
+      "name": "findCodeBlockAtPosition #6 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "```js\nconst x = 1\n```",
+        3
+      ],
+      "expected": {
+        "startPos": 0,
+        "endPos": 21,
+        "language": "js",
+        "content": "const x = 1\n"
+      }
+    },
+    {
+      "name": "findCodeBlockAtPosition #7 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "```js\nconst x = 1\n```",
+        6
+      ],
+      "expected": {
+        "startPos": 0,
+        "endPos": 21,
+        "language": "js",
+        "content": "const x = 1\n"
+      }
+    },
+    {
+      "name": "findCodeBlockAtPosition #8 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "```js\nconst x = 1\n```",
+        10
+      ],
+      "expected": {
+        "startPos": 0,
+        "endPos": 21,
+        "language": "js",
+        "content": "const x = 1\n"
+      }
+    },
+    {
+      "name": "findCodeBlockAtPosition #9 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "```js\nconst x = 1\n```",
+        20
+      ],
+      "expected": {
+        "startPos": 0,
+        "endPos": 21,
+        "language": "js",
+        "content": "const x = 1\n"
+      }
+    },
+    {
+      "name": "findCodeBlockAtPosition #10 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "```js\nconst x = 1\n```",
+        21
+      ],
+      "expected": {
+        "startPos": 0,
+        "endPos": 21,
+        "language": "js",
+        "content": "const x = 1\n"
+      }
+    },
+    {
+      "name": "findCodeBlockAtPosition #11 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "```js\nconst x = 1\n```",
+        24
+      ],
+      "expected": null
+    },
+    {
+      "name": "findCodeBlockAtPosition #12 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "pre\n```\nplain\n```\npost",
+        0
+      ],
+      "expected": null
+    },
+    {
+      "name": "findCodeBlockAtPosition #13 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "pre\n```\nplain\n```\npost",
+        3
+      ],
+      "expected": null
+    },
+    {
+      "name": "findCodeBlockAtPosition #14 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "pre\n```\nplain\n```\npost",
+        6
+      ],
+      "expected": {
+        "startPos": 4,
+        "endPos": 17,
+        "language": "",
+        "content": "plain\n"
+      }
+    },
+    {
+      "name": "findCodeBlockAtPosition #15 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "pre\n```\nplain\n```\npost",
+        11
+      ],
+      "expected": {
+        "startPos": 4,
+        "endPos": 17,
+        "language": "",
+        "content": "plain\n"
+      }
+    },
+    {
+      "name": "findCodeBlockAtPosition #16 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "pre\n```\nplain\n```\npost",
+        21
+      ],
+      "expected": null
+    },
+    {
+      "name": "findCodeBlockAtPosition #17 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "pre\n```\nplain\n```\npost",
+        22
+      ],
+      "expected": null
+    },
+    {
+      "name": "findCodeBlockAtPosition #18 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "pre\n```\nplain\n```\npost",
+        25
+      ],
+      "expected": null
+    },
+    {
+      "name": "findCodeBlockAtPosition #19 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "```python\na\n```\n\n```ruby\nb\n```",
+        0
+      ],
+      "expected": {
+        "startPos": 0,
+        "endPos": 15,
+        "language": "python",
+        "content": "a\n"
+      }
+    },
+    {
+      "name": "findCodeBlockAtPosition #20 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "```python\na\n```\n\n```ruby\nb\n```",
+        3
+      ],
+      "expected": {
+        "startPos": 0,
+        "endPos": 15,
+        "language": "python",
+        "content": "a\n"
+      }
+    },
+    {
+      "name": "findCodeBlockAtPosition #21 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "```python\na\n```\n\n```ruby\nb\n```",
+        6
+      ],
+      "expected": {
+        "startPos": 0,
+        "endPos": 15,
+        "language": "python",
+        "content": "a\n"
+      }
+    },
+    {
+      "name": "findCodeBlockAtPosition #22 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "```python\na\n```\n\n```ruby\nb\n```",
+        15
+      ],
+      "expected": {
+        "startPos": 0,
+        "endPos": 15,
+        "language": "python",
+        "content": "a\n"
+      }
+    },
+    {
+      "name": "findCodeBlockAtPosition #23 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "```python\na\n```\n\n```ruby\nb\n```",
+        29
+      ],
+      "expected": {
+        "startPos": 17,
+        "endPos": 30,
+        "language": "ruby",
+        "content": "b\n"
+      }
+    },
+    {
+      "name": "findCodeBlockAtPosition #24 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "```python\na\n```\n\n```ruby\nb\n```",
+        30
+      ],
+      "expected": {
+        "startPos": 17,
+        "endPos": 30,
+        "language": "ruby",
+        "content": "b\n"
+      }
+    },
+    {
+      "name": "findCodeBlockAtPosition #25 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "```python\na\n```\n\n```ruby\nb\n```",
+        33
+      ],
+      "expected": null
+    },
+    {
+      "name": "findCodeBlockAtPosition #26 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "```\nunclosed",
+        0
+      ],
+      "expected": null
+    },
+    {
+      "name": "findCodeBlockAtPosition #27 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "```\nunclosed",
+        3
+      ],
+      "expected": null
+    },
+    {
+      "name": "findCodeBlockAtPosition #28 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "```\nunclosed",
+        6
+      ],
+      "expected": null
+    },
+    {
+      "name": "findCodeBlockAtPosition #29 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "```\nunclosed",
+        11
+      ],
+      "expected": null
+    },
+    {
+      "name": "findCodeBlockAtPosition #30 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "```\nunclosed",
+        12
+      ],
+      "expected": null
+    },
+    {
+      "name": "findCodeBlockAtPosition #31 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "```\nunclosed",
+        15
+      ],
+      "expected": null
+    },
+    {
+      "name": "findCodeBlockAtPosition #32 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "```c++\nx\n```",
+        0
+      ],
+      "expected": null
+    },
+    {
+      "name": "findCodeBlockAtPosition #33 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "```c++\nx\n```",
+        3
+      ],
+      "expected": null
+    },
+    {
+      "name": "findCodeBlockAtPosition #34 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "```c++\nx\n```",
+        6
+      ],
+      "expected": null
+    },
+    {
+      "name": "findCodeBlockAtPosition #35 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "```c++\nx\n```",
+        11
+      ],
+      "expected": null
+    },
+    {
+      "name": "findCodeBlockAtPosition #36 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "```c++\nx\n```",
+        12
+      ],
+      "expected": null
+    },
+    {
+      "name": "findCodeBlockAtPosition #37 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "```c++\nx\n```",
+        15
+      ],
+      "expected": null
+    },
+    {
+      "name": "findCodeBlockAtPosition #38 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "```js \nx\n```",
+        0
+      ],
+      "expected": null
+    },
+    {
+      "name": "findCodeBlockAtPosition #39 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "```js \nx\n```",
+        3
+      ],
+      "expected": null
+    },
+    {
+      "name": "findCodeBlockAtPosition #40 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "```js \nx\n```",
+        6
+      ],
+      "expected": null
+    },
+    {
+      "name": "findCodeBlockAtPosition #41 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "```js \nx\n```",
+        11
+      ],
+      "expected": null
+    },
+    {
+      "name": "findCodeBlockAtPosition #42 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "```js \nx\n```",
+        12
+      ],
+      "expected": null
+    },
+    {
+      "name": "findCodeBlockAtPosition #43 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "```js \nx\n```",
+        15
+      ],
+      "expected": null
+    },
+    {
+      "name": "findCodeBlockAtPosition #44 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "~~~js\nx\n~~~",
+        0
+      ],
+      "expected": null
+    },
+    {
+      "name": "findCodeBlockAtPosition #45 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "~~~js\nx\n~~~",
+        3
+      ],
+      "expected": null
+    },
+    {
+      "name": "findCodeBlockAtPosition #46 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "~~~js\nx\n~~~",
+        6
+      ],
+      "expected": null
+    },
+    {
+      "name": "findCodeBlockAtPosition #47 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "~~~js\nx\n~~~",
+        5
+      ],
+      "expected": null
+    },
+    {
+      "name": "findCodeBlockAtPosition #48 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "~~~js\nx\n~~~",
+        10
+      ],
+      "expected": null
+    },
+    {
+      "name": "findCodeBlockAtPosition #49 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "~~~js\nx\n~~~",
+        11
+      ],
+      "expected": null
+    },
+    {
+      "name": "findCodeBlockAtPosition #50 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "~~~js\nx\n~~~",
+        14
+      ],
+      "expected": null
+    },
+    {
+      "name": "findCodeBlockAtPosition #51 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "````js\nx\n````",
+        0
+      ],
+      "expected": null
+    },
+    {
+      "name": "findCodeBlockAtPosition #52 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "````js\nx\n````",
+        3
+      ],
+      "expected": {
+        "startPos": 1,
+        "endPos": 12,
+        "language": "js",
+        "content": "x\n"
+      }
+    },
+    {
+      "name": "findCodeBlockAtPosition #53 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "````js\nx\n````",
+        6
+      ],
+      "expected": {
+        "startPos": 1,
+        "endPos": 12,
+        "language": "js",
+        "content": "x\n"
+      }
+    },
+    {
+      "name": "findCodeBlockAtPosition #54 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "````js\nx\n````",
+        12
+      ],
+      "expected": {
+        "startPos": 1,
+        "endPos": 12,
+        "language": "js",
+        "content": "x\n"
+      }
+    },
+    {
+      "name": "findCodeBlockAtPosition #55 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "````js\nx\n````",
+        13
+      ],
+      "expected": null
+    },
+    {
+      "name": "findCodeBlockAtPosition #56 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "````js\nx\n````",
+        16
+      ],
+      "expected": null
+    },
+    {
+      "name": "findCodeBlockAtPosition #57 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "```js\r\nx\r\n```",
+        0
+      ],
+      "expected": null
+    },
+    {
+      "name": "findCodeBlockAtPosition #58 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "```js\r\nx\r\n```",
+        3
+      ],
+      "expected": null
+    },
+    {
+      "name": "findCodeBlockAtPosition #59 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "```js\r\nx\r\n```",
+        6
+      ],
+      "expected": null
+    },
+    {
+      "name": "findCodeBlockAtPosition #60 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "```js\r\nx\r\n```",
+        12
+      ],
+      "expected": null
+    },
+    {
+      "name": "findCodeBlockAtPosition #61 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "```js\r\nx\r\n```",
+        13
+      ],
+      "expected": null
+    },
+    {
+      "name": "findCodeBlockAtPosition #62 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "```js\r\nx\r\n```",
+        16
+      ],
+      "expected": null
+    },
+    {
+      "name": "findCodeBlockAtPosition #63 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "```日本\nx\n```",
+        0
+      ],
+      "expected": null
+    },
+    {
+      "name": "findCodeBlockAtPosition #64 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "```日本\nx\n```",
+        3
+      ],
+      "expected": null
+    },
+    {
+      "name": "findCodeBlockAtPosition #65 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "```日本\nx\n```",
+        6
+      ],
+      "expected": null
+    },
+    {
+      "name": "findCodeBlockAtPosition #66 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "```日本\nx\n```",
+        5
+      ],
+      "expected": null
+    },
+    {
+      "name": "findCodeBlockAtPosition #67 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "```日本\nx\n```",
+        10
+      ],
+      "expected": null
+    },
+    {
+      "name": "findCodeBlockAtPosition #68 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "```日本\nx\n```",
+        11
+      ],
+      "expected": null
+    },
+    {
+      "name": "findCodeBlockAtPosition #69 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "```日本\nx\n```",
+        14
+      ],
+      "expected": null
+    },
+    {
+      "name": "findCodeBlockAtPosition #70 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "```\n```",
+        0
+      ],
+      "expected": {
+        "startPos": 0,
+        "endPos": 7,
+        "language": "",
+        "content": ""
+      }
+    },
+    {
+      "name": "findCodeBlockAtPosition #71 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "```\n```",
+        3
+      ],
+      "expected": {
+        "startPos": 0,
+        "endPos": 7,
+        "language": "",
+        "content": ""
+      }
+    },
+    {
+      "name": "findCodeBlockAtPosition #72 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "```\n```",
+        6
+      ],
+      "expected": {
+        "startPos": 0,
+        "endPos": 7,
+        "language": "",
+        "content": ""
+      }
+    },
+    {
+      "name": "findCodeBlockAtPosition #73 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "```\n```",
+        7
+      ],
+      "expected": {
+        "startPos": 0,
+        "endPos": 7,
+        "language": "",
+        "content": ""
+      }
+    },
+    {
+      "name": "findCodeBlockAtPosition #74 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "```\n```",
+        10
+      ],
+      "expected": null
+    },
+    {
+      "name": "findCodeBlockAtPosition #75 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "``` \n```",
+        0
+      ],
+      "expected": null
+    },
+    {
+      "name": "findCodeBlockAtPosition #76 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "``` \n```",
+        3
+      ],
+      "expected": null
+    },
+    {
+      "name": "findCodeBlockAtPosition #77 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "``` \n```",
+        6
+      ],
+      "expected": null
+    },
+    {
+      "name": "findCodeBlockAtPosition #78 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "``` \n```",
+        4
+      ],
+      "expected": null
+    },
+    {
+      "name": "findCodeBlockAtPosition #79 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "``` \n```",
+        7
+      ],
+      "expected": null
+    },
+    {
+      "name": "findCodeBlockAtPosition #80 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "``` \n```",
+        8
+      ],
+      "expected": null
+    },
+    {
+      "name": "findCodeBlockAtPosition #81 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "``` \n```",
+        11
+      ],
+      "expected": null
+    },
+    {
+      "name": "findCodeBlockAtPosition #82 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "text ```inline``` text",
+        0
+      ],
+      "expected": null
+    },
+    {
+      "name": "findCodeBlockAtPosition #83 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "text ```inline``` text",
+        3
+      ],
+      "expected": null
+    },
+    {
+      "name": "findCodeBlockAtPosition #84 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "text ```inline``` text",
+        6
+      ],
+      "expected": null
+    },
+    {
+      "name": "findCodeBlockAtPosition #85 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "text ```inline``` text",
+        11
+      ],
+      "expected": null
+    },
+    {
+      "name": "findCodeBlockAtPosition #86 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "text ```inline``` text",
+        21
+      ],
+      "expected": null
+    },
+    {
+      "name": "findCodeBlockAtPosition #87 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "text ```inline``` text",
+        22
+      ],
+      "expected": null
+    },
+    {
+      "name": "findCodeBlockAtPosition #88 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "text ```inline``` text",
+        25
+      ],
+      "expected": null
+    },
+    {
+      "name": "findCodeBlockAtPosition #89 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "    ```js\n    x\n    ```",
+        0
+      ],
+      "expected": null
+    },
+    {
+      "name": "findCodeBlockAtPosition #90 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "    ```js\n    x\n    ```",
+        3
+      ],
+      "expected": null
+    },
+    {
+      "name": "findCodeBlockAtPosition #91 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "    ```js\n    x\n    ```",
+        6
+      ],
+      "expected": {
+        "startPos": 4,
+        "endPos": 23,
+        "language": "js",
+        "content": "    x\n    "
+      }
+    },
+    {
+      "name": "findCodeBlockAtPosition #92 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "    ```js\n    x\n    ```",
+        11
+      ],
+      "expected": {
+        "startPos": 4,
+        "endPos": 23,
+        "language": "js",
+        "content": "    x\n    "
+      }
+    },
+    {
+      "name": "findCodeBlockAtPosition #93 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "    ```js\n    x\n    ```",
+        22
+      ],
+      "expected": {
+        "startPos": 4,
+        "endPos": 23,
+        "language": "js",
+        "content": "    x\n    "
+      }
+    },
+    {
+      "name": "findCodeBlockAtPosition #94 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "    ```js\n    x\n    ```",
+        23
+      ],
+      "expected": {
+        "startPos": 4,
+        "endPos": 23,
+        "language": "js",
+        "content": "    x\n    "
+      }
+    },
+    {
+      "name": "findCodeBlockAtPosition #95 (edge corpus)",
+      "fn": "findCodeBlockAtPosition",
+      "input": [
+        "    ```js\n    x\n    ```",
+        26
+      ],
+      "expected": null
+    }
+  ]
+}

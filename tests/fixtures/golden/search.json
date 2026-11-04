@@ -1,0 +1,3542 @@
+{
+  "source": "app/services/notes_service.rb#search_content/search_file, app/controllers/notes_controller.rb#search @ d47a89e92d89f807878d318182fa5dcea0329ec4",
+  "frankmd_sha": "d47a89e92d89f807878d318182fa5dcea0329ec4",
+  "generator": "tools/golden/ruby/search.rb",
+  "notes": "expected = JSON of the results array as rendered by `render json:` (keys line_number, match_text, context[{line_number,content,is_match}], path, name, mtime). mtime is a Ruby Time serialized by ActiveSupport (TZ=UTC; ISO8601 with milliseconds). File mtimes pinned via File.utime ({content,mtime} or 1700000000-100*i in spec order). Query compiled as Regexp(query, IGNORECASE, timeout 0.5s); RegexpError -> Regexp.escape(query). Blank (ActiveSupport blank?, incl. NBSP) -> []. Lines = File#readlines(chomp: true).map(&:scrub) (\\n and \\r\\n separators; lone \\r is not a separator). Traversal stops once max_results reached (readdir order, unsorted), final sort by -mtime.to_i (Ruby sort_by; ties keep no guaranteed order).",
+  "cases": [
+    {
+      "name": "blank query",
+      "fn": "NotesService#search_content",
+      "input": {
+        "tree": {
+          "note.md": "Some content"
+        },
+        "outside": {},
+        "query": "",
+        "options": {}
+      },
+      "expected": []
+    },
+    {
+      "name": "nil query",
+      "fn": "NotesService#search_content",
+      "input": {
+        "tree": {
+          "note.md": "Some content"
+        },
+        "outside": {},
+        "query": null,
+        "options": {}
+      },
+      "expected": []
+    },
+    {
+      "name": "whitespace-only query is blank",
+      "fn": "NotesService#search_content",
+      "input": {
+        "tree": {
+          "note.md": "a b"
+        },
+        "outside": {},
+        "query": "   ",
+        "options": {}
+      },
+      "expected": []
+    },
+    {
+      "name": "tab query is blank",
+      "fn": "NotesService#search_content",
+      "input": {
+        "tree": {
+          "note.md": "a\tb"
+        },
+        "outside": {},
+        "query": "\t",
+        "options": {}
+      },
+      "expected": []
+    },
+    {
+      "name": "NBSP query is blank (ActiveSupport blank?)",
+      "fn": "NotesService#search_content",
+      "input": {
+        "tree": {
+          "note.md": "a b"
+        },
+        "outside": {},
+        "query": " ",
+        "options": {}
+      },
+      "expected": []
+    },
+    {
+      "name": "newline query is blank",
+      "fn": "NotesService#search_content",
+      "input": {
+        "tree": {
+          "note.md": "a\nb"
+        },
+        "outside": {},
+        "query": "\n",
+        "options": {}
+      },
+      "expected": []
+    },
+    {
+      "name": "finds text",
+      "fn": "NotesService#search_content",
+      "input": {
+        "tree": {
+          "note1.md": {
+            "content": "Hello world\nThis is a test",
+            "mtime": 1700000000
+          },
+          "note2.md": {
+            "content": "Another file\nWith different content",
+            "mtime": 1699999900
+          }
+        },
+        "outside": {},
+        "query": "world",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "Hello world",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "Hello world",
+              "is_match": true
+            },
+            {
+              "line_number": 2,
+              "content": "This is a test",
+              "is_match": false
+            }
+          ],
+          "path": "note1.md",
+          "name": "note1",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        }
+      ]
+    },
+    {
+      "name": "case insensitive",
+      "fn": "NotesService#search_content",
+      "input": {
+        "tree": {
+          "note.md": "Hello World"
+        },
+        "outside": {},
+        "query": "hello world",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "Hello World",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "Hello World",
+              "is_match": true
+            }
+          ],
+          "path": "note.md",
+          "name": "note",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        }
+      ]
+    },
+    {
+      "name": "case insensitive uppercase query",
+      "fn": "NotesService#search_content",
+      "input": {
+        "tree": {
+          "note.md": "hello world"
+        },
+        "outside": {},
+        "query": "HELLO",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "hello world",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "hello world",
+              "is_match": true
+            }
+          ],
+          "path": "note.md",
+          "name": "note",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        }
+      ]
+    },
+    {
+      "name": "regex pattern",
+      "fn": "NotesService#search_content",
+      "input": {
+        "tree": {
+          "note.md": "foo123bar\nfoo456bar\nhello world"
+        },
+        "outside": {},
+        "query": "foo\\d+bar",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "foo123bar",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "foo123bar",
+              "is_match": true
+            },
+            {
+              "line_number": 2,
+              "content": "foo456bar",
+              "is_match": false
+            },
+            {
+              "line_number": 3,
+              "content": "hello world",
+              "is_match": false
+            }
+          ],
+          "path": "note.md",
+          "name": "note",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        },
+        {
+          "line_number": 2,
+          "match_text": "foo456bar",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "foo123bar",
+              "is_match": false
+            },
+            {
+              "line_number": 2,
+              "content": "foo456bar",
+              "is_match": true
+            },
+            {
+              "line_number": 3,
+              "content": "hello world",
+              "is_match": false
+            }
+          ],
+          "path": "note.md",
+          "name": "note",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        }
+      ]
+    },
+    {
+      "name": "regex alternation",
+      "fn": "NotesService#search_content",
+      "input": {
+        "tree": {
+          "n.md": "cat\ndog\nbird"
+        },
+        "outside": {},
+        "query": "cat|bird",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "cat",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "cat",
+              "is_match": true
+            },
+            {
+              "line_number": 2,
+              "content": "dog",
+              "is_match": false
+            },
+            {
+              "line_number": 3,
+              "content": "bird",
+              "is_match": false
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        },
+        {
+          "line_number": 3,
+          "match_text": "bird",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "cat",
+              "is_match": false
+            },
+            {
+              "line_number": 2,
+              "content": "dog",
+              "is_match": false
+            },
+            {
+              "line_number": 3,
+              "content": "bird",
+              "is_match": true
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        }
+      ]
+    },
+    {
+      "name": "regex anchors",
+      "fn": "NotesService#search_content",
+      "input": {
+        "tree": {
+          "n.md": "start mid\nmid start\nstart"
+        },
+        "outside": {},
+        "query": "^start$",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 3,
+          "match_text": "start",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "start mid",
+              "is_match": false
+            },
+            {
+              "line_number": 2,
+              "content": "mid start",
+              "is_match": false
+            },
+            {
+              "line_number": 3,
+              "content": "start",
+              "is_match": true
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        }
+      ]
+    },
+    {
+      "name": "regex dot matches every line incl. empty? (no)",
+      "fn": "NotesService#search_content",
+      "input": {
+        "tree": {
+          "n.md": "a\n\nb\n"
+        },
+        "outside": {},
+        "query": ".",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "a",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "a",
+              "is_match": true
+            },
+            {
+              "line_number": 2,
+              "content": "",
+              "is_match": false
+            },
+            {
+              "line_number": 3,
+              "content": "b",
+              "is_match": false
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        },
+        {
+          "line_number": 3,
+          "match_text": "b",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "a",
+              "is_match": false
+            },
+            {
+              "line_number": 2,
+              "content": "",
+              "is_match": false
+            },
+            {
+              "line_number": 3,
+              "content": "b",
+              "is_match": true
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        }
+      ]
+    },
+    {
+      "name": "empty-line regex",
+      "fn": "NotesService#search_content",
+      "input": {
+        "tree": {
+          "n.md": "a\n\nb\n\n"
+        },
+        "outside": {},
+        "query": "^$",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 2,
+          "match_text": "",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "a",
+              "is_match": false
+            },
+            {
+              "line_number": 2,
+              "content": "",
+              "is_match": true
+            },
+            {
+              "line_number": 3,
+              "content": "b",
+              "is_match": false
+            },
+            {
+              "line_number": 4,
+              "content": "",
+              "is_match": false
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        },
+        {
+          "line_number": 4,
+          "match_text": "",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "a",
+              "is_match": false
+            },
+            {
+              "line_number": 2,
+              "content": "",
+              "is_match": false
+            },
+            {
+              "line_number": 3,
+              "content": "b",
+              "is_match": false
+            },
+            {
+              "line_number": 4,
+              "content": "",
+              "is_match": true
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        }
+      ]
+    },
+    {
+      "name": "lookahead regex",
+      "fn": "NotesService#search_content",
+      "input": {
+        "tree": {
+          "n.md": "foobar\nfoobaz"
+        },
+        "outside": {},
+        "query": "foo(?=baz)",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 2,
+          "match_text": "foobaz",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "foobar",
+              "is_match": false
+            },
+            {
+              "line_number": 2,
+              "content": "foobaz",
+              "is_match": true
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        }
+      ]
+    },
+    {
+      "name": "inline flags regex",
+      "fn": "NotesService#search_content",
+      "input": {
+        "tree": {
+          "n.md": "ABC\nabc"
+        },
+        "outside": {},
+        "query": "(?-i)abc",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 2,
+          "match_text": "abc",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "ABC",
+              "is_match": false
+            },
+            {
+              "line_number": 2,
+              "content": "abc",
+              "is_match": true
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        }
+      ]
+    },
+    {
+      "name": "word boundary",
+      "fn": "NotesService#search_content",
+      "input": {
+        "tree": {
+          "n.md": "cat\ncatalog\nthe cat sat"
+        },
+        "outside": {},
+        "query": "\\bcat\\b",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "cat",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "cat",
+              "is_match": true
+            },
+            {
+              "line_number": 2,
+              "content": "catalog",
+              "is_match": false
+            },
+            {
+              "line_number": 3,
+              "content": "the cat sat",
+              "is_match": false
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        },
+        {
+          "line_number": 3,
+          "match_text": "the cat sat",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "cat",
+              "is_match": false
+            },
+            {
+              "line_number": 2,
+              "content": "catalog",
+              "is_match": false
+            },
+            {
+              "line_number": 3,
+              "content": "the cat sat",
+              "is_match": true
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        }
+      ]
+    },
+    {
+      "name": "invalid regex brackets escaped",
+      "fn": "NotesService#search_content",
+      "input": {
+        "tree": {
+          "note.md": "test [brackets]"
+        },
+        "outside": {},
+        "query": "[brackets",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "test [brackets]",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "test [brackets]",
+              "is_match": true
+            }
+          ],
+          "path": "note.md",
+          "name": "note",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        }
+      ]
+    },
+    {
+      "name": "invalid regex lone paren escaped",
+      "fn": "NotesService#search_content",
+      "input": {
+        "tree": {
+          "n.md": "f(x) = 1\nnone"
+        },
+        "outside": {},
+        "query": "f(",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "f(x) = 1",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "f(x) = 1",
+              "is_match": true
+            },
+            {
+              "line_number": 2,
+              "content": "none",
+              "is_match": false
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        }
+      ]
+    },
+    {
+      "name": "invalid regex star escaped",
+      "fn": "NotesService#search_content",
+      "input": {
+        "tree": {
+          "n.md": "a*b\nab"
+        },
+        "outside": {},
+        "query": "*",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "a*b",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "a*b",
+              "is_match": true
+            },
+            {
+              "line_number": 2,
+              "content": "ab",
+              "is_match": false
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        }
+      ]
+    },
+    {
+      "name": "invalid regex trailing backslash escaped",
+      "fn": "NotesService#search_content",
+      "input": {
+        "tree": {
+          "n.md": "path\\to\nother"
+        },
+        "outside": {},
+        "query": "\\",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "path\\to",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "path\\to",
+              "is_match": true
+            },
+            {
+              "line_number": 2,
+              "content": "other",
+              "is_match": false
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        }
+      ]
+    },
+    {
+      "name": "valid regex metachar dot used literally by user",
+      "fn": "NotesService#search_content",
+      "input": {
+        "tree": {
+          "n.md": "v1.2\nv1x2"
+        },
+        "outside": {},
+        "query": "v1.2",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "v1.2",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "v1.2",
+              "is_match": true
+            },
+            {
+              "line_number": 2,
+              "content": "v1x2",
+              "is_match": false
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        },
+        {
+          "line_number": 2,
+          "match_text": "v1x2",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "v1.2",
+              "is_match": false
+            },
+            {
+              "line_number": 2,
+              "content": "v1x2",
+              "is_match": true
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        }
+      ]
+    },
+    {
+      "name": "question mark (valid? no -> escaped)",
+      "fn": "NotesService#search_content",
+      "input": {
+        "tree": {
+          "n.md": "what?\nwhat"
+        },
+        "outside": {},
+        "query": "?",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "what?",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "what?",
+              "is_match": true
+            },
+            {
+              "line_number": 2,
+              "content": "what",
+              "is_match": false
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        }
+      ]
+    },
+    {
+      "name": "plus sign alone (invalid -> escaped)",
+      "fn": "NotesService#search_content",
+      "input": {
+        "tree": {
+          "n.md": "a+b\nab"
+        },
+        "outside": {},
+        "query": "+",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "a+b",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "a+b",
+              "is_match": true
+            },
+            {
+              "line_number": 2,
+              "content": "ab",
+              "is_match": false
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        }
+      ]
+    },
+    {
+      "name": "brace quantifier literal",
+      "fn": "NotesService#search_content",
+      "input": {
+        "tree": {
+          "n.md": "a{2}\naa"
+        },
+        "outside": {},
+        "query": "a{2}",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 2,
+          "match_text": "aa",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "a{2}",
+              "is_match": false
+            },
+            {
+              "line_number": 2,
+              "content": "aa",
+              "is_match": true
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        }
+      ]
+    },
+    {
+      "name": "regex timeout pattern returns no matches for that file",
+      "fn": "NotesService#search_content",
+      "input": {
+        "tree": {
+          "n.md": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa!"
+        },
+        "outside": {},
+        "query": "(a|a)+$",
+        "options": {}
+      },
+      "expected": [],
+      "notes": "Catastrophic backtracking hits the 0.5s Regexp timeout; search_file rescues and returns [] for the file."
+    },
+    {
+      "name": "unicode case folding (ção/ÇÃO)",
+      "fn": "NotesService#search_content",
+      "input": {
+        "tree": {
+          "n.md": "AÇÃO\nação\nacao"
+        },
+        "outside": {},
+        "query": "ação",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "AÇÃO",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "AÇÃO",
+              "is_match": true
+            },
+            {
+              "line_number": 2,
+              "content": "ação",
+              "is_match": false
+            },
+            {
+              "line_number": 3,
+              "content": "acao",
+              "is_match": false
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        },
+        {
+          "line_number": 2,
+          "match_text": "ação",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "AÇÃO",
+              "is_match": false
+            },
+            {
+              "line_number": 2,
+              "content": "ação",
+              "is_match": true
+            },
+            {
+              "line_number": 3,
+              "content": "acao",
+              "is_match": false
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        }
+      ]
+    },
+    {
+      "name": "accents are not folded",
+      "fn": "NotesService#search_content",
+      "input": {
+        "tree": {
+          "n.md": "café\ncafe\nCAFÉ"
+        },
+        "outside": {},
+        "query": "cafe",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 2,
+          "match_text": "cafe",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "café",
+              "is_match": false
+            },
+            {
+              "line_number": 2,
+              "content": "cafe",
+              "is_match": true
+            },
+            {
+              "line_number": 3,
+              "content": "CAFÉ",
+              "is_match": false
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        }
+      ]
+    },
+    {
+      "name": "combining vs precomposed not equivalent",
+      "fn": "NotesService#search_content",
+      "input": {
+        "tree": {
+          "n.md": "étude\nétude"
+        },
+        "outside": {},
+        "query": "étude",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 2,
+          "match_text": "étude",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "étude",
+              "is_match": false
+            },
+            {
+              "line_number": 2,
+              "content": "étude",
+              "is_match": true
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        }
+      ]
+    },
+    {
+      "name": "German sharp s / ẞ",
+      "fn": "NotesService#search_content",
+      "input": {
+        "tree": {
+          "n.md": "straße\nSTRASSE\nSTRAẞE"
+        },
+        "outside": {},
+        "query": "straße",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "straße",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "straße",
+              "is_match": true
+            },
+            {
+              "line_number": 2,
+              "content": "STRASSE",
+              "is_match": false
+            },
+            {
+              "line_number": 3,
+              "content": "STRAẞE",
+              "is_match": false
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        },
+        {
+          "line_number": 2,
+          "match_text": "STRASSE",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "straße",
+              "is_match": false
+            },
+            {
+              "line_number": 2,
+              "content": "STRASSE",
+              "is_match": true
+            },
+            {
+              "line_number": 3,
+              "content": "STRAẞE",
+              "is_match": false
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        },
+        {
+          "line_number": 3,
+          "match_text": "STRAẞE",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "straße",
+              "is_match": false
+            },
+            {
+              "line_number": 2,
+              "content": "STRASSE",
+              "is_match": false
+            },
+            {
+              "line_number": 3,
+              "content": "STRAẞE",
+              "is_match": true
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        }
+      ]
+    },
+    {
+      "name": "CJK",
+      "fn": "NotesService#search_content",
+      "input": {
+        "tree": {
+          "n.md": "日本語のテキスト\n中文\n한국어"
+        },
+        "outside": {},
+        "query": "日本",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "日本語のテキスト",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "日本語のテキスト",
+              "is_match": true
+            },
+            {
+              "line_number": 2,
+              "content": "中文",
+              "is_match": false
+            },
+            {
+              "line_number": 3,
+              "content": "한국어",
+              "is_match": false
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        }
+      ]
+    },
+    {
+      "name": "Hebrew RTL",
+      "fn": "NotesService#search_content",
+      "input": {
+        "tree": {
+          "n.md": "שלום עולם\nhello"
+        },
+        "outside": {},
+        "query": "שלום",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "שלום עולם",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "שלום עולם",
+              "is_match": true
+            },
+            {
+              "line_number": 2,
+              "content": "hello",
+              "is_match": false
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        }
+      ]
+    },
+    {
+      "name": "emoji ZWJ sequence",
+      "fn": "NotesService#search_content",
+      "input": {
+        "tree": {
+          "n.md": "family 👨‍👩‍👧 here\n👨 alone"
+        },
+        "outside": {},
+        "query": "👨‍👩‍👧",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "family 👨‍👩‍👧 here",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "family 👨‍👩‍👧 here",
+              "is_match": true
+            },
+            {
+              "line_number": 2,
+              "content": "👨 alone",
+              "is_match": false
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        }
+      ]
+    },
+    {
+      "name": "emoji partial (single codepoint inside ZWJ)",
+      "fn": "NotesService#search_content",
+      "input": {
+        "tree": {
+          "n.md": "family 👨‍👩‍👧 here\nnone"
+        },
+        "outside": {},
+        "query": "👩",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "family 👨‍👩‍👧 here",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "family 👨‍👩‍👧 here",
+              "is_match": true
+            },
+            {
+              "line_number": 2,
+              "content": "none",
+              "is_match": false
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        }
+      ]
+    },
+    {
+      "name": "Turkish dotted I",
+      "fn": "NotesService#search_content",
+      "input": {
+        "tree": {
+          "n.md": "İstanbul\nistanbul\nISTANBUL"
+        },
+        "outside": {},
+        "query": "istanbul",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 2,
+          "match_text": "istanbul",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "İstanbul",
+              "is_match": false
+            },
+            {
+              "line_number": 2,
+              "content": "istanbul",
+              "is_match": true
+            },
+            {
+              "line_number": 3,
+              "content": "ISTANBUL",
+              "is_match": false
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        },
+        {
+          "line_number": 3,
+          "match_text": "ISTANBUL",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "İstanbul",
+              "is_match": false
+            },
+            {
+              "line_number": 2,
+              "content": "istanbul",
+              "is_match": false
+            },
+            {
+              "line_number": 3,
+              "content": "ISTANBUL",
+              "is_match": true
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        }
+      ]
+    },
+    {
+      "name": "context lines (default 3)",
+      "fn": "NotesService#search_content",
+      "input": {
+        "tree": {
+          "note.md": "Line 1\nLine 2\nLine 3 MATCH\nLine 4\nLine 5"
+        },
+        "outside": {},
+        "query": "MATCH",
+        "options": {
+          "context_lines": 2
+        }
+      },
+      "expected": [
+        {
+          "line_number": 3,
+          "match_text": "Line 3 MATCH",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "Line 1",
+              "is_match": false
+            },
+            {
+              "line_number": 2,
+              "content": "Line 2",
+              "is_match": false
+            },
+            {
+              "line_number": 3,
+              "content": "Line 3 MATCH",
+              "is_match": true
+            },
+            {
+              "line_number": 4,
+              "content": "Line 4",
+              "is_match": false
+            },
+            {
+              "line_number": 5,
+              "content": "Line 5",
+              "is_match": false
+            }
+          ],
+          "path": "note.md",
+          "name": "note",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        }
+      ]
+    },
+    {
+      "name": "context clipped at file start/end",
+      "fn": "NotesService#search_content",
+      "input": {
+        "tree": {
+          "n.md": "MATCH first\nmid\nMATCH last"
+        },
+        "outside": {},
+        "query": "MATCH",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "MATCH first",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "MATCH first",
+              "is_match": true
+            },
+            {
+              "line_number": 2,
+              "content": "mid",
+              "is_match": false
+            },
+            {
+              "line_number": 3,
+              "content": "MATCH last",
+              "is_match": false
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        },
+        {
+          "line_number": 3,
+          "match_text": "MATCH last",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "MATCH first",
+              "is_match": false
+            },
+            {
+              "line_number": 2,
+              "content": "mid",
+              "is_match": false
+            },
+            {
+              "line_number": 3,
+              "content": "MATCH last",
+              "is_match": true
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        }
+      ]
+    },
+    {
+      "name": "context_lines 0",
+      "fn": "NotesService#search_content",
+      "input": {
+        "tree": {
+          "n.md": "a\nMATCH\nb"
+        },
+        "outside": {},
+        "query": "MATCH",
+        "options": {
+          "context_lines": 0
+        }
+      },
+      "expected": [
+        {
+          "line_number": 2,
+          "match_text": "MATCH",
+          "context": [
+            {
+              "line_number": 2,
+              "content": "MATCH",
+              "is_match": true
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        }
+      ]
+    },
+    {
+      "name": "context_lines 10 larger than file",
+      "fn": "NotesService#search_content",
+      "input": {
+        "tree": {
+          "n.md": "a\nMATCH\nb"
+        },
+        "outside": {},
+        "query": "MATCH",
+        "options": {
+          "context_lines": 10
+        }
+      },
+      "expected": [
+        {
+          "line_number": 2,
+          "match_text": "MATCH",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "a",
+              "is_match": false
+            },
+            {
+              "line_number": 2,
+              "content": "MATCH",
+              "is_match": true
+            },
+            {
+              "line_number": 3,
+              "content": "b",
+              "is_match": false
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        }
+      ]
+    },
+    {
+      "name": "context_lines negative",
+      "fn": "NotesService#search_content",
+      "input": {
+        "tree": {
+          "n.md": "a\nb\nMATCH\nc\nd"
+        },
+        "outside": {},
+        "query": "MATCH",
+        "options": {
+          "context_lines": -1
+        }
+      },
+      "expected": [
+        {
+          "line_number": 3,
+          "match_text": "MATCH",
+          "context": [],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        }
+      ]
+    },
+    {
+      "name": "overlapping contexts for adjacent matches",
+      "fn": "NotesService#search_content",
+      "input": {
+        "tree": {
+          "n.md": "x\nhit1\nhit2\ny"
+        },
+        "outside": {},
+        "query": "hit",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 2,
+          "match_text": "hit1",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "x",
+              "is_match": false
+            },
+            {
+              "line_number": 2,
+              "content": "hit1",
+              "is_match": true
+            },
+            {
+              "line_number": 3,
+              "content": "hit2",
+              "is_match": false
+            },
+            {
+              "line_number": 4,
+              "content": "y",
+              "is_match": false
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        },
+        {
+          "line_number": 3,
+          "match_text": "hit2",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "x",
+              "is_match": false
+            },
+            {
+              "line_number": 2,
+              "content": "hit1",
+              "is_match": false
+            },
+            {
+              "line_number": 3,
+              "content": "hit2",
+              "is_match": true
+            },
+            {
+              "line_number": 4,
+              "content": "y",
+              "is_match": false
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        }
+      ]
+    },
+    {
+      "name": "CRLF lines are chomped",
+      "fn": "NotesService#search_content",
+      "input": {
+        "tree": {
+          "n.md": "first\r\nsecond hit\r\nthird\r\n"
+        },
+        "outside": {},
+        "query": "hit",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 2,
+          "match_text": "second hit",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "first",
+              "is_match": false
+            },
+            {
+              "line_number": 2,
+              "content": "second hit",
+              "is_match": true
+            },
+            {
+              "line_number": 3,
+              "content": "third",
+              "is_match": false
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        }
+      ]
+    },
+    {
+      "name": "lone CR is not a line break",
+      "fn": "NotesService#search_content",
+      "input": {
+        "tree": {
+          "n.md": "first\rsecond hit\rthird"
+        },
+        "outside": {},
+        "query": "hit",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "first\rsecond hit\rthird",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "first\rsecond hit\rthird",
+              "is_match": true
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        }
+      ]
+    },
+    {
+      "name": "trailing blank lines",
+      "fn": "NotesService#search_content",
+      "input": {
+        "tree": {
+          "n.md": "hit\n\n\n"
+        },
+        "outside": {},
+        "query": "hit",
+        "options": {
+          "context_lines": 5
+        }
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "hit",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "hit",
+              "is_match": true
+            },
+            {
+              "line_number": 2,
+              "content": "",
+              "is_match": false
+            },
+            {
+              "line_number": 3,
+              "content": "",
+              "is_match": false
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        }
+      ]
+    },
+    {
+      "name": "no trailing newline",
+      "fn": "NotesService#search_content",
+      "input": {
+        "tree": {
+          "n.md": "a\nhit"
+        },
+        "outside": {},
+        "query": "hit",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 2,
+          "match_text": "hit",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "a",
+              "is_match": false
+            },
+            {
+              "line_number": 2,
+              "content": "hit",
+              "is_match": true
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        }
+      ]
+    },
+    {
+      "name": "tabs and NBSP preserved in match_text",
+      "fn": "NotesService#search_content",
+      "input": {
+        "tree": {
+          "n.md": "\tindented hit nbsp  "
+        },
+        "outside": {},
+        "query": "hit",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "\tindented hit nbsp  ",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "\tindented hit nbsp  ",
+              "is_match": true
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        }
+      ]
+    },
+    {
+      "name": "BOM is part of first line",
+      "fn": "NotesService#search_content",
+      "input": {
+        "tree": {
+          "n.md": "﻿hit at start"
+        },
+        "outside": {},
+        "query": "^hit",
+        "options": {}
+      },
+      "expected": []
+    },
+    {
+      "name": "BOM line matched by content",
+      "fn": "NotesService#search_content",
+      "input": {
+        "tree": {
+          "n.md": "﻿hit at start"
+        },
+        "outside": {},
+        "query": "hit",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "﻿hit at start",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "﻿hit at start",
+              "is_match": true
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        }
+      ]
+    },
+    {
+      "name": "max_results respected within one file",
+      "fn": "NotesService#search_content",
+      "input": {
+        "tree": {
+          "n.md": "findme 1\nfindme 2\nfindme 3\nfindme 4\nfindme 5\nfindme 6\nfindme 7\nfindme 8\nfindme 9\nfindme 10"
+        },
+        "outside": {},
+        "query": "findme",
+        "options": {
+          "max_results": 3
+        }
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "findme 1",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "findme 1",
+              "is_match": true
+            },
+            {
+              "line_number": 2,
+              "content": "findme 2",
+              "is_match": false
+            },
+            {
+              "line_number": 3,
+              "content": "findme 3",
+              "is_match": false
+            },
+            {
+              "line_number": 4,
+              "content": "findme 4",
+              "is_match": false
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        },
+        {
+          "line_number": 2,
+          "match_text": "findme 2",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "findme 1",
+              "is_match": false
+            },
+            {
+              "line_number": 2,
+              "content": "findme 2",
+              "is_match": true
+            },
+            {
+              "line_number": 3,
+              "content": "findme 3",
+              "is_match": false
+            },
+            {
+              "line_number": 4,
+              "content": "findme 4",
+              "is_match": false
+            },
+            {
+              "line_number": 5,
+              "content": "findme 5",
+              "is_match": false
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        },
+        {
+          "line_number": 3,
+          "match_text": "findme 3",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "findme 1",
+              "is_match": false
+            },
+            {
+              "line_number": 2,
+              "content": "findme 2",
+              "is_match": false
+            },
+            {
+              "line_number": 3,
+              "content": "findme 3",
+              "is_match": true
+            },
+            {
+              "line_number": 4,
+              "content": "findme 4",
+              "is_match": false
+            },
+            {
+              "line_number": 5,
+              "content": "findme 5",
+              "is_match": false
+            },
+            {
+              "line_number": 6,
+              "content": "findme 6",
+              "is_match": false
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        }
+      ]
+    },
+    {
+      "name": "max_results 0",
+      "fn": "NotesService#search_content",
+      "input": {
+        "tree": {
+          "n.md": "findme"
+        },
+        "outside": {},
+        "query": "findme",
+        "options": {
+          "max_results": 0
+        }
+      },
+      "expected": []
+    },
+    {
+      "name": "default max_results 50 with 60 matches",
+      "fn": "NotesService#search_content",
+      "input": {
+        "tree": {
+          "n.md": "findme 1\nfindme 2\nfindme 3\nfindme 4\nfindme 5\nfindme 6\nfindme 7\nfindme 8\nfindme 9\nfindme 10\nfindme 11\nfindme 12\nfindme 13\nfindme 14\nfindme 15\nfindme 16\nfindme 17\nfindme 18\nfindme 19\nfindme 20\nfindme 21\nfindme 22\nfindme 23\nfindme 24\nfindme 25\nfindme 26\nfindme 27\nfindme 28\nfindme 29\nfindme 30\nfindme 31\nfindme 32\nfindme 33\nfindme 34\nfindme 35\nfindme 36\nfindme 37\nfindme 38\nfindme 39\nfindme 40\nfindme 41\nfindme 42\nfindme 43\nfindme 44\nfindme 45\nfindme 46\nfindme 47\nfindme 48\nfindme 49\nfindme 50\nfindme 51\nfindme 52\nfindme 53\nfindme 54\nfindme 55\nfindme 56\nfindme 57\nfindme 58\nfindme 59\nfindme 60"
+        },
+        "outside": {},
+        "query": "findme",
+        "options": {
+          "context_lines": 0
+        }
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "findme 1",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "findme 1",
+              "is_match": true
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        },
+        {
+          "line_number": 2,
+          "match_text": "findme 2",
+          "context": [
+            {
+              "line_number": 2,
+              "content": "findme 2",
+              "is_match": true
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        },
+        {
+          "line_number": 3,
+          "match_text": "findme 3",
+          "context": [
+            {
+              "line_number": 3,
+              "content": "findme 3",
+              "is_match": true
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        },
+        {
+          "line_number": 4,
+          "match_text": "findme 4",
+          "context": [
+            {
+              "line_number": 4,
+              "content": "findme 4",
+              "is_match": true
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        },
+        {
+          "line_number": 5,
+          "match_text": "findme 5",
+          "context": [
+            {
+              "line_number": 5,
+              "content": "findme 5",
+              "is_match": true
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        },
+        {
+          "line_number": 6,
+          "match_text": "findme 6",
+          "context": [
+            {
+              "line_number": 6,
+              "content": "findme 6",
+              "is_match": true
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        },
+        {
+          "line_number": 7,
+          "match_text": "findme 7",
+          "context": [
+            {
+              "line_number": 7,
+              "content": "findme 7",
+              "is_match": true
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        },
+        {
+          "line_number": 8,
+          "match_text": "findme 8",
+          "context": [
+            {
+              "line_number": 8,
+              "content": "findme 8",
+              "is_match": true
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        },
+        {
+          "line_number": 9,
+          "match_text": "findme 9",
+          "context": [
+            {
+              "line_number": 9,
+              "content": "findme 9",
+              "is_match": true
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        },
+        {
+          "line_number": 10,
+          "match_text": "findme 10",
+          "context": [
+            {
+              "line_number": 10,
+              "content": "findme 10",
+              "is_match": true
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        },
+        {
+          "line_number": 11,
+          "match_text": "findme 11",
+          "context": [
+            {
+              "line_number": 11,
+              "content": "findme 11",
+              "is_match": true
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        },
+        {
+          "line_number": 12,
+          "match_text": "findme 12",
+          "context": [
+            {
+              "line_number": 12,
+              "content": "findme 12",
+              "is_match": true
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        },
+        {
+          "line_number": 13,
+          "match_text": "findme 13",
+          "context": [
+            {
+              "line_number": 13,
+              "content": "findme 13",
+              "is_match": true
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        },
+        {
+          "line_number": 14,
+          "match_text": "findme 14",
+          "context": [
+            {
+              "line_number": 14,
+              "content": "findme 14",
+              "is_match": true
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        },
+        {
+          "line_number": 15,
+          "match_text": "findme 15",
+          "context": [
+            {
+              "line_number": 15,
+              "content": "findme 15",
+              "is_match": true
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        },
+        {
+          "line_number": 16,
+          "match_text": "findme 16",
+          "context": [
+            {
+              "line_number": 16,
+              "content": "findme 16",
+              "is_match": true
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        },
+        {
+          "line_number": 17,
+          "match_text": "findme 17",
+          "context": [
+            {
+              "line_number": 17,
+              "content": "findme 17",
+              "is_match": true
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        },
+        {
+          "line_number": 18,
+          "match_text": "findme 18",
+          "context": [
+            {
+              "line_number": 18,
+              "content": "findme 18",
+              "is_match": true
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        },
+        {
+          "line_number": 19,
+          "match_text": "findme 19",
+          "context": [
+            {
+              "line_number": 19,
+              "content": "findme 19",
+              "is_match": true
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        },
+        {
+          "line_number": 20,
+          "match_text": "findme 20",
+          "context": [
+            {
+              "line_number": 20,
+              "content": "findme 20",
+              "is_match": true
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        },
+        {
+          "line_number": 21,
+          "match_text": "findme 21",
+          "context": [
+            {
+              "line_number": 21,
+              "content": "findme 21",
+              "is_match": true
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        },
+        {
+          "line_number": 22,
+          "match_text": "findme 22",
+          "context": [
+            {
+              "line_number": 22,
+              "content": "findme 22",
+              "is_match": true
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        },
+        {
+          "line_number": 23,
+          "match_text": "findme 23",
+          "context": [
+            {
+              "line_number": 23,
+              "content": "findme 23",
+              "is_match": true
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        },
+        {
+          "line_number": 24,
+          "match_text": "findme 24",
+          "context": [
+            {
+              "line_number": 24,
+              "content": "findme 24",
+              "is_match": true
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        },
+        {
+          "line_number": 25,
+          "match_text": "findme 25",
+          "context": [
+            {
+              "line_number": 25,
+              "content": "findme 25",
+              "is_match": true
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        },
+        {
+          "line_number": 26,
+          "match_text": "findme 26",
+          "context": [
+            {
+              "line_number": 26,
+              "content": "findme 26",
+              "is_match": true
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        },
+        {
+          "line_number": 27,
+          "match_text": "findme 27",
+          "context": [
+            {
+              "line_number": 27,
+              "content": "findme 27",
+              "is_match": true
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        },
+        {
+          "line_number": 28,
+          "match_text": "findme 28",
+          "context": [
+            {
+              "line_number": 28,
+              "content": "findme 28",
+              "is_match": true
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        },
+        {
+          "line_number": 29,
+          "match_text": "findme 29",
+          "context": [
+            {
+              "line_number": 29,
+              "content": "findme 29",
+              "is_match": true
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        },
+        {
+          "line_number": 30,
+          "match_text": "findme 30",
+          "context": [
+            {
+              "line_number": 30,
+              "content": "findme 30",
+              "is_match": true
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        },
+        {
+          "line_number": 31,
+          "match_text": "findme 31",
+          "context": [
+            {
+              "line_number": 31,
+              "content": "findme 31",
+              "is_match": true
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        },
+        {
+          "line_number": 32,
+          "match_text": "findme 32",
+          "context": [
+            {
+              "line_number": 32,
+              "content": "findme 32",
+              "is_match": true
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        },
+        {
+          "line_number": 33,
+          "match_text": "findme 33",
+          "context": [
+            {
+              "line_number": 33,
+              "content": "findme 33",
+              "is_match": true
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        },
+        {
+          "line_number": 34,
+          "match_text": "findme 34",
+          "context": [
+            {
+              "line_number": 34,
+              "content": "findme 34",
+              "is_match": true
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        },
+        {
+          "line_number": 35,
+          "match_text": "findme 35",
+          "context": [
+            {
+              "line_number": 35,
+              "content": "findme 35",
+              "is_match": true
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        },
+        {
+          "line_number": 36,
+          "match_text": "findme 36",
+          "context": [
+            {
+              "line_number": 36,
+              "content": "findme 36",
+              "is_match": true
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        },
+        {
+          "line_number": 37,
+          "match_text": "findme 37",
+          "context": [
+            {
+              "line_number": 37,
+              "content": "findme 37",
+              "is_match": true
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        },
+        {
+          "line_number": 38,
+          "match_text": "findme 38",
+          "context": [
+            {
+              "line_number": 38,
+              "content": "findme 38",
+              "is_match": true
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        },
+        {
+          "line_number": 39,
+          "match_text": "findme 39",
+          "context": [
+            {
+              "line_number": 39,
+              "content": "findme 39",
+              "is_match": true
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        },
+        {
+          "line_number": 40,
+          "match_text": "findme 40",
+          "context": [
+            {
+              "line_number": 40,
+              "content": "findme 40",
+              "is_match": true
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        },
+        {
+          "line_number": 41,
+          "match_text": "findme 41",
+          "context": [
+            {
+              "line_number": 41,
+              "content": "findme 41",
+              "is_match": true
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        },
+        {
+          "line_number": 42,
+          "match_text": "findme 42",
+          "context": [
+            {
+              "line_number": 42,
+              "content": "findme 42",
+              "is_match": true
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        },
+        {
+          "line_number": 43,
+          "match_text": "findme 43",
+          "context": [
+            {
+              "line_number": 43,
+              "content": "findme 43",
+              "is_match": true
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        },
+        {
+          "line_number": 44,
+          "match_text": "findme 44",
+          "context": [
+            {
+              "line_number": 44,
+              "content": "findme 44",
+              "is_match": true
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        },
+        {
+          "line_number": 45,
+          "match_text": "findme 45",
+          "context": [
+            {
+              "line_number": 45,
+              "content": "findme 45",
+              "is_match": true
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        },
+        {
+          "line_number": 46,
+          "match_text": "findme 46",
+          "context": [
+            {
+              "line_number": 46,
+              "content": "findme 46",
+              "is_match": true
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        },
+        {
+          "line_number": 47,
+          "match_text": "findme 47",
+          "context": [
+            {
+              "line_number": 47,
+              "content": "findme 47",
+              "is_match": true
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        },
+        {
+          "line_number": 48,
+          "match_text": "findme 48",
+          "context": [
+            {
+              "line_number": 48,
+              "content": "findme 48",
+              "is_match": true
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        },
+        {
+          "line_number": 49,
+          "match_text": "findme 49",
+          "context": [
+            {
+              "line_number": 49,
+              "content": "findme 49",
+              "is_match": true
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        },
+        {
+          "line_number": 50,
+          "match_text": "findme 50",
+          "context": [
+            {
+              "line_number": 50,
+              "content": "findme 50",
+              "is_match": true
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        }
+      ]
+    },
+    {
+      "name": "max_results across files (which files are visited first follows readdir order)",
+      "fn": "NotesService#search_content",
+      "input": {
+        "tree": {
+          "note0.md": {
+            "content": "findme",
+            "mtime": 1700000000
+          },
+          "note1.md": {
+            "content": "findme",
+            "mtime": 1699999990
+          },
+          "note2.md": {
+            "content": "findme",
+            "mtime": 1699999980
+          },
+          "note3.md": {
+            "content": "findme",
+            "mtime": 1699999970
+          },
+          "note4.md": {
+            "content": "findme",
+            "mtime": 1699999960
+          }
+        },
+        "outside": {},
+        "query": "findme",
+        "options": {
+          "max_results": 3
+        }
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "findme",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "findme",
+              "is_match": true
+            }
+          ],
+          "path": "note0.md",
+          "name": "note0",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        },
+        {
+          "line_number": 1,
+          "match_text": "findme",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "findme",
+              "is_match": true
+            }
+          ],
+          "path": "note1.md",
+          "name": "note1",
+          "mtime": "2023-11-14T22:13:10.000+00:00"
+        },
+        {
+          "line_number": 1,
+          "match_text": "findme",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "findme",
+              "is_match": true
+            }
+          ],
+          "path": "note3.md",
+          "name": "note3",
+          "mtime": "2023-11-14T22:12:50.000+00:00"
+        }
+      ],
+      "notes": "Traversal order is Dir.children (readdir) order and stops at max_results; the SET of files returned is filesystem-dependent. Only the count (3) and the mtime-desc ordering of what is returned are contractual."
+    },
+    {
+      "name": "results sorted by file mtime desc",
+      "fn": "NotesService#search_content",
+      "input": {
+        "tree": {
+          "old.md": {
+            "content": "hit old",
+            "mtime": 1699999000
+          },
+          "new.md": {
+            "content": "hit new",
+            "mtime": 1700000000
+          },
+          "mid.md": {
+            "content": "hit mid",
+            "mtime": 1699999500
+          }
+        },
+        "outside": {},
+        "query": "hit",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "hit new",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "hit new",
+              "is_match": true
+            }
+          ],
+          "path": "new.md",
+          "name": "new",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        },
+        {
+          "line_number": 1,
+          "match_text": "hit mid",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "hit mid",
+              "is_match": true
+            }
+          ],
+          "path": "mid.md",
+          "name": "mid",
+          "mtime": "2023-11-14T22:05:00.000+00:00"
+        },
+        {
+          "line_number": 1,
+          "match_text": "hit old",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "hit old",
+              "is_match": true
+            }
+          ],
+          "path": "old.md",
+          "name": "old",
+          "mtime": "2023-11-14T21:56:40.000+00:00"
+        }
+      ]
+    },
+    {
+      "name": "multiple matches in same file keep line order",
+      "fn": "NotesService#search_content",
+      "input": {
+        "tree": {
+          "a.md": {
+            "content": "hit 1\nno\nhit 3\nhit 4",
+            "mtime": 1700000000
+          },
+          "b.md": {
+            "content": "hit b",
+            "mtime": 1700000005
+          }
+        },
+        "outside": {},
+        "query": "hit",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "hit b",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "hit b",
+              "is_match": true
+            }
+          ],
+          "path": "b.md",
+          "name": "b",
+          "mtime": "2023-11-14T22:13:25.000+00:00"
+        },
+        {
+          "line_number": 1,
+          "match_text": "hit 1",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "hit 1",
+              "is_match": true
+            },
+            {
+              "line_number": 2,
+              "content": "no",
+              "is_match": false
+            },
+            {
+              "line_number": 3,
+              "content": "hit 3",
+              "is_match": false
+            },
+            {
+              "line_number": 4,
+              "content": "hit 4",
+              "is_match": false
+            }
+          ],
+          "path": "a.md",
+          "name": "a",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        },
+        {
+          "line_number": 3,
+          "match_text": "hit 3",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "hit 1",
+              "is_match": false
+            },
+            {
+              "line_number": 2,
+              "content": "no",
+              "is_match": false
+            },
+            {
+              "line_number": 3,
+              "content": "hit 3",
+              "is_match": true
+            },
+            {
+              "line_number": 4,
+              "content": "hit 4",
+              "is_match": false
+            }
+          ],
+          "path": "a.md",
+          "name": "a",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        },
+        {
+          "line_number": 4,
+          "match_text": "hit 4",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "hit 1",
+              "is_match": false
+            },
+            {
+              "line_number": 2,
+              "content": "no",
+              "is_match": false
+            },
+            {
+              "line_number": 3,
+              "content": "hit 3",
+              "is_match": false
+            },
+            {
+              "line_number": 4,
+              "content": "hit 4",
+              "is_match": true
+            }
+          ],
+          "path": "a.md",
+          "name": "a",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        }
+      ]
+    },
+    {
+      "name": "nested folders",
+      "fn": "NotesService#search_content",
+      "input": {
+        "tree": {
+          "folder/nested.md": "find this text",
+          "a/b/c/d.md": "find deep"
+        },
+        "outside": {},
+        "query": "find",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "find this text",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "find this text",
+              "is_match": true
+            }
+          ],
+          "path": "folder/nested.md",
+          "name": "nested",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        },
+        {
+          "line_number": 1,
+          "match_text": "find deep",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "find deep",
+              "is_match": true
+            }
+          ],
+          "path": "a/b/c/d.md",
+          "name": "d",
+          "mtime": "2023-11-14T22:11:40.000+00:00"
+        }
+      ]
+    },
+    {
+      "name": "hidden files/dirs skipped",
+      "fn": "NotesService#search_content",
+      "input": {
+        "tree": {
+          ".hidden.md": "findme",
+          ".dir/x.md": "findme",
+          "v.md": "findme"
+        },
+        "outside": {},
+        "query": "findme",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "findme",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "findme",
+              "is_match": true
+            }
+          ],
+          "path": "v.md",
+          "name": "v",
+          "mtime": "2023-11-14T22:10:00.000+00:00"
+        }
+      ]
+    },
+    {
+      "name": "non-md and .fed skipped",
+      "fn": "NotesService#search_content",
+      "input": {
+        "tree": {
+          "a.txt": "findme",
+          ".fed": "findme = 1",
+          "b.MD": "findme",
+          "c.markdown": "findme",
+          "d.md": "findme"
+        },
+        "outside": {},
+        "query": "findme",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "findme",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "findme",
+              "is_match": true
+            }
+          ],
+          "path": "d.md",
+          "name": "d",
+          "mtime": "2023-11-14T22:06:40.000+00:00"
+        }
+      ]
+    },
+    {
+      "name": "root images/ folder IS searched",
+      "fn": "NotesService#search_content",
+      "input": {
+        "tree": {
+          "images/notes.md": "findme",
+          "videos/x.md": "findme"
+        },
+        "outside": {},
+        "query": "findme",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "findme",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "findme",
+              "is_match": true
+            }
+          ],
+          "path": "images/notes.md",
+          "name": "notes",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        },
+        {
+          "line_number": 1,
+          "match_text": "findme",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "findme",
+              "is_match": true
+            }
+          ],
+          "path": "videos/x.md",
+          "name": "x",
+          "mtime": "2023-11-14T22:11:40.000+00:00"
+        }
+      ]
+    },
+    {
+      "name": "symlinked dir and file skipped",
+      "fn": "NotesService#search_content",
+      "input": {
+        "tree": {
+          "real.md": "findme",
+          "alias.md": {
+            "symlink": "real.md"
+          },
+          "ext": {
+            "symlink": "<OUTSIDE>"
+          }
+        },
+        "outside": {
+          "external.md": "findme"
+        },
+        "query": "findme",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "findme",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "findme",
+              "is_match": true
+            }
+          ],
+          "path": "real.md",
+          "name": "real",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        }
+      ]
+    },
+    {
+      "name": "invalid UTF-8 scrubbed (good file still found)",
+      "fn": "NotesService#search_content",
+      "input": {
+        "tree": {
+          "bad.md": {
+            "base64": "aGVsbG8g//4gd29ybGQK"
+          },
+          "good.md": "hello world"
+        },
+        "outside": {},
+        "query": "world",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "hello �� world",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "hello �� world",
+              "is_match": true
+            }
+          ],
+          "path": "bad.md",
+          "name": "bad",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        },
+        {
+          "line_number": 1,
+          "match_text": "hello world",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "hello world",
+              "is_match": true
+            }
+          ],
+          "path": "good.md",
+          "name": "good",
+          "mtime": "2023-11-14T22:11:40.000+00:00"
+        }
+      ]
+    },
+    {
+      "name": "invalid UTF-8 scrubbed and matched",
+      "fn": "NotesService#search_content",
+      "input": {
+        "tree": {
+          "bad.md": {
+            "base64": "dGFyZ2V0X3dvcmQg/yBoZXJlCg=="
+          }
+        },
+        "outside": {},
+        "query": "target_word",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "target_word � here",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "target_word � here",
+              "is_match": true
+            }
+          ],
+          "path": "bad.md",
+          "name": "bad",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        }
+      ]
+    },
+    {
+      "name": "file over 5MB skipped",
+      "fn": "NotesService#search_content",
+      "input": {
+        "tree": {
+          "small.md": {
+            "content": "findme",
+            "mtime": 1700000000
+          },
+          "large.md": {
+            "content": "findme",
+            "mtime": 1699999999
+          }
+        },
+        "outside": {},
+        "query": "findme",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "findme",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "findme",
+              "is_match": true
+            }
+          ],
+          "path": "small.md",
+          "name": "small",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        }
+      ]
+    },
+    {
+      "name": "file exactly 5MB searched (findme + newline padding to 5*1024*1024 bytes)",
+      "fn": "NotesService#search_content",
+      "input": {
+        "tree": {
+          "edge.md": {
+            "content": "findme",
+            "mtime": 1700000000
+          }
+        },
+        "outside": {},
+        "query": "findme",
+        "options": {
+          "context_lines": 0
+        }
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "findme",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "findme",
+              "is_match": true
+            }
+          ],
+          "path": "edge.md",
+          "name": "edge",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        }
+      ]
+    },
+    {
+      "name": "name/path for unicode file names",
+      "fn": "NotesService#search_content",
+      "input": {
+        "tree": {
+          "日本語/ノート.md": "hit",
+          "with space.md": "hit 2",
+          "x.y.md": "hit 3"
+        },
+        "outside": {},
+        "query": "hit",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "hit",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "hit",
+              "is_match": true
+            }
+          ],
+          "path": "日本語/ノート.md",
+          "name": "ノート",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        },
+        {
+          "line_number": 1,
+          "match_text": "hit 2",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "hit 2",
+              "is_match": true
+            }
+          ],
+          "path": "with space.md",
+          "name": "with space",
+          "mtime": "2023-11-14T22:11:40.000+00:00"
+        },
+        {
+          "line_number": 1,
+          "match_text": "hit 3",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "hit 3",
+              "is_match": true
+            }
+          ],
+          "path": "x.y.md",
+          "name": "x.y",
+          "mtime": "2023-11-14T22:10:00.000+00:00"
+        }
+      ]
+    },
+    {
+      "name": "very long line",
+      "fn": "NotesService#search_content",
+      "input": {
+        "tree": {
+          "n.md": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxneedleyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy"
+        },
+        "outside": {},
+        "query": "needle",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxneedleyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxneedleyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
+              "is_match": true
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        }
+      ]
+    },
+    {
+      "name": "match_text is full line",
+      "fn": "NotesService#search_content",
+      "input": {
+        "tree": {
+          "n.md": "prefix needle suffix"
+        },
+        "outside": {},
+        "query": "needle",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "prefix needle suffix",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "prefix needle suffix",
+              "is_match": true
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        }
+      ]
+    },
+    {
+      "name": "query with surrounding spaces is used as-is",
+      "fn": "NotesService#search_content",
+      "input": {
+        "tree": {
+          "n.md": "a needle b\nneedle"
+        },
+        "outside": {},
+        "query": " needle ",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "a needle b",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "a needle b",
+              "is_match": true
+            },
+            {
+              "line_number": 2,
+              "content": "needle",
+              "is_match": false
+            }
+          ],
+          "path": "n.md",
+          "name": "n",
+          "mtime": "2023-11-14T22:13:20.000+00:00"
+        }
+      ]
+    },
+    {
+      "name": "empty file",
+      "fn": "NotesService#search_content",
+      "input": {
+        "tree": {
+          "e.md": ""
+        },
+        "outside": {},
+        "query": "x",
+        "options": {}
+      },
+      "expected": []
+    },
+    {
+      "name": "mtime serialization (fractional and pre-epoch)",
+      "fn": "NotesService#search_content",
+      "input": {
+        "tree": {
+          "a.md": {
+            "content": "hit",
+            "mtime": 1700000000.75
+          },
+          "b.md": {
+            "content": "hit",
+            "mtime": -86400
+          }
+        },
+        "outside": {},
+        "query": "hit",
+        "options": {}
+      },
+      "expected": [
+        {
+          "line_number": 1,
+          "match_text": "hit",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "hit",
+              "is_match": true
+            }
+          ],
+          "path": "a.md",
+          "name": "a",
+          "mtime": "2023-11-14T22:13:20.750+00:00"
+        },
+        {
+          "line_number": 1,
+          "match_text": "hit",
+          "context": [
+            {
+              "line_number": 1,
+              "content": "hit",
+              "is_match": true
+            }
+          ],
+          "path": "b.md",
+          "name": "b",
+          "mtime": "1969-12-31T00:00:00.000+00:00"
+        }
+      ]
+    },
+    {
+      "name": "no results",
+      "fn": "NotesService#search_content",
+      "input": {
+        "tree": {
+          "note1.md": {
+            "content": "Hello world\nThis is a test",
+            "mtime": 1700000000
+          },
+          "note2.md": {
+            "content": "Another file\nWith different content",
+            "mtime": 1699999900
+          }
+        },
+        "outside": {},
+        "query": "nonexistent_xyz",
+        "options": {}
+      },
+      "expected": []
+    },
+    {
+      "name": "GET /notes/search q=\"findme\" accept=application/json",
+      "fn": "http",
+      "input": {
+        "tree": "26 files n00..n24.md ('findme i', mtime 1700000000-i) + one.md",
+        "query": "findme",
+        "accept": "application/json"
+      },
+      "expected": {
+        "status": 200,
+        "body": "<omitted: readdir-order dependent subset>",
+        "count": 20
+      }
+    },
+    {
+      "name": "GET /notes/search q=\"<b>hit</b>\" accept=application/json",
+      "fn": "http",
+      "input": {
+        "tree": "26 files n00..n24.md ('findme i', mtime 1700000000-i) + one.md",
+        "query": "<b>hit</b>",
+        "accept": "application/json"
+      },
+      "expected": {
+        "status": 200,
+        "body": [
+          {
+            "line_number": 1,
+            "match_text": "single <b>hit</b> & \"q\"",
+            "context": [
+              {
+                "line_number": 1,
+                "content": "single <b>hit</b> & \"q\"",
+                "is_match": true
+              }
+            ],
+            "path": "one.md",
+            "name": "one",
+            "mtime": "2023-11-14T22:15:00.000+00:00"
+          }
+        ]
+      }
+    },
+    {
+      "name": "GET /notes/search q=\"<b>hit</b>\" accept=text/html",
+      "fn": "http",
+      "input": {
+        "tree": "26 files n00..n24.md ('findme i', mtime 1700000000-i) + one.md",
+        "query": "<b>hit</b>",
+        "accept": "text/html"
+      },
+      "expected": {
+        "status": 200,
+        "body": "    <button\n      type=\"button\"\n      class=\"w-full text-left border-b border-[var(--theme-border)] last:border-b-0 bg-[var(--theme-accent)] text-[var(--theme-accent-text)]\"\n      data-index=\"0\"\n      data-path=\"one.md\"\n      data-line=\"1\"\n      data-action=\"click->content-search#selectFromClick mouseenter->content-search#onHover\"\n    >\n      <div class=\"px-3 py-2\">\n        <div class=\"flex items-center gap-2 mb-1\">\n          <svg class=\"w-4 h-4 flex-shrink-0 \" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">\n            <path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" d=\"M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z\" />\n          </svg>\n          <span class=\"font-medium truncate\">one</span>\n          <span class=\"text-xs opacity-80\">:1</span>\n          <span class=\"text-xs opacity-70 truncate ml-auto\">one</span>\n        </div>\n        <div class=\"font-mono text-xs leading-relaxed overflow-hidden bg-black/20 rounded p-2\">\n            <div class=\"flex bg-[var(--theme-selection)] text-[var(--theme-selection-text)]\">\n              <span class=\"w-10 flex-shrink-0 text-right pr-2 text-[var(--theme-text-faint)] select-none\">1</span>\n              <span class=\"flex-1 overflow-hidden text-ellipsis\">single &lt;b&gt;hit&lt;/b&gt; &amp; &quot;q&quot;</span>\n            </div>\n        </div>\n      </div>\n    </button>\n"
+      }
+    },
+    {
+      "name": "GET /notes/search q=\"\" accept=application/json",
+      "fn": "http",
+      "input": {
+        "tree": "26 files n00..n24.md ('findme i', mtime 1700000000-i) + one.md",
+        "query": "",
+        "accept": "application/json"
+      },
+      "expected": {
+        "status": 200,
+        "body": []
+      }
+    }
+  ]
+}

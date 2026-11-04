@@ -1,0 +1,392 @@
+{
+  "source": "app/javascript/lib/line_numbers.js @ d47a89e92d89f807878d318182fa5dcea0329ec4",
+  "frankmd_sha": "d47a89e92d89f807878d318182fa5dcea0329ec4",
+  "generator": "tools/golden/js/utils.mjs",
+  "notes": "input = encoded argument array (decode with golden.mjs decode: {$undefined}, {$number}, {$date}, {$regexp}, {$utf16}); expected = encoded return value, or {$error:{name,message}}. JS strings are UTF-16: all positions/lengths/indices in inputs and outputs are UTF-16 code-unit offsets; cases with non-BMP/multi-unit strings carry a `utf16` array (utf16_len/scalar_len/utf8_len per such string arg). TZ pinned to UTC for date-based helpers.",
+  "functions": [
+    "nextLineNumberMode",
+    "normalizeLineNumberMode"
+  ],
+  "cases": [
+    {
+      "name": "nextLineNumberMode #1 (from FrankMD vitest suite)",
+      "fn": "nextLineNumberMode",
+      "input": [
+        0
+      ],
+      "expected": 1
+    },
+    {
+      "name": "nextLineNumberMode #2 (from FrankMD vitest suite)",
+      "fn": "nextLineNumberMode",
+      "input": [
+        2
+      ],
+      "expected": 0
+    },
+    {
+      "name": "nextLineNumberMode #3 (from FrankMD vitest suite)",
+      "fn": "nextLineNumberMode",
+      "input": [
+        1
+      ],
+      "expected": 2
+    },
+    {
+      "name": "normalizeLineNumberMode #1 (from FrankMD vitest suite)",
+      "fn": "normalizeLineNumberMode",
+      "input": [
+        99,
+        1
+      ],
+      "expected": 1
+    },
+    {
+      "name": "normalizeLineNumberMode #2 (from FrankMD vitest suite)",
+      "fn": "normalizeLineNumberMode",
+      "input": [
+        "invalid",
+        0
+      ],
+      "expected": 0
+    },
+    {
+      "name": "normalizeLineNumberMode #3 (from FrankMD vitest suite)",
+      "fn": "normalizeLineNumberMode",
+      "input": [
+        2,
+        0
+      ],
+      "expected": 2
+    },
+    {
+      "name": "normalizeLineNumberMode #4 (from FrankMD vitest suite)",
+      "fn": "normalizeLineNumberMode",
+      "input": [
+        "1",
+        0
+      ],
+      "expected": 1
+    },
+    {
+      "name": "normalizeLineNumberMode #5 (from FrankMD vitest suite)",
+      "fn": "normalizeLineNumberMode",
+      "input": [
+        {
+          "$undefined": true
+        },
+        0
+      ],
+      "expected": 0
+    },
+    {
+      "name": "normalizeLineNumberMode #6 (from FrankMD vitest suite)",
+      "fn": "normalizeLineNumberMode",
+      "input": [
+        0,
+        "off"
+      ],
+      "expected": 0
+    },
+    {
+      "name": "normalizeLineNumberMode #7 (edge corpus)",
+      "fn": "normalizeLineNumberMode",
+      "input": [
+        0
+      ],
+      "expected": 0
+    },
+    {
+      "name": "normalizeLineNumberMode #8 (edge corpus)",
+      "fn": "normalizeLineNumberMode",
+      "input": [
+        0,
+        0
+      ],
+      "expected": 0
+    },
+    {
+      "name": "normalizeLineNumberMode #9 (edge corpus)",
+      "fn": "normalizeLineNumberMode",
+      "input": [
+        1
+      ],
+      "expected": 1
+    },
+    {
+      "name": "normalizeLineNumberMode #10 (edge corpus)",
+      "fn": "normalizeLineNumberMode",
+      "input": [
+        1,
+        0
+      ],
+      "expected": 1
+    },
+    {
+      "name": "normalizeLineNumberMode #11 (edge corpus)",
+      "fn": "normalizeLineNumberMode",
+      "input": [
+        2
+      ],
+      "expected": 2
+    },
+    {
+      "name": "normalizeLineNumberMode #12 (edge corpus)",
+      "fn": "normalizeLineNumberMode",
+      "input": [
+        3
+      ],
+      "expected": 1
+    },
+    {
+      "name": "normalizeLineNumberMode #13 (edge corpus)",
+      "fn": "normalizeLineNumberMode",
+      "input": [
+        3,
+        0
+      ],
+      "expected": 0
+    },
+    {
+      "name": "normalizeLineNumberMode #14 (edge corpus)",
+      "fn": "normalizeLineNumberMode",
+      "input": [
+        -1
+      ],
+      "expected": 1
+    },
+    {
+      "name": "normalizeLineNumberMode #15 (edge corpus)",
+      "fn": "normalizeLineNumberMode",
+      "input": [
+        -1,
+        0
+      ],
+      "expected": 0
+    },
+    {
+      "name": "normalizeLineNumberMode #16 (edge corpus)",
+      "fn": "normalizeLineNumberMode",
+      "input": [
+        "0"
+      ],
+      "expected": 0
+    },
+    {
+      "name": "normalizeLineNumberMode #17 (edge corpus)",
+      "fn": "normalizeLineNumberMode",
+      "input": [
+        "0",
+        0
+      ],
+      "expected": 0
+    },
+    {
+      "name": "normalizeLineNumberMode #18 (edge corpus)",
+      "fn": "normalizeLineNumberMode",
+      "input": [
+        "1"
+      ],
+      "expected": 1
+    },
+    {
+      "name": "normalizeLineNumberMode #19 (edge corpus)",
+      "fn": "normalizeLineNumberMode",
+      "input": [
+        "2"
+      ],
+      "expected": 2
+    },
+    {
+      "name": "normalizeLineNumberMode #20 (edge corpus)",
+      "fn": "normalizeLineNumberMode",
+      "input": [
+        "2",
+        0
+      ],
+      "expected": 2
+    },
+    {
+      "name": "normalizeLineNumberMode #21 (edge corpus)",
+      "fn": "normalizeLineNumberMode",
+      "input": [
+        "2px"
+      ],
+      "expected": 2
+    },
+    {
+      "name": "normalizeLineNumberMode #22 (edge corpus)",
+      "fn": "normalizeLineNumberMode",
+      "input": [
+        "2px",
+        0
+      ],
+      "expected": 2
+    },
+    {
+      "name": "normalizeLineNumberMode #23 (edge corpus)",
+      "fn": "normalizeLineNumberMode",
+      "input": [
+        " 1"
+      ],
+      "expected": 1
+    },
+    {
+      "name": "normalizeLineNumberMode #24 (edge corpus)",
+      "fn": "normalizeLineNumberMode",
+      "input": [
+        " 1",
+        0
+      ],
+      "expected": 1
+    },
+    {
+      "name": "normalizeLineNumberMode #25 (edge corpus)",
+      "fn": "normalizeLineNumberMode",
+      "input": [
+        "abc"
+      ],
+      "expected": 1
+    },
+    {
+      "name": "normalizeLineNumberMode #26 (edge corpus)",
+      "fn": "normalizeLineNumberMode",
+      "input": [
+        "abc",
+        0
+      ],
+      "expected": 0
+    },
+    {
+      "name": "normalizeLineNumberMode #27 (edge corpus)",
+      "fn": "normalizeLineNumberMode",
+      "input": [
+        ""
+      ],
+      "expected": 1
+    },
+    {
+      "name": "normalizeLineNumberMode #28 (edge corpus)",
+      "fn": "normalizeLineNumberMode",
+      "input": [
+        "",
+        0
+      ],
+      "expected": 0
+    },
+    {
+      "name": "normalizeLineNumberMode #29 (edge corpus)",
+      "fn": "normalizeLineNumberMode",
+      "input": [
+        null
+      ],
+      "expected": 1
+    },
+    {
+      "name": "normalizeLineNumberMode #30 (edge corpus)",
+      "fn": "normalizeLineNumberMode",
+      "input": [
+        null,
+        0
+      ],
+      "expected": 0
+    },
+    {
+      "name": "normalizeLineNumberMode #31 (edge corpus)",
+      "fn": "normalizeLineNumberMode",
+      "input": [
+        {
+          "$undefined": true
+        }
+      ],
+      "expected": 1
+    },
+    {
+      "name": "normalizeLineNumberMode #32 (edge corpus)",
+      "fn": "normalizeLineNumberMode",
+      "input": [
+        1.9
+      ],
+      "expected": 1
+    },
+    {
+      "name": "normalizeLineNumberMode #33 (edge corpus)",
+      "fn": "normalizeLineNumberMode",
+      "input": [
+        1.9,
+        0
+      ],
+      "expected": 1
+    },
+    {
+      "name": "normalizeLineNumberMode #34 (edge corpus)",
+      "fn": "normalizeLineNumberMode",
+      "input": [
+        true
+      ],
+      "expected": 1
+    },
+    {
+      "name": "normalizeLineNumberMode #35 (edge corpus)",
+      "fn": "normalizeLineNumberMode",
+      "input": [
+        true,
+        0
+      ],
+      "expected": 0
+    },
+    {
+      "name": "normalizeLineNumberMode #36 (edge corpus)",
+      "fn": "normalizeLineNumberMode",
+      "input": [
+        {
+          "$number": "NaN"
+        }
+      ],
+      "expected": 1
+    },
+    {
+      "name": "normalizeLineNumberMode #37 (edge corpus)",
+      "fn": "normalizeLineNumberMode",
+      "input": [
+        {
+          "$number": "NaN"
+        },
+        0
+      ],
+      "expected": 0
+    },
+    {
+      "name": "nextLineNumberMode #4 (edge corpus)",
+      "fn": "nextLineNumberMode",
+      "input": [
+        3
+      ],
+      "expected": 0
+    },
+    {
+      "name": "nextLineNumberMode #5 (edge corpus)",
+      "fn": "nextLineNumberMode",
+      "input": [
+        -1
+      ],
+      "expected": 0
+    },
+    {
+      "name": "nextLineNumberMode #6 (edge corpus)",
+      "fn": "nextLineNumberMode",
+      "input": [
+        null
+      ],
+      "expected": 0
+    },
+    {
+      "name": "nextLineNumberMode #7 (edge corpus)",
+      "fn": "nextLineNumberMode",
+      "input": [
+        "1"
+      ],
+      "expected": 0
+    }
+  ]
+}

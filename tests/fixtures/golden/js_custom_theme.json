@@ -1,0 +1,2624 @@
+{
+  "source": "app/javascript/lib/custom_theme.js + app/assets/tailwind/themes/*.css @ d47a89e92d89f807878d318182fa5dcea0329ec4",
+  "frankmd_sha": "d47a89e92d89f807878d318182fa5dcea0329ec4",
+  "generator": "tools/golden/js/ui_data.mjs",
+  "notes": "applyCustomColors/clearCustomColors act on jsdom document.documentElement.style (pre-set --editor-width:72ch to show it is untouched); expected is the style attribute serialization. themeColor: styles stub returns input.getPropertyValue for every property; jsdom has no CSS.supports/canvas, so the browser-only named-color path (e.g. 'khaki' -> canvas fillStyle) returns null here (in a browser it would resolve named colors). themePalette cases dump each built-in theme's --theme-* variables (raw text), contrast of syntax roles vs --theme-code-bg (custom_theme.contrastRatio), and themeColor() per COLOR_KEY.",
+  "cases": [
+    {
+      "name": "COLOR_KEYS",
+      "fn": "COLOR_KEYS",
+      "input": [],
+      "expected": [
+        "bg-primary",
+        "bg-secondary",
+        "bg-tertiary",
+        "bg-hover",
+        "text-primary",
+        "text-secondary",
+        "text-muted",
+        "text-faint",
+        "border",
+        "accent",
+        "accent-hover",
+        "accent-text",
+        "selection",
+        "selection-text",
+        "scrollbar",
+        "scrollbar-hover",
+        "success",
+        "warning",
+        "error",
+        "code-bg",
+        "heading-1",
+        "heading-2",
+        "heading-3",
+        "folder-icon",
+        "file-icon",
+        "config-icon",
+        "syntax-keyword",
+        "syntax-function",
+        "syntax-type",
+        "syntax-string",
+        "syntax-number",
+        "syntax-constant",
+        "syntax-identifier",
+        "syntax-property",
+        "syntax-operator",
+        "syntax-comment",
+        "syntax-punctuation",
+        "syntax-invalid"
+      ]
+    },
+    {
+      "name": "harvested normalizeColor [\"#abc\"]",
+      "fn": "normalizeColor",
+      "input": [
+        "#abc"
+      ],
+      "expected": null
+    },
+    {
+      "name": "harvested normalizeColor [\" #AABBCC \"]",
+      "fn": "normalizeColor",
+      "input": [
+        " #AABBCC "
+      ],
+      "expected": "#aabbcc"
+    },
+    {
+      "name": "harvested normalizeColor [\"url(evil)\"]",
+      "fn": "normalizeColor",
+      "input": [
+        "url(evil)"
+      ],
+      "expected": null
+    },
+    {
+      "name": "harvested normalizeColor [\"#aabbcc\"]",
+      "fn": "normalizeColor",
+      "input": [
+        "#aabbcc"
+      ],
+      "expected": "#aabbcc"
+    },
+    {
+      "name": "harvested normalizeColor [\"#ffffff;display:none\"]",
+      "fn": "normalizeColor",
+      "input": [
+        "#ffffff;display:none"
+      ],
+      "expected": null
+    },
+    {
+      "name": "harvested normalizeColor [null]",
+      "fn": "normalizeColor",
+      "input": [
+        null
+      ],
+      "expected": null
+    },
+    {
+      "name": "harvested normalizeColor [\"url(https://example.com)\"]",
+      "fn": "normalizeColor",
+      "input": [
+        "url(https://example.com)"
+      ],
+      "expected": null
+    },
+    {
+      "name": "harvested normalizeColor [\"red\"]",
+      "fn": "normalizeColor",
+      "input": [
+        "red"
+      ],
+      "expected": null
+    },
+    {
+      "name": "harvested normalizeColor [\"#abcdef\"]",
+      "fn": "normalizeColor",
+      "input": [
+        "#abcdef"
+      ],
+      "expected": "#abcdef"
+    },
+    {
+      "name": "harvested normalizeColor [\"#111111\"]",
+      "fn": "normalizeColor",
+      "input": [
+        "#111111"
+      ],
+      "expected": "#111111"
+    },
+    {
+      "name": "harvested normalizeColor [\"#fff\"]",
+      "fn": "normalizeColor",
+      "input": [
+        "#fff"
+      ],
+      "expected": null
+    },
+    {
+      "name": "harvested normalizeColor [\"#112233\"]",
+      "fn": "normalizeColor",
+      "input": [
+        "#112233"
+      ],
+      "expected": "#112233"
+    },
+    {
+      "name": "harvested contrastRatio [\"#777777\",\"#ffffff\"]",
+      "fn": "contrastRatio",
+      "input": [
+        "#777777",
+        "#ffffff"
+      ],
+      "expected": 4.478089453577214
+    },
+    {
+      "name": "harvested contrastRatio [\"#111111\",\"#111111\"]",
+      "fn": "contrastRatio",
+      "input": [
+        "#111111",
+        "#111111"
+      ],
+      "expected": 1
+    },
+    {
+      "name": "harvested contrastRatio [\"#ffffff\",\"#112233\"]",
+      "fn": "contrastRatio",
+      "input": [
+        "#ffffff",
+        "#112233"
+      ],
+      "expected": 16.148276384578075
+    },
+    {
+      "name": "harvested contrastRatio [\"#ffffff\",\"#000000\"]",
+      "fn": "contrastRatio",
+      "input": [
+        "#ffffff",
+        "#000000"
+      ],
+      "expected": 21
+    },
+    {
+      "name": "harvested contrastRatio [\"#ffffff\",\"#111111\"]",
+      "fn": "contrastRatio",
+      "input": [
+        "#ffffff",
+        "#111111"
+      ],
+      "expected": 18.883060964594996
+    },
+    {
+      "name": "harvested contrastRatio [\"#123456\",\"#123456\"]",
+      "fn": "contrastRatio",
+      "input": [
+        "#123456",
+        "#123456"
+      ],
+      "expected": 1
+    },
+    {
+      "name": "harvested contrastRatio [\"#ffffff\",\"#aabbcc\"]",
+      "fn": "contrastRatio",
+      "input": [
+        "#ffffff",
+        "#aabbcc"
+      ],
+      "expected": 1.9645876970822407
+    },
+    {
+      "name": "harvested contrastRatio [\"\",\"#ffffff\"]",
+      "fn": "contrastRatio",
+      "input": [
+        "",
+        "#ffffff"
+      ],
+      "expected": null
+    },
+    {
+      "name": "harvested contrastRatio [\"#111111\",\"#ffffff\"]",
+      "fn": "contrastRatio",
+      "input": [
+        "#111111",
+        "#ffffff"
+      ],
+      "expected": 18.883060964594996
+    },
+    {
+      "name": "harvested contrastRatio [\"#ffffff\",\"#abcdef\"]",
+      "fn": "contrastRatio",
+      "input": [
+        "#ffffff",
+        "#abcdef"
+      ],
+      "expected": 1.6521756384257364
+    },
+    {
+      "name": "normalizeColor \"#ABC\"",
+      "fn": "normalizeColor",
+      "input": [
+        "#ABC"
+      ],
+      "expected": null
+    },
+    {
+      "name": "normalizeColor \"url(x)\"",
+      "fn": "normalizeColor",
+      "input": [
+        "url(x)"
+      ],
+      "expected": null
+    },
+    {
+      "name": "normalizeColor \"#gggggg\"",
+      "fn": "normalizeColor",
+      "input": [
+        "#gggggg"
+      ],
+      "expected": null
+    },
+    {
+      "name": "normalizeColor \"#1234567\"",
+      "fn": "normalizeColor",
+      "input": [
+        "#1234567"
+      ],
+      "expected": null
+    },
+    {
+      "name": "normalizeColor \"#12345\"",
+      "fn": "normalizeColor",
+      "input": [
+        "#12345"
+      ],
+      "expected": null
+    },
+    {
+      "name": "normalizeColor \"\\t#00ff00\\n\"",
+      "fn": "normalizeColor",
+      "input": [
+        "\t#00ff00\n"
+      ],
+      "expected": "#00ff00"
+    },
+    {
+      "name": "normalizeColor \"#00FF00\"",
+      "fn": "normalizeColor",
+      "input": [
+        "#00FF00"
+      ],
+      "expected": "#00ff00"
+    },
+    {
+      "name": "normalizeColor 1122867",
+      "fn": "normalizeColor",
+      "input": [
+        1122867
+      ],
+      "expected": null
+    },
+    {
+      "name": "normalizeColor \"undefined\"",
+      "fn": "normalizeColor",
+      "input": [
+        {
+          "$undefined": true
+        }
+      ],
+      "expected": null
+    },
+    {
+      "name": "normalizeColor {}",
+      "fn": "normalizeColor",
+      "input": [
+        {}
+      ],
+      "expected": null
+    },
+    {
+      "name": "normalizeColor [\"#112233\"]",
+      "fn": "normalizeColor",
+      "input": [
+        [
+          "#112233"
+        ]
+      ],
+      "expected": null
+    },
+    {
+      "name": "normalizeColor \"\"",
+      "fn": "normalizeColor",
+      "input": [
+        ""
+      ],
+      "expected": null
+    },
+    {
+      "name": "normalizeColor \"＃112233\"",
+      "fn": "normalizeColor",
+      "input": [
+        "＃112233"
+      ],
+      "expected": null
+    },
+    {
+      "name": "normalizeColor \"#１１２２３３\"",
+      "fn": "normalizeColor",
+      "input": [
+        "#１１２２３３"
+      ],
+      "expected": null
+    },
+    {
+      "name": "contrastRatio #000000 #ffffff",
+      "fn": "contrastRatio",
+      "input": [
+        "#000000",
+        "#ffffff"
+      ],
+      "expected": 21
+    },
+    {
+      "name": "contrastRatio #fff #000",
+      "fn": "contrastRatio",
+      "input": [
+        "#fff",
+        "#000"
+      ],
+      "expected": null
+    },
+    {
+      "name": "contrastRatio #FF0000 #00ff00",
+      "fn": "contrastRatio",
+      "input": [
+        "#FF0000",
+        "#00ff00"
+      ],
+      "expected": 2.9139375476009137
+    },
+    {
+      "name": "contrastRatio #0000ff #ffff00",
+      "fn": "contrastRatio",
+      "input": [
+        "#0000ff",
+        "#ffff00"
+      ],
+      "expected": 8.00163666121113
+    },
+    {
+      "name": "contrastRatio  #808080  #101010",
+      "fn": "contrastRatio",
+      "input": [
+        " #808080 ",
+        "#101010"
+      ],
+      "expected": {
+        "$number": "NaN"
+      }
+    },
+    {
+      "name": "contrastRatio null null",
+      "fn": "contrastRatio",
+      "input": [
+        null,
+        null
+      ],
+      "expected": null
+    },
+    {
+      "name": "contrastRatio #0a0a0a #0b0b0b",
+      "fn": "contrastRatio",
+      "input": [
+        "#0a0a0a",
+        "#0b0b0b"
+      ],
+      "expected": 1.0058690363860938
+    },
+    {
+      "name": "themeColor \" #fff \"",
+      "fn": "themeColor",
+      "input": {
+        "getPropertyValue": " #fff ",
+        "key": "accent"
+      },
+      "expected": {
+        "result": "#ffffff",
+        "propertyRead": [
+          "--theme-accent"
+        ]
+      }
+    },
+    {
+      "name": "themeColor \"#FFF\"",
+      "fn": "themeColor",
+      "input": {
+        "getPropertyValue": "#FFF",
+        "key": "accent"
+      },
+      "expected": {
+        "result": "#ffffff",
+        "propertyRead": [
+          "--theme-accent"
+        ]
+      }
+    },
+    {
+      "name": "themeColor \"#abc\"",
+      "fn": "themeColor",
+      "input": {
+        "getPropertyValue": "#abc",
+        "key": "accent"
+      },
+      "expected": {
+        "result": "#aabbcc",
+        "propertyRead": [
+          "--theme-accent"
+        ]
+      }
+    },
+    {
+      "name": "themeColor \"#aabbcc\"",
+      "fn": "themeColor",
+      "input": {
+        "getPropertyValue": "#aabbcc",
+        "key": "accent"
+      },
+      "expected": {
+        "result": "#aabbcc",
+        "propertyRead": [
+          "--theme-accent"
+        ]
+      }
+    },
+    {
+      "name": "themeColor \"#AABBCC\"",
+      "fn": "themeColor",
+      "input": {
+        "getPropertyValue": "#AABBCC",
+        "key": "accent"
+      },
+      "expected": {
+        "result": "#aabbcc",
+        "propertyRead": [
+          "--theme-accent"
+        ]
+      }
+    },
+    {
+      "name": "themeColor \"\"",
+      "fn": "themeColor",
+      "input": {
+        "getPropertyValue": "",
+        "key": "accent"
+      },
+      "expected": {
+        "result": null,
+        "propertyRead": [
+          "--theme-accent"
+        ]
+      }
+    },
+    {
+      "name": "themeColor \"  \"",
+      "fn": "themeColor",
+      "input": {
+        "getPropertyValue": "  ",
+        "key": "accent"
+      },
+      "expected": {
+        "result": null,
+        "propertyRead": [
+          "--theme-accent"
+        ]
+      }
+    },
+    {
+      "name": "themeColor \"#abcd\"",
+      "fn": "themeColor",
+      "input": {
+        "getPropertyValue": "#abcd",
+        "key": "accent"
+      },
+      "expected": {
+        "result": null,
+        "propertyRead": [
+          "--theme-accent"
+        ]
+      }
+    },
+    {
+      "name": "themeColor \"rgb(1,2,3)\"",
+      "fn": "themeColor",
+      "input": {
+        "getPropertyValue": "rgb(1,2,3)",
+        "key": "accent"
+      },
+      "expected": {
+        "result": null,
+        "propertyRead": [
+          "--theme-accent"
+        ]
+      }
+    },
+    {
+      "name": "themeColor \"khaki\"",
+      "fn": "themeColor",
+      "input": {
+        "getPropertyValue": "khaki",
+        "key": "accent"
+      },
+      "expected": {
+        "result": null,
+        "propertyRead": [
+          "--theme-accent"
+        ]
+      }
+    },
+    {
+      "name": "applyCustomColors {\"accent\":\"#abcdef\"}",
+      "fn": "applyCustomColors",
+      "input": [
+        {
+          "accent": "#abcdef"
+        }
+      ],
+      "expected": {
+        "styleAfterApply": "--editor-width: 72ch; --theme-accent: #abcdef;",
+        "styleAfterClear": "--editor-width: 72ch;"
+      }
+    },
+    {
+      "name": "applyCustomColors {\"accent\":\"#112233\",\"bg-primary\":\"url(secret)\",\"font-family\"",
+      "fn": "applyCustomColors",
+      "input": [
+        {
+          "accent": "#112233",
+          "bg-primary": "url(secret)",
+          "font-family": "#abcdef"
+        }
+      ],
+      "expected": {
+        "styleAfterApply": "--editor-width: 72ch; --theme-accent: #112233;",
+        "styleAfterClear": "--editor-width: 72ch;"
+      }
+    },
+    {
+      "name": "applyCustomColors {\"accent\":\"#112233\",\"text-primary\":\"#111111\"}",
+      "fn": "applyCustomColors",
+      "input": [
+        {
+          "accent": "#112233",
+          "text-primary": "#111111"
+        }
+      ],
+      "expected": {
+        "styleAfterApply": "--editor-width: 72ch; --theme-accent: #112233; --theme-text-primary: #111111;",
+        "styleAfterClear": "--editor-width: 72ch;"
+      }
+    },
+    {
+      "name": "applyCustomColors {\"accent\":\"#aabbcc\"}",
+      "fn": "applyCustomColors",
+      "input": [
+        {
+          "accent": "#aabbcc"
+        }
+      ],
+      "expected": {
+        "styleAfterApply": "--editor-width: 72ch; --theme-accent: #aabbcc;",
+        "styleAfterClear": "--editor-width: 72ch;"
+      }
+    },
+    {
+      "name": "applyCustomColors {\"accent\":\"#112233\"}",
+      "fn": "applyCustomColors",
+      "input": [
+        {
+          "accent": "#112233"
+        }
+      ],
+      "expected": {
+        "styleAfterApply": "--editor-width: 72ch; --theme-accent: #112233;",
+        "styleAfterClear": "--editor-width: 72ch;"
+      }
+    },
+    {
+      "name": "applyCustomColors {}",
+      "fn": "applyCustomColors",
+      "input": [
+        {}
+      ],
+      "expected": {
+        "styleAfterApply": "--editor-width: 72ch;",
+        "styleAfterClear": "--editor-width: 72ch;"
+      }
+    },
+    {
+      "name": "applyCustomColors {\"syntax-keyword\":\" #ABCDEF \"}",
+      "fn": "applyCustomColors",
+      "input": [
+        {
+          "syntax-keyword": " #ABCDEF "
+        }
+      ],
+      "expected": {
+        "styleAfterApply": "--editor-width: 72ch; --theme-syntax-keyword: #abcdef;",
+        "styleAfterClear": "--editor-width: 72ch;"
+      }
+    },
+    {
+      "name": "applyCustomColors {\"accent\":\"#abc\"}",
+      "fn": "applyCustomColors",
+      "input": [
+        {
+          "accent": "#abc"
+        }
+      ],
+      "expected": {
+        "styleAfterApply": "--editor-width: 72ch;",
+        "styleAfterClear": "--editor-width: 72ch;"
+      }
+    },
+    {
+      "name": "applyCustomColors \"null\"",
+      "fn": "applyCustomColors",
+      "input": [
+        null
+      ],
+      "expected": {
+        "styleAfterApply": "--editor-width: 72ch;",
+        "styleAfterClear": "--editor-width: 72ch;"
+      }
+    },
+    {
+      "name": "applyCustomColors \"undefined\"",
+      "fn": "applyCustomColors",
+      "input": [
+        {
+          "$undefined": true
+        }
+      ],
+      "expected": {
+        "styleAfterApply": "--editor-width: 72ch;",
+        "styleAfterClear": "--editor-width: 72ch;"
+      }
+    },
+    {
+      "name": "applyCustomColors {\"accent\":123}",
+      "fn": "applyCustomColors",
+      "input": [
+        {
+          "accent": 123
+        }
+      ],
+      "expected": {
+        "styleAfterApply": "--editor-width: 72ch;",
+        "styleAfterClear": "--editor-width: 72ch;"
+      }
+    },
+    {
+      "name": "applyCustomColors {\"bg-primary\":\"#000000\",\"bg-secondary\":\"#018697\",\"bg-tertiar",
+      "fn": "applyCustomColors",
+      "input": [
+        {
+          "bg-primary": "#000000",
+          "bg-secondary": "#018697",
+          "bg-tertiary": "#030d2e",
+          "bg-hover": "#0493c5",
+          "text-primary": "#061a5c",
+          "text-secondary": "#07a0f3",
+          "text-muted": "#09278a",
+          "text-faint": "#0aae21",
+          "border": "#0c34b8",
+          "accent": "#0dbb4f",
+          "accent-hover": "#0f41e6",
+          "accent-text": "#10c87d",
+          "selection": "#124f14",
+          "selection-text": "#13d5ab",
+          "scrollbar": "#155c42",
+          "scrollbar-hover": "#16e2d9",
+          "success": "#186970",
+          "warning": "#19f007",
+          "error": "#1b769e",
+          "code-bg": "#1cfd35",
+          "heading-1": "#1e83cc",
+          "heading-2": "#200a63",
+          "heading-3": "#2190fa",
+          "folder-icon": "#231791",
+          "file-icon": "#249e28",
+          "config-icon": "#2624bf",
+          "syntax-keyword": "#27ab56",
+          "syntax-function": "#2931ed",
+          "syntax-type": "#2ab884",
+          "syntax-string": "#2c3f1b",
+          "syntax-number": "#2dc5b2",
+          "syntax-constant": "#2f4c49",
+          "syntax-identifier": "#30d2e0",
+          "syntax-property": "#325977",
+          "syntax-operator": "#33e00e",
+          "syntax-comment": "#3566a5",
+          "syntax-punctuation": "#36ed3c",
+          "syntax-invalid": "#3873d3"
+        }
+      ],
+      "expected": {
+        "styleAfterApply": "--editor-width: 72ch; --theme-bg-primary: #000000; --theme-bg-secondary: #018697; --theme-bg-tertiary: #030d2e; --theme-bg-hover: #0493c5; --theme-text-primary: #061a5c; --theme-text-secondary: #07a0f3; --theme-text-muted: #09278a; --theme-text-faint: #0aae21; --theme-border: #0c34b8; --theme-accent: #0dbb4f; --theme-accent-hover: #0f41e6; --theme-accent-text: #10c87d; --theme-selection: #124f14; --theme-selection-text: #13d5ab; --theme-scrollbar: #155c42; --theme-scrollbar-hover: #16e2d9; --theme-success: #186970; --theme-warning: #19f007; --theme-error: #1b769e; --theme-code-bg: #1cfd35; --theme-heading-1: #1e83cc; --theme-heading-2: #200a63; --theme-heading-3: #2190fa; --theme-folder-icon: #231791; --theme-file-icon: #249e28; --theme-config-icon: #2624bf; --theme-syntax-keyword: #27ab56; --theme-syntax-function: #2931ed; --theme-syntax-type: #2ab884; --theme-syntax-string: #2c3f1b; --theme-syntax-number: #2dc5b2; --theme-syntax-constant: #2f4c49; --theme-syntax-identifier: #30d2e0; --theme-syntax-property: #325977; --theme-syntax-operator: #33e00e; --theme-syntax-comment: #3566a5; --theme-syntax-punctuation: #36ed3c; --theme-syntax-invalid: #3873d3;",
+        "styleAfterClear": "--editor-width: 72ch;"
+      }
+    },
+    {
+      "name": "theme catppuccin-latte.css",
+      "fn": "themePalette",
+      "input": {
+        "file": "app/assets/tailwind/themes/catppuccin-latte.css"
+      },
+      "expected": {
+        "selector": "[data-theme=\"catppuccin-latte\"]",
+        "vars": {
+          "bg-primary": "#eff1f5",
+          "bg-secondary": "#e6e9ef",
+          "bg-tertiary": "#dce0e8",
+          "bg-hover": "#bcc0cc",
+          "text-primary": "#4c4f69",
+          "text-secondary": "#5c5f77",
+          "text-muted": "#6c6f85",
+          "text-faint": "#acb0be",
+          "border": "#bcc0cc",
+          "accent": "#1e66f5",
+          "accent-hover": "#2a6ef5",
+          "accent-text": "#eff1f5",
+          "selection": "#dc8a78",
+          "selection-text": "#eff1f5",
+          "scrollbar": "#bcc0cc",
+          "scrollbar-hover": "#acb0be",
+          "success": "#40a02b",
+          "warning": "#df8e1d",
+          "error": "#d20f39",
+          "code-bg": "#dce0e8",
+          "heading-1": "#8839ef",
+          "heading-2": "#1e66f5",
+          "heading-3": "#179299",
+          "folder-icon": "#1e66f5",
+          "file-icon": "#6c6f85",
+          "config-icon": "#df8e1d",
+          "syntax-keyword": "#771db7",
+          "syntax-function": "#7b4b12",
+          "syntax-type": "#0d5860",
+          "syntax-string": "#a23c10",
+          "syntax-number": "#8a5600",
+          "syntax-constant": "#3557b7",
+          "syntax-identifier": "#4c4f69",
+          "syntax-property": "#1a6175",
+          "syntax-operator": "#45475a",
+          "syntax-comment": "#505d74",
+          "syntax-punctuation": "#575a6d",
+          "syntax-invalid": "#b4233e"
+        },
+        "syntaxContrastVsCodeBg": {
+          "keyword": 6.002704747922535,
+          "function": 5.554305884855131,
+          "type": 6.146860650209641,
+          "string": 4.974959926414366,
+          "number": 4.651728905352473,
+          "constant": 4.961999615445147,
+          "identifier": 6.035201182516654,
+          "property": 5.271459378724067,
+          "operator": 6.894356180367143,
+          "comment": 5.023899914792298,
+          "punctuation": 5.138556580840521,
+          "invalid": 4.8823205017621945
+        },
+        "themeColor": {
+          "bg-primary": "#eff1f5",
+          "bg-secondary": "#e6e9ef",
+          "bg-tertiary": "#dce0e8",
+          "bg-hover": "#bcc0cc",
+          "text-primary": "#4c4f69",
+          "text-secondary": "#5c5f77",
+          "text-muted": "#6c6f85",
+          "text-faint": "#acb0be",
+          "border": "#bcc0cc",
+          "accent": "#1e66f5",
+          "accent-hover": "#2a6ef5",
+          "accent-text": "#eff1f5",
+          "selection": "#dc8a78",
+          "selection-text": "#eff1f5",
+          "scrollbar": "#bcc0cc",
+          "scrollbar-hover": "#acb0be",
+          "success": "#40a02b",
+          "warning": "#df8e1d",
+          "error": "#d20f39",
+          "code-bg": "#dce0e8",
+          "heading-1": "#8839ef",
+          "heading-2": "#1e66f5",
+          "heading-3": "#179299",
+          "folder-icon": "#1e66f5",
+          "file-icon": "#6c6f85",
+          "config-icon": "#df8e1d",
+          "syntax-keyword": "#771db7",
+          "syntax-function": "#7b4b12",
+          "syntax-type": "#0d5860",
+          "syntax-string": "#a23c10",
+          "syntax-number": "#8a5600",
+          "syntax-constant": "#3557b7",
+          "syntax-identifier": "#4c4f69",
+          "syntax-property": "#1a6175",
+          "syntax-operator": "#45475a",
+          "syntax-comment": "#505d74",
+          "syntax-punctuation": "#575a6d",
+          "syntax-invalid": "#b4233e"
+        }
+      }
+    },
+    {
+      "name": "theme catppuccin.css",
+      "fn": "themePalette",
+      "input": {
+        "file": "app/assets/tailwind/themes/catppuccin.css"
+      },
+      "expected": {
+        "selector": "[data-theme=\"catppuccin\"]",
+        "vars": {
+          "bg-primary": "#1e1e2e",
+          "bg-secondary": "#181825",
+          "bg-tertiary": "#313244",
+          "bg-hover": "#45475a",
+          "text-primary": "#cdd6f4",
+          "text-secondary": "#bac2de",
+          "text-muted": "#585b70",
+          "text-faint": "#45475a",
+          "border": "#45475a",
+          "accent": "#89b4fa",
+          "accent-hover": "#b4befe",
+          "accent-text": "#1e1e2e",
+          "selection": "#f5e0dc",
+          "selection-text": "#1e1e2e",
+          "scrollbar": "#45475a",
+          "scrollbar-hover": "#585b70",
+          "success": "#a6e3a1",
+          "warning": "#f9e2af",
+          "error": "#f38ba8",
+          "code-bg": "#313244",
+          "heading-1": "#cba6f7",
+          "heading-2": "#89b4fa",
+          "heading-3": "#94e2d5",
+          "folder-icon": "#89b4fa",
+          "file-icon": "#585b70",
+          "config-icon": "#f9e2af",
+          "syntax-keyword": "#d8a8e8",
+          "syntax-function": "#f6c177",
+          "syntax-type": "#9de0d0",
+          "syntax-string": "#b7e3a1",
+          "syntax-number": "#ffc08a",
+          "syntax-constant": "#93c7ff",
+          "syntax-identifier": "#cdd6f4",
+          "syntax-property": "#89dceb",
+          "syntax-operator": "#bac2de",
+          "syntax-comment": "#b7bdcc",
+          "syntax-punctuation": "#aeb9d4",
+          "syntax-invalid": "#ff98a6"
+        },
+        "syntaxContrastVsCodeBg": {
+          "keyword": 6.397678735794897,
+          "function": 7.671012235123498,
+          "type": 8.385708564192884,
+          "string": 8.6904653542168,
+          "number": 7.878110135756258,
+          "constant": 7.09689253869515,
+          "identifier": 8.69349059728767,
+          "property": 8.082703957451423,
+          "operator": 7.100090881457954,
+          "comment": 6.684059456757455,
+          "punctuation": 6.400034221845049,
+          "invalid": 6.1629022695754045
+        },
+        "themeColor": {
+          "bg-primary": "#1e1e2e",
+          "bg-secondary": "#181825",
+          "bg-tertiary": "#313244",
+          "bg-hover": "#45475a",
+          "text-primary": "#cdd6f4",
+          "text-secondary": "#bac2de",
+          "text-muted": "#585b70",
+          "text-faint": "#45475a",
+          "border": "#45475a",
+          "accent": "#89b4fa",
+          "accent-hover": "#b4befe",
+          "accent-text": "#1e1e2e",
+          "selection": "#f5e0dc",
+          "selection-text": "#1e1e2e",
+          "scrollbar": "#45475a",
+          "scrollbar-hover": "#585b70",
+          "success": "#a6e3a1",
+          "warning": "#f9e2af",
+          "error": "#f38ba8",
+          "code-bg": "#313244",
+          "heading-1": "#cba6f7",
+          "heading-2": "#89b4fa",
+          "heading-3": "#94e2d5",
+          "folder-icon": "#89b4fa",
+          "file-icon": "#585b70",
+          "config-icon": "#f9e2af",
+          "syntax-keyword": "#d8a8e8",
+          "syntax-function": "#f6c177",
+          "syntax-type": "#9de0d0",
+          "syntax-string": "#b7e3a1",
+          "syntax-number": "#ffc08a",
+          "syntax-constant": "#93c7ff",
+          "syntax-identifier": "#cdd6f4",
+          "syntax-property": "#89dceb",
+          "syntax-operator": "#bac2de",
+          "syntax-comment": "#b7bdcc",
+          "syntax-punctuation": "#aeb9d4",
+          "syntax-invalid": "#ff98a6"
+        }
+      }
+    },
+    {
+      "name": "theme dark.css",
+      "fn": "themePalette",
+      "input": {
+        "file": "app/assets/tailwind/themes/dark.css"
+      },
+      "expected": {
+        "selector": "[data-theme=\"dark\"]",
+        "vars": {
+          "bg-primary": "#18181b",
+          "bg-secondary": "#1f1f23",
+          "bg-tertiary": "#27272a",
+          "bg-hover": "#3f3f46",
+          "text-primary": "#fafafa",
+          "text-secondary": "#d4d4d8",
+          "text-muted": "#a1a1aa",
+          "text-faint": "#71717a",
+          "border": "#3f3f46",
+          "accent": "#3b82f6",
+          "accent-hover": "#60a5fa",
+          "accent-text": "#ffffff",
+          "selection": "#1e3a5f",
+          "selection-text": "#93c5fd",
+          "scrollbar": "#52525b",
+          "scrollbar-hover": "#71717a",
+          "success": "#4ade80",
+          "warning": "#fb923c",
+          "error": "#f87171",
+          "code-bg": "#27272a",
+          "heading-1": "#60a5fa",
+          "heading-2": "#a78bfa",
+          "heading-3": "#22d3ee",
+          "folder-icon": "#60a5fa",
+          "file-icon": "#a1a1aa",
+          "config-icon": "#fbbf24",
+          "syntax-keyword": "#e2a4e6",
+          "syntax-function": "#f0e68c",
+          "syntax-type": "#63d6c0",
+          "syntax-string": "#f0a070",
+          "syntax-number": "#c3df9d",
+          "syntax-constant": "#79b8ff",
+          "syntax-identifier": "#e3e6ea",
+          "syntax-property": "#addcff",
+          "syntax-operator": "#d0d6e0",
+          "syntax-comment": "#a0c27b",
+          "syntax-punctuation": "#bfc6d2",
+          "syntax-invalid": "#ff9e9e"
+        },
+        "syntaxContrastVsCodeBg": {
+          "keyword": 7.579620742619644,
+          "function": 11.633715285134205,
+          "type": 8.447579995076707,
+          "string": 7.069500600086658,
+          "number": 10.186731887241825,
+          "constant": 7.172939787442768,
+          "identifier": 11.896525594357517,
+          "property": 10.25465971872269,
+          "operator": 10.197097657277922,
+          "comment": 7.445480873259016,
+          "punctuation": 8.669739370396357,
+          "invalid": 7.54408662517992
+        },
+        "themeColor": {
+          "bg-primary": "#18181b",
+          "bg-secondary": "#1f1f23",
+          "bg-tertiary": "#27272a",
+          "bg-hover": "#3f3f46",
+          "text-primary": "#fafafa",
+          "text-secondary": "#d4d4d8",
+          "text-muted": "#a1a1aa",
+          "text-faint": "#71717a",
+          "border": "#3f3f46",
+          "accent": "#3b82f6",
+          "accent-hover": "#60a5fa",
+          "accent-text": "#ffffff",
+          "selection": "#1e3a5f",
+          "selection-text": "#93c5fd",
+          "scrollbar": "#52525b",
+          "scrollbar-hover": "#71717a",
+          "success": "#4ade80",
+          "warning": "#fb923c",
+          "error": "#f87171",
+          "code-bg": "#27272a",
+          "heading-1": "#60a5fa",
+          "heading-2": "#a78bfa",
+          "heading-3": "#22d3ee",
+          "folder-icon": "#60a5fa",
+          "file-icon": "#a1a1aa",
+          "config-icon": "#fbbf24",
+          "syntax-keyword": "#e2a4e6",
+          "syntax-function": "#f0e68c",
+          "syntax-type": "#63d6c0",
+          "syntax-string": "#f0a070",
+          "syntax-number": "#c3df9d",
+          "syntax-constant": "#79b8ff",
+          "syntax-identifier": "#e3e6ea",
+          "syntax-property": "#addcff",
+          "syntax-operator": "#d0d6e0",
+          "syntax-comment": "#a0c27b",
+          "syntax-punctuation": "#bfc6d2",
+          "syntax-invalid": "#ff9e9e"
+        }
+      }
+    },
+    {
+      "name": "theme ethereal.css",
+      "fn": "themePalette",
+      "input": {
+        "file": "app/assets/tailwind/themes/ethereal.css"
+      },
+      "expected": {
+        "selector": "[data-theme=\"ethereal\"]",
+        "vars": {
+          "bg-primary": "#060b1e",
+          "bg-secondary": "#0a1020",
+          "bg-tertiary": "#101830",
+          "bg-hover": "#1a2545",
+          "text-primary": "#ffcead",
+          "text-secondary": "#f99957",
+          "text-muted": "#6d7db6",
+          "text-faint": "#4a5580",
+          "border": "#1a2545",
+          "accent": "#7d82d9",
+          "accent-hover": "#9498e5",
+          "accent-text": "#060b1e",
+          "selection": "#ffcead",
+          "selection-text": "#060b1e",
+          "scrollbar": "#1a2545",
+          "scrollbar-hover": "#2a3560",
+          "success": "#92a593",
+          "warning": "#e9bb4f",
+          "error": "#ed5b5a",
+          "code-bg": "#101830",
+          "heading-1": "#c2c4f0",
+          "heading-2": "#a3bfd1",
+          "heading-3": "#c89dc1",
+          "folder-icon": "#7d82d9",
+          "file-icon": "#6d7db6",
+          "config-icon": "#e9bb4f",
+          "syntax-keyword": "#d8a5ff",
+          "syntax-function": "#ffd28f",
+          "syntax-type": "#87e0e0",
+          "syntax-string": "#a9e6bc",
+          "syntax-number": "#ffb28f",
+          "syntax-constant": "#9ab8ff",
+          "syntax-identifier": "#ffcead",
+          "syntax-property": "#9bd4ff",
+          "syntax-operator": "#ccd2ff",
+          "syntax-comment": "#9caed4",
+          "syntax-punctuation": "#bac7e6",
+          "syntax-invalid": "#ff969f"
+        },
+        "syntaxContrastVsCodeBg": {
+          "keyword": 8.989585003621002,
+          "function": 12.437427704188957,
+          "type": 11.518489833241262,
+          "string": 12.32417833417433,
+          "number": 10.052818482040704,
+          "constant": 8.929654769484443,
+          "identifier": 12.284066489163578,
+          "property": 11.088747645438435,
+          "operator": 11.904402266762192,
+          "comment": 7.879345928584896,
+          "punctuation": 10.373249789405817,
+          "invalid": 8.461997263827236
+        },
+        "themeColor": {
+          "bg-primary": "#060b1e",
+          "bg-secondary": "#0a1020",
+          "bg-tertiary": "#101830",
+          "bg-hover": "#1a2545",
+          "text-primary": "#ffcead",
+          "text-secondary": "#f99957",
+          "text-muted": "#6d7db6",
+          "text-faint": "#4a5580",
+          "border": "#1a2545",
+          "accent": "#7d82d9",
+          "accent-hover": "#9498e5",
+          "accent-text": "#060b1e",
+          "selection": "#ffcead",
+          "selection-text": "#060b1e",
+          "scrollbar": "#1a2545",
+          "scrollbar-hover": "#2a3560",
+          "success": "#92a593",
+          "warning": "#e9bb4f",
+          "error": "#ed5b5a",
+          "code-bg": "#101830",
+          "heading-1": "#c2c4f0",
+          "heading-2": "#a3bfd1",
+          "heading-3": "#c89dc1",
+          "folder-icon": "#7d82d9",
+          "file-icon": "#6d7db6",
+          "config-icon": "#e9bb4f",
+          "syntax-keyword": "#d8a5ff",
+          "syntax-function": "#ffd28f",
+          "syntax-type": "#87e0e0",
+          "syntax-string": "#a9e6bc",
+          "syntax-number": "#ffb28f",
+          "syntax-constant": "#9ab8ff",
+          "syntax-identifier": "#ffcead",
+          "syntax-property": "#9bd4ff",
+          "syntax-operator": "#ccd2ff",
+          "syntax-comment": "#9caed4",
+          "syntax-punctuation": "#bac7e6",
+          "syntax-invalid": "#ff969f"
+        }
+      }
+    },
+    {
+      "name": "theme everforest.css",
+      "fn": "themePalette",
+      "input": {
+        "file": "app/assets/tailwind/themes/everforest.css"
+      },
+      "expected": {
+        "selector": "[data-theme=\"everforest\"]",
+        "vars": {
+          "bg-primary": "#2d353b",
+          "bg-secondary": "#272e33",
+          "bg-tertiary": "#343f44",
+          "bg-hover": "#475258",
+          "text-primary": "#d3c6aa",
+          "text-secondary": "#a7c080",
+          "text-muted": "#7a8478",
+          "text-faint": "#475258",
+          "border": "#475258",
+          "accent": "#7fbbb3",
+          "accent-hover": "#83c092",
+          "accent-text": "#2d353b",
+          "selection": "#d3c6aa",
+          "selection-text": "#2d353b",
+          "scrollbar": "#475258",
+          "scrollbar-hover": "#56635a",
+          "success": "#a7c080",
+          "warning": "#dbbc7f",
+          "error": "#e67e80",
+          "code-bg": "#343f44",
+          "heading-1": "#a7c080",
+          "heading-2": "#7fbbb3",
+          "heading-3": "#83c092",
+          "folder-icon": "#7fbbb3",
+          "file-icon": "#7a8478",
+          "config-icon": "#dbbc7f",
+          "syntax-keyword": "#d8a8ef",
+          "syntax-function": "#e8d18a",
+          "syntax-type": "#83d6c7",
+          "syntax-string": "#b6d58e",
+          "syntax-number": "#f1b482",
+          "syntax-constant": "#91c9e6",
+          "syntax-identifier": "#d3c6aa",
+          "syntax-property": "#8fc9e1",
+          "syntax-operator": "#d3c6aa",
+          "syntax-comment": "#aec299",
+          "syntax-punctuation": "#bac6bc",
+          "syntax-invalid": "#ff9991"
+        },
+        "syntaxContrastVsCodeBg": {
+          "keyword": 5.548730703820295,
+          "function": 7.172604113303451,
+          "type": 6.394473396420061,
+          "string": 6.646433577929265,
+          "number": 5.973243391904271,
+          "constant": 6.030054647929567,
+          "identifier": 6.404510052565258,
+          "property": 5.982949876723849,
+          "operator": 6.404510052565258,
+          "comment": 5.656534902353128,
+          "punctuation": 6.128164944063613,
+          "invalid": 5.265359622874344
+        },
+        "themeColor": {
+          "bg-primary": "#2d353b",
+          "bg-secondary": "#272e33",
+          "bg-tertiary": "#343f44",
+          "bg-hover": "#475258",
+          "text-primary": "#d3c6aa",
+          "text-secondary": "#a7c080",
+          "text-muted": "#7a8478",
+          "text-faint": "#475258",
+          "border": "#475258",
+          "accent": "#7fbbb3",
+          "accent-hover": "#83c092",
+          "accent-text": "#2d353b",
+          "selection": "#d3c6aa",
+          "selection-text": "#2d353b",
+          "scrollbar": "#475258",
+          "scrollbar-hover": "#56635a",
+          "success": "#a7c080",
+          "warning": "#dbbc7f",
+          "error": "#e67e80",
+          "code-bg": "#343f44",
+          "heading-1": "#a7c080",
+          "heading-2": "#7fbbb3",
+          "heading-3": "#83c092",
+          "folder-icon": "#7fbbb3",
+          "file-icon": "#7a8478",
+          "config-icon": "#dbbc7f",
+          "syntax-keyword": "#d8a8ef",
+          "syntax-function": "#e8d18a",
+          "syntax-type": "#83d6c7",
+          "syntax-string": "#b6d58e",
+          "syntax-number": "#f1b482",
+          "syntax-constant": "#91c9e6",
+          "syntax-identifier": "#d3c6aa",
+          "syntax-property": "#8fc9e1",
+          "syntax-operator": "#d3c6aa",
+          "syntax-comment": "#aec299",
+          "syntax-punctuation": "#bac6bc",
+          "syntax-invalid": "#ff9991"
+        }
+      }
+    },
+    {
+      "name": "theme flexoki-light.css",
+      "fn": "themePalette",
+      "input": {
+        "file": "app/assets/tailwind/themes/flexoki-light.css"
+      },
+      "expected": {
+        "selector": "[data-theme=\"flexoki-light\"]",
+        "vars": {
+          "bg-primary": "#FFFCF0",
+          "bg-secondary": "#F2F0E5",
+          "bg-tertiary": "#E6E4D9",
+          "bg-hover": "#CECDC3",
+          "text-primary": "#100F0F",
+          "text-secondary": "#3D3D3D",
+          "text-muted": "#6F6E69",
+          "text-faint": "#B7B5AC",
+          "border": "#CECDC3",
+          "accent": "#205EA6",
+          "accent-hover": "#4385BE",
+          "accent-text": "#FFFCF0",
+          "selection": "#CECDC3",
+          "selection-text": "#100F0F",
+          "scrollbar": "#CECDC3",
+          "scrollbar-hover": "#B7B5AC",
+          "success": "#879A39",
+          "warning": "#D0A215",
+          "error": "#D14D41",
+          "code-bg": "#E6E4D9",
+          "heading-1": "#205EA6",
+          "heading-2": "#3AA99F",
+          "heading-3": "#CE5D97",
+          "folder-icon": "#205EA6",
+          "file-icon": "#6F6E69",
+          "config-icon": "#D0A215",
+          "syntax-keyword": "#7b2ea0",
+          "syntax-function": "#72531c",
+          "syntax-type": "#116177",
+          "syntax-string": "#a33e1a",
+          "syntax-number": "#08734a",
+          "syntax-constant": "#144b8a",
+          "syntax-identifier": "#302c2b",
+          "syntax-property": "#1a5d82",
+          "syntax-operator": "#45403d",
+          "syntax-comment": "#4d5d3b",
+          "syntax-punctuation": "#5b514a",
+          "syntax-invalid": "#b3261e"
+        },
+        "syntaxContrastVsCodeBg": {
+          "keyword": 6.0074069678024316,
+          "function": 5.5442402338900925,
+          "type": 5.487798839336144,
+          "string": 5.048309463115057,
+          "number": 4.622745242614277,
+          "constant": 6.850911251777537,
+          "identifier": 10.825593729116443,
+          "property": 5.615241759727829,
+          "operator": 8.016376918321667,
+          "comment": 5.591506689925095,
+          "punctuation": 6.05138745773483,
+          "invalid": 5.124579561142655
+        },
+        "themeColor": {
+          "bg-primary": "#fffcf0",
+          "bg-secondary": "#f2f0e5",
+          "bg-tertiary": "#e6e4d9",
+          "bg-hover": "#cecdc3",
+          "text-primary": "#100f0f",
+          "text-secondary": "#3d3d3d",
+          "text-muted": "#6f6e69",
+          "text-faint": "#b7b5ac",
+          "border": "#cecdc3",
+          "accent": "#205ea6",
+          "accent-hover": "#4385be",
+          "accent-text": "#fffcf0",
+          "selection": "#cecdc3",
+          "selection-text": "#100f0f",
+          "scrollbar": "#cecdc3",
+          "scrollbar-hover": "#b7b5ac",
+          "success": "#879a39",
+          "warning": "#d0a215",
+          "error": "#d14d41",
+          "code-bg": "#e6e4d9",
+          "heading-1": "#205ea6",
+          "heading-2": "#3aa99f",
+          "heading-3": "#ce5d97",
+          "folder-icon": "#205ea6",
+          "file-icon": "#6f6e69",
+          "config-icon": "#d0a215",
+          "syntax-keyword": "#7b2ea0",
+          "syntax-function": "#72531c",
+          "syntax-type": "#116177",
+          "syntax-string": "#a33e1a",
+          "syntax-number": "#08734a",
+          "syntax-constant": "#144b8a",
+          "syntax-identifier": "#302c2b",
+          "syntax-property": "#1a5d82",
+          "syntax-operator": "#45403d",
+          "syntax-comment": "#4d5d3b",
+          "syntax-punctuation": "#5b514a",
+          "syntax-invalid": "#b3261e"
+        }
+      }
+    },
+    {
+      "name": "theme gruvbox.css",
+      "fn": "themePalette",
+      "input": {
+        "file": "app/assets/tailwind/themes/gruvbox.css"
+      },
+      "expected": {
+        "selector": "[data-theme=\"gruvbox\"]",
+        "vars": {
+          "bg-primary": "#282828",
+          "bg-secondary": "#1d2021",
+          "bg-tertiary": "#3c3836",
+          "bg-hover": "#504945",
+          "text-primary": "#ebdbb2",
+          "text-secondary": "#d5c4a1",
+          "text-muted": "#a89984",
+          "text-faint": "#928374",
+          "border": "#504945",
+          "accent": "#fe8019",
+          "accent-hover": "#fabd2f",
+          "accent-text": "#282828",
+          "selection": "#504945",
+          "selection-text": "#fabd2f",
+          "scrollbar": "#665c54",
+          "scrollbar-hover": "#7c6f64",
+          "success": "#b8bb26",
+          "warning": "#fe8019",
+          "error": "#fb4934",
+          "code-bg": "#3c3836",
+          "heading-1": "#fabd2f",
+          "heading-2": "#8ec07c",
+          "heading-3": "#83a598",
+          "folder-icon": "#fe8019",
+          "file-icon": "#a89984",
+          "config-icon": "#fabd2f",
+          "syntax-keyword": "#ff8175",
+          "syntax-function": "#fabd2f",
+          "syntax-type": "#8ec07c",
+          "syntax-string": "#b8bb26",
+          "syntax-number": "#fe8019",
+          "syntax-constant": "#e8a4b6",
+          "syntax-identifier": "#ebdbb2",
+          "syntax-property": "#a0c4b7",
+          "syntax-operator": "#d5c4a1",
+          "syntax-comment": "#b7c08a",
+          "syntax-punctuation": "#c5b8a3",
+          "syntax-invalid": "#ff8f7a"
+        },
+        "syntaxContrastVsCodeBg": {
+          "keyword": 4.775616750098684,
+          "function": 6.838436961041883,
+          "type": 5.511140701062846,
+          "string": 5.6177785290195565,
+          "number": 4.591691454475808,
+          "constant": 5.75175322152303,
+          "identifier": 8.452415305667195,
+          "property": 6.114877118049972,
+          "operator": 6.758349129870046,
+          "comment": 6.029755657782808,
+          "punctuation": 5.940759446467057,
+          "invalid": 5.224544195811719
+        },
+        "themeColor": {
+          "bg-primary": "#282828",
+          "bg-secondary": "#1d2021",
+          "bg-tertiary": "#3c3836",
+          "bg-hover": "#504945",
+          "text-primary": "#ebdbb2",
+          "text-secondary": "#d5c4a1",
+          "text-muted": "#a89984",
+          "text-faint": "#928374",
+          "border": "#504945",
+          "accent": "#fe8019",
+          "accent-hover": "#fabd2f",
+          "accent-text": "#282828",
+          "selection": "#504945",
+          "selection-text": "#fabd2f",
+          "scrollbar": "#665c54",
+          "scrollbar-hover": "#7c6f64",
+          "success": "#b8bb26",
+          "warning": "#fe8019",
+          "error": "#fb4934",
+          "code-bg": "#3c3836",
+          "heading-1": "#fabd2f",
+          "heading-2": "#8ec07c",
+          "heading-3": "#83a598",
+          "folder-icon": "#fe8019",
+          "file-icon": "#a89984",
+          "config-icon": "#fabd2f",
+          "syntax-keyword": "#ff8175",
+          "syntax-function": "#fabd2f",
+          "syntax-type": "#8ec07c",
+          "syntax-string": "#b8bb26",
+          "syntax-number": "#fe8019",
+          "syntax-constant": "#e8a4b6",
+          "syntax-identifier": "#ebdbb2",
+          "syntax-property": "#a0c4b7",
+          "syntax-operator": "#d5c4a1",
+          "syntax-comment": "#b7c08a",
+          "syntax-punctuation": "#c5b8a3",
+          "syntax-invalid": "#ff8f7a"
+        }
+      }
+    },
+    {
+      "name": "theme hackerman.css",
+      "fn": "themePalette",
+      "input": {
+        "file": "app/assets/tailwind/themes/hackerman.css"
+      },
+      "expected": {
+        "selector": "[data-theme=\"hackerman\"]",
+        "vars": {
+          "bg-primary": "#0a0a0a",
+          "bg-secondary": "#050505",
+          "bg-tertiary": "#111111",
+          "bg-hover": "#1a1a1a",
+          "text-primary": "#00ff00",
+          "text-secondary": "#00dd00",
+          "text-muted": "#00aa00",
+          "text-faint": "#007700",
+          "border": "#003300",
+          "accent": "#00ff00",
+          "accent-hover": "#33ff33",
+          "accent-text": "#000000",
+          "selection": "#003300",
+          "selection-text": "#00ff00",
+          "scrollbar": "#003300",
+          "scrollbar-hover": "#004400",
+          "success": "#00ff00",
+          "warning": "#ffff00",
+          "error": "#ff0000",
+          "code-bg": "#111111",
+          "heading-1": "#00ff00",
+          "heading-2": "#00dddd",
+          "heading-3": "#dddd00",
+          "folder-icon": "#00ff00",
+          "file-icon": "#00aa00",
+          "config-icon": "#ffff00",
+          "syntax-keyword": "#00e676",
+          "syntax-function": "#ffeb3b",
+          "syntax-type": "#00e5ff",
+          "syntax-string": "#76ff03",
+          "syntax-number": "#ffab00",
+          "syntax-constant": "#40c4ff",
+          "syntax-identifier": "#00ff00",
+          "syntax-property": "#69f0ae",
+          "syntax-operator": "#b9f6ca",
+          "syntax-comment": "#00cc00",
+          "syntax-punctuation": "#80cbc4",
+          "syntax-invalid": "#ff5252"
+        },
+        "syntaxContrastVsCodeBg": {
+          "keyword": 11.312146663974799,
+          "function": 15.464764474517198,
+          "type": 12.27554034890444,
+          "string": 14.455095788270722,
+          "number": 9.96051252179385,
+          "constant": 9.493655665252643,
+          "identifier": 13.76125547629342,
+          "property": 13.196458898798682,
+          "operator": 15.374424605395905,
+          "comment": 8.66565810750634,
+          "punctuation": 10.122505536066628,
+          "invalid": 5.917372746758
+        },
+        "themeColor": {
+          "bg-primary": "#0a0a0a",
+          "bg-secondary": "#050505",
+          "bg-tertiary": "#111111",
+          "bg-hover": "#1a1a1a",
+          "text-primary": "#00ff00",
+          "text-secondary": "#00dd00",
+          "text-muted": "#00aa00",
+          "text-faint": "#007700",
+          "border": "#003300",
+          "accent": "#00ff00",
+          "accent-hover": "#33ff33",
+          "accent-text": "#000000",
+          "selection": "#003300",
+          "selection-text": "#00ff00",
+          "scrollbar": "#003300",
+          "scrollbar-hover": "#004400",
+          "success": "#00ff00",
+          "warning": "#ffff00",
+          "error": "#ff0000",
+          "code-bg": "#111111",
+          "heading-1": "#00ff00",
+          "heading-2": "#00dddd",
+          "heading-3": "#dddd00",
+          "folder-icon": "#00ff00",
+          "file-icon": "#00aa00",
+          "config-icon": "#ffff00",
+          "syntax-keyword": "#00e676",
+          "syntax-function": "#ffeb3b",
+          "syntax-type": "#00e5ff",
+          "syntax-string": "#76ff03",
+          "syntax-number": "#ffab00",
+          "syntax-constant": "#40c4ff",
+          "syntax-identifier": "#00ff00",
+          "syntax-property": "#69f0ae",
+          "syntax-operator": "#b9f6ca",
+          "syntax-comment": "#00cc00",
+          "syntax-punctuation": "#80cbc4",
+          "syntax-invalid": "#ff5252"
+        }
+      }
+    },
+    {
+      "name": "theme kanagawa.css",
+      "fn": "themePalette",
+      "input": {
+        "file": "app/assets/tailwind/themes/kanagawa.css"
+      },
+      "expected": {
+        "selector": "[data-theme=\"kanagawa\"]",
+        "vars": {
+          "bg-primary": "#1f1f28",
+          "bg-secondary": "#16161d",
+          "bg-tertiary": "#2a2a37",
+          "bg-hover": "#363646",
+          "text-primary": "#dcd7ba",
+          "text-secondary": "#c8c093",
+          "text-muted": "#727169",
+          "text-faint": "#54546d",
+          "border": "#363646",
+          "accent": "#7e9cd8",
+          "accent-hover": "#7fb4ca",
+          "accent-text": "#1f1f28",
+          "selection": "#2d4f67",
+          "selection-text": "#c8c093",
+          "scrollbar": "#363646",
+          "scrollbar-hover": "#54546d",
+          "success": "#98bb6c",
+          "warning": "#e6c384",
+          "error": "#e82424",
+          "code-bg": "#2a2a37",
+          "heading-1": "#957fb8",
+          "heading-2": "#7e9cd8",
+          "heading-3": "#7fb4ca",
+          "folder-icon": "#7e9cd8",
+          "file-icon": "#727169",
+          "config-icon": "#e6c384",
+          "syntax-keyword": "#d27e99",
+          "syntax-function": "#e6c384",
+          "syntax-type": "#7fb4ca",
+          "syntax-string": "#98bb6c",
+          "syntax-number": "#ffa066",
+          "syntax-constant": "#ff9e3b",
+          "syntax-identifier": "#dcd7ba",
+          "syntax-property": "#7e9cd8",
+          "syntax-operator": "#c8c093",
+          "syntax-comment": "#a6a69c",
+          "syntax-punctuation": "#c8c093",
+          "syntax-invalid": "#ff8a80"
+        },
+        "syntaxContrastVsCodeBg": {
+          "keyword": 4.838797296754074,
+          "function": 8.421216294367692,
+          "type": 6.252529609215311,
+          "string": 6.505755092602909,
+          "number": 7.052921120869252,
+          "constant": 6.873579345202349,
+          "identifier": 9.746988718953371,
+          "property": 5.14148661367363,
+          "operator": 7.689275396779224,
+          "comment": 5.7623517417269685,
+          "punctuation": 7.689275396779224,
+          "invalid": 6.195506517019375
+        },
+        "themeColor": {
+          "bg-primary": "#1f1f28",
+          "bg-secondary": "#16161d",
+          "bg-tertiary": "#2a2a37",
+          "bg-hover": "#363646",
+          "text-primary": "#dcd7ba",
+          "text-secondary": "#c8c093",
+          "text-muted": "#727169",
+          "text-faint": "#54546d",
+          "border": "#363646",
+          "accent": "#7e9cd8",
+          "accent-hover": "#7fb4ca",
+          "accent-text": "#1f1f28",
+          "selection": "#2d4f67",
+          "selection-text": "#c8c093",
+          "scrollbar": "#363646",
+          "scrollbar-hover": "#54546d",
+          "success": "#98bb6c",
+          "warning": "#e6c384",
+          "error": "#e82424",
+          "code-bg": "#2a2a37",
+          "heading-1": "#957fb8",
+          "heading-2": "#7e9cd8",
+          "heading-3": "#7fb4ca",
+          "folder-icon": "#7e9cd8",
+          "file-icon": "#727169",
+          "config-icon": "#e6c384",
+          "syntax-keyword": "#d27e99",
+          "syntax-function": "#e6c384",
+          "syntax-type": "#7fb4ca",
+          "syntax-string": "#98bb6c",
+          "syntax-number": "#ffa066",
+          "syntax-constant": "#ff9e3b",
+          "syntax-identifier": "#dcd7ba",
+          "syntax-property": "#7e9cd8",
+          "syntax-operator": "#c8c093",
+          "syntax-comment": "#a6a69c",
+          "syntax-punctuation": "#c8c093",
+          "syntax-invalid": "#ff8a80"
+        }
+      }
+    },
+    {
+      "name": "theme light.css",
+      "fn": "themePalette",
+      "input": {
+        "file": "app/assets/tailwind/themes/light.css"
+      },
+      "expected": {
+        "selector": ":root,\n[data-theme=\"light\"]",
+        "vars": {
+          "bg-primary": "#ffffff",
+          "bg-secondary": "#fafafa",
+          "bg-tertiary": "#f4f4f5",
+          "bg-hover": "#e4e4e7",
+          "text-primary": "#18181b",
+          "text-secondary": "#3f3f46",
+          "text-muted": "#71717a",
+          "text-faint": "#a1a1aa",
+          "border": "#e4e4e7",
+          "accent": "#2563eb",
+          "accent-hover": "#1d4ed8",
+          "accent-text": "#ffffff",
+          "selection": "#dbeafe",
+          "selection-text": "#1d4ed8",
+          "scrollbar": "#a1a1aa",
+          "scrollbar-hover": "#71717a",
+          "success": "#16a34a",
+          "warning": "#f97316",
+          "error": "#dc2626",
+          "code-bg": "#f4f4f5",
+          "heading-1": "#2563eb",
+          "heading-2": "#7c3aed",
+          "heading-3": "#0891b2",
+          "folder-icon": "#3b82f6",
+          "file-icon": "#71717a",
+          "config-icon": "#f59e0b",
+          "syntax-keyword": "#8700a5",
+          "syntax-function": "#6d4c1f",
+          "syntax-type": "#0f5c70",
+          "syntax-string": "#a31515",
+          "syntax-number": "#006b45",
+          "syntax-constant": "#001080",
+          "syntax-identifier": "#20202a",
+          "syntax-property": "#0050a4",
+          "syntax-operator": "#454545",
+          "syntax-comment": "#3f6417",
+          "syntax-punctuation": "#4a4a4a",
+          "syntax-invalid": "#a90000"
+        },
+        "syntaxContrastVsCodeBg": {
+          "keyword": 7.4238949126401765,
+          "function": 7.066120426229836,
+          "type": 6.859764265526026,
+          "string": 7.1411383499789505,
+          "number": 5.99101092127797,
+          "constant": 13.78636569512193,
+          "identifier": 14.680054525537418,
+          "property": 7.119501693971658,
+          "operator": 8.723034971423688,
+          "comment": 6.271072471368139,
+          "punctuation": 8.062838593085713,
+          "invalid": 7.110302999768248
+        },
+        "themeColor": {
+          "bg-primary": "#ffffff",
+          "bg-secondary": "#fafafa",
+          "bg-tertiary": "#f4f4f5",
+          "bg-hover": "#e4e4e7",
+          "text-primary": "#18181b",
+          "text-secondary": "#3f3f46",
+          "text-muted": "#71717a",
+          "text-faint": "#a1a1aa",
+          "border": "#e4e4e7",
+          "accent": "#2563eb",
+          "accent-hover": "#1d4ed8",
+          "accent-text": "#ffffff",
+          "selection": "#dbeafe",
+          "selection-text": "#1d4ed8",
+          "scrollbar": "#a1a1aa",
+          "scrollbar-hover": "#71717a",
+          "success": "#16a34a",
+          "warning": "#f97316",
+          "error": "#dc2626",
+          "code-bg": "#f4f4f5",
+          "heading-1": "#2563eb",
+          "heading-2": "#7c3aed",
+          "heading-3": "#0891b2",
+          "folder-icon": "#3b82f6",
+          "file-icon": "#71717a",
+          "config-icon": "#f59e0b",
+          "syntax-keyword": "#8700a5",
+          "syntax-function": "#6d4c1f",
+          "syntax-type": "#0f5c70",
+          "syntax-string": "#a31515",
+          "syntax-number": "#006b45",
+          "syntax-constant": "#001080",
+          "syntax-identifier": "#20202a",
+          "syntax-property": "#0050a4",
+          "syntax-operator": "#454545",
+          "syntax-comment": "#3f6417",
+          "syntax-punctuation": "#4a4a4a",
+          "syntax-invalid": "#a90000"
+        }
+      }
+    },
+    {
+      "name": "theme matte-black.css",
+      "fn": "themePalette",
+      "input": {
+        "file": "app/assets/tailwind/themes/matte-black.css"
+      },
+      "expected": {
+        "selector": "[data-theme=\"matte-black\"]",
+        "vars": {
+          "bg-primary": "#121212",
+          "bg-secondary": "#0a0a0a",
+          "bg-tertiary": "#1a1a1a",
+          "bg-hover": "#333333",
+          "text-primary": "#bebebe",
+          "text-secondary": "#eaeaea",
+          "text-muted": "#8a8a8d",
+          "text-faint": "#666666",
+          "border": "#333333",
+          "accent": "#e68e0d",
+          "accent-hover": "#f59e0b",
+          "accent-text": "#121212",
+          "selection": "#333333",
+          "selection-text": "#bebebe",
+          "scrollbar": "#333333",
+          "scrollbar-hover": "#4d4d4d",
+          "success": "#ffc107",
+          "warning": "#ffc107",
+          "error": "#d35f5f",
+          "code-bg": "#1a1a1a",
+          "heading-1": "#ffffff",
+          "heading-2": "#e68e0d",
+          "heading-3": "#bebebe",
+          "folder-icon": "#e68e0d",
+          "file-icon": "#8a8a8d",
+          "config-icon": "#ffc107",
+          "syntax-keyword": "#ffb454",
+          "syntax-function": "#f2cc60",
+          "syntax-type": "#56d4dd",
+          "syntax-string": "#a6da95",
+          "syntax-number": "#d2a8ff",
+          "syntax-constant": "#ff7b72",
+          "syntax-identifier": "#e6edf3",
+          "syntax-property": "#79c0ff",
+          "syntax-operator": "#ffc56d",
+          "syntax-comment": "#adbac7",
+          "syntax-punctuation": "#c1c8d0",
+          "syntax-invalid": "#ff8585"
+        },
+        "syntaxContrastVsCodeBg": {
+          "keyword": 9.869515062493301,
+          "function": 11.256042463272701,
+          "type": 9.826957139199477,
+          "string": 10.843679166381314,
+          "number": 8.938680562824162,
+          "constant": 6.902195417322543,
+          "identifier": 14.729436951402981,
+          "property": 8.948181654542273,
+          "operator": 11.154786820940421,
+          "comment": 8.805855278242063,
+          "punctuation": 10.310004712373471,
+          "invalid": 7.41399702389184
+        },
+        "themeColor": {
+          "bg-primary": "#121212",
+          "bg-secondary": "#0a0a0a",
+          "bg-tertiary": "#1a1a1a",
+          "bg-hover": "#333333",
+          "text-primary": "#bebebe",
+          "text-secondary": "#eaeaea",
+          "text-muted": "#8a8a8d",
+          "text-faint": "#666666",
+          "border": "#333333",
+          "accent": "#e68e0d",
+          "accent-hover": "#f59e0b",
+          "accent-text": "#121212",
+          "selection": "#333333",
+          "selection-text": "#bebebe",
+          "scrollbar": "#333333",
+          "scrollbar-hover": "#4d4d4d",
+          "success": "#ffc107",
+          "warning": "#ffc107",
+          "error": "#d35f5f",
+          "code-bg": "#1a1a1a",
+          "heading-1": "#ffffff",
+          "heading-2": "#e68e0d",
+          "heading-3": "#bebebe",
+          "folder-icon": "#e68e0d",
+          "file-icon": "#8a8a8d",
+          "config-icon": "#ffc107",
+          "syntax-keyword": "#ffb454",
+          "syntax-function": "#f2cc60",
+          "syntax-type": "#56d4dd",
+          "syntax-string": "#a6da95",
+          "syntax-number": "#d2a8ff",
+          "syntax-constant": "#ff7b72",
+          "syntax-identifier": "#e6edf3",
+          "syntax-property": "#79c0ff",
+          "syntax-operator": "#ffc56d",
+          "syntax-comment": "#adbac7",
+          "syntax-punctuation": "#c1c8d0",
+          "syntax-invalid": "#ff8585"
+        }
+      }
+    },
+    {
+      "name": "theme nord.css",
+      "fn": "themePalette",
+      "input": {
+        "file": "app/assets/tailwind/themes/nord.css"
+      },
+      "expected": {
+        "selector": "[data-theme=\"nord\"]",
+        "vars": {
+          "bg-primary": "#2e3440",
+          "bg-secondary": "#272c36",
+          "bg-tertiary": "#3b4252",
+          "bg-hover": "#434c5e",
+          "text-primary": "#eceff4",
+          "text-secondary": "#e5e9f0",
+          "text-muted": "#d8dee9",
+          "text-faint": "#7b88a1",
+          "border": "#4c566a",
+          "accent": "#88c0d0",
+          "accent-hover": "#8fbcbb",
+          "accent-text": "#2e3440",
+          "selection": "#434c5e",
+          "selection-text": "#eceff4",
+          "scrollbar": "#4c566a",
+          "scrollbar-hover": "#5e6779",
+          "success": "#a3be8c",
+          "warning": "#ebcb8b",
+          "error": "#bf616a",
+          "code-bg": "#3b4252",
+          "heading-1": "#81a1c1",
+          "heading-2": "#b48ead",
+          "heading-3": "#a3be8c",
+          "folder-icon": "#81a1c1",
+          "file-icon": "#7b88a1",
+          "config-icon": "#ebcb8b",
+          "syntax-keyword": "#d4a8d7",
+          "syntax-function": "#f2d08b",
+          "syntax-type": "#8fcac3",
+          "syntax-string": "#b5d19d",
+          "syntax-number": "#f0a676",
+          "syntax-constant": "#92b7e2",
+          "syntax-identifier": "#eceff4",
+          "syntax-property": "#9dccdd",
+          "syntax-operator": "#d8dee9",
+          "syntax-comment": "#c2c9d5",
+          "syntax-punctuation": "#c6ceda",
+          "syntax-invalid": "#ff9e9e"
+        },
+        "syntaxContrastVsCodeBg": {
+          "keyword": 4.974265287815382,
+          "function": 6.789663692289433,
+          "type": 5.4641559551552605,
+          "string": 6.023613079958866,
+          "number": 4.993152696990325,
+          "constant": 4.836306737612604,
+          "identifier": 8.729635879221235,
+          "property": 5.804674476830122,
+          "operator": 7.4481508373420855,
+          "comment": 6.041601020476463,
+          "punctuation": 6.344762100390914,
+          "invalid": 5.0963237633028315
+        },
+        "themeColor": {
+          "bg-primary": "#2e3440",
+          "bg-secondary": "#272c36",
+          "bg-tertiary": "#3b4252",
+          "bg-hover": "#434c5e",
+          "text-primary": "#eceff4",
+          "text-secondary": "#e5e9f0",
+          "text-muted": "#d8dee9",
+          "text-faint": "#7b88a1",
+          "border": "#4c566a",
+          "accent": "#88c0d0",
+          "accent-hover": "#8fbcbb",
+          "accent-text": "#2e3440",
+          "selection": "#434c5e",
+          "selection-text": "#eceff4",
+          "scrollbar": "#4c566a",
+          "scrollbar-hover": "#5e6779",
+          "success": "#a3be8c",
+          "warning": "#ebcb8b",
+          "error": "#bf616a",
+          "code-bg": "#3b4252",
+          "heading-1": "#81a1c1",
+          "heading-2": "#b48ead",
+          "heading-3": "#a3be8c",
+          "folder-icon": "#81a1c1",
+          "file-icon": "#7b88a1",
+          "config-icon": "#ebcb8b",
+          "syntax-keyword": "#d4a8d7",
+          "syntax-function": "#f2d08b",
+          "syntax-type": "#8fcac3",
+          "syntax-string": "#b5d19d",
+          "syntax-number": "#f0a676",
+          "syntax-constant": "#92b7e2",
+          "syntax-identifier": "#eceff4",
+          "syntax-property": "#9dccdd",
+          "syntax-operator": "#d8dee9",
+          "syntax-comment": "#c2c9d5",
+          "syntax-punctuation": "#c6ceda",
+          "syntax-invalid": "#ff9e9e"
+        }
+      }
+    },
+    {
+      "name": "theme osaka-jade.css",
+      "fn": "themePalette",
+      "input": {
+        "file": "app/assets/tailwind/themes/osaka-jade.css"
+      },
+      "expected": {
+        "selector": "[data-theme=\"osaka-jade\"]",
+        "vars": {
+          "bg-primary": "#111c18",
+          "bg-secondary": "#0d1512",
+          "bg-tertiary": "#1a2a24",
+          "bg-hover": "#23372b",
+          "text-primary": "#c1c497",
+          "text-secondary": "#f6f5dd",
+          "text-muted": "#53685b",
+          "text-faint": "#23372b",
+          "border": "#23372b",
+          "accent": "#509475",
+          "accent-hover": "#63b07a",
+          "accent-text": "#111c18",
+          "selection": "#c1c497",
+          "selection-text": "#111c18",
+          "scrollbar": "#23372b",
+          "scrollbar-hover": "#2d4435",
+          "success": "#549e6a",
+          "warning": "#e5c736",
+          "error": "#ff5345",
+          "code-bg": "#1a2a24",
+          "heading-1": "#509475",
+          "heading-2": "#2dd5b7",
+          "heading-3": "#acd4cf",
+          "folder-icon": "#509475",
+          "file-icon": "#53685b",
+          "config-icon": "#e5c736",
+          "syntax-keyword": "#e8a87c",
+          "syntax-function": "#f2d075",
+          "syntax-type": "#50d8c1",
+          "syntax-string": "#a8d894",
+          "syntax-number": "#f0ad72",
+          "syntax-constant": "#64c5d5",
+          "syntax-identifier": "#c1c497",
+          "syntax-property": "#7ccfb7",
+          "syntax-operator": "#aad5c0",
+          "syntax-comment": "#94af9d",
+          "syntax-punctuation": "#b4c7ba",
+          "syntax-invalid": "#ff9187"
+        },
+        "syntaxContrastVsCodeBg": {
+          "keyword": 7.370687722729065,
+          "function": 10.034870227035777,
+          "type": 8.520374246204536,
+          "string": 9.221113821954514,
+          "number": 7.80065227768132,
+          "constant": 7.489155704205234,
+          "identifier": 8.289643901340417,
+          "property": 8.186537299916731,
+          "operator": 9.273325737425733,
+          "comment": 6.338811884862972,
+          "punctuation": 8.438673152711738,
+          "invalid": 6.891424900777268
+        },
+        "themeColor": {
+          "bg-primary": "#111c18",
+          "bg-secondary": "#0d1512",
+          "bg-tertiary": "#1a2a24",
+          "bg-hover": "#23372b",
+          "text-primary": "#c1c497",
+          "text-secondary": "#f6f5dd",
+          "text-muted": "#53685b",
+          "text-faint": "#23372b",
+          "border": "#23372b",
+          "accent": "#509475",
+          "accent-hover": "#63b07a",
+          "accent-text": "#111c18",
+          "selection": "#c1c497",
+          "selection-text": "#111c18",
+          "scrollbar": "#23372b",
+          "scrollbar-hover": "#2d4435",
+          "success": "#549e6a",
+          "warning": "#e5c736",
+          "error": "#ff5345",
+          "code-bg": "#1a2a24",
+          "heading-1": "#509475",
+          "heading-2": "#2dd5b7",
+          "heading-3": "#acd4cf",
+          "folder-icon": "#509475",
+          "file-icon": "#53685b",
+          "config-icon": "#e5c736",
+          "syntax-keyword": "#e8a87c",
+          "syntax-function": "#f2d075",
+          "syntax-type": "#50d8c1",
+          "syntax-string": "#a8d894",
+          "syntax-number": "#f0ad72",
+          "syntax-constant": "#64c5d5",
+          "syntax-identifier": "#c1c497",
+          "syntax-property": "#7ccfb7",
+          "syntax-operator": "#aad5c0",
+          "syntax-comment": "#94af9d",
+          "syntax-punctuation": "#b4c7ba",
+          "syntax-invalid": "#ff9187"
+        }
+      }
+    },
+    {
+      "name": "theme ristretto.css",
+      "fn": "themePalette",
+      "input": {
+        "file": "app/assets/tailwind/themes/ristretto.css"
+      },
+      "expected": {
+        "selector": "[data-theme=\"ristretto\"]",
+        "vars": {
+          "bg-primary": "#2c2525",
+          "bg-secondary": "#241f1f",
+          "bg-tertiary": "#352e2e",
+          "bg-hover": "#403e41",
+          "text-primary": "#e6d9db",
+          "text-secondary": "#c3b7b8",
+          "text-muted": "#948a8b",
+          "text-faint": "#72696a",
+          "border": "#403e41",
+          "accent": "#f38d70",
+          "accent-hover": "#f8a788",
+          "accent-text": "#2c2525",
+          "selection": "#403e41",
+          "selection-text": "#e6d9db",
+          "scrollbar": "#403e41",
+          "scrollbar-hover": "#4d4a4a",
+          "success": "#adda78",
+          "warning": "#f9cc6c",
+          "error": "#fd6883",
+          "code-bg": "#352e2e",
+          "heading-1": "#f38d70",
+          "heading-2": "#a8a9eb",
+          "heading-3": "#85dacc",
+          "folder-icon": "#f38d70",
+          "file-icon": "#948a8b",
+          "config-icon": "#f9cc6c",
+          "syntax-keyword": "#f26d9c",
+          "syntax-function": "#f9c859",
+          "syntax-type": "#7ad5cf",
+          "syntax-string": "#a9dc76",
+          "syntax-number": "#fd9353",
+          "syntax-constant": "#cab8ff",
+          "syntax-identifier": "#e6d9db",
+          "syntax-property": "#80bfff",
+          "syntax-operator": "#e6d9db",
+          "syntax-comment": "#bcaeaf",
+          "syntax-punctuation": "#c8bbbc",
+          "syntax-invalid": "#ff8a80"
+        },
+        "syntaxContrastVsCodeBg": {
+          "keyword": 4.705893737550866,
+          "function": 8.493733754789915,
+          "type": 7.742799021817181,
+          "string": 8.336915703917912,
+          "number": 5.990621189653623,
+          "constant": 7.4679511932487745,
+          "identifier": 9.681576604981021,
+          "property": 6.837367500421451,
+          "operator": 9.681576604981021,
+          "comment": 6.20356636442437,
+          "punctuation": 7.1383299630756,
+          "invalid": 5.816225201497017
+        },
+        "themeColor": {
+          "bg-primary": "#2c2525",
+          "bg-secondary": "#241f1f",
+          "bg-tertiary": "#352e2e",
+          "bg-hover": "#403e41",
+          "text-primary": "#e6d9db",
+          "text-secondary": "#c3b7b8",
+          "text-muted": "#948a8b",
+          "text-faint": "#72696a",
+          "border": "#403e41",
+          "accent": "#f38d70",
+          "accent-hover": "#f8a788",
+          "accent-text": "#2c2525",
+          "selection": "#403e41",
+          "selection-text": "#e6d9db",
+          "scrollbar": "#403e41",
+          "scrollbar-hover": "#4d4a4a",
+          "success": "#adda78",
+          "warning": "#f9cc6c",
+          "error": "#fd6883",
+          "code-bg": "#352e2e",
+          "heading-1": "#f38d70",
+          "heading-2": "#a8a9eb",
+          "heading-3": "#85dacc",
+          "folder-icon": "#f38d70",
+          "file-icon": "#948a8b",
+          "config-icon": "#f9cc6c",
+          "syntax-keyword": "#f26d9c",
+          "syntax-function": "#f9c859",
+          "syntax-type": "#7ad5cf",
+          "syntax-string": "#a9dc76",
+          "syntax-number": "#fd9353",
+          "syntax-constant": "#cab8ff",
+          "syntax-identifier": "#e6d9db",
+          "syntax-property": "#80bfff",
+          "syntax-operator": "#e6d9db",
+          "syntax-comment": "#bcaeaf",
+          "syntax-punctuation": "#c8bbbc",
+          "syntax-invalid": "#ff8a80"
+        }
+      }
+    },
+    {
+      "name": "theme rose-pine.css",
+      "fn": "themePalette",
+      "input": {
+        "file": "app/assets/tailwind/themes/rose-pine.css"
+      },
+      "expected": {
+        "selector": "[data-theme=\"rose-pine\"]",
+        "vars": {
+          "bg-primary": "#faf4ed",
+          "bg-secondary": "#fffaf3",
+          "bg-tertiary": "#f2e9e1",
+          "bg-hover": "#dfdad9",
+          "text-primary": "#575279",
+          "text-secondary": "#797593",
+          "text-muted": "#9893a5",
+          "text-faint": "#cecacd",
+          "border": "#dfdad9",
+          "accent": "#56949f",
+          "accent-hover": "#286983",
+          "accent-text": "#faf4ed",
+          "selection": "#dfdad9",
+          "selection-text": "#575279",
+          "scrollbar": "#dfdad9",
+          "scrollbar-hover": "#cecacd",
+          "success": "#286983",
+          "warning": "#ea9d34",
+          "error": "#b4637a",
+          "code-bg": "#f2e9e1",
+          "heading-1": "#907aa9",
+          "heading-2": "#56949f",
+          "heading-3": "#d7827e",
+          "folder-icon": "#56949f",
+          "file-icon": "#9893a5",
+          "config-icon": "#ea9d34",
+          "syntax-keyword": "#625d7b",
+          "syntax-function": "#73531c",
+          "syntax-type": "#286983",
+          "syntax-string": "#9f465b",
+          "syntax-number": "#954b00",
+          "syntax-constant": "#355d9a",
+          "syntax-identifier": "#575279",
+          "syntax-property": "#24647d",
+          "syntax-operator": "#575279",
+          "syntax-comment": "#686487",
+          "syntax-punctuation": "#625d7b",
+          "syntax-invalid": "#b42318"
+        },
+        "syntaxContrastVsCodeBg": {
+          "keyword": 5.196622274110714,
+          "function": 5.872624335088197,
+          "type": 5.094603451334894,
+          "string": 5.003337595725383,
+          "number": 5.3338713119059324,
+          "constant": 5.502423442363882,
+          "identifier": 6.065334694845162,
+          "property": 5.484713839220286,
+          "operator": 6.065334694845162,
+          "comment": 4.65746041076937,
+          "punctuation": 5.196622274110714,
+          "invalid": 5.4842912945073685
+        },
+        "themeColor": {
+          "bg-primary": "#faf4ed",
+          "bg-secondary": "#fffaf3",
+          "bg-tertiary": "#f2e9e1",
+          "bg-hover": "#dfdad9",
+          "text-primary": "#575279",
+          "text-secondary": "#797593",
+          "text-muted": "#9893a5",
+          "text-faint": "#cecacd",
+          "border": "#dfdad9",
+          "accent": "#56949f",
+          "accent-hover": "#286983",
+          "accent-text": "#faf4ed",
+          "selection": "#dfdad9",
+          "selection-text": "#575279",
+          "scrollbar": "#dfdad9",
+          "scrollbar-hover": "#cecacd",
+          "success": "#286983",
+          "warning": "#ea9d34",
+          "error": "#b4637a",
+          "code-bg": "#f2e9e1",
+          "heading-1": "#907aa9",
+          "heading-2": "#56949f",
+          "heading-3": "#d7827e",
+          "folder-icon": "#56949f",
+          "file-icon": "#9893a5",
+          "config-icon": "#ea9d34",
+          "syntax-keyword": "#625d7b",
+          "syntax-function": "#73531c",
+          "syntax-type": "#286983",
+          "syntax-string": "#9f465b",
+          "syntax-number": "#954b00",
+          "syntax-constant": "#355d9a",
+          "syntax-identifier": "#575279",
+          "syntax-property": "#24647d",
+          "syntax-operator": "#575279",
+          "syntax-comment": "#686487",
+          "syntax-punctuation": "#625d7b",
+          "syntax-invalid": "#b42318"
+        }
+      }
+    },
+    {
+      "name": "theme solarized-dark.css",
+      "fn": "themePalette",
+      "input": {
+        "file": "app/assets/tailwind/themes/solarized-dark.css"
+      },
+      "expected": {
+        "selector": "[data-theme=\"solarized-dark\"]",
+        "vars": {
+          "bg-primary": "#002b36",
+          "bg-secondary": "#073642",
+          "bg-tertiary": "#073642",
+          "bg-hover": "#094959",
+          "text-primary": "#839496",
+          "text-secondary": "#93a1a1",
+          "text-muted": "#657b83",
+          "text-faint": "#586e75",
+          "border": "#094959",
+          "accent": "#268bd2",
+          "accent-hover": "#2aa198",
+          "accent-text": "#fdf6e3",
+          "selection": "#094959",
+          "selection-text": "#93a1a1",
+          "scrollbar": "#586e75",
+          "scrollbar-hover": "#657b83",
+          "success": "#859900",
+          "warning": "#cb4b16",
+          "error": "#dc322f",
+          "code-bg": "#073642",
+          "heading-1": "#b58900",
+          "heading-2": "#cb4b16",
+          "heading-3": "#2aa198",
+          "folder-icon": "#2aa198",
+          "file-icon": "#657b83",
+          "config-icon": "#b58900",
+          "syntax-keyword": "#c792ea",
+          "syntax-function": "#ffd866",
+          "syntax-type": "#65d5cb",
+          "syntax-string": "#95d96a",
+          "syntax-number": "#ffad66",
+          "syntax-constant": "#79c0ff",
+          "syntax-identifier": "#b2c2c4",
+          "syntax-property": "#68c5e3",
+          "syntax-operator": "#93a1a1",
+          "syntax-comment": "#91b67e",
+          "syntax-punctuation": "#b2c2c4",
+          "syntax-invalid": "#ff8787"
+        },
+        "syntaxContrastVsCodeBg": {
+          "keyword": 5.403144179724101,
+          "function": 9.450593259594214,
+          "type": 7.3874076396943815,
+          "string": 7.683176216920937,
+          "number": 7.070384566962083,
+          "constant": 6.6838196041441575,
+          "identifier": 7.061423553385236,
+          "property": 6.614162579107685,
+          "operator": 4.861546489913263,
+          "comment": 5.693059334043057,
+          "punctuation": 7.061423553385236,
+          "invalid": 5.61322848644966
+        },
+        "themeColor": {
+          "bg-primary": "#002b36",
+          "bg-secondary": "#073642",
+          "bg-tertiary": "#073642",
+          "bg-hover": "#094959",
+          "text-primary": "#839496",
+          "text-secondary": "#93a1a1",
+          "text-muted": "#657b83",
+          "text-faint": "#586e75",
+          "border": "#094959",
+          "accent": "#268bd2",
+          "accent-hover": "#2aa198",
+          "accent-text": "#fdf6e3",
+          "selection": "#094959",
+          "selection-text": "#93a1a1",
+          "scrollbar": "#586e75",
+          "scrollbar-hover": "#657b83",
+          "success": "#859900",
+          "warning": "#cb4b16",
+          "error": "#dc322f",
+          "code-bg": "#073642",
+          "heading-1": "#b58900",
+          "heading-2": "#cb4b16",
+          "heading-3": "#2aa198",
+          "folder-icon": "#2aa198",
+          "file-icon": "#657b83",
+          "config-icon": "#b58900",
+          "syntax-keyword": "#c792ea",
+          "syntax-function": "#ffd866",
+          "syntax-type": "#65d5cb",
+          "syntax-string": "#95d96a",
+          "syntax-number": "#ffad66",
+          "syntax-constant": "#79c0ff",
+          "syntax-identifier": "#b2c2c4",
+          "syntax-property": "#68c5e3",
+          "syntax-operator": "#93a1a1",
+          "syntax-comment": "#91b67e",
+          "syntax-punctuation": "#b2c2c4",
+          "syntax-invalid": "#ff8787"
+        }
+      }
+    },
+    {
+      "name": "theme solarized-light.css",
+      "fn": "themePalette",
+      "input": {
+        "file": "app/assets/tailwind/themes/solarized-light.css"
+      },
+      "expected": {
+        "selector": "[data-theme=\"solarized-light\"]",
+        "vars": {
+          "bg-primary": "#fdf6e3",
+          "bg-secondary": "#eee8d5",
+          "bg-tertiary": "#eee8d5",
+          "bg-hover": "#e0dbc8",
+          "text-primary": "#657b83",
+          "text-secondary": "#586e75",
+          "text-muted": "#93a1a1",
+          "text-faint": "#839496",
+          "border": "#d3cbb7",
+          "accent": "#268bd2",
+          "accent-hover": "#2aa198",
+          "accent-text": "#fdf6e3",
+          "selection": "#e0dbc8",
+          "selection-text": "#586e75",
+          "scrollbar": "#93a1a1",
+          "scrollbar-hover": "#839496",
+          "success": "#859900",
+          "warning": "#cb4b16",
+          "error": "#dc322f",
+          "code-bg": "#eee8d5",
+          "heading-1": "#b58900",
+          "heading-2": "#cb4b16",
+          "heading-3": "#2aa198",
+          "folder-icon": "#268bd2",
+          "file-icon": "#93a1a1",
+          "config-icon": "#b58900",
+          "syntax-keyword": "#7b4fa3",
+          "syntax-function": "#855800",
+          "syntax-type": "#006b73",
+          "syntax-string": "#24692d",
+          "syntax-number": "#aa4600",
+          "syntax-constant": "#205ea6",
+          "syntax-identifier": "#4f5d64",
+          "syntax-property": "#12607b",
+          "syntax-operator": "#4b6067",
+          "syntax-comment": "#4b6d31",
+          "syntax-punctuation": "#4d6269",
+          "syntax-invalid": "#b13a2e"
+        },
+        "syntaxContrastVsCodeBg": {
+          "keyword": 4.911628265368135,
+          "function": 5.050955014392228,
+          "type": 5.115111797625374,
+          "string": 5.469505616204749,
+          "number": 4.780359136323813,
+          "constant": 5.334015520010414,
+          "identifier": 5.560579879773912,
+          "property": 5.741903179636539,
+          "operator": 5.409706807138482,
+          "comment": 4.853867027664088,
+          "punctuation": 5.2466856149365,
+          "invalid": 4.877183916406127
+        },
+        "themeColor": {
+          "bg-primary": "#fdf6e3",
+          "bg-secondary": "#eee8d5",
+          "bg-tertiary": "#eee8d5",
+          "bg-hover": "#e0dbc8",
+          "text-primary": "#657b83",
+          "text-secondary": "#586e75",
+          "text-muted": "#93a1a1",
+          "text-faint": "#839496",
+          "border": "#d3cbb7",
+          "accent": "#268bd2",
+          "accent-hover": "#2aa198",
+          "accent-text": "#fdf6e3",
+          "selection": "#e0dbc8",
+          "selection-text": "#586e75",
+          "scrollbar": "#93a1a1",
+          "scrollbar-hover": "#839496",
+          "success": "#859900",
+          "warning": "#cb4b16",
+          "error": "#dc322f",
+          "code-bg": "#eee8d5",
+          "heading-1": "#b58900",
+          "heading-2": "#cb4b16",
+          "heading-3": "#2aa198",
+          "folder-icon": "#268bd2",
+          "file-icon": "#93a1a1",
+          "config-icon": "#b58900",
+          "syntax-keyword": "#7b4fa3",
+          "syntax-function": "#855800",
+          "syntax-type": "#006b73",
+          "syntax-string": "#24692d",
+          "syntax-number": "#aa4600",
+          "syntax-constant": "#205ea6",
+          "syntax-identifier": "#4f5d64",
+          "syntax-property": "#12607b",
+          "syntax-operator": "#4b6067",
+          "syntax-comment": "#4b6d31",
+          "syntax-punctuation": "#4d6269",
+          "syntax-invalid": "#b13a2e"
+        }
+      }
+    },
+    {
+      "name": "theme tokyo-night.css",
+      "fn": "themePalette",
+      "input": {
+        "file": "app/assets/tailwind/themes/tokyo-night.css"
+      },
+      "expected": {
+        "selector": "[data-theme=\"tokyo-night\"]",
+        "vars": {
+          "bg-primary": "#1a1b26",
+          "bg-secondary": "#16161e",
+          "bg-tertiary": "#24283b",
+          "bg-hover": "#343a52",
+          "text-primary": "#c0caf5",
+          "text-secondary": "#a9b1d6",
+          "text-muted": "#565f89",
+          "text-faint": "#414868",
+          "border": "#343a52",
+          "accent": "#7aa2f7",
+          "accent-hover": "#89b4fa",
+          "accent-text": "#1a1b26",
+          "selection": "#33467c",
+          "selection-text": "#c0caf5",
+          "scrollbar": "#414868",
+          "scrollbar-hover": "#565f89",
+          "success": "#9ece6a",
+          "warning": "#e0af68",
+          "error": "#f7768e",
+          "code-bg": "#24283b",
+          "heading-1": "#bb9af7",
+          "heading-2": "#7dcfff",
+          "heading-3": "#73daca",
+          "folder-icon": "#bb9af7",
+          "file-icon": "#565f89",
+          "config-icon": "#e0af68",
+          "syntax-keyword": "#bb9af7",
+          "syntax-function": "#e0af68",
+          "syntax-type": "#7dcfff",
+          "syntax-string": "#9ece6a",
+          "syntax-number": "#ff9e64",
+          "syntax-constant": "#f7768e",
+          "syntax-identifier": "#c0caf5",
+          "syntax-property": "#73daca",
+          "syntax-operator": "#a9b1d6",
+          "syntax-comment": "#9aa5ce",
+          "syntax-punctuation": "#a9b1d6",
+          "syntax-invalid": "#ff8c94"
+        },
+        "syntaxContrastVsCodeBg": {
+          "keyword": 6.296998194257738,
+          "function": 7.284082379094179,
+          "type": 8.49085291999248,
+          "string": 7.970170113039405,
+          "number": 7.16298863950313,
+          "constant": 5.505232212499105,
+          "identifier": 9.022797368046596,
+          "property": 8.746982887953397,
+          "operator": 6.899479680581846,
+          "comment": 5.998059508918939,
+          "punctuation": 6.899479680581846,
+          "invalid": 6.54155768493517
+        },
+        "themeColor": {
+          "bg-primary": "#1a1b26",
+          "bg-secondary": "#16161e",
+          "bg-tertiary": "#24283b",
+          "bg-hover": "#343a52",
+          "text-primary": "#c0caf5",
+          "text-secondary": "#a9b1d6",
+          "text-muted": "#565f89",
+          "text-faint": "#414868",
+          "border": "#343a52",
+          "accent": "#7aa2f7",
+          "accent-hover": "#89b4fa",
+          "accent-text": "#1a1b26",
+          "selection": "#33467c",
+          "selection-text": "#c0caf5",
+          "scrollbar": "#414868",
+          "scrollbar-hover": "#565f89",
+          "success": "#9ece6a",
+          "warning": "#e0af68",
+          "error": "#f7768e",
+          "code-bg": "#24283b",
+          "heading-1": "#bb9af7",
+          "heading-2": "#7dcfff",
+          "heading-3": "#73daca",
+          "folder-icon": "#bb9af7",
+          "file-icon": "#565f89",
+          "config-icon": "#e0af68",
+          "syntax-keyword": "#bb9af7",
+          "syntax-function": "#e0af68",
+          "syntax-type": "#7dcfff",
+          "syntax-string": "#9ece6a",
+          "syntax-number": "#ff9e64",
+          "syntax-constant": "#f7768e",
+          "syntax-identifier": "#c0caf5",
+          "syntax-property": "#73daca",
+          "syntax-operator": "#a9b1d6",
+          "syntax-comment": "#9aa5ce",
+          "syntax-punctuation": "#a9b1d6",
+          "syntax-invalid": "#ff8c94"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,1499 @@
+{
+  "source": "app/javascript/lib/emoji_i18n.js (+ public/emoji-data/*.json) @ d47a89e92d89f807878d318182fa5dcea0329ec4",
+  "frankmd_sha": "d47a89e92d89f807878d318182fa5dcea0329ec4",
+  "generator": "tools/golden/js/ui_data.mjs",
+  "notes": "buildSearchIndex returns a Map encoded as {\"$map\": [[emoji, {label,tags,searchTerms}], ...]} in insertion order (duplicate emoji: later entry overwrites value but keeps original position). setEmojiLocale maps via LOCALE_MAP with fallback 'en' (prototype keys like 'toString' resolve to inherited values — see cases). getTranslatedEmojis: fetch stubbed to serve public/emoji-data/<loc>.json; module caches per locale across calls; 'fetched' lists URLs requested in that call.",
+  "cases": [
+    {
+      "name": "setEmojiLocale \"en\"",
+      "fn": "setEmojiLocale+getEmojibaseLocale",
+      "input": [
+        "en"
+      ],
+      "expected": "en"
+    },
+    {
+      "name": "setEmojiLocale \"pt-BR\"",
+      "fn": "setEmojiLocale+getEmojibaseLocale",
+      "input": [
+        "pt-BR"
+      ],
+      "expected": "pt"
+    },
+    {
+      "name": "setEmojiLocale \"pt-PT\"",
+      "fn": "setEmojiLocale+getEmojibaseLocale",
+      "input": [
+        "pt-PT"
+      ],
+      "expected": "pt"
+    },
+    {
+      "name": "setEmojiLocale \"es\"",
+      "fn": "setEmojiLocale+getEmojibaseLocale",
+      "input": [
+        "es"
+      ],
+      "expected": "es"
+    },
+    {
+      "name": "setEmojiLocale \"ja\"",
+      "fn": "setEmojiLocale+getEmojibaseLocale",
+      "input": [
+        "ja"
+      ],
+      "expected": "ja"
+    },
+    {
+      "name": "setEmojiLocale \"ko\"",
+      "fn": "setEmojiLocale+getEmojibaseLocale",
+      "input": [
+        "ko"
+      ],
+      "expected": "ko"
+    },
+    {
+      "name": "setEmojiLocale \"he\"",
+      "fn": "setEmojiLocale+getEmojibaseLocale",
+      "input": [
+        "he"
+      ],
+      "expected": "en"
+    },
+    {
+      "name": "setEmojiLocale \"pt\"",
+      "fn": "setEmojiLocale+getEmojibaseLocale",
+      "input": [
+        "pt"
+      ],
+      "expected": "en"
+    },
+    {
+      "name": "setEmojiLocale \"fr\"",
+      "fn": "setEmojiLocale+getEmojibaseLocale",
+      "input": [
+        "fr"
+      ],
+      "expected": "en"
+    },
+    {
+      "name": "setEmojiLocale \"EN\"",
+      "fn": "setEmojiLocale+getEmojibaseLocale",
+      "input": [
+        "EN"
+      ],
+      "expected": "en"
+    },
+    {
+      "name": "setEmojiLocale \"\"",
+      "fn": "setEmojiLocale+getEmojibaseLocale",
+      "input": [
+        ""
+      ],
+      "expected": "en"
+    },
+    {
+      "name": "setEmojiLocale \"null\"",
+      "fn": "setEmojiLocale+getEmojibaseLocale",
+      "input": [
+        null
+      ],
+      "expected": "en"
+    },
+    {
+      "name": "setEmojiLocale \"undefined\"",
+      "fn": "setEmojiLocale+getEmojibaseLocale",
+      "input": [
+        {
+          "$undefined": true
+        }
+      ],
+      "expected": "en"
+    },
+    {
+      "name": "setEmojiLocale \"toString\"",
+      "fn": "setEmojiLocale+getEmojibaseLocale",
+      "input": [
+        "toString"
+      ],
+      "expected": {
+        "$function": "toString"
+      }
+    },
+    {
+      "name": "setEmojiLocale \"__proto__\"",
+      "fn": "setEmojiLocale+getEmojibaseLocale",
+      "input": [
+        "__proto__"
+      ],
+      "expected": {}
+    },
+    {
+      "name": "harvested buildSearchIndex",
+      "fn": "buildSearchIndex",
+      "input": [
+        [
+          {
+            "hexcode": "1F600",
+            "label": "grinning face",
+            "unicode": "😀",
+            "tags": [
+              "happy",
+              "smile"
+            ]
+          },
+          {
+            "hexcode": "1F602",
+            "label": "face with tears of joy",
+            "unicode": "😂",
+            "tags": [
+              "laugh",
+              "crying"
+            ]
+          },
+          {
+            "hexcode": "2764",
+            "label": "red heart",
+            "unicode": "❤️",
+            "tags": [
+              "love"
+            ]
+          }
+        ]
+      ],
+      "expected": {
+        "$map": [
+          [
+            "😀",
+            {
+              "label": "grinning face",
+              "tags": [
+                "happy",
+                "smile"
+              ],
+              "searchTerms": "grinning face happy smile"
+            }
+          ],
+          [
+            "😂",
+            {
+              "label": "face with tears of joy",
+              "tags": [
+                "laugh",
+                "crying"
+              ],
+              "searchTerms": "face with tears of joy laugh crying"
+            }
+          ],
+          [
+            "❤️",
+            {
+              "label": "red heart",
+              "tags": [
+                "love"
+              ],
+              "searchTerms": "red heart love"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "name": "buildSearchIndex synthetic",
+      "fn": "buildSearchIndex",
+      "input": [
+        [
+          {
+            "unicode": "😀",
+            "label": "Grinning Face",
+            "tags": [
+              "Happy",
+              "SMILE"
+            ]
+          },
+          {
+            "emoji": "🙂",
+            "label": "slight"
+          },
+          {
+            "label": "no char"
+          },
+          {
+            "unicode": "",
+            "emoji": "x",
+            "label": "empty unicode"
+          },
+          {
+            "unicode": "😀",
+            "label": "dup later wins",
+            "tags": []
+          },
+          {
+            "unicode": "❤️",
+            "tags": [
+              "love"
+            ]
+          },
+          {
+            "unicode": "👨‍👩‍👧",
+            "label": "Família ção",
+            "tags": [
+              "日本"
+            ]
+          }
+        ]
+      ],
+      "expected": {
+        "$map": [
+          [
+            "😀",
+            {
+              "label": "dup later wins",
+              "tags": [],
+              "searchTerms": "dup later wins"
+            }
+          ],
+          [
+            "🙂",
+            {
+              "label": "slight",
+              "tags": [],
+              "searchTerms": "slight"
+            }
+          ],
+          [
+            "x",
+            {
+              "label": "empty unicode",
+              "tags": [],
+              "searchTerms": "empty unicode"
+            }
+          ],
+          [
+            "❤️",
+            {
+              "label": "",
+              "tags": [
+                "love"
+              ],
+              "searchTerms": " love"
+            }
+          ],
+          [
+            "👨‍👩‍👧",
+            {
+              "label": "Família ção",
+              "tags": [
+                "日本"
+              ],
+              "searchTerms": "família ção 日本"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "name": "buildSearchIndex en.json first 40",
+      "fn": "buildSearchIndex",
+      "input": [
+        [
+          {
+            "hexcode": "1F1E6",
+            "label": "regional indicator A",
+            "unicode": "🇦"
+          },
+          {
+            "hexcode": "1F1E7",
+            "label": "regional indicator B",
+            "unicode": "🇧"
+          },
+          {
+            "hexcode": "1F1E8",
+            "label": "regional indicator C",
+            "unicode": "🇨"
+          },
+          {
+            "hexcode": "1F1E9",
+            "label": "regional indicator D",
+            "unicode": "🇩"
+          },
+          {
+            "hexcode": "1F1EA",
+            "label": "regional indicator E",
+            "unicode": "🇪"
+          },
+          {
+            "hexcode": "1F1EB",
+            "label": "regional indicator F",
+            "unicode": "🇫"
+          },
+          {
+            "hexcode": "1F1EC",
+            "label": "regional indicator G",
+            "unicode": "🇬"
+          },
+          {
+            "hexcode": "1F1ED",
+            "label": "regional indicator H",
+            "unicode": "🇭"
+          },
+          {
+            "hexcode": "1F1EE",
+            "label": "regional indicator I",
+            "unicode": "🇮"
+          },
+          {
+            "hexcode": "1F1EF",
+            "label": "regional indicator J",
+            "unicode": "🇯"
+          },
+          {
+            "hexcode": "1F1F0",
+            "label": "regional indicator K",
+            "unicode": "🇰"
+          },
+          {
+            "hexcode": "1F1F1",
+            "label": "regional indicator L",
+            "unicode": "🇱"
+          },
+          {
+            "hexcode": "1F1F2",
+            "label": "regional indicator M",
+            "unicode": "🇲"
+          },
+          {
+            "hexcode": "1F1F3",
+            "label": "regional indicator N",
+            "unicode": "🇳"
+          },
+          {
+            "hexcode": "1F1F4",
+            "label": "regional indicator O",
+            "unicode": "🇴"
+          },
+          {
+            "hexcode": "1F1F5",
+            "label": "regional indicator P",
+            "unicode": "🇵"
+          },
+          {
+            "hexcode": "1F1F6",
+            "label": "regional indicator Q",
+            "unicode": "🇶"
+          },
+          {
+            "hexcode": "1F1F7",
+            "label": "regional indicator R",
+            "unicode": "🇷"
+          },
+          {
+            "hexcode": "1F1F8",
+            "label": "regional indicator S",
+            "unicode": "🇸"
+          },
+          {
+            "hexcode": "1F1F9",
+            "label": "regional indicator T",
+            "unicode": "🇹"
+          },
+          {
+            "hexcode": "1F1FA",
+            "label": "regional indicator U",
+            "unicode": "🇺"
+          },
+          {
+            "hexcode": "1F1FB",
+            "label": "regional indicator V",
+            "unicode": "🇻"
+          },
+          {
+            "hexcode": "1F1FC",
+            "label": "regional indicator W",
+            "unicode": "🇼"
+          },
+          {
+            "hexcode": "1F1FD",
+            "label": "regional indicator X",
+            "unicode": "🇽"
+          },
+          {
+            "hexcode": "1F1FE",
+            "label": "regional indicator Y",
+            "unicode": "🇾"
+          },
+          {
+            "hexcode": "1F1FF",
+            "label": "regional indicator Z",
+            "unicode": "🇿"
+          },
+          {
+            "group": 0,
+            "hexcode": "1F600",
+            "label": "grinning face",
+            "order": 1,
+            "tags": [
+              "cheerful",
+              "cheery",
+              "face",
+              "grin",
+              "grinning",
+              "happy",
+              "laugh",
+              "nice",
+              "smile",
+              "smiling",
+              "teeth"
+            ],
+            "unicode": "😀"
+          },
+          {
+            "group": 0,
+            "hexcode": "1F603",
+            "label": "grinning face with big eyes",
+            "order": 2,
+            "tags": [
+              "awesome",
+              "big",
+              "eyes",
+              "face",
+              "grin",
+              "grinning",
+              "happy",
+              "mouth",
+              "open",
+              "smile",
+              "smiling",
+              "teeth",
+              "yay"
+            ],
+            "unicode": "😃"
+          },
+          {
+            "group": 0,
+            "hexcode": "1F604",
+            "label": "grinning face with smiling eyes",
+            "order": 3,
+            "tags": [
+              "eye",
+              "eyes",
+              "face",
+              "grin",
+              "grinning",
+              "happy",
+              "laugh",
+              "lol",
+              "mouth",
+              "open",
+              "smile",
+              "smiling"
+            ],
+            "unicode": "😄",
+            "emoticon": ":D"
+          },
+          {
+            "group": 0,
+            "hexcode": "1F601",
+            "label": "beaming face with smiling eyes",
+            "order": 4,
+            "tags": [
+              "beaming",
+              "eye",
+              "eyes",
+              "face",
+              "grin",
+              "grinning",
+              "happy",
+              "nice",
+              "smile",
+              "smiling",
+              "teeth"
+            ],
+            "unicode": "😁"
+          },
+          {
+            "group": 0,
+            "hexcode": "1F606",
+            "label": "grinning squinting face",
+            "order": 5,
+            "tags": [
+              "closed",
+              "eyes",
+              "face",
+              "grinning",
+              "haha",
+              "hahaha",
+              "happy",
+              "laugh",
+              "lol",
+              "mouth",
+              "open",
+              "rofl",
+              "smile",
+              "smiling",
+              "squinting"
+            ],
+            "unicode": "😆",
+            "emoticon": [
+              "xD",
+              "XD"
+            ]
+          },
+          {
+            "group": 0,
+            "hexcode": "1F605",
+            "label": "grinning face with sweat",
+            "order": 6,
+            "tags": [
+              "cold",
+              "dejected",
+              "excited",
+              "face",
+              "grinning",
+              "mouth",
+              "nervous",
+              "open",
+              "smile",
+              "smiling",
+              "stress",
+              "stressed",
+              "sweat"
+            ],
+            "unicode": "😅"
+          },
+          {
+            "group": 0,
+            "hexcode": "1F923",
+            "label": "rolling on the floor laughing",
+            "order": 7,
+            "tags": [
+              "crying",
+              "face",
+              "floor",
+              "funny",
+              "haha",
+              "happy",
+              "hehe",
+              "hilarious",
+              "joy",
+              "laugh",
+              "lmao",
+              "lol",
+              "rofl",
+              "roflmao",
+              "rolling",
+              "tear"
+            ],
+            "unicode": "🤣",
+            "emoticon": ":'D"
+          },
+          {
+            "group": 0,
+            "hexcode": "1F602",
+            "label": "face with tears of joy",
+            "order": 8,
+            "tags": [
+              "crying",
+              "face",
+              "feels",
+              "funny",
+              "haha",
+              "happy",
+              "hehe",
+              "hilarious",
+              "joy",
+              "laugh",
+              "lmao",
+              "lol",
+              "rofl",
+              "roflmao",
+              "tear"
+            ],
+            "unicode": "😂",
+            "emoticon": ":')"
+          },
+          {
+            "group": 0,
+            "hexcode": "1F642",
+            "label": "slightly smiling face",
+            "order": 9,
+            "tags": [
+              "face",
+              "happy",
+              "slightly",
+              "smile",
+              "smiling"
+            ],
+            "unicode": "🙂",
+            "emoticon": ":)"
+          },
+          {
+            "group": 0,
+            "hexcode": "1F643",
+            "label": "upside-down face",
+            "order": 10,
+            "tags": [
+              "face",
+              "hehe",
+              "smile",
+              "upside-down"
+            ],
+            "unicode": "🙃"
+          },
+          {
+            "group": 0,
+            "hexcode": "1FAE0",
+            "label": "melting face",
+            "order": 11,
+            "tags": [
+              "disappear",
+              "dissolve",
+              "embarrassed",
+              "face",
+              "haha",
+              "heat",
+              "hot",
+              "liquid",
+              "lol",
+              "melt",
+              "melting",
+              "sarcasm",
+              "sarcastic"
+            ],
+            "unicode": "🫠"
+          },
+          {
+            "group": 0,
+            "hexcode": "1F609",
+            "label": "winking face",
+            "order": 12,
+            "tags": [
+              "face",
+              "flirt",
+              "heartbreaker",
+              "sexy",
+              "slide",
+              "tease",
+              "wink",
+              "winking",
+              "winks"
+            ],
+            "unicode": "😉",
+            "emoticon": ";)"
+          },
+          {
+            "group": 0,
+            "hexcode": "1F60A",
+            "label": "smiling face with smiling eyes",
+            "order": 13,
+            "tags": [
+              "blush",
+              "eye",
+              "eyes",
+              "face",
+              "glad",
+              "satisfied",
+              "smile",
+              "smiling"
+            ],
+            "unicode": "😊",
+            "emoticon": ":>"
+          },
+          {
+            "group": 0,
+            "hexcode": "1F607",
+            "label": "smiling face with halo",
+            "order": 14,
+            "tags": [
+              "angel",
+              "angelic",
+              "angels",
+              "blessed",
+              "face",
+              "fairy",
+              "fairytale",
+              "fantasy",
+              "halo",
+              "happy",
+              "innocent",
+              "peaceful",
+              "smile",
+              "smiling",
+              "spirit",
+              "tale"
+            ],
+            "unicode": "😇",
+            "emoticon": [
+              "o:)",
+              "O:)"
+            ]
+          }
+        ]
+      ],
+      "expected": {
+        "$map": [
+          [
+            "🇦",
+            {
+              "label": "regional indicator A",
+              "tags": [],
+              "searchTerms": "regional indicator a"
+            }
+          ],
+          [
+            "🇧",
+            {
+              "label": "regional indicator B",
+              "tags": [],
+              "searchTerms": "regional indicator b"
+            }
+          ],
+          [
+            "🇨",
+            {
+              "label": "regional indicator C",
+              "tags": [],
+              "searchTerms": "regional indicator c"
+            }
+          ],
+          [
+            "🇩",
+            {
+              "label": "regional indicator D",
+              "tags": [],
+              "searchTerms": "regional indicator d"
+            }
+          ],
+          [
+            "🇪",
+            {
+              "label": "regional indicator E",
+              "tags": [],
+              "searchTerms": "regional indicator e"
+            }
+          ],
+          [
+            "🇫",
+            {
+              "label": "regional indicator F",
+              "tags": [],
+              "searchTerms": "regional indicator f"
+            }
+          ],
+          [
+            "🇬",
+            {
+              "label": "regional indicator G",
+              "tags": [],
+              "searchTerms": "regional indicator g"
+            }
+          ],
+          [
+            "🇭",
+            {
+              "label": "regional indicator H",
+              "tags": [],
+              "searchTerms": "regional indicator h"
+            }
+          ],
+          [
+            "🇮",
+            {
+              "label": "regional indicator I",
+              "tags": [],
+              "searchTerms": "regional indicator i"
+            }
+          ],
+          [
+            "🇯",
+            {
+              "label": "regional indicator J",
+              "tags": [],
+              "searchTerms": "regional indicator j"
+            }
+          ],
+          [
+            "🇰",
+            {
+              "label": "regional indicator K",
+              "tags": [],
+              "searchTerms": "regional indicator k"
+            }
+          ],
+          [
+            "🇱",
+            {
+              "label": "regional indicator L",
+              "tags": [],
+              "searchTerms": "regional indicator l"
+            }
+          ],
+          [
+            "🇲",
+            {
+              "label": "regional indicator M",
+              "tags": [],
+              "searchTerms": "regional indicator m"
+            }
+          ],
+          [
+            "🇳",
+            {
+              "label": "regional indicator N",
+              "tags": [],
+              "searchTerms": "regional indicator n"
+            }
+          ],
+          [
+            "🇴",
+            {
+              "label": "regional indicator O",
+              "tags": [],
+              "searchTerms": "regional indicator o"
+            }
+          ],
+          [
+            "🇵",
+            {
+              "label": "regional indicator P",
+              "tags": [],
+              "searchTerms": "regional indicator p"
+            }
+          ],
+          [
+            "🇶",
+            {
+              "label": "regional indicator Q",
+              "tags": [],
+              "searchTerms": "regional indicator q"
+            }
+          ],
+          [
+            "🇷",
+            {
+              "label": "regional indicator R",
+              "tags": [],
+              "searchTerms": "regional indicator r"
+            }
+          ],
+          [
+            "🇸",
+            {
+              "label": "regional indicator S",
+              "tags": [],
+              "searchTerms": "regional indicator s"
+            }
+          ],
+          [
+            "🇹",
+            {
+              "label": "regional indicator T",
+              "tags": [],
+              "searchTerms": "regional indicator t"
+            }
+          ],
+          [
+            "🇺",
+            {
+              "label": "regional indicator U",
+              "tags": [],
+              "searchTerms": "regional indicator u"
+            }
+          ],
+          [
+            "🇻",
+            {
+              "label": "regional indicator V",
+              "tags": [],
+              "searchTerms": "regional indicator v"
+            }
+          ],
+          [
+            "🇼",
+            {
+              "label": "regional indicator W",
+              "tags": [],
+              "searchTerms": "regional indicator w"
+            }
+          ],
+          [
+            "🇽",
+            {
+              "label": "regional indicator X",
+              "tags": [],
+              "searchTerms": "regional indicator x"
+            }
+          ],
+          [
+            "🇾",
+            {
+              "label": "regional indicator Y",
+              "tags": [],
+              "searchTerms": "regional indicator y"
+            }
+          ],
+          [
+            "🇿",
+            {
+              "label": "regional indicator Z",
+              "tags": [],
+              "searchTerms": "regional indicator z"
+            }
+          ],
+          [
+            "😀",
+            {
+              "label": "grinning face",
+              "tags": [
+                "cheerful",
+                "cheery",
+                "face",
+                "grin",
+                "grinning",
+                "happy",
+                "laugh",
+                "nice",
+                "smile",
+                "smiling",
+                "teeth"
+              ],
+              "searchTerms": "grinning face cheerful cheery face grin grinning happy laugh nice smile smiling teeth"
+            }
+          ],
+          [
+            "😃",
+            {
+              "label": "grinning face with big eyes",
+              "tags": [
+                "awesome",
+                "big",
+                "eyes",
+                "face",
+                "grin",
+                "grinning",
+                "happy",
+                "mouth",
+                "open",
+                "smile",
+                "smiling",
+                "teeth",
+                "yay"
+              ],
+              "searchTerms": "grinning face with big eyes awesome big eyes face grin grinning happy mouth open smile smiling teeth yay"
+            }
+          ],
+          [
+            "😄",
+            {
+              "label": "grinning face with smiling eyes",
+              "tags": [
+                "eye",
+                "eyes",
+                "face",
+                "grin",
+                "grinning",
+                "happy",
+                "laugh",
+                "lol",
+                "mouth",
+                "open",
+                "smile",
+                "smiling"
+              ],
+              "searchTerms": "grinning face with smiling eyes eye eyes face grin grinning happy laugh lol mouth open smile smiling"
+            }
+          ],
+          [
+            "😁",
+            {
+              "label": "beaming face with smiling eyes",
+              "tags": [
+                "beaming",
+                "eye",
+                "eyes",
+                "face",
+                "grin",
+                "grinning",
+                "happy",
+                "nice",
+                "smile",
+                "smiling",
+                "teeth"
+              ],
+              "searchTerms": "beaming face with smiling eyes beaming eye eyes face grin grinning happy nice smile smiling teeth"
+            }
+          ],
+          [
+            "😆",
+            {
+              "label": "grinning squinting face",
+              "tags": [
+                "closed",
+                "eyes",
+                "face",
+                "grinning",
+                "haha",
+                "hahaha",
+                "happy",
+                "laugh",
+                "lol",
+                "mouth",
+                "open",
+                "rofl",
+                "smile",
+                "smiling",
+                "squinting"
+              ],
+              "searchTerms": "grinning squinting face closed eyes face grinning haha hahaha happy laugh lol mouth open rofl smile smiling squinting"
+            }
+          ],
+          [
+            "😅",
+            {
+              "label": "grinning face with sweat",
+              "tags": [
+                "cold",
+                "dejected",
+                "excited",
+                "face",
+                "grinning",
+                "mouth",
+                "nervous",
+                "open",
+                "smile",
+                "smiling",
+                "stress",
+                "stressed",
+                "sweat"
+              ],
+              "searchTerms": "grinning face with sweat cold dejected excited face grinning mouth nervous open smile smiling stress stressed sweat"
+            }
+          ],
+          [
+            "🤣",
+            {
+              "label": "rolling on the floor laughing",
+              "tags": [
+                "crying",
+                "face",
+                "floor",
+                "funny",
+                "haha",
+                "happy",
+                "hehe",
+                "hilarious",
+                "joy",
+                "laugh",
+                "lmao",
+                "lol",
+                "rofl",
+                "roflmao",
+                "rolling",
+                "tear"
+              ],
+              "searchTerms": "rolling on the floor laughing crying face floor funny haha happy hehe hilarious joy laugh lmao lol rofl roflmao rolling tear"
+            }
+          ],
+          [
+            "😂",
+            {
+              "label": "face with tears of joy",
+              "tags": [
+                "crying",
+                "face",
+                "feels",
+                "funny",
+                "haha",
+                "happy",
+                "hehe",
+                "hilarious",
+                "joy",
+                "laugh",
+                "lmao",
+                "lol",
+                "rofl",
+                "roflmao",
+                "tear"
+              ],
+              "searchTerms": "face with tears of joy crying face feels funny haha happy hehe hilarious joy laugh lmao lol rofl roflmao tear"
+            }
+          ],
+          [
+            "🙂",
+            {
+              "label": "slightly smiling face",
+              "tags": [
+                "face",
+                "happy",
+                "slightly",
+                "smile",
+                "smiling"
+              ],
+              "searchTerms": "slightly smiling face face happy slightly smile smiling"
+            }
+          ],
+          [
+            "🙃",
+            {
+              "label": "upside-down face",
+              "tags": [
+                "face",
+                "hehe",
+                "smile",
+                "upside-down"
+              ],
+              "searchTerms": "upside-down face face hehe smile upside-down"
+            }
+          ],
+          [
+            "🫠",
+            {
+              "label": "melting face",
+              "tags": [
+                "disappear",
+                "dissolve",
+                "embarrassed",
+                "face",
+                "haha",
+                "heat",
+                "hot",
+                "liquid",
+                "lol",
+                "melt",
+                "melting",
+                "sarcasm",
+                "sarcastic"
+              ],
+              "searchTerms": "melting face disappear dissolve embarrassed face haha heat hot liquid lol melt melting sarcasm sarcastic"
+            }
+          ],
+          [
+            "😉",
+            {
+              "label": "winking face",
+              "tags": [
+                "face",
+                "flirt",
+                "heartbreaker",
+                "sexy",
+                "slide",
+                "tease",
+                "wink",
+                "winking",
+                "winks"
+              ],
+              "searchTerms": "winking face face flirt heartbreaker sexy slide tease wink winking winks"
+            }
+          ],
+          [
+            "😊",
+            {
+              "label": "smiling face with smiling eyes",
+              "tags": [
+                "blush",
+                "eye",
+                "eyes",
+                "face",
+                "glad",
+                "satisfied",
+                "smile",
+                "smiling"
+              ],
+              "searchTerms": "smiling face with smiling eyes blush eye eyes face glad satisfied smile smiling"
+            }
+          ],
+          [
+            "😇",
+            {
+              "label": "smiling face with halo",
+              "tags": [
+                "angel",
+                "angelic",
+                "angels",
+                "blessed",
+                "face",
+                "fairy",
+                "fairytale",
+                "fantasy",
+                "halo",
+                "happy",
+                "innocent",
+                "peaceful",
+                "smile",
+                "smiling",
+                "spirit",
+                "tale"
+              ],
+              "searchTerms": "smiling face with halo angel angelic angels blessed face fairy fairytale fantasy halo happy innocent peaceful smile smiling spirit tale"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "name": "buildSearchIndex empty",
+      "fn": "buildSearchIndex",
+      "input": [
+        []
+      ],
+      "expected": {
+        "$map": []
+      }
+    },
+    {
+      "name": "dataset en.json",
+      "fn": "emojiDataset(shape)",
+      "input": {
+        "file": "public/emoji-data/en.json"
+      },
+      "expected": {
+        "entries": 1949,
+        "keyCounts": {
+          "hexcode": 1949,
+          "label": 1949,
+          "unicode": 1949,
+          "group": 1923,
+          "order": 1923,
+          "tags": 1923,
+          "emoticon": 49,
+          "skins": 330
+        },
+        "first": {
+          "hexcode": "1F1E6",
+          "label": "regional indicator A",
+          "unicode": "🇦"
+        },
+        "last": {
+          "group": 9,
+          "hexcode": "1F3F4-E0067-E0062-E0077-E006C-E0073-E007F",
+          "label": "flag: Wales",
+          "order": 5225,
+          "tags": [
+            "flag",
+            "gbwls"
+          ],
+          "unicode": "🏴󠁧󠁢󠁷󠁬󠁳󠁿"
+        },
+        "indexSize": 1949
+      }
+    },
+    {
+      "name": "dataset es.json",
+      "fn": "emojiDataset(shape)",
+      "input": {
+        "file": "public/emoji-data/es.json"
+      },
+      "expected": {
+        "entries": 1949,
+        "keyCounts": {
+          "hexcode": 1949,
+          "label": 1949,
+          "unicode": 1949,
+          "group": 1923,
+          "order": 1923,
+          "tags": 1923,
+          "emoticon": 49,
+          "skins": 330
+        },
+        "first": {
+          "hexcode": "1F1E6",
+          "label": "indicador regional A",
+          "unicode": "🇦"
+        },
+        "last": {
+          "group": 9,
+          "hexcode": "1F3F4-E0067-E0062-E0077-E006C-E0073-E007F",
+          "label": "Bandera: Gales",
+          "order": 5225,
+          "tags": [
+            "bandera",
+            "gbwls"
+          ],
+          "unicode": "🏴󠁧󠁢󠁷󠁬󠁳󠁿"
+        },
+        "indexSize": 1949
+      }
+    },
+    {
+      "name": "dataset ja.json",
+      "fn": "emojiDataset(shape)",
+      "input": {
+        "file": "public/emoji-data/ja.json"
+      },
+      "expected": {
+        "entries": 1949,
+        "keyCounts": {
+          "hexcode": 1949,
+          "label": 1949,
+          "unicode": 1949,
+          "group": 1923,
+          "order": 1923,
+          "tags": 1923,
+          "emoticon": 49,
+          "skins": 330
+        },
+        "first": {
+          "hexcode": "1F1E6",
+          "label": "地域指標 A",
+          "unicode": "🇦"
+        },
+        "last": {
+          "group": 9,
+          "hexcode": "1F3F4-E0067-E0062-E0077-E006C-E0073-E007F",
+          "label": "旗: ウェールズ",
+          "order": 5225,
+          "tags": [
+            "gbwls",
+            "旗"
+          ],
+          "unicode": "🏴󠁧󠁢󠁷󠁬󠁳󠁿"
+        },
+        "indexSize": 1949
+      }
+    },
+    {
+      "name": "dataset ko.json",
+      "fn": "emojiDataset(shape)",
+      "input": {
+        "file": "public/emoji-data/ko.json"
+      },
+      "expected": {
+        "entries": 1949,
+        "keyCounts": {
+          "hexcode": 1949,
+          "label": 1949,
+          "unicode": 1949,
+          "group": 1923,
+          "order": 1923,
+          "tags": 1923,
+          "emoticon": 49,
+          "skins": 330
+        },
+        "first": {
+          "hexcode": "1F1E6",
+          "label": "지역 지표 A",
+          "unicode": "🇦"
+        },
+        "last": {
+          "group": 9,
+          "hexcode": "1F3F4-E0067-E0062-E0077-E006C-E0073-E007F",
+          "label": "깃발: 웨일즈",
+          "order": 5225,
+          "tags": [
+            "gbwls",
+            "깃발"
+          ],
+          "unicode": "🏴󠁧󠁢󠁷󠁬󠁳󠁿"
+        },
+        "indexSize": 1949
+      }
+    },
+    {
+      "name": "dataset pt.json",
+      "fn": "emojiDataset(shape)",
+      "input": {
+        "file": "public/emoji-data/pt.json"
+      },
+      "expected": {
+        "entries": 1949,
+        "keyCounts": {
+          "hexcode": 1949,
+          "label": 1949,
+          "unicode": 1949,
+          "group": 1923,
+          "order": 1923,
+          "tags": 1923,
+          "emoticon": 49,
+          "skins": 330
+        },
+        "first": {
+          "hexcode": "1F1E6",
+          "label": "indicador regional A",
+          "unicode": "🇦"
+        },
+        "last": {
+          "group": 9,
+          "hexcode": "1F3F4-E0067-E0062-E0077-E006C-E0073-E007F",
+          "label": "bandeira: País de Gales",
+          "order": 5225,
+          "tags": [
+            "bandeira",
+            "gbwls"
+          ],
+          "unicode": "🏴󠁧󠁢󠁷󠁬󠁳󠁿"
+        },
+        "indexSize": 1949
+      }
+    },
+    {
+      "name": "getTranslatedEmojis pt-BR",
+      "fn": "getTranslatedEmojis",
+      "input": {
+        "locale": "pt-BR"
+      },
+      "expected": {
+        "fetched": [
+          "/emoji-data/pt.json"
+        ],
+        "count": 1949,
+        "first": {
+          "hexcode": "1F1E6",
+          "label": "indicador regional A",
+          "unicode": "🇦"
+        }
+      }
+    },
+    {
+      "name": "getTranslatedEmojis ja",
+      "fn": "getTranslatedEmojis",
+      "input": {
+        "locale": "ja"
+      },
+      "expected": {
+        "fetched": [
+          "/emoji-data/ja.json"
+        ],
+        "count": 1949,
+        "first": {
+          "hexcode": "1F1E6",
+          "label": "地域指標 A",
+          "unicode": "🇦"
+        }
+      }
+    },
+    {
+      "name": "getTranslatedEmojis he",
+      "fn": "getTranslatedEmojis",
+      "input": {
+        "locale": "he"
+      },
+      "expected": {
+        "fetched": [
+          "/emoji-data/en.json"
+        ],
+        "count": 1949,
+        "first": {
+          "hexcode": "1F1E6",
+          "label": "regional indicator A",
+          "unicode": "🇦"
+        }
+      }
+    },
+    {
+      "name": "getTranslatedEmojis xx",
+      "fn": "getTranslatedEmojis",
+      "input": {
+        "locale": "xx"
+      },
+      "expected": {
+        "fetched": [],
+        "count": 1949,
+        "first": {
+          "hexcode": "1F1E6",
+          "label": "regional indicator A",
+          "unicode": "🇦"
+        }
+      }
+    }
+  ]
+}

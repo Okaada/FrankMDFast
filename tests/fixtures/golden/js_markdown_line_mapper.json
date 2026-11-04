@@ -1,0 +1,1410 @@
+{
+  "source": "app/javascript/lib/markdown_line_mapper.js @ d47a89e92d89f807878d318182fa5dcea0329ec4",
+  "frankmd_sha": "d47a89e92d89f807878d318182fa5dcea0329ec4",
+  "generator": "tools/golden/js/render.mjs",
+  "notes": "parseWithLineNumbers runs against vendored marked@15.0.6 WITH the app's global marked.use({breaks:true,gfm:true,extensions:allExtensions}) (FrankMD's own vitest suite mocks marked; here it is real) and vendored DOMPurify on jsdom. Output HTML is DOMPurify/jsdom serialization. findElementByLine expected = {tag,line,text[0..40]} of the returned element. findLineAtScroll: jsdom has no layout, so element/container getBoundingClientRect().top and container.scrollTop are stubbed from the input (tops[i] for the i-th [data-source-line] element). 'marked.lexer(types+raw)' cases are informative token dumps.",
+  "cases": [
+    {
+      "name": "harvested \"```typescript\\nconst x: number = 1;\\n```\"",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "```typescript\nconst x: number = 1;\n```"
+      ],
+      "expected": "<pre data-source-line=\"1\"><code class=\"language-typescript\">const x: number = 1;\n</code></pre>\n"
+    },
+    {
+      "name": "harvested \"\"",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        ""
+      ],
+      "expected": ""
+    },
+    {
+      "name": "harvested \"# First\\n\\n# Second\\n\\n\"",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "# First\n\n# Second\n\n",
+        4
+      ],
+      "expected": "<h1 data-source-line=\"5\">First</h1>\n<h1 data-source-line=\"7\">Second</h1>\n"
+    },
+    {
+      "name": "harvested \"# Title\\n\\n- [ ] open\\n- [x] done\\n\"",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "# Title\n\n- [ ] open\n- [x] done\n",
+        0
+      ],
+      "expected": "<h1 data-source-line=\"1\">Title</h1>\n<ul data-source-line=\"3\">\n<li data-source-line=\"3\"><input type=\"checkbox\"> open</li>\n<li data-source-line=\"4\"><input checked=\"\" type=\"checkbox\"> done</li>\n</ul>\n"
+    },
+    {
+      "name": "harvested \"# Hello\"",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "# Hello",
+        0
+      ],
+      "expected": "<h1 data-source-line=\"1\">Hello</h1>\n"
+    },
+    {
+      "name": "harvested \"# First\\n\\n# Second\\n\\n\"",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "# First\n\n# Second\n\n"
+      ],
+      "expected": "<h1 data-source-line=\"1\">First</h1>\n<h1 data-source-line=\"3\">Second</h1>\n"
+    },
+    {
+      "name": "harvested \"# Hello World\"",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "# Hello World",
+        0
+      ],
+      "expected": "<h1 data-source-line=\"1\">Hello World</h1>\n"
+    },
+    {
+      "name": "harvested \"# Hello\\n\\nWorld\"",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "# Hello\n\nWorld",
+        0
+      ],
+      "expected": "<h1 data-source-line=\"1\">Hello</h1>\n<p data-source-line=\"3\">World</p>\n"
+    },
+    {
+      "name": "harvested \"# Second\"",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "# Second",
+        0
+      ],
+      "expected": "<h1 data-source-line=\"1\">Second</h1>\n"
+    },
+    {
+      "name": "harvested \"- [ ] a\\n- plain\\n- parent\\n  - [x] child\\n\"",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "- [ ] a\n- plain\n- parent\n  - [x] child\n",
+        3
+      ],
+      "expected": "<ul data-source-line=\"4\">\n<li data-source-line=\"4\"><input type=\"checkbox\"> a</li>\n<li data-source-line=\"5\">plain</li>\n<li data-source-line=\"6\">parent<ul>\n<li data-source-line=\"7\"><input checked=\"\" type=\"checkbox\"> child</li>\n</ul>\n</li>\n</ul>\n"
+    },
+    {
+      "name": "harvested \"# First\"",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "# First",
+        0
+      ],
+      "expected": "<h1 data-source-line=\"1\">First</h1>\n"
+    },
+    {
+      "name": "harvested \"Before\\n\\n$$\\nx + y\\n$$\\n\\nAfter\"",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "Before\n\n$$\nx + y\n$$\n\nAfter"
+      ],
+      "expected": "<p data-source-line=\"1\">Before</p>\n<div data-source-line=\"3\" class=\"math-block\">x + y</div>\n<p data-source-line=\"7\">After</p>\n"
+    },
+    {
+      "name": "harvested \"# Test content\"",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "# Test content",
+        0
+      ],
+      "expected": "<h1 data-source-line=\"1\">Test content</h1>\n"
+    },
+    {
+      "name": "harvested \"\"",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "",
+        0
+      ],
+      "expected": ""
+    },
+    {
+      "name": "harvested \"# Intro\\n\\n- [ ] a\\n- plain\\n- parent\\n  - [x] ch",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "# Intro\n\n- [ ] a\n- plain\n- parent\n  - [x] child\n"
+      ],
+      "expected": "<h1 data-source-line=\"1\">Intro</h1>\n<ul data-source-line=\"3\">\n<li data-source-line=\"3\"><input type=\"checkbox\"> a</li>\n<li data-source-line=\"4\">plain</li>\n<li data-source-line=\"5\">parent<ul>\n<li data-source-line=\"6\"><input checked=\"\" type=\"checkbox\"> child</li>\n</ul>\n</li>\n</ul>\n"
+    },
+    {
+      "name": "harvested \"<img src=\\\"/safe.png\\\" alt=\\\"Sample\\\" onerror=\\\"e",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "<img src=\"/safe.png\" alt=\"Sample\" onerror=\"evil()\">",
+        0
+      ],
+      "expected": "<img src=\"/safe.png\" alt=\"Sample\">"
+    },
+    {
+      "name": "harvested \"# Test\"",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "# Test",
+        0
+      ],
+      "expected": "<h1 data-source-line=\"1\">Test</h1>\n"
+    },
+    {
+      "name": "harvested \"# First\\n\\n# Second\\n\\n\"",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "# First\n\n# Second\n\n",
+        0
+      ],
+      "expected": "<h1 data-source-line=\"1\">First</h1>\n<h1 data-source-line=\"3\">Second</h1>\n"
+    },
+    {
+      "name": "corpus heading_levels",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "# H1\n## H2\n### H3\n#### H4\n##### H5\n###### H6\n####### not a heading"
+      ],
+      "expected": "<h1 data-source-line=\"1\">H1</h1>\n<h2 data-source-line=\"2\">H2</h2>\n<h3 data-source-line=\"3\">H3</h3>\n<h4 data-source-line=\"4\">H4</h4>\n<h5 data-source-line=\"5\">H5</h5>\n<h6 data-source-line=\"6\">H6</h6>\n<p data-source-line=\"7\">####### not a heading</p>\n"
+    },
+    {
+      "name": "corpus setext",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "Title\n=====\n\nSub\n---\n"
+      ],
+      "expected": "<h1 data-source-line=\"1\">Title</h1>\n<h2 data-source-line=\"4\">Sub</h2>\n"
+    },
+    {
+      "name": "corpus heading_trailing_hashes",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "# Title #\n\n#NoSpace\n\n  # indented"
+      ],
+      "expected": "<h1 data-source-line=\"1\">Title</h1>\n<p data-source-line=\"3\">#NoSpace</p>\n<h1 data-source-line=\"5\">indented</h1>\n"
+    },
+    {
+      "name": "corpus paragraphs_breaks",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "line one\nline two (breaks:true -> <br>)\n\nnew para  \nhard break"
+      ],
+      "expected": "<p data-source-line=\"1\">line one<br>line two (breaks:true -&gt; <br>)</p>\n<p data-source-line=\"4\">new para<br>hard break</p>\n"
+    },
+    {
+      "name": "corpus emphasis",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "*em* _em_ **strong** __strong__ ***both*** ~~strike~~ `code` ``co`de``"
+      ],
+      "expected": "<p data-source-line=\"1\"><em>em</em> <em>em</em> <strong>strong</strong> <strong>strong</strong> <em><strong>both</strong></em> <del>strike</del> <code>code</code> <code>co`de</code></p>\n"
+    },
+    {
+      "name": "corpus sup_sub_mark",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "x^2^ H~2~O ==marked== ~~strike~~ ~a~~ ^^double^^ ==a=b== ^<b>x</b>^"
+      ],
+      "expected": "<p data-source-line=\"1\">x<sup>2</sup> H<sub>2</sub>O <mark>marked</mark> <del>strike</del> ~a~~ ^<sup>double</sup><sup> ==a=b== </sup><b>x</b>^</p>\n"
+    },
+    {
+      "name": "corpus emoji_shortcodes",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        ":smile: :+1: :-1: :heart: :not_a_real_emoji: :tada::rocket: 10:30:45 :SMILE:"
+      ],
+      "expected": "<p data-source-line=\"1\">😄 👍 👎 ❤️ :not_a_real_emoji: 🎉🚀 10:30:45 :SMILE:</p>\n"
+    },
+    {
+      "name": "corpus icons",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        ":ph-heart: :ph-check: :ph-not-real: :ph-: :ph-heart-fill:"
+      ],
+      "expected": "<p data-source-line=\"1\"><svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 256 256\" fill=\"currentColor\" width=\"1em\" height=\"1em\" class=\"frankmd-inline-icon\" aria-hidden=\"true\"><path d=\"M178,40c-20.65,0-38.73,8.88-50,23.89C116.73,48.88,98.65,40,78,40a62.07,62.07,0,0,0-62,62c0,70,103.79,126.66,108.21,129a8,8,0,0,0,7.58,0C136.21,228.66,240,172,240,102A62.07,62.07,0,0,0,178,40ZM128,214.8C109.74,204.16,32,155.69,32,102A46.06,46.06,0,0,1,78,56c19.45,0,35.78,10.36,42.6,27a8,8,0,0,0,14.8,0c6.82-16.67,23.15-27,42.6-27a46.06,46.06,0,0,1,46,46C224,155.61,146.24,204.15,128,214.8Z\"></path></svg> <svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 256 256\" fill=\"currentColor\" width=\"1em\" height=\"1em\" class=\"frankmd-inline-icon\" aria-hidden=\"true\"><path d=\"M229.66,77.66l-128,128a8,8,0,0,1-11.32,0l-56-56a8,8,0,0,1,11.32-11.32L96,188.69,218.34,66.34a8,8,0,0,1,11.32,11.32Z\"></path></svg> :ph-not-real: :ph-: :ph-heart-fill:</p>\n"
+    },
+    {
+      "name": "corpus wikilinks",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "See [[My Note]], [[folder/Sub Note|Label]], [[  spaced  |  disp  ]], [[a|]], [[unclosed and [[x]]] and [[<script>|<b>]] and [[Notes & \"Ideas\"]]"
+      ],
+      "expected": "<p data-source-line=\"1\">See <a class=\"wikilink\" data-wikilink-path=\"My Note\" data-action=\"click->app#openWikilink\">My Note</a>, <a class=\"wikilink\" data-wikilink-path=\"folder/Sub Note\" data-action=\"click->app#openWikilink\">Label</a>, <a class=\"wikilink\" data-wikilink-path=\"spaced\" data-action=\"click->app#openWikilink\">disp</a>, [[a|]], <a class=\"wikilink\" data-wikilink-path=\"unclosed and [[x\" data-action=\"click->app#openWikilink\">unclosed and [[x</a>] and <a class=\"wikilink\" data-wikilink-path=\"<script>\" data-action=\"click->app#openWikilink\">&lt;b&gt;</a> and <a class=\"wikilink\" data-wikilink-path=\"Notes &amp; &quot;Ideas&quot;\" data-action=\"click->app#openWikilink\">Notes &amp; \"Ideas\"</a></p>\n"
+    },
+    {
+      "name": "corpus wikilink_in_code",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "`[[not a link]]` and ```\n[[block]]\n```"
+      ],
+      "expected": "<p data-source-line=\"1\"><code>[[not a link]]</code> and <code>[[block]]</code></p>\n"
+    },
+    {
+      "name": "corpus links",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "[text](https://example.com \"T\") <https://auto.link> www.example.com https://bare.example.com/path?q=1 [ref][1]\n\n[1]: https://ref.example.com"
+      ],
+      "expected": "<p data-source-line=\"1\"><a href=\"https://example.com\" title=\"T\">text</a> <a href=\"https://auto.link\">https://auto.link</a> <a href=\"http://www.example.com\">www.example.com</a> https://bare.example.com/path?q=1 <a href=\"https://ref.example.com\">ref</a></p>\n"
+    },
+    {
+      "name": "corpus link_xss",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "[x](javascript:alert(1)) [y](JaVaScRiPt:alert(1)) [z](data:text/html;base64,PHNjcmlwdD4=) [w](vbscript:msgbox) [ok](/relative) [mail](mailto:a@b.c)"
+      ],
+      "expected": "<p data-source-line=\"1\"><a>x</a> <a>y</a> <a>z</a> <a>w</a> <a href=\"/relative\">ok</a> <a href=\"mailto:a@b.c\">mail</a></p>\n"
+    },
+    {
+      "name": "corpus images",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "![alt](/images/a.png \"title\") ![](https://x.y/z.jpg) ![x](javascript:alert(1)) [![nested](/i.png)](https://l.ink)"
+      ],
+      "expected": "<p data-source-line=\"1\"><img src=\"/images/a.png\" alt=\"alt\" title=\"title\"> <img src=\"https://x.y/z.jpg\" alt=\"\"> <img alt=\"x\"> <a href=\"https://l.ink\"><img src=\"/i.png\" alt=\"nested\"></a></p>\n"
+    },
+    {
+      "name": "corpus unordered_list",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "- a\n- b\n  - nested\n    - deeper\n- c\n\n* star\n+ plus"
+      ],
+      "expected": "<ul data-source-line=\"1\">\n<li data-source-line=\"1\">a</li>\n<li data-source-line=\"2\">b<ul data-source-line=\"7\">\n<li data-source-line=\"5\">nested<ul data-source-line=\"8\">\n<li data-source-line=\"7\">deeper</li>\n</ul>\n</li>\n</ul>\n</li>\n<li data-source-line=\"8\">c</li>\n</ul>\n<ul>\n<li>star</li>\n</ul>\n<ul>\n<li>plus</li>\n</ul>\n"
+    },
+    {
+      "name": "corpus ordered_list",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "1. one\n2. two\n10. ten\n\n3) paren start\n4) next"
+      ],
+      "expected": "<ol data-source-line=\"1\">\n<li data-source-line=\"1\">one</li>\n<li data-source-line=\"2\">two</li>\n<li data-source-line=\"3\">ten</li>\n</ol>\n<ol data-source-line=\"5\" start=\"3\">\n<li data-source-line=\"5\">paren start</li>\n<li data-source-line=\"6\">next</li>\n</ol>\n"
+    },
+    {
+      "name": "corpus loose_list",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "- a\n\n- b\n\n  para in b\n- c"
+      ],
+      "expected": "<ul data-source-line=\"1\">\n<li data-source-line=\"1\"><p>a</p>\n</li>\n<li data-source-line=\"3\"><p>b</p>\n<p>para in b</p>\n</li>\n<li data-source-line=\"6\"><p>c</p>\n</li>\n</ul>\n"
+    },
+    {
+      "name": "corpus tasks",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "- [ ] todo\n- [x] done\n- [X] upper\n  - [ ] child\n- plain\n1. [ ] ordered task\n- [ ]\n- [] not a task"
+      ],
+      "expected": "<ul data-source-line=\"1\">\n<li data-source-line=\"1\"><input type=\"checkbox\"> todo</li>\n<li data-source-line=\"2\"><input checked=\"\" type=\"checkbox\"> done</li>\n<li data-source-line=\"3\"><input checked=\"\" type=\"checkbox\"> upper<ul data-source-line=\"6\">\n<li data-source-line=\"4\"><input type=\"checkbox\"> child</li>\n</ul>\n</li>\n<li data-source-line=\"5\">plain</li>\n</ul>\n<ol data-source-line=\"7\">\n<li data-source-line=\"6\"><input type=\"checkbox\"> ordered task</li>\n</ol>\n<ul>\n<li data-source-line=\"7\">[ ]</li>\n<li data-source-line=\"8\">[] not a task</li>\n</ul>\n"
+    },
+    {
+      "name": "corpus blockquote",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "> quote\n> > nested\n>\n> - list in quote\n\n> lazy\ncontinuation"
+      ],
+      "expected": "<blockquote data-source-line=\"1\">\n<p data-source-line=\"6\">quote</p>\n<blockquote>\n<p>nested</p>\n</blockquote>\n<ul>\n<li>list in quote</li>\n</ul>\n</blockquote>\n<blockquote>\n<p>lazy<br>continuation</p>\n</blockquote>\n"
+    },
+    {
+      "name": "corpus hr",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "---\n\n***\n\n___\n\n- - -"
+      ],
+      "expected": "<hr data-source-line=\"1\">\n<hr data-source-line=\"3\">\n<hr data-source-line=\"5\">\n<hr data-source-line=\"7\">\n"
+    },
+    {
+      "name": "corpus table",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "| a | b | c |\n|:--|:-:|--:|\n| 1 | **2** | `3` |\n| x \\| pipe | | ç |"
+      ],
+      "expected": "<table data-source-line=\"1\">\n<thead>\n<tr>\n<th align=\"left\">a</th>\n<th align=\"center\">b</th>\n<th align=\"right\">c</th>\n</tr>\n</thead>\n<tbody><tr>\n<td align=\"left\">1</td>\n<td align=\"center\"><strong>2</strong></td>\n<td align=\"right\"><code>3</code></td>\n</tr>\n<tr>\n<td align=\"left\">x | pipe</td>\n<td align=\"center\"></td>\n<td align=\"right\">ç</td>\n</tr>\n</tbody></table>\n"
+    },
+    {
+      "name": "corpus table_no_body",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "| h1 | h2 |\n| --- | --- |"
+      ],
+      "expected": "<table data-source-line=\"1\">\n<thead>\n<tr>\n<th>h1</th>\n<th>h2</th>\n</tr>\n</thead>\n</table>\n"
+    },
+    {
+      "name": "corpus table_ragged",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "a | b\n--|--\n1\n1 | 2 | 3"
+      ],
+      "expected": "<table data-source-line=\"1\">\n<thead>\n<tr>\n<th>a</th>\n<th>b</th>\n</tr>\n</thead>\n<tbody><tr>\n<td>1</td>\n<td></td>\n</tr>\n<tr>\n<td>1</td>\n<td>2</td>\n</tr>\n</tbody></table>\n"
+    },
+    {
+      "name": "corpus code_fences",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "```js\nconst a = 1 // c\n```\n\n```python\ndef f(x):\n    return x * 2\n```\n\n~~~ruby\nputs 'hi'\n~~~\n\n```\nno lang <b>\n```\n\n    indented code"
+      ],
+      "expected": "<pre data-source-line=\"1\"><code class=\"language-js\">const a = 1 // c\n</code></pre>\n<pre data-source-line=\"5\"><code class=\"language-python\">def f(x):\n    return x * 2\n</code></pre>\n<pre data-source-line=\"10\"><code class=\"language-ruby\">puts 'hi'\n</code></pre>\n<pre data-source-line=\"14\"><code>no lang &lt;b&gt;\n</code></pre>\n<pre data-source-line=\"18\"><code>indented code\n</code></pre>\n"
+    },
+    {
+      "name": "corpus code_fence_langs_many",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "```ts\nx = 1\n```\n\n```tsx\nx = 1\n```\n\n```jsx\nx = 1\n```\n\n```html\nx = 1\n```\n\n```css\nx = 1\n```\n\n```json\nx = 1\n```\n\n```yaml\nx = 1\n```\n\n```rb\nx = 1\n```\n\n```sh\nx = 1\n```\n\n```sql\nx = 1\n```\n\n```toml\nx = 1\n```\n\n```tf\nx = 1\n```\n\n```rs\nx = 1\n```\n\n```go\nx = 1\n```\n\n```java\nx = 1\n```\n\n```c\nx = 1\n```\n\n```cpp\nx = 1\n```\n\n```cs\nx = 1\n```\n\n```kotlin\nx = 1\n```\n\n```php\nx = 1\n```\n\n```dockerfile\nx = 1\n```\n\n```unknownlang\nx = 1\n```\n\n```JS\nx = 1\n```\n\n```c++\nx = 1\n```\n\n```c#\nx = 1\n```"
+      ],
+      "expected": "<pre data-source-line=\"1\"><code class=\"language-ts\">x = 1\n</code></pre>\n<pre data-source-line=\"5\"><code class=\"language-tsx\">x = 1\n</code></pre>\n<pre data-source-line=\"9\"><code class=\"language-jsx\">x = 1\n</code></pre>\n<pre data-source-line=\"13\"><code class=\"language-html\">x = 1\n</code></pre>\n<pre data-source-line=\"17\"><code class=\"language-css\">x = 1\n</code></pre>\n<pre data-source-line=\"21\"><code class=\"language-json\">x = 1\n</code></pre>\n<pre data-source-line=\"25\"><code class=\"language-yaml\">x = 1\n</code></pre>\n<pre data-source-line=\"29\"><code class=\"language-rb\">x = 1\n</code></pre>\n<pre data-source-line=\"33\"><code class=\"language-sh\">x = 1\n</code></pre>\n<pre data-source-line=\"37\"><code class=\"language-sql\">x = 1\n</code></pre>\n<pre data-source-line=\"41\"><code class=\"language-toml\">x = 1\n</code></pre>\n<pre data-source-line=\"45\"><code class=\"language-tf\">x = 1\n</code></pre>\n<pre data-source-line=\"49\"><code class=\"language-rs\">x = 1\n</code></pre>\n<pre data-source-line=\"53\"><code class=\"language-go\">x = 1\n</code></pre>\n<pre data-source-line=\"57\"><code class=\"language-java\">x = 1\n</code></pre>\n<pre data-source-line=\"61\"><code class=\"language-c\">x = 1\n</code></pre>\n<pre data-source-line=\"65\"><code class=\"language-cpp\">x = 1\n</code></pre>\n<pre data-source-line=\"69\"><code class=\"language-cs\">x = 1\n</code></pre>\n<pre data-source-line=\"73\"><code class=\"language-kotlin\">x = 1\n</code></pre>\n<pre data-source-line=\"77\"><code class=\"language-php\">x = 1\n</code></pre>\n<pre data-source-line=\"81\"><code class=\"language-dockerfile\">x = 1\n</code></pre>\n<pre data-source-line=\"85\"><code class=\"language-unknownlang\">x = 1\n</code></pre>\n<pre data-source-line=\"89\"><code class=\"language-JS\">x = 1\n</code></pre>\n<pre data-source-line=\"93\"><code class=\"language-c++\">x = 1\n</code></pre>\n<pre data-source-line=\"97\"><code class=\"language-c#\">x = 1\n</code></pre>\n"
+    },
+    {
+      "name": "corpus code_fence_info_string",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "```js title=\"a.js\" {1,3}\nlet x\n```\n\n```<script>\nx\n```\n\n``` js\nspace before\n```"
+      ],
+      "expected": "<pre data-source-line=\"1\"><code class=\"language-js\">let x\n</code></pre>\n<pre data-source-line=\"5\"><code class=\"language-<script>\">x\n</code></pre>\n<pre data-source-line=\"9\"><code class=\"language-js\">space before\n</code></pre>\n"
+    },
+    {
+      "name": "corpus code_unclosed",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "```js\nconst a = 1\nnever closed"
+      ],
+      "expected": "<pre data-source-line=\"1\"><code class=\"language-js\">const a = 1\nnever closed\n</code></pre>\n"
+    },
+    {
+      "name": "corpus math_inline",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "Euler $e^{i\\pi}+1=0$ and $x$ and $5 and $10, \\$ literal, $ x$ no, $x $ no, $a \\$ b$ yes, $x$1 no"
+      ],
+      "expected": "<p data-source-line=\"1\">Euler <span class=\"math-inline\">e^{i\\pi}+1=0</span> and <span class=\"math-inline\">x</span> and $5 and $10, $ literal, $ x$ no, $x $ no, <span class=\"math-inline\">a \\$ b</span> yes, $x$1 no</p>\n"
+    },
+    {
+      "name": "corpus math_block",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "Before\n\n$$\nx = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}\n$$\n\nAfter\n\n$$E=mc^2$$\n\n$$   $$\n\ninline $$x$$ mid"
+      ],
+      "expected": "<p data-source-line=\"1\">Before</p>\n<div data-source-line=\"3\" class=\"math-block\">x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}</div>\n<p data-source-line=\"7\">After</p>\n<div data-source-line=\"9\" class=\"math-block\">E=mc^2</div>\n<p>$$<br>$$</p>\n<p>inline<br>$$x<br>$$ mid</p>\n"
+    },
+    {
+      "name": "corpus math_errors",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "$\\frac{1}$ and $\\href{javascript:alert(1)}{x}$ and $\\htmlId{a}{b}$ and $$\\undefinedcommand$$"
+      ],
+      "expected": "<p data-source-line=\"1\"><span class=\"math-inline\">\\frac{1}</span> and <span class=\"math-inline\">\\href{javascript:alert(1)}{x}</span> and <span class=\"math-inline\">\\htmlId{a}{b}</span> and </p>\n<div data-source-line=\"1\" class=\"math-block\">\\undefinedcommand</div>\n"
+    },
+    {
+      "name": "corpus math_in_code",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "`$x$` and\n\n```\n$$y$$\n```"
+      ],
+      "expected": "<p data-source-line=\"1\"><code>$x$</code> and</p>\n<pre data-source-line=\"3\"><code>$$y$$\n</code></pre>\n"
+    },
+    {
+      "name": "corpus footnotes",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "Text with footnote[^1] and [^note].\n\n[^1]: The footnote.\n[^note]: Named."
+      ],
+      "expected": "<p data-source-line=\"1\">Text with footnote[<sup>1] and [</sup>note].</p>\n<p data-source-line=\"3\">[<sup>1]: The footnote.\n[</sup>note]: Named.</p>\n"
+    },
+    {
+      "name": "corpus definition_like",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "Term\n: definition (not supported)"
+      ],
+      "expected": "<p data-source-line=\"1\">Term<br>: definition (not supported)</p>\n"
+    },
+    {
+      "name": "corpus raw_html_block",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "<div class=\"note\">\n**not md inside**\n</div>\n\n<details><summary>S</summary>\n\nHidden *md*\n\n</details>"
+      ],
+      "expected": "<div data-source-line=\"1\" class=\"note\">\n**not md inside**\n</div>\n\n<details><summary>S</summary>\n\n<p data-source-line=\"5\">Hidden <em>md</em></p>\n</details>"
+    },
+    {
+      "name": "corpus raw_html_inline",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "a <b>bold</b> <span style=\"color:red\" class=\"x\">s</span> <kbd>Ctrl</kbd> <u>u</u> <!-- comment --> end"
+      ],
+      "expected": "<p data-source-line=\"1\">a <b>bold</b> <span class=\"x\">s</span> <kbd>Ctrl</kbd> <u>u</u>  end</p>\n"
+    },
+    {
+      "name": "corpus xss_script",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "<script>alert(1)</script>\n\nok <script src=\"https://evil/x.js\"></script>"
+      ],
+      "expected": "<p data-source-line=\"1\">ok </p>\n"
+    },
+    {
+      "name": "corpus xss_handlers",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "<img src=x onerror=alert(1)> <a href=\"#\" onclick=\"alert(1)\">c</a> <body onload=alert(1)> <div onmouseover=\"x()\">d</div>"
+      ],
+      "expected": "<p data-source-line=\"1\"><img src=\"x\"> <a href=\"#\">c</a>  </p><div>d</div><p></p>\n"
+    },
+    {
+      "name": "corpus xss_js_urls",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "<a href=\"javascript:alert(1)\">j</a> <a href=\" javascript:alert(1)\">sp</a> <a href=\"jav&#x09;ascript:alert(1)\">ent</a> <img src=\"javascript:alert(1)\"> <a href=\"data:text/html,<script>alert(1)</script>\">d</a>"
+      ],
+      "expected": "<p data-source-line=\"1\"><a>j</a> <a>sp</a> <a>ent</a> <img> <a>d</a></p>\n"
+    },
+    {
+      "name": "corpus xss_svg",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "<svg onload=alert(1)><script>alert(1)</script><circle r=\"5\"/></svg>\n\n<svg><a xlink:href=\"javascript:alert(1)\"><text>x</text></a></svg>\n\n<math><mi xlink:href=\"javascript:alert(1)\">m</mi></math>"
+      ],
+      "expected": "<p data-source-line=\"1\"><svg><circle r=\"5\"></circle></svg></p>\n<p data-source-line=\"3\"><svg><a><text>x</text></a></svg></p>\n<p data-source-line=\"5\"><math><mi>m</mi></math></p>\n"
+    },
+    {
+      "name": "corpus xss_iframes",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "<iframe src=\"https://www.youtube.com/embed/abc123\" width=\"560\" height=\"315\" frameborder=\"0\" allow=\"autoplay; encrypted-media\" allowfullscreen referrerpolicy=\"strict-origin\"></iframe>\n\n<iframe src=\"https://youtube-nocookie.com/embed/x\"></iframe>\n\n<iframe src=\"https://player.vimeo.com/video/1\"></iframe>\n\n<iframe src=\"http://www.youtube.com/embed/insecure\"></iframe>\n\n<iframe src=\"https://evil.com/embed\"></iframe>\n\n<iframe src=\"https://www.youtube.com.evil.com/x\"></iframe>\n\n<iframe srcdoc=\"<script>alert(1)</script>\" src=\"https://www.youtube.com/embed/x\"></iframe>\n\n<iframe src=\"javascript:alert(1)\"></iframe>\n\n<iframe></iframe>\n\n<iframe src=\"//www.youtube.com/embed/protorel\"></iframe>"
+      ],
+      "expected": "<iframe src=\"https://www.youtube.com/embed/abc123\" width=\"560\" height=\"315\" frameborder=\"0\" allow=\"autoplay; encrypted-media\" allowfullscreen=\"\" referrerpolicy=\"strict-origin\"></iframe>\n\n<iframe src=\"https://youtube-nocookie.com/embed/x\"></iframe>\n\n<iframe src=\"https://player.vimeo.com/video/1\"></iframe>\n\n\n\n\n\n\n\n<iframe src=\"https://www.youtube.com/embed/x\"></iframe>\n\n\n\n\n\n"
+    },
+    {
+      "name": "corpus xss_forms",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "<form action=\"/x\"><input type=\"text\" name=\"p\"><input type=\"password\"><input type=\"checkbox\" checked disabled onclick=\"x()\" data-x=\"1\"><button>Go</button><textarea>t</textarea><select><option>o</option></select></form><input type=\"hidden\" value=\"h\"><input>"
+      ],
+      "expected": "<input type=\"checkbox\" checked=\"\">Goto"
+    },
+    {
+      "name": "corpus xss_style",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "<style>body{display:none}</style><p style=\"position:fixed\">s</p><link rel=\"stylesheet\" href=\"x.css\"><meta http-equiv=\"refresh\" content=\"0;url=http://evil\"><base href=\"http://evil/\">"
+      ],
+      "expected": "<p data-source-line=\"1\">s</p>"
+    },
+    {
+      "name": "corpus xss_misc",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "<object data=\"x.swf\"></object><embed src=\"x\"><a href=\"https://ok.com\" target=\"_blank\" rel=\"noopener\">ok</a> <img src=\"https://ok/a.png\" srcset=\"a.png 1x\" alt=\"a\" width=\"10\"> <video src=\"v.mp4\" controls></video> <audio src=\"a.mp3\"></audio> <noscript><p title=\"</noscript><img src=x onerror=alert(1)>\"></noscript>"
+      ],
+      "expected": "<p data-source-line=\"1\"><a href=\"https://ok.com\" rel=\"noopener\">ok</a> <img src=\"https://ok/a.png\" srcset=\"a.png 1x\" alt=\"a\" width=\"10\"> <video src=\"v.mp4\" controls=\"\"></video> <audio src=\"a.mp3\"></audio> </p><p></p>\n"
+    },
+    {
+      "name": "corpus html_entities",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "&amp; &lt; &gt; &quot; &copy; &#169; &#x1F600; &nbsp; & < > \" '"
+      ],
+      "expected": "<p data-source-line=\"1\">&amp; &lt; &gt; \" © © 😀 &nbsp; &amp; &lt; &gt; \" '</p>\n"
+    },
+    {
+      "name": "corpus escapes",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "\\*not em\\* \\# \\[not link\\] \\` \\\\ \\$ \\^ \\~ \\="
+      ],
+      "expected": "<p data-source-line=\"1\">*not em* # [not link] ` \\ $ ^ ~ =</p>\n"
+    },
+    {
+      "name": "corpus unicode_mix",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "# Título com ação\n\nCafé ü 日本語 中文 한국어 שלום עולם 👨‍👩‍👧 é NBSP: end\ttab"
+      ],
+      "expected": "<h1 data-source-line=\"1\">Título com ação</h1>\n<p data-source-line=\"3\">Café ü 日本語 中文 한국어 שלום עולם 👨‍👩‍👧 é NBSP:&nbsp;end\ttab</p>\n"
+    },
+    {
+      "name": "corpus rtl_heading",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "# שלום\n\n- פריט\n- [ ] משימה"
+      ],
+      "expected": "<h1 data-source-line=\"1\">שלום</h1>\n<ul data-source-line=\"3\">\n<li data-source-line=\"3\">פריט</li>\n<li data-source-line=\"4\"><input type=\"checkbox\"> משימה</li>\n</ul>\n"
+    },
+    {
+      "name": "corpus crlf",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "# Title\r\n\r\npara line1\r\nline2\r\n\r\n- a\r\n- [x] b\r\n\r\n```js\r\nlet x\r\n```\r\n"
+      ],
+      "expected": "<h1>Title</h1>\n<p>para line1<br>line2</p>\n<ul>\n<li>a</li>\n<li><input checked=\"\" type=\"checkbox\"> b</li>\n</ul>\n<pre><code class=\"language-js\">let x\n</code></pre>\n"
+    },
+    {
+      "name": "corpus lone_cr",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "# Title\rpara\r\r- a"
+      ],
+      "expected": "<h1 data-source-line=\"1\">Title</h1>\n<p data-source-line=\"1\">para</p>\n<ul>\n<li data-source-line=\"1\">a</li>\n</ul>\n"
+    },
+    {
+      "name": "corpus trailing_newlines",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "para\n\n\n\n"
+      ],
+      "expected": "<p data-source-line=\"1\">para</p>\n"
+    },
+    {
+      "name": "corpus no_trailing_newline",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "# h\npara"
+      ],
+      "expected": "<h1 data-source-line=\"1\">h</h1>\n<p data-source-line=\"2\">para</p>\n"
+    },
+    {
+      "name": "corpus only_whitespace",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "   \n\t\n  "
+      ],
+      "expected": ""
+    },
+    {
+      "name": "corpus frontmatter_yaml",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "---\ntitle: Hello\ntags: [a, b]\n---\n\n# Body\n\ntext"
+      ],
+      "expected": "<hr data-source-line=\"1\">\n<h2 data-source-line=\"2\">title: Hello<br>tags: [a, b]</h2>\n<h1 data-source-line=\"6\">Body</h1>\n<p data-source-line=\"8\">text</p>\n"
+    },
+    {
+      "name": "corpus frontmatter_toml",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "+++\ntitle = \"Hello\"\n+++\n# Body"
+      ],
+      "expected": "<p data-source-line=\"1\">+++<br>title = \"Hello\"<br>+++</p>\n<h1 data-source-line=\"4\">Body</h1>\n"
+    },
+    {
+      "name": "corpus frontmatter_unclosed",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "---\ntitle: x\n\n# Body"
+      ],
+      "expected": "<hr data-source-line=\"1\">\n<p data-source-line=\"2\">title: x</p>\n<h1 data-source-line=\"4\">Body</h1>\n"
+    },
+    {
+      "name": "corpus frontmatter_at_eof",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "---\ntitle: x\n---"
+      ],
+      "expected": "<hr data-source-line=\"1\">\n<h2 data-source-line=\"2\">title: x</h2>\n"
+    },
+    {
+      "name": "corpus frontmatter_not_at_start",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "\n---\ntitle: x\n---\n# Body"
+      ],
+      "expected": "<hr data-source-line=\"2\">\n<h2 data-source-line=\"3\">title: x</h2>\n<h1 data-source-line=\"5\">Body</h1>\n"
+    },
+    {
+      "name": "corpus hr_then_text",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "---\nnot frontmatter? closing below\n---\n\nbody"
+      ],
+      "expected": "<hr data-source-line=\"1\">\n<h2 data-source-line=\"2\">not frontmatter? closing below</h2>\n<p data-source-line=\"5\">body</p>\n"
+    },
+    {
+      "name": "corpus nested_mix",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "1. Step with `code`\n   ```sh\n   echo hi\n   ```\n2. > quote in list\n3. | t | u |\n   |---|---|\n   | 1 | 2 |"
+      ],
+      "expected": "<ol data-source-line=\"1\">\n<li data-source-line=\"1\">Step with <code>code</code><pre><code class=\"language-sh\">echo hi\n</code></pre>\n</li>\n<li data-source-line=\"5\"><blockquote>\n<p>quote in list</p>\n</blockquote>\n</li>\n<li data-source-line=\"6\"><table>\n<thead>\n<tr>\n<th>t</th>\n<th>u</th>\n</tr>\n</thead>\n<tbody><tr>\n<td>1</td>\n<td>2</td>\n</tr>\n</tbody></table>\n</li>\n</ol>\n"
+    },
+    {
+      "name": "corpus html_in_list_li",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "- <li>raw li</li>\n- <link rel=x>\n\n```html\n<li>in code</li>\n<ul><li>x</li></ul>\n```"
+      ],
+      "expected": "<ul data-source-line=\"1\">\n<li data-source-line=\"1\"></li><li data-source-line=\"2\">raw li</li>\n<li></li>\n</ul>\n<pre data-source-line=\"4\"><code class=\"language-html\">&lt;li&gt;in code&lt;/li&gt;\n&lt;ul&gt;&lt;li&gt;x&lt;/li&gt;&lt;/ul&gt;\n</code></pre>\n"
+    },
+    {
+      "name": "corpus long_doc",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "## Section 0\n\nParagraph 1 with **bold** and [[Link 1]] and $x_1$.\n\nParagraph 2 with **bold** and [[Link 2]] and $x_2$.\n\nParagraph 3 with **bold** and [[Link 3]] and $x_3$.\n\nParagraph 4 with **bold** and [[Link 4]] and $x_4$.\n\n## Section 5\n\nParagraph 6 with **bold** and [[Link 6]] and $x_6$.\n\nParagraph 7 with **bold** and [[Link 7]] and $x_7$.\n\nParagraph 8 with **bold** and [[Link 8]] and $x_8$.\n\nParagraph 9 with **bold** and [[Link 9]] and $x_9$.\n\n## Section 10\n\nParagraph 11 with **bold** and [[Link 11]] and $x_11$.\n\nParagraph 12 with **bold** and [[Link 12]] and $x_12$.\n\nParagraph 13 with **bold** and [[Link 13]] and $x_13$.\n\nParagraph 14 with **bold** and [[Link 14]] and $x_14$.\n\n## Section 15\n\nParagraph 16 with **bold** and [[Link 16]] and $x_16$.\n\nParagraph 17 with **bold** and [[Link 17]] and $x_17$.\n\nParagraph 18 with **bold** and [[Link 18]] and $x_18$.\n\nParagraph 19 with **bold** and [[Link 19]] and $x_19$.\n\n## Section 20\n\nParagraph 21 with **bold** and [[Link 21]] and $x_21$.\n\nParagraph 22 with **bold** and [[Link 22]] and $x_22$.\n\nParagraph 23 with **bold** and [[Link 23]] and $x_23$.\n\nParagraph 24 with **bold** and [[Link 24]] and $x_24$.\n\n## Section 25\n\nParagraph 26 with **bold** and [[Link 26]] and $x_26$.\n\nParagraph 27 with **bold** and [[Link 27]] and $x_27$.\n\nParagraph 28 with **bold** and [[Link 28]] and $x_28$.\n\nParagraph 29 with **bold** and [[Link 29]] and $x_29$.\n\n## Section 30\n\nParagraph 31 with **bold** and [[Link 31]] and $x_31$.\n\nParagraph 32 with **bold** and [[Link 32]] and $x_32$.\n\nParagraph 33 with **bold** and [[Link 33]] and $x_33$.\n\nParagraph 34 with **bold** and [[Link 34]] and $x_34$.\n\n## Section 35\n\nParagraph 36 with **bold** and [[Link 36]] and $x_36$.\n\nParagraph 37 with **bold** and [[Link 37]] and $x_37$.\n\nParagraph 38 with **bold** and [[Link 38]] and $x_38$.\n\nParagraph 39 with **bold** and [[Link 39]] and $x_39$.\n\n## Section 40\n\nParagraph 41 with **bold** and [[Link 41]] and $x_41$.\n\nParagraph 42 with **bold** and [[Link 42]] and $x_42$.\n\nParagraph 43 with **bold** and [[Link 43]] and $x_43$.\n\nParagraph 44 with **bold** and [[Link 44]] and $x_44$.\n\n## Section 45\n\nParagraph 46 with **bold** and [[Link 46]] and $x_46$.\n\nParagraph 47 with **bold** and [[Link 47]] and $x_47$.\n\nParagraph 48 with **bold** and [[Link 48]] and $x_48$.\n\nParagraph 49 with **bold** and [[Link 49]] and $x_49$.\n\n## Section 50\n\nParagraph 51 with **bold** and [[Link 51]] and $x_51$.\n\nParagraph 52 with **bold** and [[Link 52]] and $x_52$.\n\nParagraph 53 with **bold** and [[Link 53]] and $x_53$.\n\nParagraph 54 with **bold** and [[Link 54]] and $x_54$.\n\n## Section 55\n\nParagraph 56 with **bold** and [[Link 56]] and $x_56$.\n\nParagraph 57 with **bold** and [[Link 57]] and $x_57$.\n\nParagraph 58 with **bold** and [[Link 58]] and $x_58$.\n\nParagraph 59 with **bold** and [[Link 59]] and $x_59$.\n"
+      ],
+      "expected": "<h2 data-source-line=\"1\">Section 0</h2>\n<p data-source-line=\"3\">Paragraph 1 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 1\" data-action=\"click->app#openWikilink\">Link 1</a> and <span class=\"math-inline\">x_1</span>.</p>\n<p data-source-line=\"5\">Paragraph 2 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 2\" data-action=\"click->app#openWikilink\">Link 2</a> and <span class=\"math-inline\">x_2</span>.</p>\n<p data-source-line=\"7\">Paragraph 3 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 3\" data-action=\"click->app#openWikilink\">Link 3</a> and <span class=\"math-inline\">x_3</span>.</p>\n<p data-source-line=\"9\">Paragraph 4 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 4\" data-action=\"click->app#openWikilink\">Link 4</a> and <span class=\"math-inline\">x_4</span>.</p>\n<h2 data-source-line=\"11\">Section 5</h2>\n<p data-source-line=\"13\">Paragraph 6 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 6\" data-action=\"click->app#openWikilink\">Link 6</a> and <span class=\"math-inline\">x_6</span>.</p>\n<p data-source-line=\"15\">Paragraph 7 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 7\" data-action=\"click->app#openWikilink\">Link 7</a> and <span class=\"math-inline\">x_7</span>.</p>\n<p data-source-line=\"17\">Paragraph 8 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 8\" data-action=\"click->app#openWikilink\">Link 8</a> and <span class=\"math-inline\">x_8</span>.</p>\n<p data-source-line=\"19\">Paragraph 9 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 9\" data-action=\"click->app#openWikilink\">Link 9</a> and <span class=\"math-inline\">x_9</span>.</p>\n<h2 data-source-line=\"21\">Section 10</h2>\n<p data-source-line=\"23\">Paragraph 11 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 11\" data-action=\"click->app#openWikilink\">Link 11</a> and <span class=\"math-inline\">x_11</span>.</p>\n<p data-source-line=\"25\">Paragraph 12 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 12\" data-action=\"click->app#openWikilink\">Link 12</a> and <span class=\"math-inline\">x_12</span>.</p>\n<p data-source-line=\"27\">Paragraph 13 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 13\" data-action=\"click->app#openWikilink\">Link 13</a> and <span class=\"math-inline\">x_13</span>.</p>\n<p data-source-line=\"29\">Paragraph 14 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 14\" data-action=\"click->app#openWikilink\">Link 14</a> and <span class=\"math-inline\">x_14</span>.</p>\n<h2 data-source-line=\"31\">Section 15</h2>\n<p data-source-line=\"33\">Paragraph 16 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 16\" data-action=\"click->app#openWikilink\">Link 16</a> and <span class=\"math-inline\">x_16</span>.</p>\n<p data-source-line=\"35\">Paragraph 17 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 17\" data-action=\"click->app#openWikilink\">Link 17</a> and <span class=\"math-inline\">x_17</span>.</p>\n<p data-source-line=\"37\">Paragraph 18 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 18\" data-action=\"click->app#openWikilink\">Link 18</a> and <span class=\"math-inline\">x_18</span>.</p>\n<p data-source-line=\"39\">Paragraph 19 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 19\" data-action=\"click->app#openWikilink\">Link 19</a> and <span class=\"math-inline\">x_19</span>.</p>\n<h2 data-source-line=\"41\">Section 20</h2>\n<p data-source-line=\"43\">Paragraph 21 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 21\" data-action=\"click->app#openWikilink\">Link 21</a> and <span class=\"math-inline\">x_21</span>.</p>\n<p data-source-line=\"45\">Paragraph 22 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 22\" data-action=\"click->app#openWikilink\">Link 22</a> and <span class=\"math-inline\">x_22</span>.</p>\n<p data-source-line=\"47\">Paragraph 23 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 23\" data-action=\"click->app#openWikilink\">Link 23</a> and <span class=\"math-inline\">x_23</span>.</p>\n<p data-source-line=\"49\">Paragraph 24 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 24\" data-action=\"click->app#openWikilink\">Link 24</a> and <span class=\"math-inline\">x_24</span>.</p>\n<h2 data-source-line=\"51\">Section 25</h2>\n<p data-source-line=\"53\">Paragraph 26 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 26\" data-action=\"click->app#openWikilink\">Link 26</a> and <span class=\"math-inline\">x_26</span>.</p>\n<p data-source-line=\"55\">Paragraph 27 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 27\" data-action=\"click->app#openWikilink\">Link 27</a> and <span class=\"math-inline\">x_27</span>.</p>\n<p data-source-line=\"57\">Paragraph 28 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 28\" data-action=\"click->app#openWikilink\">Link 28</a> and <span class=\"math-inline\">x_28</span>.</p>\n<p data-source-line=\"59\">Paragraph 29 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 29\" data-action=\"click->app#openWikilink\">Link 29</a> and <span class=\"math-inline\">x_29</span>.</p>\n<h2 data-source-line=\"61\">Section 30</h2>\n<p data-source-line=\"63\">Paragraph 31 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 31\" data-action=\"click->app#openWikilink\">Link 31</a> and <span class=\"math-inline\">x_31</span>.</p>\n<p data-source-line=\"65\">Paragraph 32 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 32\" data-action=\"click->app#openWikilink\">Link 32</a> and <span class=\"math-inline\">x_32</span>.</p>\n<p data-source-line=\"67\">Paragraph 33 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 33\" data-action=\"click->app#openWikilink\">Link 33</a> and <span class=\"math-inline\">x_33</span>.</p>\n<p data-source-line=\"69\">Paragraph 34 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 34\" data-action=\"click->app#openWikilink\">Link 34</a> and <span class=\"math-inline\">x_34</span>.</p>\n<h2 data-source-line=\"71\">Section 35</h2>\n<p data-source-line=\"73\">Paragraph 36 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 36\" data-action=\"click->app#openWikilink\">Link 36</a> and <span class=\"math-inline\">x_36</span>.</p>\n<p data-source-line=\"75\">Paragraph 37 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 37\" data-action=\"click->app#openWikilink\">Link 37</a> and <span class=\"math-inline\">x_37</span>.</p>\n<p data-source-line=\"77\">Paragraph 38 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 38\" data-action=\"click->app#openWikilink\">Link 38</a> and <span class=\"math-inline\">x_38</span>.</p>\n<p data-source-line=\"79\">Paragraph 39 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 39\" data-action=\"click->app#openWikilink\">Link 39</a> and <span class=\"math-inline\">x_39</span>.</p>\n<h2 data-source-line=\"81\">Section 40</h2>\n<p data-source-line=\"83\">Paragraph 41 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 41\" data-action=\"click->app#openWikilink\">Link 41</a> and <span class=\"math-inline\">x_41</span>.</p>\n<p data-source-line=\"85\">Paragraph 42 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 42\" data-action=\"click->app#openWikilink\">Link 42</a> and <span class=\"math-inline\">x_42</span>.</p>\n<p data-source-line=\"87\">Paragraph 43 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 43\" data-action=\"click->app#openWikilink\">Link 43</a> and <span class=\"math-inline\">x_43</span>.</p>\n<p data-source-line=\"89\">Paragraph 44 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 44\" data-action=\"click->app#openWikilink\">Link 44</a> and <span class=\"math-inline\">x_44</span>.</p>\n<h2 data-source-line=\"91\">Section 45</h2>\n<p data-source-line=\"93\">Paragraph 46 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 46\" data-action=\"click->app#openWikilink\">Link 46</a> and <span class=\"math-inline\">x_46</span>.</p>\n<p data-source-line=\"95\">Paragraph 47 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 47\" data-action=\"click->app#openWikilink\">Link 47</a> and <span class=\"math-inline\">x_47</span>.</p>\n<p data-source-line=\"97\">Paragraph 48 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 48\" data-action=\"click->app#openWikilink\">Link 48</a> and <span class=\"math-inline\">x_48</span>.</p>\n<p data-source-line=\"99\">Paragraph 49 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 49\" data-action=\"click->app#openWikilink\">Link 49</a> and <span class=\"math-inline\">x_49</span>.</p>\n<h2 data-source-line=\"101\">Section 50</h2>\n<p data-source-line=\"103\">Paragraph 51 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 51\" data-action=\"click->app#openWikilink\">Link 51</a> and <span class=\"math-inline\">x_51</span>.</p>\n<p data-source-line=\"105\">Paragraph 52 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 52\" data-action=\"click->app#openWikilink\">Link 52</a> and <span class=\"math-inline\">x_52</span>.</p>\n<p data-source-line=\"107\">Paragraph 53 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 53\" data-action=\"click->app#openWikilink\">Link 53</a> and <span class=\"math-inline\">x_53</span>.</p>\n<p data-source-line=\"109\">Paragraph 54 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 54\" data-action=\"click->app#openWikilink\">Link 54</a> and <span class=\"math-inline\">x_54</span>.</p>\n<h2 data-source-line=\"111\">Section 55</h2>\n<p data-source-line=\"113\">Paragraph 56 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 56\" data-action=\"click->app#openWikilink\">Link 56</a> and <span class=\"math-inline\">x_56</span>.</p>\n<p data-source-line=\"115\">Paragraph 57 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 57\" data-action=\"click->app#openWikilink\">Link 57</a> and <span class=\"math-inline\">x_57</span>.</p>\n<p data-source-line=\"117\">Paragraph 58 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 58\" data-action=\"click->app#openWikilink\">Link 58</a> and <span class=\"math-inline\">x_58</span>.</p>\n<p data-source-line=\"119\">Paragraph 59 with <strong>bold</strong> and <a class=\"wikilink\" data-wikilink-path=\"Link 59\" data-action=\"click->app#openWikilink\">Link 59</a> and <span class=\"math-inline\">x_59</span>.</p>\n"
+    },
+    {
+      "name": "corpus very_long_line",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word "
+      ],
+      "expected": "<p data-source-line=\"1\">word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word word </p>\n"
+    },
+    {
+      "name": "corpus deep_nesting",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "- level 0\n  - level 1\n    - level 2\n      - level 3\n        - level 4\n          - level 5\n            - level 6\n              - level 7\n                - level 8\n                  - level 9\n                    - level 10\n                      - level 11"
+      ],
+      "expected": "<ul data-source-line=\"1\">\n<li data-source-line=\"1\">level 0<ul>\n<li>level 1<ul>\n<li>level 2<ul>\n<li>level 3<ul>\n<li>level 4<ul>\n<li>level 5<ul>\n<li>level 6<ul>\n<li>level 7<ul>\n<li>level 8<ul>\n<li>level 9<ul>\n<li>level 10<ul>\n<li>level 11</li>\n</ul>\n</li>\n</ul>\n</li>\n</ul>\n</li>\n</ul>\n</li>\n</ul>\n</li>\n</ul>\n</li>\n</ul>\n</li>\n</ul>\n</li>\n</ul>\n</li>\n</ul>\n</li>\n</ul>\n</li>\n</ul>\n"
+    },
+    {
+      "name": "corpus deep_quote",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>> deep"
+      ],
+      "expected": "<blockquote data-source-line=\"1\">\n<blockquote>\n<blockquote>\n<blockquote>\n<blockquote>\n<blockquote>\n<blockquote>\n<blockquote>\n<blockquote>\n<blockquote>\n<blockquote>\n<blockquote>\n<blockquote>\n<blockquote>\n<blockquote>\n<blockquote>\n<blockquote>\n<blockquote>\n<blockquote>\n<blockquote>\n<blockquote>\n<blockquote>\n<blockquote>\n<blockquote>\n<blockquote>\n<blockquote>\n<blockquote>\n<blockquote>\n<blockquote>\n<blockquote>\n<p>deep</p>\n</blockquote>\n</blockquote>\n</blockquote>\n</blockquote>\n</blockquote>\n</blockquote>\n</blockquote>\n</blockquote>\n</blockquote>\n</blockquote>\n</blockquote>\n</blockquote>\n</blockquote>\n</blockquote>\n</blockquote>\n</blockquote>\n</blockquote>\n</blockquote>\n</blockquote>\n</blockquote>\n</blockquote>\n</blockquote>\n</blockquote>\n</blockquote>\n</blockquote>\n</blockquote>\n</blockquote>\n</blockquote>\n</blockquote>\n</blockquote>\n"
+    },
+    {
+      "name": "corpus autolinks_gfm",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "Visit www.commonmark.org/help or https://github.com. Email foo@bar.baz. Not a link: http:/broken"
+      ],
+      "expected": "<p data-source-line=\"1\">Visit <a href=\"http://www.commonmark.org/help\">www.commonmark.org/help</a> or https://github.com. Email <a href=\"mailto:foo@bar.baz\">foo@bar.baz</a>. Not a link: http:/broken</p>\n"
+    },
+    {
+      "name": "corpus strikethrough_tilde",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "~~two~~ ~one~ ~~~three~~~ a~b~c"
+      ],
+      "expected": "<p data-source-line=\"1\"><del>two</del> <sub>one</sub> ~~<del>three~~~ a</del>b~c</p>\n"
+    },
+    {
+      "name": "corpus hard_line_break_backslash",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "line\\\nnext"
+      ],
+      "expected": "<p data-source-line=\"1\">line<br>next</p>\n"
+    },
+    {
+      "name": "corpus heading_ids",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "# Same\n# Same\n## Ça va?"
+      ],
+      "expected": "<h1 data-source-line=\"1\">Same</h1>\n<h1 data-source-line=\"2\">Same</h1>\n<h2 data-source-line=\"3\">Ça va?</h2>\n"
+    },
+    {
+      "name": "corpus emoji_inside_link",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "[:smile: link](https://x.y) **:tada:**"
+      ],
+      "expected": "<p data-source-line=\"1\"><a href=\"https://x.y\">😄 link</a> <strong>🎉</strong></p>\n"
+    },
+    {
+      "name": "corpus mixed_extensions",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "==**bold mark**== ^[[wiki]]^ ~$x$~ :ph-check: $a^2$"
+      ],
+      "expected": "<p data-source-line=\"1\"><mark>**bold mark**</mark> <sup>[[wiki]]</sup> <sub>$x$</sub> <svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 256 256\" fill=\"currentColor\" width=\"1em\" height=\"1em\" class=\"frankmd-inline-icon\" aria-hidden=\"true\"><path d=\"M229.66,77.66l-128,128a8,8,0,0,1-11.32,0l-56-56a8,8,0,0,1,11.32-11.32L96,188.69,218.34,66.34a8,8,0,0,1,11.32,11.32Z\"></path></svg> <span class=\"math-inline\">a^2</span></p>\n"
+    },
+    {
+      "name": "offset offset 0 explicit",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "- [ ] a\n- [x] b",
+        0
+      ],
+      "expected": "<ul data-source-line=\"1\">\n<li data-source-line=\"1\"><input type=\"checkbox\"> a</li>\n<li data-source-line=\"2\"><input checked=\"\" type=\"checkbox\"> b</li>\n</ul>\n"
+    },
+    {
+      "name": "offset offset 10 tasks",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "- [ ] todo\n- [x] done\n- [X] upper\n  - [ ] child\n- plain\n1. [ ] ordered task\n- [ ]\n- [] not a task",
+        10
+      ],
+      "expected": "<ul data-source-line=\"11\">\n<li data-source-line=\"11\"><input type=\"checkbox\"> todo</li>\n<li data-source-line=\"12\"><input checked=\"\" type=\"checkbox\"> done</li>\n<li data-source-line=\"13\"><input checked=\"\" type=\"checkbox\"> upper<ul data-source-line=\"16\">\n<li data-source-line=\"14\"><input type=\"checkbox\"> child</li>\n</ul>\n</li>\n<li data-source-line=\"15\">plain</li>\n</ul>\n<ol data-source-line=\"17\">\n<li data-source-line=\"16\"><input type=\"checkbox\"> ordered task</li>\n</ol>\n<ul>\n<li data-source-line=\"17\">[ ]</li>\n<li data-source-line=\"18\">[] not a task</li>\n</ul>\n"
+    },
+    {
+      "name": "offset negative offset",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        "# a\n\nb",
+        -3
+      ],
+      "expected": "<h1 data-source-line=\"-2\">a</h1>\n<p data-source-line=\"0\">b</p>\n"
+    },
+    {
+      "name": "offset null md",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        null,
+        0
+      ],
+      "expected": ""
+    },
+    {
+      "name": "offset undefined md",
+      "fn": "parseWithLineNumbers",
+      "input": [
+        {
+          "$undefined": true
+        },
+        2
+      ],
+      "expected": ""
+    },
+    {
+      "name": "lexer tasks",
+      "fn": "marked.lexer(types+raw)",
+      "input": [
+        "- [ ] todo\n- [x] done\n- [X] upper\n  - [ ] child\n- plain\n1. [ ] ordered task\n- [ ]\n- [] not a task"
+      ],
+      "expected": [
+        {
+          "type": "list",
+          "raw": "- [ ] todo\n- [x] done\n- [X] upper\n  - [ ] child\n- plain\n"
+        },
+        {
+          "type": "list",
+          "raw": "1. [ ] ordered task\n"
+        },
+        {
+          "type": "list",
+          "raw": "- [ ]\n- [] not a task"
+        }
+      ]
+    },
+    {
+      "name": "lexer code_fences",
+      "fn": "marked.lexer(types+raw)",
+      "input": [
+        "```js\nconst a = 1 // c\n```\n\n```python\ndef f(x):\n    return x * 2\n```\n\n~~~ruby\nputs 'hi'\n~~~\n\n```\nno lang <b>\n```\n\n    indented code"
+      ],
+      "expected": [
+        {
+          "type": "code",
+          "raw": "```js\nconst a = 1 // c\n```"
+        },
+        {
+          "type": "space",
+          "raw": "\n\n"
+        },
+        {
+          "type": "code",
+          "raw": "```python\ndef f(x):\n    return x * 2\n```"
+        },
+        {
+          "type": "space",
+          "raw": "\n\n"
+        },
+        {
+          "type": "code",
+          "raw": "~~~ruby\nputs 'hi'\n~~~"
+        },
+        {
+          "type": "space",
+          "raw": "\n\n"
+        },
+        {
+          "type": "code",
+          "raw": "```\nno lang <b>\n```"
+        },
+        {
+          "type": "space",
+          "raw": "\n\n"
+        },
+        {
+          "type": "code",
+          "raw": "    indented code"
+        }
+      ]
+    },
+    {
+      "name": "lexer math_block",
+      "fn": "marked.lexer(types+raw)",
+      "input": [
+        "Before\n\n$$\nx = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}\n$$\n\nAfter\n\n$$E=mc^2$$\n\n$$   $$\n\ninline $$x$$ mid"
+      ],
+      "expected": [
+        {
+          "type": "paragraph",
+          "raw": "Before"
+        },
+        {
+          "type": "space",
+          "raw": "\n\n"
+        },
+        {
+          "type": "mathBlock",
+          "raw": "$$\nx = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}\n$$\n\n"
+        },
+        {
+          "type": "paragraph",
+          "raw": "After"
+        },
+        {
+          "type": "space",
+          "raw": "\n\n"
+        },
+        {
+          "type": "mathBlock",
+          "raw": "$$E=mc^2$$\n\n"
+        },
+        {
+          "type": "paragraph",
+          "raw": "$$   \n$$"
+        },
+        {
+          "type": "space",
+          "raw": "\n\n"
+        },
+        {
+          "type": "paragraph",
+          "raw": "inline \n$$x\n$$ mid"
+        }
+      ]
+    },
+    {
+      "name": "lexer table",
+      "fn": "marked.lexer(types+raw)",
+      "input": [
+        "| a | b | c |\n|:--|:-:|--:|\n| 1 | **2** | `3` |\n| x \\| pipe | | ç |"
+      ],
+      "expected": [
+        {
+          "type": "table",
+          "raw": "| a | b | c |\n|:--|:-:|--:|\n| 1 | **2** | `3` |\n| x \\| pipe | | ç |"
+        }
+      ]
+    },
+    {
+      "name": "lexer nested_mix",
+      "fn": "marked.lexer(types+raw)",
+      "input": [
+        "1. Step with `code`\n   ```sh\n   echo hi\n   ```\n2. > quote in list\n3. | t | u |\n   |---|---|\n   | 1 | 2 |"
+      ],
+      "expected": [
+        {
+          "type": "list",
+          "raw": "1. Step with `code`\n   ```sh\n   echo hi\n   ```\n2. > quote in list\n3. | t | u |\n   |---|---|\n   | 1 | 2 |"
+        }
+      ]
+    },
+    {
+      "name": "lexer crlf",
+      "fn": "marked.lexer(types+raw)",
+      "input": [
+        "# Title\r\n\r\npara line1\r\nline2\r\n\r\n- a\r\n- [x] b\r\n\r\n```js\r\nlet x\r\n```\r\n"
+      ],
+      "expected": [
+        {
+          "type": "heading",
+          "raw": "# Title\n\n"
+        },
+        {
+          "type": "paragraph",
+          "raw": "para line1\nline2"
+        },
+        {
+          "type": "space",
+          "raw": "\n\n"
+        },
+        {
+          "type": "list",
+          "raw": "- a\n- [x] b"
+        },
+        {
+          "type": "space",
+          "raw": "\n\n"
+        },
+        {
+          "type": "code",
+          "raw": "```js\nlet x\n```\n"
+        }
+      ]
+    },
+    {
+      "name": "lexer raw_html_block",
+      "fn": "marked.lexer(types+raw)",
+      "input": [
+        "<div class=\"note\">\n**not md inside**\n</div>\n\n<details><summary>S</summary>\n\nHidden *md*\n\n</details>"
+      ],
+      "expected": [
+        {
+          "type": "html",
+          "raw": "<div class=\"note\">\n**not md inside**\n</div>\n\n"
+        },
+        {
+          "type": "html",
+          "raw": "<details><summary>S</summary>\n\n"
+        },
+        {
+          "type": "paragraph",
+          "raw": "Hidden *md*"
+        },
+        {
+          "type": "space",
+          "raw": "\n\n"
+        },
+        {
+          "type": "html",
+          "raw": "</details>"
+        }
+      ]
+    },
+    {
+      "name": "findElementByLine long_doc @-5",
+      "fn": "findElementByLine",
+      "input": {
+        "markdown": "## Section 0\n\nParagraph 1 with **bold** and [[Link 1]] and $x_1$.\n\nParagraph 2 with **bold** and [[Link 2]] and $x_2$.\n\nParagraph 3 with **bold** and [[Link 3]] and $x_3$.\n\nParagraph 4 with **bold** and [[Link 4]] and $x_4$.\n\n## Section 5\n\nParagraph 6 with **bold** and [[Link 6]] and $x_6$.\n\nParagraph 7 with **bold** and [[Link 7]] and $x_7$.\n\nParagraph 8 with **bold** and [[Link 8]] and $x_8$.\n\nParagraph 9 with **bold** and [[Link 9]] and $x_9$.\n\n## Section 10\n\nParagraph 11 with **bold** and [[Link 11]] and $x_11$.\n\nParagraph 12 with **bold** and [[Link 12]] and $x_12$.\n\nParagraph 13 with **bold** and [[Link 13]] and $x_13$.\n\nParagraph 14 with **bold** and [[Link 14]] and $x_14$.\n\n## Section 15\n\nParagraph 16 with **bold** and [[Link 16]] and $x_16$.\n\nParagraph 17 with **bold** and [[Link 17]] and $x_17$.\n\nParagraph 18 with **bold** and [[Link 18]] and $x_18$.\n\nParagraph 19 with **bold** and [[Link 19]] and $x_19$.\n\n## Section 20\n\nParagraph 21 with **bold** and [[Link 21]] and $x_21$.\n\nParagraph 22 with **bold** and [[Link 22]] and $x_22$.\n\nParagraph 23 with **bold** and [[Link 23]] and $x_23$.\n\nParagraph 24 with **bold** and [[Link 24]] and $x_24$.\n\n## Section 25\n\nParagraph 26 with **bold** and [[Link 26]] and $x_26$.\n\nParagraph 27 with **bold** and [[Link 27]] and $x_27$.\n\nParagraph 28 with **bold** and [[Link 28]] and $x_28$.\n\nParagraph 29 with **bold** and [[Link 29]] and $x_29$.\n\n## Section 30\n\nParagraph 31 with **bold** and [[Link 31]] and $x_31$.\n\nParagraph 32 with **bold** and [[Link 32]] and $x_32$.\n\nParagraph 33 with **bold** and [[Link 33]] and $x_33$.\n\nParagraph 34 with **bold** and [[Link 34]] and $x_34$.\n\n## Section 35\n\nParagraph 36 with **bold** and [[Link 36]] and $x_36$.\n\nParagraph 37 with **bold** and [[Link 37]] and $x_37$.\n\nParagraph 38 with **bold** and [[Link 38]] and $x_38$.\n\nParagraph 39 with **bold** and [[Link 39]] and $x_39$.\n\n## Section 40\n\nParagraph 41 with **bold** and [[Link 41]] and $x_41$.\n\nParagraph 42 with **bold** and [[Link 42]] and $x_42$.\n\nParagraph 43 with **bold** and [[Link 43]] and $x_43$.\n\nParagraph 44 with **bold** and [[Link 44]] and $x_44$.\n\n## Section 45\n\nParagraph 46 with **bold** and [[Link 46]] and $x_46$.\n\nParagraph 47 with **bold** and [[Link 47]] and $x_47$.\n\nParagraph 48 with **bold** and [[Link 48]] and $x_48$.\n\nParagraph 49 with **bold** and [[Link 49]] and $x_49$.\n\n## Section 50\n\nParagraph 51 with **bold** and [[Link 51]] and $x_51$.\n\nParagraph 52 with **bold** and [[Link 52]] and $x_52$.\n\nParagraph 53 with **bold** and [[Link 53]] and $x_53$.\n\nParagraph 54 with **bold** and [[Link 54]] and $x_54$.\n\n## Section 55\n\nParagraph 56 with **bold** and [[Link 56]] and $x_56$.\n\nParagraph 57 with **bold** and [[Link 57]] and $x_57$.\n\nParagraph 58 with **bold** and [[Link 58]] and $x_58$.\n\nParagraph 59 with **bold** and [[Link 59]] and $x_59$.\n",
+        "targetLine": -5
+      },
+      "expected": {
+        "tag": "h2",
+        "line": "1",
+        "text": "Section 0"
+      }
+    },
+    {
+      "name": "findElementByLine long_doc @0",
+      "fn": "findElementByLine",
+      "input": {
+        "markdown": "## Section 0\n\nParagraph 1 with **bold** and [[Link 1]] and $x_1$.\n\nParagraph 2 with **bold** and [[Link 2]] and $x_2$.\n\nParagraph 3 with **bold** and [[Link 3]] and $x_3$.\n\nParagraph 4 with **bold** and [[Link 4]] and $x_4$.\n\n## Section 5\n\nParagraph 6 with **bold** and [[Link 6]] and $x_6$.\n\nParagraph 7 with **bold** and [[Link 7]] and $x_7$.\n\nParagraph 8 with **bold** and [[Link 8]] and $x_8$.\n\nParagraph 9 with **bold** and [[Link 9]] and $x_9$.\n\n## Section 10\n\nParagraph 11 with **bold** and [[Link 11]] and $x_11$.\n\nParagraph 12 with **bold** and [[Link 12]] and $x_12$.\n\nParagraph 13 with **bold** and [[Link 13]] and $x_13$.\n\nParagraph 14 with **bold** and [[Link 14]] and $x_14$.\n\n## Section 15\n\nParagraph 16 with **bold** and [[Link 16]] and $x_16$.\n\nParagraph 17 with **bold** and [[Link 17]] and $x_17$.\n\nParagraph 18 with **bold** and [[Link 18]] and $x_18$.\n\nParagraph 19 with **bold** and [[Link 19]] and $x_19$.\n\n## Section 20\n\nParagraph 21 with **bold** and [[Link 21]] and $x_21$.\n\nParagraph 22 with **bold** and [[Link 22]] and $x_22$.\n\nParagraph 23 with **bold** and [[Link 23]] and $x_23$.\n\nParagraph 24 with **bold** and [[Link 24]] and $x_24$.\n\n## Section 25\n\nParagraph 26 with **bold** and [[Link 26]] and $x_26$.\n\nParagraph 27 with **bold** and [[Link 27]] and $x_27$.\n\nParagraph 28 with **bold** and [[Link 28]] and $x_28$.\n\nParagraph 29 with **bold** and [[Link 29]] and $x_29$.\n\n## Section 30\n\nParagraph 31 with **bold** and [[Link 31]] and $x_31$.\n\nParagraph 32 with **bold** and [[Link 32]] and $x_32$.\n\nParagraph 33 with **bold** and [[Link 33]] and $x_33$.\n\nParagraph 34 with **bold** and [[Link 34]] and $x_34$.\n\n## Section 35\n\nParagraph 36 with **bold** and [[Link 36]] and $x_36$.\n\nParagraph 37 with **bold** and [[Link 37]] and $x_37$.\n\nParagraph 38 with **bold** and [[Link 38]] and $x_38$.\n\nParagraph 39 with **bold** and [[Link 39]] and $x_39$.\n\n## Section 40\n\nParagraph 41 with **bold** and [[Link 41]] and $x_41$.\n\nParagraph 42 with **bold** and [[Link 42]] and $x_42$.\n\nParagraph 43 with **bold** and [[Link 43]] and $x_43$.\n\nParagraph 44 with **bold** and [[Link 44]] and $x_44$.\n\n## Section 45\n\nParagraph 46 with **bold** and [[Link 46]] and $x_46$.\n\nParagraph 47 with **bold** and [[Link 47]] and $x_47$.\n\nParagraph 48 with **bold** and [[Link 48]] and $x_48$.\n\nParagraph 49 with **bold** and [[Link 49]] and $x_49$.\n\n## Section 50\n\nParagraph 51 with **bold** and [[Link 51]] and $x_51$.\n\nParagraph 52 with **bold** and [[Link 52]] and $x_52$.\n\nParagraph 53 with **bold** and [[Link 53]] and $x_53$.\n\nParagraph 54 with **bold** and [[Link 54]] and $x_54$.\n\n## Section 55\n\nParagraph 56 with **bold** and [[Link 56]] and $x_56$.\n\nParagraph 57 with **bold** and [[Link 57]] and $x_57$.\n\nParagraph 58 with **bold** and [[Link 58]] and $x_58$.\n\nParagraph 59 with **bold** and [[Link 59]] and $x_59$.\n",
+        "targetLine": 0
+      },
+      "expected": {
+        "tag": "h2",
+        "line": "1",
+        "text": "Section 0"
+      }
+    },
+    {
+      "name": "findElementByLine long_doc @1",
+      "fn": "findElementByLine",
+      "input": {
+        "markdown": "## Section 0\n\nParagraph 1 with **bold** and [[Link 1]] and $x_1$.\n\nParagraph 2 with **bold** and [[Link 2]] and $x_2$.\n\nParagraph 3 with **bold** and [[Link 3]] and $x_3$.\n\nParagraph 4 with **bold** and [[Link 4]] and $x_4$.\n\n## Section 5\n\nParagraph 6 with **bold** and [[Link 6]] and $x_6$.\n\nParagraph 7 with **bold** and [[Link 7]] and $x_7$.\n\nParagraph 8 with **bold** and [[Link 8]] and $x_8$.\n\nParagraph 9 with **bold** and [[Link 9]] and $x_9$.\n\n## Section 10\n\nParagraph 11 with **bold** and [[Link 11]] and $x_11$.\n\nParagraph 12 with **bold** and [[Link 12]] and $x_12$.\n\nParagraph 13 with **bold** and [[Link 13]] and $x_13$.\n\nParagraph 14 with **bold** and [[Link 14]] and $x_14$.\n\n## Section 15\n\nParagraph 16 with **bold** and [[Link 16]] and $x_16$.\n\nParagraph 17 with **bold** and [[Link 17]] and $x_17$.\n\nParagraph 18 with **bold** and [[Link 18]] and $x_18$.\n\nParagraph 19 with **bold** and [[Link 19]] and $x_19$.\n\n## Section 20\n\nParagraph 21 with **bold** and [[Link 21]] and $x_21$.\n\nParagraph 22 with **bold** and [[Link 22]] and $x_22$.\n\nParagraph 23 with **bold** and [[Link 23]] and $x_23$.\n\nParagraph 24 with **bold** and [[Link 24]] and $x_24$.\n\n## Section 25\n\nParagraph 26 with **bold** and [[Link 26]] and $x_26$.\n\nParagraph 27 with **bold** and [[Link 27]] and $x_27$.\n\nParagraph 28 with **bold** and [[Link 28]] and $x_28$.\n\nParagraph 29 with **bold** and [[Link 29]] and $x_29$.\n\n## Section 30\n\nParagraph 31 with **bold** and [[Link 31]] and $x_31$.\n\nParagraph 32 with **bold** and [[Link 32]] and $x_32$.\n\nParagraph 33 with **bold** and [[Link 33]] and $x_33$.\n\nParagraph 34 with **bold** and [[Link 34]] and $x_34$.\n\n## Section 35\n\nParagraph 36 with **bold** and [[Link 36]] and $x_36$.\n\nParagraph 37 with **bold** and [[Link 37]] and $x_37$.\n\nParagraph 38 with **bold** and [[Link 38]] and $x_38$.\n\nParagraph 39 with **bold** and [[Link 39]] and $x_39$.\n\n## Section 40\n\nParagraph 41 with **bold** and [[Link 41]] and $x_41$.\n\nParagraph 42 with **bold** and [[Link 42]] and $x_42$.\n\nParagraph 43 with **bold** and [[Link 43]] and $x_43$.\n\nParagraph 44 with **bold** and [[Link 44]] and $x_44$.\n\n## Section 45\n\nParagraph 46 with **bold** and [[Link 46]] and $x_46$.\n\nParagraph 47 with **bold** and [[Link 47]] and $x_47$.\n\nParagraph 48 with **bold** and [[Link 48]] and $x_48$.\n\nParagraph 49 with **bold** and [[Link 49]] and $x_49$.\n\n## Section 50\n\nParagraph 51 with **bold** and [[Link 51]] and $x_51$.\n\nParagraph 52 with **bold** and [[Link 52]] and $x_52$.\n\nParagraph 53 with **bold** and [[Link 53]] and $x_53$.\n\nParagraph 54 with **bold** and [[Link 54]] and $x_54$.\n\n## Section 55\n\nParagraph 56 with **bold** and [[Link 56]] and $x_56$.\n\nParagraph 57 with **bold** and [[Link 57]] and $x_57$.\n\nParagraph 58 with **bold** and [[Link 58]] and $x_58$.\n\nParagraph 59 with **bold** and [[Link 59]] and $x_59$.\n",
+        "targetLine": 1
+      },
+      "expected": {
+        "tag": "h2",
+        "line": "1",
+        "text": "Section 0"
+      }
+    },
+    {
+      "name": "findElementByLine long_doc @2",
+      "fn": "findElementByLine",
+      "input": {
+        "markdown": "## Section 0\n\nParagraph 1 with **bold** and [[Link 1]] and $x_1$.\n\nParagraph 2 with **bold** and [[Link 2]] and $x_2$.\n\nParagraph 3 with **bold** and [[Link 3]] and $x_3$.\n\nParagraph 4 with **bold** and [[Link 4]] and $x_4$.\n\n## Section 5\n\nParagraph 6 with **bold** and [[Link 6]] and $x_6$.\n\nParagraph 7 with **bold** and [[Link 7]] and $x_7$.\n\nParagraph 8 with **bold** and [[Link 8]] and $x_8$.\n\nParagraph 9 with **bold** and [[Link 9]] and $x_9$.\n\n## Section 10\n\nParagraph 11 with **bold** and [[Link 11]] and $x_11$.\n\nParagraph 12 with **bold** and [[Link 12]] and $x_12$.\n\nParagraph 13 with **bold** and [[Link 13]] and $x_13$.\n\nParagraph 14 with **bold** and [[Link 14]] and $x_14$.\n\n## Section 15\n\nParagraph 16 with **bold** and [[Link 16]] and $x_16$.\n\nParagraph 17 with **bold** and [[Link 17]] and $x_17$.\n\nParagraph 18 with **bold** and [[Link 18]] and $x_18$.\n\nParagraph 19 with **bold** and [[Link 19]] and $x_19$.\n\n## Section 20\n\nParagraph 21 with **bold** and [[Link 21]] and $x_21$.\n\nParagraph 22 with **bold** and [[Link 22]] and $x_22$.\n\nParagraph 23 with **bold** and [[Link 23]] and $x_23$.\n\nParagraph 24 with **bold** and [[Link 24]] and $x_24$.\n\n## Section 25\n\nParagraph 26 with **bold** and [[Link 26]] and $x_26$.\n\nParagraph 27 with **bold** and [[Link 27]] and $x_27$.\n\nParagraph 28 with **bold** and [[Link 28]] and $x_28$.\n\nParagraph 29 with **bold** and [[Link 29]] and $x_29$.\n\n## Section 30\n\nParagraph 31 with **bold** and [[Link 31]] and $x_31$.\n\nParagraph 32 with **bold** and [[Link 32]] and $x_32$.\n\nParagraph 33 with **bold** and [[Link 33]] and $x_33$.\n\nParagraph 34 with **bold** and [[Link 34]] and $x_34$.\n\n## Section 35\n\nParagraph 36 with **bold** and [[Link 36]] and $x_36$.\n\nParagraph 37 with **bold** and [[Link 37]] and $x_37$.\n\nParagraph 38 with **bold** and [[Link 38]] and $x_38$.\n\nParagraph 39 with **bold** and [[Link 39]] and $x_39$.\n\n## Section 40\n\nParagraph 41 with **bold** and [[Link 41]] and $x_41$.\n\nParagraph 42 with **bold** and [[Link 42]] and $x_42$.\n\nParagraph 43 with **bold** and [[Link 43]] and $x_43$.\n\nParagraph 44 with **bold** and [[Link 44]] and $x_44$.\n\n## Section 45\n\nParagraph 46 with **bold** and [[Link 46]] and $x_46$.\n\nParagraph 47 with **bold** and [[Link 47]] and $x_47$.\n\nParagraph 48 with **bold** and [[Link 48]] and $x_48$.\n\nParagraph 49 with **bold** and [[Link 49]] and $x_49$.\n\n## Section 50\n\nParagraph 51 with **bold** and [[Link 51]] and $x_51$.\n\nParagraph 52 with **bold** and [[Link 52]] and $x_52$.\n\nParagraph 53 with **bold** and [[Link 53]] and $x_53$.\n\nParagraph 54 with **bold** and [[Link 54]] and $x_54$.\n\n## Section 55\n\nParagraph 56 with **bold** and [[Link 56]] and $x_56$.\n\nParagraph 57 with **bold** and [[Link 57]] and $x_57$.\n\nParagraph 58 with **bold** and [[Link 58]] and $x_58$.\n\nParagraph 59 with **bold** and [[Link 59]] and $x_59$.\n",
+        "targetLine": 2
+      },
+      "expected": {
+        "tag": "h2",
+        "line": "1",
+        "text": "Section 0"
+      }
+    },
+    {
+      "name": "findElementByLine long_doc @3",
+      "fn": "findElementByLine",
+      "input": {
+        "markdown": "## Section 0\n\nParagraph 1 with **bold** and [[Link 1]] and $x_1$.\n\nParagraph 2 with **bold** and [[Link 2]] and $x_2$.\n\nParagraph 3 with **bold** and [[Link 3]] and $x_3$.\n\nParagraph 4 with **bold** and [[Link 4]] and $x_4$.\n\n## Section 5\n\nParagraph 6 with **bold** and [[Link 6]] and $x_6$.\n\nParagraph 7 with **bold** and [[Link 7]] and $x_7$.\n\nParagraph 8 with **bold** and [[Link 8]] and $x_8$.\n\nParagraph 9 with **bold** and [[Link 9]] and $x_9$.\n\n## Section 10\n\nParagraph 11 with **bold** and [[Link 11]] and $x_11$.\n\nParagraph 12 with **bold** and [[Link 12]] and $x_12$.\n\nParagraph 13 with **bold** and [[Link 13]] and $x_13$.\n\nParagraph 14 with **bold** and [[Link 14]] and $x_14$.\n\n## Section 15\n\nParagraph 16 with **bold** and [[Link 16]] and $x_16$.\n\nParagraph 17 with **bold** and [[Link 17]] and $x_17$.\n\nParagraph 18 with **bold** and [[Link 18]] and $x_18$.\n\nParagraph 19 with **bold** and [[Link 19]] and $x_19$.\n\n## Section 20\n\nParagraph 21 with **bold** and [[Link 21]] and $x_21$.\n\nParagraph 22 with **bold** and [[Link 22]] and $x_22$.\n\nParagraph 23 with **bold** and [[Link 23]] and $x_23$.\n\nParagraph 24 with **bold** and [[Link 24]] and $x_24$.\n\n## Section 25\n\nParagraph 26 with **bold** and [[Link 26]] and $x_26$.\n\nParagraph 27 with **bold** and [[Link 27]] and $x_27$.\n\nParagraph 28 with **bold** and [[Link 28]] and $x_28$.\n\nParagraph 29 with **bold** and [[Link 29]] and $x_29$.\n\n## Section 30\n\nParagraph 31 with **bold** and [[Link 31]] and $x_31$.\n\nParagraph 32 with **bold** and [[Link 32]] and $x_32$.\n\nParagraph 33 with **bold** and [[Link 33]] and $x_33$.\n\nParagraph 34 with **bold** and [[Link 34]] and $x_34$.\n\n## Section 35\n\nParagraph 36 with **bold** and [[Link 36]] and $x_36$.\n\nParagraph 37 with **bold** and [[Link 37]] and $x_37$.\n\nParagraph 38 with **bold** and [[Link 38]] and $x_38$.\n\nParagraph 39 with **bold** and [[Link 39]] and $x_39$.\n\n## Section 40\n\nParagraph 41 with **bold** and [[Link 41]] and $x_41$.\n\nParagraph 42 with **bold** and [[Link 42]] and $x_42$.\n\nParagraph 43 with **bold** and [[Link 43]] and $x_43$.\n\nParagraph 44 with **bold** and [[Link 44]] and $x_44$.\n\n## Section 45\n\nParagraph 46 with **bold** and [[Link 46]] and $x_46$.\n\nParagraph 47 with **bold** and [[Link 47]] and $x_47$.\n\nParagraph 48 with **bold** and [[Link 48]] and $x_48$.\n\nParagraph 49 with **bold** and [[Link 49]] and $x_49$.\n\n## Section 50\n\nParagraph 51 with **bold** and [[Link 51]] and $x_51$.\n\nParagraph 52 with **bold** and [[Link 52]] and $x_52$.\n\nParagraph 53 with **bold** and [[Link 53]] and $x_53$.\n\nParagraph 54 with **bold** and [[Link 54]] and $x_54$.\n\n## Section 55\n\nParagraph 56 with **bold** and [[Link 56]] and $x_56$.\n\nParagraph 57 with **bold** and [[Link 57]] and $x_57$.\n\nParagraph 58 with **bold** and [[Link 58]] and $x_58$.\n\nParagraph 59 with **bold** and [[Link 59]] and $x_59$.\n",
+        "targetLine": 3
+      },
+      "expected": {
+        "tag": "p",
+        "line": "3",
+        "text": "Paragraph 1 with bold and Link 1 and x_1"
+      }
+    },
+    {
+      "name": "findElementByLine long_doc @7",
+      "fn": "findElementByLine",
+      "input": {
+        "markdown": "## Section 0\n\nParagraph 1 with **bold** and [[Link 1]] and $x_1$.\n\nParagraph 2 with **bold** and [[Link 2]] and $x_2$.\n\nParagraph 3 with **bold** and [[Link 3]] and $x_3$.\n\nParagraph 4 with **bold** and [[Link 4]] and $x_4$.\n\n## Section 5\n\nParagraph 6 with **bold** and [[Link 6]] and $x_6$.\n\nParagraph 7 with **bold** and [[Link 7]] and $x_7$.\n\nParagraph 8 with **bold** and [[Link 8]] and $x_8$.\n\nParagraph 9 with **bold** and [[Link 9]] and $x_9$.\n\n## Section 10\n\nParagraph 11 with **bold** and [[Link 11]] and $x_11$.\n\nParagraph 12 with **bold** and [[Link 12]] and $x_12$.\n\nParagraph 13 with **bold** and [[Link 13]] and $x_13$.\n\nParagraph 14 with **bold** and [[Link 14]] and $x_14$.\n\n## Section 15\n\nParagraph 16 with **bold** and [[Link 16]] and $x_16$.\n\nParagraph 17 with **bold** and [[Link 17]] and $x_17$.\n\nParagraph 18 with **bold** and [[Link 18]] and $x_18$.\n\nParagraph 19 with **bold** and [[Link 19]] and $x_19$.\n\n## Section 20\n\nParagraph 21 with **bold** and [[Link 21]] and $x_21$.\n\nParagraph 22 with **bold** and [[Link 22]] and $x_22$.\n\nParagraph 23 with **bold** and [[Link 23]] and $x_23$.\n\nParagraph 24 with **bold** and [[Link 24]] and $x_24$.\n\n## Section 25\n\nParagraph 26 with **bold** and [[Link 26]] and $x_26$.\n\nParagraph 27 with **bold** and [[Link 27]] and $x_27$.\n\nParagraph 28 with **bold** and [[Link 28]] and $x_28$.\n\nParagraph 29 with **bold** and [[Link 29]] and $x_29$.\n\n## Section 30\n\nParagraph 31 with **bold** and [[Link 31]] and $x_31$.\n\nParagraph 32 with **bold** and [[Link 32]] and $x_32$.\n\nParagraph 33 with **bold** and [[Link 33]] and $x_33$.\n\nParagraph 34 with **bold** and [[Link 34]] and $x_34$.\n\n## Section 35\n\nParagraph 36 with **bold** and [[Link 36]] and $x_36$.\n\nParagraph 37 with **bold** and [[Link 37]] and $x_37$.\n\nParagraph 38 with **bold** and [[Link 38]] and $x_38$.\n\nParagraph 39 with **bold** and [[Link 39]] and $x_39$.\n\n## Section 40\n\nParagraph 41 with **bold** and [[Link 41]] and $x_41$.\n\nParagraph 42 with **bold** and [[Link 42]] and $x_42$.\n\nParagraph 43 with **bold** and [[Link 43]] and $x_43$.\n\nParagraph 44 with **bold** and [[Link 44]] and $x_44$.\n\n## Section 45\n\nParagraph 46 with **bold** and [[Link 46]] and $x_46$.\n\nParagraph 47 with **bold** and [[Link 47]] and $x_47$.\n\nParagraph 48 with **bold** and [[Link 48]] and $x_48$.\n\nParagraph 49 with **bold** and [[Link 49]] and $x_49$.\n\n## Section 50\n\nParagraph 51 with **bold** and [[Link 51]] and $x_51$.\n\nParagraph 52 with **bold** and [[Link 52]] and $x_52$.\n\nParagraph 53 with **bold** and [[Link 53]] and $x_53$.\n\nParagraph 54 with **bold** and [[Link 54]] and $x_54$.\n\n## Section 55\n\nParagraph 56 with **bold** and [[Link 56]] and $x_56$.\n\nParagraph 57 with **bold** and [[Link 57]] and $x_57$.\n\nParagraph 58 with **bold** and [[Link 58]] and $x_58$.\n\nParagraph 59 with **bold** and [[Link 59]] and $x_59$.\n",
+        "targetLine": 7
+      },
+      "expected": {
+        "tag": "p",
+        "line": "7",
+        "text": "Paragraph 3 with bold and Link 3 and x_3"
+      }
+    },
+    {
+      "name": "findElementByLine long_doc @12",
+      "fn": "findElementByLine",
+      "input": {
+        "markdown": "## Section 0\n\nParagraph 1 with **bold** and [[Link 1]] and $x_1$.\n\nParagraph 2 with **bold** and [[Link 2]] and $x_2$.\n\nParagraph 3 with **bold** and [[Link 3]] and $x_3$.\n\nParagraph 4 with **bold** and [[Link 4]] and $x_4$.\n\n## Section 5\n\nParagraph 6 with **bold** and [[Link 6]] and $x_6$.\n\nParagraph 7 with **bold** and [[Link 7]] and $x_7$.\n\nParagraph 8 with **bold** and [[Link 8]] and $x_8$.\n\nParagraph 9 with **bold** and [[Link 9]] and $x_9$.\n\n## Section 10\n\nParagraph 11 with **bold** and [[Link 11]] and $x_11$.\n\nParagraph 12 with **bold** and [[Link 12]] and $x_12$.\n\nParagraph 13 with **bold** and [[Link 13]] and $x_13$.\n\nParagraph 14 with **bold** and [[Link 14]] and $x_14$.\n\n## Section 15\n\nParagraph 16 with **bold** and [[Link 16]] and $x_16$.\n\nParagraph 17 with **bold** and [[Link 17]] and $x_17$.\n\nParagraph 18 with **bold** and [[Link 18]] and $x_18$.\n\nParagraph 19 with **bold** and [[Link 19]] and $x_19$.\n\n## Section 20\n\nParagraph 21 with **bold** and [[Link 21]] and $x_21$.\n\nParagraph 22 with **bold** and [[Link 22]] and $x_22$.\n\nParagraph 23 with **bold** and [[Link 23]] and $x_23$.\n\nParagraph 24 with **bold** and [[Link 24]] and $x_24$.\n\n## Section 25\n\nParagraph 26 with **bold** and [[Link 26]] and $x_26$.\n\nParagraph 27 with **bold** and [[Link 27]] and $x_27$.\n\nParagraph 28 with **bold** and [[Link 28]] and $x_28$.\n\nParagraph 29 with **bold** and [[Link 29]] and $x_29$.\n\n## Section 30\n\nParagraph 31 with **bold** and [[Link 31]] and $x_31$.\n\nParagraph 32 with **bold** and [[Link 32]] and $x_32$.\n\nParagraph 33 with **bold** and [[Link 33]] and $x_33$.\n\nParagraph 34 with **bold** and [[Link 34]] and $x_34$.\n\n## Section 35\n\nParagraph 36 with **bold** and [[Link 36]] and $x_36$.\n\nParagraph 37 with **bold** and [[Link 37]] and $x_37$.\n\nParagraph 38 with **bold** and [[Link 38]] and $x_38$.\n\nParagraph 39 with **bold** and [[Link 39]] and $x_39$.\n\n## Section 40\n\nParagraph 41 with **bold** and [[Link 41]] and $x_41$.\n\nParagraph 42 with **bold** and [[Link 42]] and $x_42$.\n\nParagraph 43 with **bold** and [[Link 43]] and $x_43$.\n\nParagraph 44 with **bold** and [[Link 44]] and $x_44$.\n\n## Section 45\n\nParagraph 46 with **bold** and [[Link 46]] and $x_46$.\n\nParagraph 47 with **bold** and [[Link 47]] and $x_47$.\n\nParagraph 48 with **bold** and [[Link 48]] and $x_48$.\n\nParagraph 49 with **bold** and [[Link 49]] and $x_49$.\n\n## Section 50\n\nParagraph 51 with **bold** and [[Link 51]] and $x_51$.\n\nParagraph 52 with **bold** and [[Link 52]] and $x_52$.\n\nParagraph 53 with **bold** and [[Link 53]] and $x_53$.\n\nParagraph 54 with **bold** and [[Link 54]] and $x_54$.\n\n## Section 55\n\nParagraph 56 with **bold** and [[Link 56]] and $x_56$.\n\nParagraph 57 with **bold** and [[Link 57]] and $x_57$.\n\nParagraph 58 with **bold** and [[Link 58]] and $x_58$.\n\nParagraph 59 with **bold** and [[Link 59]] and $x_59$.\n",
+        "targetLine": 12
+      },
+      "expected": {
+        "tag": "h2",
+        "line": "11",
+        "text": "Section 5"
+      }
+    },
+    {
+      "name": "findElementByLine long_doc @50",
+      "fn": "findElementByLine",
+      "input": {
+        "markdown": "## Section 0\n\nParagraph 1 with **bold** and [[Link 1]] and $x_1$.\n\nParagraph 2 with **bold** and [[Link 2]] and $x_2$.\n\nParagraph 3 with **bold** and [[Link 3]] and $x_3$.\n\nParagraph 4 with **bold** and [[Link 4]] and $x_4$.\n\n## Section 5\n\nParagraph 6 with **bold** and [[Link 6]] and $x_6$.\n\nParagraph 7 with **bold** and [[Link 7]] and $x_7$.\n\nParagraph 8 with **bold** and [[Link 8]] and $x_8$.\n\nParagraph 9 with **bold** and [[Link 9]] and $x_9$.\n\n## Section 10\n\nParagraph 11 with **bold** and [[Link 11]] and $x_11$.\n\nParagraph 12 with **bold** and [[Link 12]] and $x_12$.\n\nParagraph 13 with **bold** and [[Link 13]] and $x_13$.\n\nParagraph 14 with **bold** and [[Link 14]] and $x_14$.\n\n## Section 15\n\nParagraph 16 with **bold** and [[Link 16]] and $x_16$.\n\nParagraph 17 with **bold** and [[Link 17]] and $x_17$.\n\nParagraph 18 with **bold** and [[Link 18]] and $x_18$.\n\nParagraph 19 with **bold** and [[Link 19]] and $x_19$.\n\n## Section 20\n\nParagraph 21 with **bold** and [[Link 21]] and $x_21$.\n\nParagraph 22 with **bold** and [[Link 22]] and $x_22$.\n\nParagraph 23 with **bold** and [[Link 23]] and $x_23$.\n\nParagraph 24 with **bold** and [[Link 24]] and $x_24$.\n\n## Section 25\n\nParagraph 26 with **bold** and [[Link 26]] and $x_26$.\n\nParagraph 27 with **bold** and [[Link 27]] and $x_27$.\n\nParagraph 28 with **bold** and [[Link 28]] and $x_28$.\n\nParagraph 29 with **bold** and [[Link 29]] and $x_29$.\n\n## Section 30\n\nParagraph 31 with **bold** and [[Link 31]] and $x_31$.\n\nParagraph 32 with **bold** and [[Link 32]] and $x_32$.\n\nParagraph 33 with **bold** and [[Link 33]] and $x_33$.\n\nParagraph 34 with **bold** and [[Link 34]] and $x_34$.\n\n## Section 35\n\nParagraph 36 with **bold** and [[Link 36]] and $x_36$.\n\nParagraph 37 with **bold** and [[Link 37]] and $x_37$.\n\nParagraph 38 with **bold** and [[Link 38]] and $x_38$.\n\nParagraph 39 with **bold** and [[Link 39]] and $x_39$.\n\n## Section 40\n\nParagraph 41 with **bold** and [[Link 41]] and $x_41$.\n\nParagraph 42 with **bold** and [[Link 42]] and $x_42$.\n\nParagraph 43 with **bold** and [[Link 43]] and $x_43$.\n\nParagraph 44 with **bold** and [[Link 44]] and $x_44$.\n\n## Section 45\n\nParagraph 46 with **bold** and [[Link 46]] and $x_46$.\n\nParagraph 47 with **bold** and [[Link 47]] and $x_47$.\n\nParagraph 48 with **bold** and [[Link 48]] and $x_48$.\n\nParagraph 49 with **bold** and [[Link 49]] and $x_49$.\n\n## Section 50\n\nParagraph 51 with **bold** and [[Link 51]] and $x_51$.\n\nParagraph 52 with **bold** and [[Link 52]] and $x_52$.\n\nParagraph 53 with **bold** and [[Link 53]] and $x_53$.\n\nParagraph 54 with **bold** and [[Link 54]] and $x_54$.\n\n## Section 55\n\nParagraph 56 with **bold** and [[Link 56]] and $x_56$.\n\nParagraph 57 with **bold** and [[Link 57]] and $x_57$.\n\nParagraph 58 with **bold** and [[Link 58]] and $x_58$.\n\nParagraph 59 with **bold** and [[Link 59]] and $x_59$.\n",
+        "targetLine": 50
+      },
+      "expected": {
+        "tag": "p",
+        "line": "49",
+        "text": "Paragraph 24 with bold and Link 24 and x"
+      }
+    },
+    {
+      "name": "findElementByLine long_doc @61",
+      "fn": "findElementByLine",
+      "input": {
+        "markdown": "## Section 0\n\nParagraph 1 with **bold** and [[Link 1]] and $x_1$.\n\nParagraph 2 with **bold** and [[Link 2]] and $x_2$.\n\nParagraph 3 with **bold** and [[Link 3]] and $x_3$.\n\nParagraph 4 with **bold** and [[Link 4]] and $x_4$.\n\n## Section 5\n\nParagraph 6 with **bold** and [[Link 6]] and $x_6$.\n\nParagraph 7 with **bold** and [[Link 7]] and $x_7$.\n\nParagraph 8 with **bold** and [[Link 8]] and $x_8$.\n\nParagraph 9 with **bold** and [[Link 9]] and $x_9$.\n\n## Section 10\n\nParagraph 11 with **bold** and [[Link 11]] and $x_11$.\n\nParagraph 12 with **bold** and [[Link 12]] and $x_12$.\n\nParagraph 13 with **bold** and [[Link 13]] and $x_13$.\n\nParagraph 14 with **bold** and [[Link 14]] and $x_14$.\n\n## Section 15\n\nParagraph 16 with **bold** and [[Link 16]] and $x_16$.\n\nParagraph 17 with **bold** and [[Link 17]] and $x_17$.\n\nParagraph 18 with **bold** and [[Link 18]] and $x_18$.\n\nParagraph 19 with **bold** and [[Link 19]] and $x_19$.\n\n## Section 20\n\nParagraph 21 with **bold** and [[Link 21]] and $x_21$.\n\nParagraph 22 with **bold** and [[Link 22]] and $x_22$.\n\nParagraph 23 with **bold** and [[Link 23]] and $x_23$.\n\nParagraph 24 with **bold** and [[Link 24]] and $x_24$.\n\n## Section 25\n\nParagraph 26 with **bold** and [[Link 26]] and $x_26$.\n\nParagraph 27 with **bold** and [[Link 27]] and $x_27$.\n\nParagraph 28 with **bold** and [[Link 28]] and $x_28$.\n\nParagraph 29 with **bold** and [[Link 29]] and $x_29$.\n\n## Section 30\n\nParagraph 31 with **bold** and [[Link 31]] and $x_31$.\n\nParagraph 32 with **bold** and [[Link 32]] and $x_32$.\n\nParagraph 33 with **bold** and [[Link 33]] and $x_33$.\n\nParagraph 34 with **bold** and [[Link 34]] and $x_34$.\n\n## Section 35\n\nParagraph 36 with **bold** and [[Link 36]] and $x_36$.\n\nParagraph 37 with **bold** and [[Link 37]] and $x_37$.\n\nParagraph 38 with **bold** and [[Link 38]] and $x_38$.\n\nParagraph 39 with **bold** and [[Link 39]] and $x_39$.\n\n## Section 40\n\nParagraph 41 with **bold** and [[Link 41]] and $x_41$.\n\nParagraph 42 with **bold** and [[Link 42]] and $x_42$.\n\nParagraph 43 with **bold** and [[Link 43]] and $x_43$.\n\nParagraph 44 with **bold** and [[Link 44]] and $x_44$.\n\n## Section 45\n\nParagraph 46 with **bold** and [[Link 46]] and $x_46$.\n\nParagraph 47 with **bold** and [[Link 47]] and $x_47$.\n\nParagraph 48 with **bold** and [[Link 48]] and $x_48$.\n\nParagraph 49 with **bold** and [[Link 49]] and $x_49$.\n\n## Section 50\n\nParagraph 51 with **bold** and [[Link 51]] and $x_51$.\n\nParagraph 52 with **bold** and [[Link 52]] and $x_52$.\n\nParagraph 53 with **bold** and [[Link 53]] and $x_53$.\n\nParagraph 54 with **bold** and [[Link 54]] and $x_54$.\n\n## Section 55\n\nParagraph 56 with **bold** and [[Link 56]] and $x_56$.\n\nParagraph 57 with **bold** and [[Link 57]] and $x_57$.\n\nParagraph 58 with **bold** and [[Link 58]] and $x_58$.\n\nParagraph 59 with **bold** and [[Link 59]] and $x_59$.\n",
+        "targetLine": 61
+      },
+      "expected": {
+        "tag": "h2",
+        "line": "61",
+        "text": "Section 30"
+      }
+    },
+    {
+      "name": "findElementByLine long_doc @119",
+      "fn": "findElementByLine",
+      "input": {
+        "markdown": "## Section 0\n\nParagraph 1 with **bold** and [[Link 1]] and $x_1$.\n\nParagraph 2 with **bold** and [[Link 2]] and $x_2$.\n\nParagraph 3 with **bold** and [[Link 3]] and $x_3$.\n\nParagraph 4 with **bold** and [[Link 4]] and $x_4$.\n\n## Section 5\n\nParagraph 6 with **bold** and [[Link 6]] and $x_6$.\n\nParagraph 7 with **bold** and [[Link 7]] and $x_7$.\n\nParagraph 8 with **bold** and [[Link 8]] and $x_8$.\n\nParagraph 9 with **bold** and [[Link 9]] and $x_9$.\n\n## Section 10\n\nParagraph 11 with **bold** and [[Link 11]] and $x_11$.\n\nParagraph 12 with **bold** and [[Link 12]] and $x_12$.\n\nParagraph 13 with **bold** and [[Link 13]] and $x_13$.\n\nParagraph 14 with **bold** and [[Link 14]] and $x_14$.\n\n## Section 15\n\nParagraph 16 with **bold** and [[Link 16]] and $x_16$.\n\nParagraph 17 with **bold** and [[Link 17]] and $x_17$.\n\nParagraph 18 with **bold** and [[Link 18]] and $x_18$.\n\nParagraph 19 with **bold** and [[Link 19]] and $x_19$.\n\n## Section 20\n\nParagraph 21 with **bold** and [[Link 21]] and $x_21$.\n\nParagraph 22 with **bold** and [[Link 22]] and $x_22$.\n\nParagraph 23 with **bold** and [[Link 23]] and $x_23$.\n\nParagraph 24 with **bold** and [[Link 24]] and $x_24$.\n\n## Section 25\n\nParagraph 26 with **bold** and [[Link 26]] and $x_26$.\n\nParagraph 27 with **bold** and [[Link 27]] and $x_27$.\n\nParagraph 28 with **bold** and [[Link 28]] and $x_28$.\n\nParagraph 29 with **bold** and [[Link 29]] and $x_29$.\n\n## Section 30\n\nParagraph 31 with **bold** and [[Link 31]] and $x_31$.\n\nParagraph 32 with **bold** and [[Link 32]] and $x_32$.\n\nParagraph 33 with **bold** and [[Link 33]] and $x_33$.\n\nParagraph 34 with **bold** and [[Link 34]] and $x_34$.\n\n## Section 35\n\nParagraph 36 with **bold** and [[Link 36]] and $x_36$.\n\nParagraph 37 with **bold** and [[Link 37]] and $x_37$.\n\nParagraph 38 with **bold** and [[Link 38]] and $x_38$.\n\nParagraph 39 with **bold** and [[Link 39]] and $x_39$.\n\n## Section 40\n\nParagraph 41 with **bold** and [[Link 41]] and $x_41$.\n\nParagraph 42 with **bold** and [[Link 42]] and $x_42$.\n\nParagraph 43 with **bold** and [[Link 43]] and $x_43$.\n\nParagraph 44 with **bold** and [[Link 44]] and $x_44$.\n\n## Section 45\n\nParagraph 46 with **bold** and [[Link 46]] and $x_46$.\n\nParagraph 47 with **bold** and [[Link 47]] and $x_47$.\n\nParagraph 48 with **bold** and [[Link 48]] and $x_48$.\n\nParagraph 49 with **bold** and [[Link 49]] and $x_49$.\n\n## Section 50\n\nParagraph 51 with **bold** and [[Link 51]] and $x_51$.\n\nParagraph 52 with **bold** and [[Link 52]] and $x_52$.\n\nParagraph 53 with **bold** and [[Link 53]] and $x_53$.\n\nParagraph 54 with **bold** and [[Link 54]] and $x_54$.\n\n## Section 55\n\nParagraph 56 with **bold** and [[Link 56]] and $x_56$.\n\nParagraph 57 with **bold** and [[Link 57]] and $x_57$.\n\nParagraph 58 with **bold** and [[Link 58]] and $x_58$.\n\nParagraph 59 with **bold** and [[Link 59]] and $x_59$.\n",
+        "targetLine": 119
+      },
+      "expected": {
+        "tag": "p",
+        "line": "119",
+        "text": "Paragraph 59 with bold and Link 59 and x"
+      }
+    },
+    {
+      "name": "findElementByLine long_doc @120",
+      "fn": "findElementByLine",
+      "input": {
+        "markdown": "## Section 0\n\nParagraph 1 with **bold** and [[Link 1]] and $x_1$.\n\nParagraph 2 with **bold** and [[Link 2]] and $x_2$.\n\nParagraph 3 with **bold** and [[Link 3]] and $x_3$.\n\nParagraph 4 with **bold** and [[Link 4]] and $x_4$.\n\n## Section 5\n\nParagraph 6 with **bold** and [[Link 6]] and $x_6$.\n\nParagraph 7 with **bold** and [[Link 7]] and $x_7$.\n\nParagraph 8 with **bold** and [[Link 8]] and $x_8$.\n\nParagraph 9 with **bold** and [[Link 9]] and $x_9$.\n\n## Section 10\n\nParagraph 11 with **bold** and [[Link 11]] and $x_11$.\n\nParagraph 12 with **bold** and [[Link 12]] and $x_12$.\n\nParagraph 13 with **bold** and [[Link 13]] and $x_13$.\n\nParagraph 14 with **bold** and [[Link 14]] and $x_14$.\n\n## Section 15\n\nParagraph 16 with **bold** and [[Link 16]] and $x_16$.\n\nParagraph 17 with **bold** and [[Link 17]] and $x_17$.\n\nParagraph 18 with **bold** and [[Link 18]] and $x_18$.\n\nParagraph 19 with **bold** and [[Link 19]] and $x_19$.\n\n## Section 20\n\nParagraph 21 with **bold** and [[Link 21]] and $x_21$.\n\nParagraph 22 with **bold** and [[Link 22]] and $x_22$.\n\nParagraph 23 with **bold** and [[Link 23]] and $x_23$.\n\nParagraph 24 with **bold** and [[Link 24]] and $x_24$.\n\n## Section 25\n\nParagraph 26 with **bold** and [[Link 26]] and $x_26$.\n\nParagraph 27 with **bold** and [[Link 27]] and $x_27$.\n\nParagraph 28 with **bold** and [[Link 28]] and $x_28$.\n\nParagraph 29 with **bold** and [[Link 29]] and $x_29$.\n\n## Section 30\n\nParagraph 31 with **bold** and [[Link 31]] and $x_31$.\n\nParagraph 32 with **bold** and [[Link 32]] and $x_32$.\n\nParagraph 33 with **bold** and [[Link 33]] and $x_33$.\n\nParagraph 34 with **bold** and [[Link 34]] and $x_34$.\n\n## Section 35\n\nParagraph 36 with **bold** and [[Link 36]] and $x_36$.\n\nParagraph 37 with **bold** and [[Link 37]] and $x_37$.\n\nParagraph 38 with **bold** and [[Link 38]] and $x_38$.\n\nParagraph 39 with **bold** and [[Link 39]] and $x_39$.\n\n## Section 40\n\nParagraph 41 with **bold** and [[Link 41]] and $x_41$.\n\nParagraph 42 with **bold** and [[Link 42]] and $x_42$.\n\nParagraph 43 with **bold** and [[Link 43]] and $x_43$.\n\nParagraph 44 with **bold** and [[Link 44]] and $x_44$.\n\n## Section 45\n\nParagraph 46 with **bold** and [[Link 46]] and $x_46$.\n\nParagraph 47 with **bold** and [[Link 47]] and $x_47$.\n\nParagraph 48 with **bold** and [[Link 48]] and $x_48$.\n\nParagraph 49 with **bold** and [[Link 49]] and $x_49$.\n\n## Section 50\n\nParagraph 51 with **bold** and [[Link 51]] and $x_51$.\n\nParagraph 52 with **bold** and [[Link 52]] and $x_52$.\n\nParagraph 53 with **bold** and [[Link 53]] and $x_53$.\n\nParagraph 54 with **bold** and [[Link 54]] and $x_54$.\n\n## Section 55\n\nParagraph 56 with **bold** and [[Link 56]] and $x_56$.\n\nParagraph 57 with **bold** and [[Link 57]] and $x_57$.\n\nParagraph 58 with **bold** and [[Link 58]] and $x_58$.\n\nParagraph 59 with **bold** and [[Link 59]] and $x_59$.\n",
+        "targetLine": 120
+      },
+      "expected": {
+        "tag": "p",
+        "line": "119",
+        "text": "Paragraph 59 with bold and Link 59 and x"
+      }
+    },
+    {
+      "name": "findElementByLine long_doc @500",
+      "fn": "findElementByLine",
+      "input": {
+        "markdown": "## Section 0\n\nParagraph 1 with **bold** and [[Link 1]] and $x_1$.\n\nParagraph 2 with **bold** and [[Link 2]] and $x_2$.\n\nParagraph 3 with **bold** and [[Link 3]] and $x_3$.\n\nParagraph 4 with **bold** and [[Link 4]] and $x_4$.\n\n## Section 5\n\nParagraph 6 with **bold** and [[Link 6]] and $x_6$.\n\nParagraph 7 with **bold** and [[Link 7]] and $x_7$.\n\nParagraph 8 with **bold** and [[Link 8]] and $x_8$.\n\nParagraph 9 with **bold** and [[Link 9]] and $x_9$.\n\n## Section 10\n\nParagraph 11 with **bold** and [[Link 11]] and $x_11$.\n\nParagraph 12 with **bold** and [[Link 12]] and $x_12$.\n\nParagraph 13 with **bold** and [[Link 13]] and $x_13$.\n\nParagraph 14 with **bold** and [[Link 14]] and $x_14$.\n\n## Section 15\n\nParagraph 16 with **bold** and [[Link 16]] and $x_16$.\n\nParagraph 17 with **bold** and [[Link 17]] and $x_17$.\n\nParagraph 18 with **bold** and [[Link 18]] and $x_18$.\n\nParagraph 19 with **bold** and [[Link 19]] and $x_19$.\n\n## Section 20\n\nParagraph 21 with **bold** and [[Link 21]] and $x_21$.\n\nParagraph 22 with **bold** and [[Link 22]] and $x_22$.\n\nParagraph 23 with **bold** and [[Link 23]] and $x_23$.\n\nParagraph 24 with **bold** and [[Link 24]] and $x_24$.\n\n## Section 25\n\nParagraph 26 with **bold** and [[Link 26]] and $x_26$.\n\nParagraph 27 with **bold** and [[Link 27]] and $x_27$.\n\nParagraph 28 with **bold** and [[Link 28]] and $x_28$.\n\nParagraph 29 with **bold** and [[Link 29]] and $x_29$.\n\n## Section 30\n\nParagraph 31 with **bold** and [[Link 31]] and $x_31$.\n\nParagraph 32 with **bold** and [[Link 32]] and $x_32$.\n\nParagraph 33 with **bold** and [[Link 33]] and $x_33$.\n\nParagraph 34 with **bold** and [[Link 34]] and $x_34$.\n\n## Section 35\n\nParagraph 36 with **bold** and [[Link 36]] and $x_36$.\n\nParagraph 37 with **bold** and [[Link 37]] and $x_37$.\n\nParagraph 38 with **bold** and [[Link 38]] and $x_38$.\n\nParagraph 39 with **bold** and [[Link 39]] and $x_39$.\n\n## Section 40\n\nParagraph 41 with **bold** and [[Link 41]] and $x_41$.\n\nParagraph 42 with **bold** and [[Link 42]] and $x_42$.\n\nParagraph 43 with **bold** and [[Link 43]] and $x_43$.\n\nParagraph 44 with **bold** and [[Link 44]] and $x_44$.\n\n## Section 45\n\nParagraph 46 with **bold** and [[Link 46]] and $x_46$.\n\nParagraph 47 with **bold** and [[Link 47]] and $x_47$.\n\nParagraph 48 with **bold** and [[Link 48]] and $x_48$.\n\nParagraph 49 with **bold** and [[Link 49]] and $x_49$.\n\n## Section 50\n\nParagraph 51 with **bold** and [[Link 51]] and $x_51$.\n\nParagraph 52 with **bold** and [[Link 52]] and $x_52$.\n\nParagraph 53 with **bold** and [[Link 53]] and $x_53$.\n\nParagraph 54 with **bold** and [[Link 54]] and $x_54$.\n\n## Section 55\n\nParagraph 56 with **bold** and [[Link 56]] and $x_56$.\n\nParagraph 57 with **bold** and [[Link 57]] and $x_57$.\n\nParagraph 58 with **bold** and [[Link 58]] and $x_58$.\n\nParagraph 59 with **bold** and [[Link 59]] and $x_59$.\n",
+        "targetLine": 500
+      },
+      "expected": {
+        "tag": "p",
+        "line": "119",
+        "text": "Paragraph 59 with bold and Link 59 and x"
+      }
+    },
+    {
+      "name": "findElementByLine empty container",
+      "fn": "findElementByLine",
+      "input": {
+        "html": "<p>x</p>",
+        "targetLine": 1
+      },
+      "expected": null
+    },
+    {
+      "name": "findLineAtScroll lines=1,3,5,9 st=-10",
+      "fn": "findLineAtScroll",
+      "input": {
+        "lines": [
+          1,
+          3,
+          5,
+          9
+        ],
+        "tops": [
+          0,
+          100,
+          200,
+          400
+        ],
+        "containerTop": 0,
+        "containerScrollTop": 0,
+        "scrollTop": -10
+      },
+      "expected": 1
+    },
+    {
+      "name": "findLineAtScroll lines=1,3,5,9 st=0",
+      "fn": "findLineAtScroll",
+      "input": {
+        "lines": [
+          1,
+          3,
+          5,
+          9
+        ],
+        "tops": [
+          0,
+          100,
+          200,
+          400
+        ],
+        "containerTop": 0,
+        "containerScrollTop": 0,
+        "scrollTop": 0
+      },
+      "expected": 1
+    },
+    {
+      "name": "findLineAtScroll lines=1,3,5,9 st=50",
+      "fn": "findLineAtScroll",
+      "input": {
+        "lines": [
+          1,
+          3,
+          5,
+          9
+        ],
+        "tops": [
+          0,
+          100,
+          200,
+          400
+        ],
+        "containerTop": 0,
+        "containerScrollTop": 0,
+        "scrollTop": 50
+      },
+      "expected": 1
+    },
+    {
+      "name": "findLineAtScroll lines=1,3,5,9 st=100",
+      "fn": "findLineAtScroll",
+      "input": {
+        "lines": [
+          1,
+          3,
+          5,
+          9
+        ],
+        "tops": [
+          0,
+          100,
+          200,
+          400
+        ],
+        "containerTop": 0,
+        "containerScrollTop": 0,
+        "scrollTop": 100
+      },
+      "expected": 3
+    },
+    {
+      "name": "findLineAtScroll lines=1,3,5,9 st=150",
+      "fn": "findLineAtScroll",
+      "input": {
+        "lines": [
+          1,
+          3,
+          5,
+          9
+        ],
+        "tops": [
+          0,
+          100,
+          200,
+          400
+        ],
+        "containerTop": 0,
+        "containerScrollTop": 0,
+        "scrollTop": 150
+      },
+      "expected": 3
+    },
+    {
+      "name": "findLineAtScroll lines=1,3,5,9 st=300",
+      "fn": "findLineAtScroll",
+      "input": {
+        "lines": [
+          1,
+          3,
+          5,
+          9
+        ],
+        "tops": [
+          0,
+          100,
+          200,
+          400
+        ],
+        "containerTop": 0,
+        "containerScrollTop": 0,
+        "scrollTop": 300
+      },
+      "expected": 5
+    },
+    {
+      "name": "findLineAtScroll lines=1,3,5,9 st=399",
+      "fn": "findLineAtScroll",
+      "input": {
+        "lines": [
+          1,
+          3,
+          5,
+          9
+        ],
+        "tops": [
+          0,
+          100,
+          200,
+          400
+        ],
+        "containerTop": 0,
+        "containerScrollTop": 0,
+        "scrollTop": 399
+      },
+      "expected": 5
+    },
+    {
+      "name": "findLineAtScroll lines=1,3,5,9 st=400",
+      "fn": "findLineAtScroll",
+      "input": {
+        "lines": [
+          1,
+          3,
+          5,
+          9
+        ],
+        "tops": [
+          0,
+          100,
+          200,
+          400
+        ],
+        "containerTop": 0,
+        "containerScrollTop": 0,
+        "scrollTop": 400
+      },
+      "expected": 9
+    },
+    {
+      "name": "findLineAtScroll lines=1,3,5,9 st=1000",
+      "fn": "findLineAtScroll",
+      "input": {
+        "lines": [
+          1,
+          3,
+          5,
+          9
+        ],
+        "tops": [
+          0,
+          100,
+          200,
+          400
+        ],
+        "containerTop": 0,
+        "containerScrollTop": 0,
+        "scrollTop": 1000
+      },
+      "expected": 9
+    },
+    {
+      "name": "findLineAtScroll lines=5,7 st=0",
+      "fn": "findLineAtScroll",
+      "input": {
+        "lines": [
+          5,
+          7
+        ],
+        "tops": [
+          50,
+          50
+        ],
+        "containerTop": 10,
+        "containerScrollTop": 20,
+        "scrollTop": 0
+      },
+      "expected": 5
+    },
+    {
+      "name": "findLineAtScroll lines=5,7 st=60",
+      "fn": "findLineAtScroll",
+      "input": {
+        "lines": [
+          5,
+          7
+        ],
+        "tops": [
+          50,
+          50
+        ],
+        "containerTop": 10,
+        "containerScrollTop": 20,
+        "scrollTop": 60
+      },
+      "expected": 5
+    },
+    {
+      "name": "findLineAtScroll lines=5,7 st=61",
+      "fn": "findLineAtScroll",
+      "input": {
+        "lines": [
+          5,
+          7
+        ],
+        "tops": [
+          50,
+          50
+        ],
+        "containerTop": 10,
+        "containerScrollTop": 20,
+        "scrollTop": 61
+      },
+      "expected": 5
+    },
+    {
+      "name": "findLineAtScroll lines=5,7 st=100",
+      "fn": "findLineAtScroll",
+      "input": {
+        "lines": [
+          5,
+          7
+        ],
+        "tops": [
+          50,
+          50
+        ],
+        "containerTop": 10,
+        "containerScrollTop": 20,
+        "scrollTop": 100
+      },
+      "expected": 5
+    },
+    {
+      "name": "findLineAtScroll lines= st=0",
+      "fn": "findLineAtScroll",
+      "input": {
+        "lines": [],
+        "tops": [],
+        "containerTop": 0,
+        "containerScrollTop": 0,
+        "scrollTop": 0
+      },
+      "expected": null
+    }
+  ]
+}

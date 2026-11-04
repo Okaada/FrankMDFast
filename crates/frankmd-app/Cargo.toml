@@ -1,0 +1,39 @@
+[package]
+name = "frankmd-app"
+description = "FrankMD desktop app: the only crate that links GPUI / gpui-kit."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[[bin]]
+name = "frankmd"
+path = "src/main.rs"
+
+[dependencies]
+frankmd-core.workspace = true
+frankmd-fs.workspace = true
+frankmd-config.workspace = true
+frankmd-i18n.workspace = true
+frankmd-markdown.workspace = true
+frankmd-search.workspace = true
+frankmd-net.workspace = true
+frankmd-media.workspace = true
+frankmd-ai.workspace = true
+frankmd-theme.workspace = true
+frankmd-watch.workspace = true
+frankmd-vim.workspace = true
+frankmd-workspace.workspace = true
+
+gpui-kit.workspace = true
+anyhow.workspace = true
+clap.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+
+[dev-dependencies]
+gpui-kit = { workspace = true, features = ["test-support"] }
+
+[lints]
+workspace = true

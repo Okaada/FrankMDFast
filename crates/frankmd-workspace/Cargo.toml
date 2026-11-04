@@ -1,0 +1,22 @@
+[package]
+name = "frankmd-workspace"
+description = "The authoritative app-state store: open documents, tree, settings, autosave/drafts, commands and events. GUI-free."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+frankmd-core.workspace = true
+frankmd-fs.workspace = true
+frankmd-config.workspace = true
+frankmd-watch.workspace = true
+thiserror.workspace = true
+
+[lints]
+workspace = true
+
+[dev-dependencies]
+frankmd-testkit.workspace = true
+serde_json.workspace = true

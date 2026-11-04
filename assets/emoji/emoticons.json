@@ -1,0 +1,630 @@
+{
+ "source": "app/javascript/controllers/emoji_picker_controller.js @ d47a89e92d89f807878d318182fa5dcea0329ec4",
+ "data": [
+  [
+   "happy",
+   "(◕‿◕)",
+   "smile joy"
+  ],
+  [
+   "excited",
+   "(ﾉ◕ヮ◕)ﾉ*:・ﾟ✧",
+   "joy sparkle celebrate"
+  ],
+  [
+   "very_happy",
+   "(✿◠‿◠)",
+   "smile flower cute"
+  ],
+  [
+   "cute_happy",
+   "(◠‿◠)",
+   "smile simple"
+  ],
+  [
+   "joyful",
+   "(*^▽^*)",
+   "happy grin"
+  ],
+  [
+   "grinning",
+   "(＾▽＾)",
+   "smile happy"
+  ],
+  [
+   "beaming",
+   "(≧◡≦)",
+   "joy bright"
+  ],
+  [
+   "cheerful",
+   "(｡◕‿◕｡)",
+   "happy cute"
+  ],
+  [
+   "delighted",
+   "٩(◕‿◕｡)۶",
+   "happy dance"
+  ],
+  [
+   "sparkling",
+   "(ﾉ´ヮ`)ﾉ*: ・゚✧",
+   "happy magic"
+  ],
+  [
+   "wink",
+   "(^_~)",
+   "flirt playful"
+  ],
+  [
+   "winking",
+   "(･ω<)☆",
+   "star playful"
+  ],
+  [
+   "peace",
+   "(￣▽￣)ノ",
+   "wave hello"
+  ],
+  [
+   "love",
+   "(♥‿♥)",
+   "heart eyes adore"
+  ],
+  [
+   "loving",
+   "(´∀`)♡",
+   "heart happy"
+  ],
+  [
+   "hearts",
+   "(｡♥‿♥｡)",
+   "love adore"
+  ],
+  [
+   "heart_eyes",
+   "(ღ˘⌣˘ღ)",
+   "love cute"
+  ],
+  [
+   "blowing_kiss",
+   "(づ￣ ³￣)づ",
+   "kiss love"
+  ],
+  [
+   "hug",
+   "(つ≧▽≦)つ",
+   "embrace love"
+  ],
+  [
+   "hugging",
+   "(づ｡◕‿‿◕｡)づ",
+   "embrace cute"
+  ],
+  [
+   "cuddle",
+   "(っ´▽`)っ",
+   "hug embrace"
+  ],
+  [
+   "kiss",
+   "(＾3＾)～♡",
+   "love smooch"
+  ],
+  [
+   "blushing",
+   "(⁄ ⁄•⁄ω⁄•⁄ ⁄)",
+   "shy embarrassed"
+  ],
+  [
+   "sad",
+   "(´;ω;`)",
+   "cry tears"
+  ],
+  [
+   "crying",
+   "(╥﹏╥)",
+   "tears upset"
+  ],
+  [
+   "tears",
+   "(;_;)",
+   "cry sad"
+  ],
+  [
+   "weeping",
+   "(っ˘̩╭╮˘̩)っ",
+   "cry hug"
+  ],
+  [
+   "sobbing",
+   "( ´༎ຶㅂ༎ຶ`)",
+   "cry loud"
+  ],
+  [
+   "disappointed",
+   "(´･_･`)",
+   "sad down"
+  ],
+  [
+   "depressed",
+   "(｡•́︿•̀｡)",
+   "sad down"
+  ],
+  [
+   "hurt",
+   "(｡ŏ﹏ŏ)",
+   "pain sad"
+  ],
+  [
+   "broken_heart",
+   "(´;︵;`)",
+   "sad love"
+  ],
+  [
+   "lonely",
+   "(ノ_<。)",
+   "sad alone"
+  ],
+  [
+   "angry",
+   "(╬ Ò﹏Ó)",
+   "mad rage"
+  ],
+  [
+   "rage",
+   "(ノಠ益ಠ)ノ彡┻━┻",
+   "flip table mad"
+  ],
+  [
+   "furious",
+   "(҂`з´)",
+   "angry mad"
+  ],
+  [
+   "annoyed",
+   "(￣︿￣)",
+   "irritated"
+  ],
+  [
+   "frustrated",
+   "(ノ°Д°）ノ︵ ┻━┻",
+   "flip table angry"
+  ],
+  [
+   "table_flip",
+   "(╯°□°)╯︵ ┻━┻",
+   "angry flip rage"
+  ],
+  [
+   "put_table_back",
+   "┬─┬ノ( º _ ºノ)",
+   "calm restore"
+  ],
+  [
+   "double_flip",
+   "┻━┻ ︵ヽ(`Д´)ﾉ︵ ┻━┻",
+   "rage flip"
+  ],
+  [
+   "grumpy",
+   "(¬_¬)",
+   "annoyed side eye"
+  ],
+  [
+   "pouting",
+   "(´-ε-`)",
+   "sulk annoyed"
+  ],
+  [
+   "surprised",
+   "(°o°)",
+   "shock wow"
+  ],
+  [
+   "shocked",
+   "Σ(°△°|||)",
+   "surprise wow"
+  ],
+  [
+   "amazed",
+   "(⊙_⊙)",
+   "shock stare"
+  ],
+  [
+   "disbelief",
+   "(」°ロ°)」",
+   "shock arms"
+  ],
+  [
+   "speechless",
+   "(・□・;)",
+   "shock silent"
+  ],
+  [
+   "jaw_drop",
+   "( ꒪Д꒪)ノ",
+   "shock surprise"
+  ],
+  [
+   "gasp",
+   "(゜゜)",
+   "surprise shock"
+  ],
+  [
+   "startled",
+   "∑(O_O;)",
+   "surprise sudden"
+  ],
+  [
+   "confused",
+   "(・・?)",
+   "puzzled question"
+  ],
+  [
+   "thinking",
+   "(￢_￢)",
+   "ponder hmm"
+  ],
+  [
+   "curious",
+   "(◔_◔)",
+   "wondering look"
+  ],
+  [
+   "puzzled",
+   "(・_・ヾ",
+   "scratch head"
+  ],
+  [
+   "pondering",
+   "(´-ω-`)",
+   "think hmm"
+  ],
+  [
+   "unsure",
+   "(；一_一)",
+   "doubt uncertain"
+  ],
+  [
+   "skeptical",
+   "(¬‿¬)",
+   "doubt suspicious"
+  ],
+  [
+   "what",
+   "(」゜ロ゜)」",
+   "confused question"
+  ],
+  [
+   "cat",
+   "(=^・ω・^=)",
+   "neko meow"
+  ],
+  [
+   "cat_happy",
+   "(=①ω①=)",
+   "neko cute"
+  ],
+  [
+   "cat_excited",
+   "ฅ(^・ω・^ฅ)",
+   "neko paws"
+  ],
+  [
+   "cat_sleepy",
+   "(=｀ω´=)",
+   "neko tired"
+  ],
+  [
+   "bear",
+   "ʕ•ᴥ•ʔ",
+   "animal cute"
+  ],
+  [
+   "bear_happy",
+   "ʕ￫ᴥ￩ʔ",
+   "animal smile"
+  ],
+  [
+   "bunny",
+   "(・x・)",
+   "rabbit animal"
+  ],
+  [
+   "bunny_hop",
+   "⁽⁽◝( •௰• )◜⁾⁾",
+   "rabbit jump"
+  ],
+  [
+   "dog",
+   "▼・ᴥ・▼",
+   "puppy animal"
+  ],
+  [
+   "pig",
+   "(´・ω・)ﾉ",
+   "oink animal"
+  ],
+  [
+   "flower",
+   "(✿´‿`)",
+   "cute happy"
+  ],
+  [
+   "sparkle",
+   "☆*:.｡.o(≧▽≦)o.｡.:*☆",
+   "star celebrate"
+  ],
+  [
+   "shrug",
+   "¯\\_(ツ)_/¯",
+   "whatever idk"
+  ],
+  [
+   "look_away",
+   "(눈_눈)",
+   "suspicious stare"
+  ],
+  [
+   "hide",
+   "|ω・)",
+   "peek shy"
+  ],
+  [
+   "hiding",
+   "┬┴┬┴┤(･_├┬┴┬┴",
+   "peek wall"
+  ],
+  [
+   "running",
+   "ε=ε=ε=┌(;*´Д`)ﾉ",
+   "run escape"
+  ],
+  [
+   "running_away",
+   "ε=ε=ε=ε=┏(;￣▽￣)┛",
+   "escape flee"
+  ],
+  [
+   "dancing",
+   "♪(´ε` )",
+   "music happy"
+  ],
+  [
+   "dance_party",
+   "└( ＾ω＾)」",
+   "celebrate music"
+  ],
+  [
+   "cheering",
+   "ヾ(＾-＾)ノ",
+   "wave celebrate"
+  ],
+  [
+   "pointing",
+   "(☞ﾟ∀ﾟ)☞",
+   "you there"
+  ],
+  [
+   "writing",
+   "φ(゜▽゜*)♪",
+   "note pen"
+  ],
+  [
+   "sleeping",
+   "(－_－) zzZ",
+   "tired sleep"
+  ],
+  [
+   "yawning",
+   "(´〜｀*) zzz",
+   "tired sleepy"
+  ],
+  [
+   "fighting",
+   "(ง •̀_•́)ง",
+   "fight strong"
+  ],
+  [
+   "punch",
+   "(ノ•̀ o •́)ノ ~ ┻━┻",
+   "fight angry"
+  ],
+  [
+   "flexing",
+   "ᕙ(⇀‸↼‶)ᕗ",
+   "strong muscle"
+  ],
+  [
+   "determined",
+   "(๑•̀ㅂ•́)و✧",
+   "fight ready"
+  ],
+  [
+   "ready",
+   "(•̀ᴗ•́)و",
+   "determined go"
+  ],
+  [
+   "victory",
+   "(ง'̀-'́)ง",
+   "win fight"
+  ],
+  [
+   "eating",
+   "(っ˘ڡ˘ς)",
+   "food yum"
+  ],
+  [
+   "hungry",
+   "(´ρ`)",
+   "food want"
+  ],
+  [
+   "delicious",
+   "( ˘▽˘)っ♨",
+   "food yum"
+  ],
+  [
+   "drooling",
+   "(´﹃｀)",
+   "hungry food"
+  ],
+  [
+   "cooking",
+   "( ・ω・)o-{{[〃]",
+   "food chef"
+  ],
+  [
+   "singing",
+   "(￣▽￣)/♪♪♪",
+   "music song"
+  ],
+  [
+   "headphones",
+   "♪(´ε｀ )",
+   "music listening"
+  ],
+  [
+   "guitar",
+   "♪♪ヽ(ˇ∀ˇ )ゞ",
+   "music play"
+  ],
+  [
+   "piano",
+   "♬♩♪♩ヽ(・ˇ∀ˇ・ゞ)",
+   "music play"
+  ],
+  [
+   "sunny",
+   "☀ヽ(◕ᴗ◕ヽ)",
+   "sun happy"
+  ],
+  [
+   "rain",
+   "( ´_ゝ`)☂",
+   "umbrella weather"
+  ],
+  [
+   "snow",
+   "( *・ω・)ノ))(❅)",
+   "cold winter"
+  ],
+  [
+   "storm",
+   "(;´༎ຶД༎ຶ`)",
+   "rain sad"
+  ],
+  [
+   "magic",
+   "(ノ°∀°)ノ⌒・*:.。. .。.:*・゜゚・*",
+   "sparkle star"
+  ],
+  [
+   "wizard",
+   "(∩｀-´)⊃━☆ﾟ.*･｡ﾟ",
+   "magic spell"
+  ],
+  [
+   "star",
+   "☆(ゝω・)v",
+   "sparkle wink"
+  ],
+  [
+   "shooting_star",
+   "☆彡",
+   "star wish"
+  ],
+  [
+   "fireworks",
+   "・*:.｡. ✧ (ó‿ò｡) ✧ .｡.:*・",
+   "celebrate party"
+  ],
+  [
+   "rainbow",
+   "☆:.｡.o(≧▽≦)o.｡.:*☆",
+   "colorful happy"
+  ],
+  [
+   "lenny",
+   "( ͡° ͜ʖ ͡°)",
+   "meme suspicious"
+  ],
+  [
+   "disapproval",
+   "ಠ_ಠ",
+   "stare judge"
+  ],
+  [
+   "donger",
+   "ヽ༼ຈل͜ຈ༽ﾉ",
+   "meme raise"
+  ],
+  [
+   "cool",
+   "(⌐■_■)",
+   "sunglasses awesome"
+  ],
+  [
+   "glasses_off",
+   "( •_•)>⌐■-■",
+   "reveal cool"
+  ],
+  [
+   "thumbs_up",
+   "(b ᵔ▽ᵔ)b",
+   "approve good"
+  ],
+  [
+   "ok",
+   "(๑˃ᴗ˂)ﻭ",
+   "good approve"
+  ],
+  [
+   "applause",
+   "(*´▽`)ノノ",
+   "clap celebrate"
+  ],
+  [
+   "bow",
+   "m(_ _)m",
+   "thanks sorry respect"
+  ],
+  [
+   "salute",
+   "(￣^￣)ゞ",
+   "respect yes sir"
+  ],
+  [
+   "goodbye",
+   "(´・ω・)ノシ",
+   "wave bye"
+  ],
+  [
+   "hello",
+   "(・ω・)ノ",
+   "wave hi"
+  ],
+  [
+   "take_my_money",
+   "(╯°□°)╯$ $ $",
+   "money throw"
+  ],
+  [
+   "zombie",
+   "[¬º-°]¬",
+   "undead walking"
+  ],
+  [
+   "robot",
+   "{•̃_•̃}",
+   "beep boop"
+  ],
+  [
+   "alien",
+   "⊂(◉‿◉)つ",
+   "space extraterrestrial"
+  ]
+ ]
+}
