@@ -34,6 +34,7 @@ pub(crate) mod app_fs {
     }
 
     /// Remove a stale socket file of a previous instance.
+    #[cfg(unix)]
     #[allow(clippy::disallowed_methods)]
     pub(crate) fn remove_stale_socket(path: &Path) -> std::io::Result<()> {
         match std::fs::remove_file(path) {

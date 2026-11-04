@@ -79,18 +79,12 @@ impl MediaUsage {
 
     /// `[relpath, dev, ino, size, mtime, ctime]` of every note, serialized.
     fn fingerprint(&self, files: &[PathBuf]) -> std::io::Result<Vec<u8>> {
-        use std::os::unix::fs::MetadataExt;
         let mut out = Vec::new();
         for file in files {
             let meta = std::fs::metadata(file)?;
             out.extend_from_slice(self.relative(file).as_bytes());
             out.push(0);
-            for n in [meta.dev(), meta.ino(), meta.size()] {
-                out.extend_from_slice(&n.to_le_bytes());
-            }
-            for n in [meta.mtime(), meta.mtime_nsec(), meta.ctime(), meta.ctime_nsec()] {
-                out.extend_from_slice(&n.to_le_bytes());
-            }
+            out.extend_from_slice(&stat_fingerprint(&meta));
         }
         Ok(out)
     }
@@ -443,4 +437,32 @@ pub fn strip_unescaped_url_suffix(path: &str) -> String {
         escaped = if c == '\\' { !escaped } else { false };
     }
     prefix
+}
+
+/// `dev, ino, size, mtime, ctime` (with nanoseconds) of one file.
+#[cfg(unix)]
+fn stat_fingerprint(meta: &std::fs::Metadata) -> Vec<u8> {
+    use std::os::unix::fs::MetadataExt;
+    let mut out = Vec::with_capacity(56);
+    for n in [meta.dev(), meta.ino(), meta.size()] {
+        out.extend_from_slice(&n.to_le_bytes());
+    }
+    for n in [meta.mtime(), meta.mtime_nsec(), meta.ctime(), meta.ctime_nsec()] {
+        out.extend_from_slice(&n.to_le_bytes());
+    }
+    out
+}
+
+/// Size and modification/creation times (no inode numbers off Unix).
+#[cfg(not(unix))]
+fn stat_fingerprint(meta: &std::fs::Metadata) -> Vec<u8> {
+    let nanos = |t: std::io::Result<std::time::SystemTime>| {
+        t.ok()
+            .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
+            .map_or(0, |d| d.as_nanos())
+    };
+    let mut out = meta.len().to_le_bytes().to_vec();
+    out.extend_from_slice(&nanos(meta.modified()).to_le_bytes());
+    out.extend_from_slice(&nanos(meta.created()).to_le_bytes());
+    out
 }

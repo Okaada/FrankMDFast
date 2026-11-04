@@ -102,7 +102,7 @@ pub(crate) fn check(point: &FaultPoint) -> io::Result<()> {
             fault.spent = true;
         }
         Err(match fault.raw_os_error {
-            Some(code) => io::Error::from_raw_os_error(code),
+            Some(code) => crate::errno::error(code),
             None => io::Error::from(fault.kind),
         })
     })

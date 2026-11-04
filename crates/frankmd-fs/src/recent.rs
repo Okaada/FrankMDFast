@@ -6,7 +6,7 @@
 //! is expected to implement it (`Config#get` / `Config#modify` under the
 //! **[COMPAT]** `.frankmd-config.lock`).
 
-use crate::error::libc_errno::EACCES;
+use crate::errno::EACCES;
 use crate::{FsError, Vault, path_safety};
 use frankmd_core::recent::{self, RecentFile, RecentFiles};
 use serde_json::Value;
@@ -148,7 +148,7 @@ impl<'a> RecentFilesService<'a> {
             .and_then(|()| std::fs::metadata(self.vault.real_root().join(path)));
         match stat {
             Ok(meta) => meta.is_file(),
-            Err(e) => e.raw_os_error() == Some(EACCES),
+            Err(e) => crate::errno::of(&e) == Some(EACCES),
         }
     }
 }

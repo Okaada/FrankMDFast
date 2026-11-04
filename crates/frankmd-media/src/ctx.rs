@@ -13,32 +13,13 @@ pub trait RandomHex: Send + Sync + std::fmt::Debug {
     fn hex(&self, n_bytes: usize) -> String;
 }
 
-/// OS randomness (`getrandom(2)`).
+/// OS randomness (`getrandom(2)` on Unix).
 #[derive(Debug, Clone, Copy, Default)]
 pub struct OsRandom;
 
 impl RandomHex for OsRandom {
     fn hex(&self, n_bytes: usize) -> String {
-        let mut buf = vec![0u8; n_bytes];
-        let mut filled = 0;
-        while filled < n_bytes {
-            match rustix::rand::getrandom(&mut buf[filled..], rustix::rand::GetRandomFlags::empty()) {
-                Ok(0) | Err(_) => break,
-                Ok(read) => filled += read,
-            }
-        }
-        if filled < n_bytes {
-            // getrandom(2) unavailable: names only need to be unlikely to collide
-            // (every write is no-clobber anyway), so mix time and pid.
-            let seed = std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .map_or(0, |d| d.as_nanos())
-                ^ u128::from(std::process::id());
-            for (i, b) in buf.iter_mut().enumerate().skip(filled) {
-                *b = (seed >> ((i % 16) * 8)) as u8 ^ (i as u8).wrapping_mul(151);
-            }
-        }
-        buf.iter().map(|b| format!("{b:02x}")).collect()
+        frankmd_fs::atomic::random_hex(n_bytes)
     }
 }
 

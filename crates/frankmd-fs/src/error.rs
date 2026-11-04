@@ -62,10 +62,11 @@ impl FsError {
         }
     }
 
-    /// The `errno` behind this error, when it is an OS error.
+    /// The POSIX `errno` behind this error, when it is an OS error
+    /// (Windows codes translated, see [`crate::errno`]).
     pub fn raw_os_error(&self) -> Option<i32> {
         match self {
-            Self::Io(err) => err.raw_os_error(),
+            Self::Io(err) => crate::errno::of(err),
             _ => None,
         }
     }
@@ -75,13 +76,13 @@ impl FsError {
         matches!(self, Self::PermissionDenied(_))
             || matches!(
                 self.raw_os_error(),
-                Some(libc_errno::EACCES | libc_errno::EPERM)
+                Some(crate::errno::EACCES | crate::errno::EPERM)
             )
     }
 
     /// ENOENT (Rails `rescue Errno::ENOENT`).
     pub fn is_enoent(&self) -> bool {
-        self.raw_os_error() == Some(libc_errno::ENOENT)
+        self.raw_os_error() == Some(crate::errno::ENOENT)
     }
 
     /// `true` for AlreadyExists, NotEmpty and InvalidPath (Rails
@@ -94,32 +95,10 @@ impl FsError {
     }
 }
 
-/// The Linux errno values the compat layer distinguishes.
-pub(crate) mod libc_errno {
-    pub(crate) const EPERM: i32 = 1;
-    pub(crate) const ENOENT: i32 = 2;
-    pub(crate) const EIO: i32 = 5;
-    pub(crate) const EACCES: i32 = 13;
-    pub(crate) const EBUSY: i32 = 16;
-    pub(crate) const EEXIST: i32 = 17;
-    pub(crate) const EXDEV: i32 = 18;
-    pub(crate) const ENOTDIR: i32 = 20;
-    pub(crate) const EISDIR: i32 = 21;
-    pub(crate) const EINVAL: i32 = 22;
-    pub(crate) const ENOSPC: i32 = 28;
-    pub(crate) const EROFS: i32 = 30;
-    pub(crate) const EMLINK: i32 = 31;
-    pub(crate) const ENAMETOOLONG: i32 = 36;
-    pub(crate) const ENOSYS: i32 = 38;
-    pub(crate) const ENOTEMPTY: i32 = 39;
-    pub(crate) const ELOOP: i32 = 40;
-    pub(crate) const EOPNOTSUPP: i32 = 95;
-}
-
 /// Ruby's `Errno::*` class name for an OS error.
 fn errno_class(err: &io::Error) -> &'static str {
-    use libc_errno::*;
-    match err.raw_os_error() {
+    use crate::errno::*;
+    match of(err) {
         Some(EPERM) => "Errno::EPERM",
         Some(ENOENT) => "Errno::ENOENT",
         Some(EIO) => "Errno::EIO",

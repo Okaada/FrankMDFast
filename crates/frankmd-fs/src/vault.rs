@@ -13,7 +13,6 @@ use frankmd_core::tree::{self, DirEntryInfo, EntryKind, FileType, TreeNode};
 use frankmd_core::{RelPath, Revision};
 use std::fs;
 use std::io;
-use std::os::unix::fs::MetadataExt;
 use std::path::{Path, PathBuf};
 
 /// Where deleted items go.
@@ -241,7 +240,7 @@ impl Vault {
             entries.push(DirEntryInfo {
                 name,
                 kind,
-                mtime: meta.mtime(),
+                mtime: crate::meta::mtime_secs(&meta),
             });
         }
         tree::sort_entries(&mut entries);
@@ -303,7 +302,7 @@ impl Vault {
         }
         let bytes =
             fs::read(&path.abs).map_err(|e| if is_gone(&e) { not_found() } else { e.into() })?;
-        let mtime = fs::metadata(&path.abs).map_or(0, |m| m.mtime());
+        let mtime = fs::metadata(&path.abs).map_or(0, |m| crate::meta::mtime_secs(&m));
         Ok(NoteFile::from_bytes(bytes, mtime))
     }
 

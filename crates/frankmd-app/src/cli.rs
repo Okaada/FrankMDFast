@@ -7,6 +7,7 @@
 //! running instance over a user-private Unix socket and exits; the primary
 //! focuses the matching window or opens a new one.
 
+#[cfg(unix)]
 use std::io::{BufRead as _, BufReader, Write as _};
 use std::path::{Path, PathBuf};
 
@@ -91,6 +92,7 @@ pub fn socket_path(runtime_dir: Option<&Path>, state_dir: &Path) -> PathBuf {
 }
 
 /// One forwarded request: vault root, then the note (may be empty), newline-separated.
+#[cfg_attr(not(unix), allow(dead_code))]
 fn encode(launch: &Launch) -> String {
     format!(
         "{}\n{}\n",
@@ -99,6 +101,7 @@ fn encode(launch: &Launch) -> String {
     )
 }
 
+#[cfg_attr(not(unix), allow(dead_code))]
 fn decode(lines: &[String]) -> Option<Launch> {
     let root = lines.first().filter(|l| !l.is_empty())?;
     let open = lines.get(1).filter(|l| !l.is_empty()).cloned();

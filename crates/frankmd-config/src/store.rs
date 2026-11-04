@@ -13,11 +13,6 @@ use std::sync::{Arc, Mutex, PoisonError};
 /// `.fed` file name at the notes root (**[COMPAT]** `Config::CONFIG_FILE`).
 pub const CONFIG_FILE: &str = ".fed";
 
-/// `ELOOP` ("Too many levels of symbolic links").
-#[cfg(any(target_os = "linux", target_os = "android"))]
-const ELOOP: i32 = 40;
-#[cfg(not(any(target_os = "linux", target_os = "android")))]
-const ELOOP: i32 = 62; // macOS / BSD
 
 /// **[COMPAT]** `.fed` is always left with mode 0600 after a write.
 const FED_MODE: ModePolicy = ModePolicy::Fixed(0o600);
@@ -203,7 +198,7 @@ impl ConfigStore {
     fn lock(&self) -> Result<LockGuard, FsError> {
         let shared = self.vault.real_root().join(CONFIG_LOCK);
         if std::fs::symlink_metadata(&shared).is_ok_and(|m| m.file_type().is_symlink()) {
-            return Err(FsError::Io(io::Error::from_raw_os_error(ELOOP)));
+            return Err(FsError::Io(frankmd_fs::errno::error(frankmd_fs::errno::ELOOP)));
         }
         self.vault.lock(CONFIG_LOCK, LockKind::Exclusive)
     }

@@ -74,7 +74,7 @@ pub fn list(config: &MediaConfig, search: Option<&str>, limit: &Param, offset: &
         .filter_map(|p| std::fs::metadata(&p).ok().map(|m| (p, m)))
         .collect();
     // `sort_by { -mtime.to_i }` (whole seconds; ties keep glob order).
-    files.sort_by_key(|(_, m)| std::cmp::Reverse(mtime_secs(m)));
+    files.sort_by_key(|(_, m)| std::cmp::Reverse(frankmd_fs::meta::mtime_secs(m)));
     files
         .into_iter()
         .skip(offset)
@@ -200,11 +200,6 @@ fn walk(dir: &Path, real_root: &Path, needle: Option<&str>, out: &mut Vec<PathBu
             walk(&path, real_root, needle, out);
         }
     }
-}
-
-fn mtime_secs(meta: &std::fs::Metadata) -> i64 {
-    use std::os::unix::fs::MetadataExt;
-    meta.mtime()
 }
 
 /// Ruby `Integer(value)` (strict): `None` where it raises.

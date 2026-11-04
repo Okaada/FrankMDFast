@@ -5,12 +5,11 @@
 //! on every failure path.
 
 use crate::FsError;
-use crate::error::libc_errno::{
-    EEXIST, EINVAL, EISDIR, ENOSYS, ENOTEMPTY, EOPNOTSUPP, EPERM, EXDEV,
-};
+#[cfg(unix)]
+use crate::errno::ENOSYS;
+use crate::errno::{EEXIST, EINVAL, EISDIR, ENOTEMPTY, EOPNOTSUPP, EPERM, EXDEV};
 use std::fs::{self, File, OpenOptions};
 use std::io::{self, Write};
-use std::os::unix::fs::PermissionsExt;
 use std::path::{Path, PathBuf};
 
 /// What permission bits the replaced file gets.
@@ -29,20 +28,12 @@ pub enum ModePolicy {
 /// any temp file is created.
 pub fn atomic_replace(target: &Path, bytes: &[u8], mode: ModePolicy) -> Result<(), FsError> {
     if fs::symlink_metadata(target).is_ok_and(|m| m.is_dir()) {
-        return Err(io::Error::from_raw_os_error(EISDIR).into());
+        return Err(crate::errno::error(EISDIR).into());
     }
     let (dir, tmp) = temp_path_for(target)?;
     let result = (|| -> io::Result<()> {
         write_new_file(&tmp, bytes)?;
-        let bits = match mode {
-            ModePolicy::Preserve => fs::metadata(target)
-                .ok()
-                .map(|m| m.permissions().mode() & 0o777),
-            ModePolicy::Fixed(bits) => Some(bits),
-        };
-        if let Some(bits) = bits {
-            fs::set_permissions(&tmp, fs::Permissions::from_mode(bits))?;
-        }
+        apply_mode(&tmp, target, mode)?;
         crate::fault_check!(crate::fault::FaultPoint::AtomicRename)?;
         fs::rename(&tmp, target)
     })();
@@ -73,8 +64,8 @@ pub fn create_new(target: &Path, bytes: &[u8]) -> Result<(), FsError> {
             .and_then(|()| fs::hard_link(&tmp, target));
         match linked {
             Ok(()) => Ok(()),
-            Err(e) if e.raw_os_error() == Some(EEXIST) => Err(already()),
-            Err(e) if matches!(e.raw_os_error(), Some(EPERM | EOPNOTSUPP | EXDEV)) => {
+            Err(e) if crate::errno::of(&e) == Some(EEXIST) => Err(already()),
+            Err(e) if matches!(crate::errno::of(&e), Some(EPERM | EOPNOTSUPP | EXDEV)) => {
                 rename_noreplace(&tmp, target).map_err(|e| map_exists(e, target))
             }
             Err(e) => Err(e.into()),
@@ -96,7 +87,7 @@ pub fn rename_noclobber(from: &Path, to: &Path) -> Result<(), FsError> {
         .and_then(|()| rename_noreplace(from, to));
     match renamed {
         Ok(()) => {}
-        Err(e) if e.raw_os_error() == Some(EXDEV) => {
+        Err(e) if crate::errno::of(&e) == Some(EXDEV) => {
             copy_tree_noclobber(from, to).map_err(|e| map_exists(e, to))?;
             remove_tree(from)?;
         }
@@ -113,25 +104,40 @@ pub fn temp_name(basename: &str) -> String {
     format!(".{basename}.{}.tmp", random_hex(6))
 }
 
-/// `2 * n` lowercase hex chars of OS randomness (`SecureRandom.hex(n)`).
-fn random_hex(n: usize) -> String {
-    let mut buf = vec![0u8; n];
-    let mut filled = 0;
-    while filled < n {
-        match rustix::rand::getrandom(&mut buf[filled..], rustix::rand::GetRandomFlags::empty()) {
-            Ok(0) | Err(_) => break,
-            Ok(read) => filled += read,
-        }
+/// Give the temp file `tmp` the permission bits `mode` asks for.
+#[cfg(unix)]
+fn apply_mode(tmp: &Path, target: &Path, mode: ModePolicy) -> io::Result<()> {
+    use std::os::unix::fs::PermissionsExt;
+    let bits = match mode {
+        ModePolicy::Preserve => fs::metadata(target)
+            .ok()
+            .map(|m| m.permissions().mode() & 0o777),
+        ModePolicy::Fixed(bits) => Some(bits),
+    };
+    match bits {
+        Some(bits) => fs::set_permissions(tmp, fs::Permissions::from_mode(bits)),
+        None => Ok(()),
     }
-    if filled < n {
-        // getrandom(2) is unavailable: fall back to a time/pid-derived value.
+}
+
+/// Windows has no mode bits; files inherit the folder's ACL.
+#[cfg(not(unix))]
+fn apply_mode(_tmp: &Path, _target: &Path, _mode: ModePolicy) -> io::Result<()> {
+    Ok(())
+}
+
+/// `2 * n` lowercase hex chars of OS randomness (`SecureRandom.hex(n)`).
+pub fn random_hex(n: usize) -> String {
+    let mut buf = vec![0u8; n];
+    if getrandom::fill(&mut buf).is_err() {
+        // No OS randomness: fall back to a time/pid-derived value.
         // Uniqueness (not secrecy) is what matters: the temp is `O_EXCL`.
         let seed = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .map_or(0, |d| d.as_nanos())
             ^ u128::from(std::process::id());
         for (i, byte) in buf.iter_mut().enumerate() {
-            *byte = (seed >> ((i % 16) * 8)) as u8;
+            *byte = (seed >> ((i % 16) * 8)) as u8 ^ (i as u8).wrapping_mul(151);
         }
     }
     buf.iter().map(|b| format!("{b:02x}")).collect()
@@ -141,7 +147,7 @@ fn random_hex(n: usize) -> String {
 fn temp_path_for(target: &Path) -> io::Result<(PathBuf, PathBuf)> {
     let name = target
         .file_name()
-        .ok_or_else(|| io::Error::from_raw_os_error(EISDIR))?;
+        .ok_or_else(|| crate::errno::error(EISDIR))?;
     let dir = match target.parent() {
         Some(p) if !p.as_os_str().is_empty() => p.to_path_buf(),
         _ => PathBuf::from("."),
@@ -159,13 +165,14 @@ fn write_new_file(path: &Path, bytes: &[u8]) -> io::Result<()> {
 
 /// `renameat2(RENAME_NOREPLACE)`, with a check-then-rename fallback on
 /// filesystems that do not support the flag (callers hold the vault lock).
+#[cfg(unix)]
 fn rename_noreplace(from: &Path, to: &Path) -> io::Result<()> {
     use rustix::fs::{CWD, RenameFlags, renameat_with};
     match renameat_with(CWD, from, CWD, to, RenameFlags::NOREPLACE) {
         Ok(()) => Ok(()),
         Err(e) => {
             let err = io::Error::from(e);
-            let unsupported = match err.raw_os_error() {
+            let unsupported = match crate::errno::of(&err) {
                 Some(ENOSYS | EOPNOTSUPP) => true,
                 // EINVAL is also "move a folder into itself"; only retry otherwise.
                 Some(EINVAL) => !to.starts_with(from),
@@ -175,17 +182,30 @@ fn rename_noreplace(from: &Path, to: &Path) -> io::Result<()> {
                 return Err(err);
             }
             if fs::symlink_metadata(to).is_ok() {
-                return Err(io::Error::from_raw_os_error(EEXIST));
+                return Err(crate::errno::error(EEXIST));
             }
             fs::rename(from, to)
         }
     }
 }
 
+/// Windows `MoveFileExW` without `REPLACE_EXISTING` refuses an occupied
+/// file destination; the check covers directories (callers hold the vault lock).
+#[cfg(not(unix))]
+fn rename_noreplace(from: &Path, to: &Path) -> io::Result<()> {
+    if fs::symlink_metadata(to).is_ok() {
+        return Err(crate::errno::error(EEXIST));
+    }
+    if to.starts_with(from) {
+        return Err(crate::errno::error(EINVAL));
+    }
+    fs::rename(from, to)
+}
+
 /// Map "destination occupied" OS errors to [`FsError::AlreadyExists`].
 fn map_exists(err: impl Into<FsError>, target: &Path) -> FsError {
     match err.into() {
-        FsError::Io(e) if matches!(e.raw_os_error(), Some(EEXIST | ENOTEMPTY | EISDIR)) => {
+        FsError::Io(e) if matches!(crate::errno::of(&e), Some(EEXIST | ENOTEMPTY | EISDIR)) => {
             FsError::AlreadyExists(target.display().to_string())
         }
         other => other,
@@ -197,7 +217,7 @@ fn map_exists(err: impl Into<FsError>, target: &Path) -> FsError {
 fn copy_tree_noclobber(from: &Path, to: &Path) -> io::Result<()> {
     let meta = fs::symlink_metadata(from)?;
     if meta.file_type().is_symlink() {
-        std::os::unix::fs::symlink(fs::read_link(from)?, to)
+        copy_symlink(from, to)
     } else if meta.is_dir() {
         fs::create_dir(to)?;
         for entry in fs::read_dir(from)? {
@@ -211,6 +231,21 @@ fn copy_tree_noclobber(from: &Path, to: &Path) -> io::Result<()> {
         io::copy(&mut src, &mut dst)?;
         dst.set_permissions(meta.permissions())?;
         dst.sync_all()
+    }
+}
+
+#[cfg(unix)]
+fn copy_symlink(from: &Path, to: &Path) -> io::Result<()> {
+    std::os::unix::fs::symlink(fs::read_link(from)?, to)
+}
+
+#[cfg(windows)]
+fn copy_symlink(from: &Path, to: &Path) -> io::Result<()> {
+    let link = fs::read_link(from)?;
+    if fs::metadata(from).is_ok_and(|m| m.is_dir()) {
+        std::os::windows::fs::symlink_dir(link, to)
+    } else {
+        std::os::windows::fs::symlink_file(link, to)
     }
 }
 

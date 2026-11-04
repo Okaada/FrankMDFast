@@ -196,7 +196,7 @@ impl<'a> MediaLibrary<'a> {
         match self.vault.delete_note(&contained, None) {
             Ok(()) => Ok(true),
             Err(e) if e.is_enoent() || matches!(e, frankmd_fs::FsError::NotFound(_)) => Ok(false),
-            Err(e) if e.raw_os_error() == Some(rustix::io::Errno::NOTDIR.raw_os_error()) => Ok(false),
+            Err(e) if e.raw_os_error() == Some(frankmd_fs::errno::ENOTDIR) => Ok(false),
             Err(e) if e.is_permission_denied() => Err(MediaError::Io(std::io::ErrorKind::PermissionDenied)),
             Err(e) => Err(MediaError::Fs(e)),
         }

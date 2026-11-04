@@ -33,10 +33,12 @@ macro_rules! fault_check {
 pub(crate) use fault_check;
 
 pub mod atomic;
+pub mod errno;
 pub mod error;
 #[cfg(feature = "fault-injection")]
 pub mod fault;
 pub mod lock;
+pub mod meta;
 pub mod model;
 pub mod path_safety;
 pub mod recent;

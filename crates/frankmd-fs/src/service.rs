@@ -19,7 +19,6 @@ use frankmd_core::wikilink::{self, Backlink, BacklinkQuery};
 use std::collections::HashSet;
 use std::fs;
 use std::io;
-use std::os::unix::fs::MetadataExt;
 use std::path::Path;
 
 /// Rails `NotesService` over a [`Vault`].
@@ -313,13 +312,13 @@ fn find_in_tree<'t>(nodes: &'t [TreeNode], path: &str) -> Option<&'t TreeNode> {
 fn collect_markdown_files(
     root: &Path,
     dir: &Path,
-    visited: &mut HashSet<(u64, u64)>,
+    visited: &mut HashSet<crate::meta::FileKey>,
     out: &mut Vec<std::path::PathBuf>,
 ) -> Result<(), FsError> {
     let Ok(meta) = fs::metadata(dir) else {
         return Ok(());
     };
-    if !meta.is_dir() || !visited.insert((meta.dev(), meta.ino())) {
+    if !meta.is_dir() || !visited.insert(crate::meta::file_key(dir, &meta)) {
         return Ok(());
     }
     let mut entries: Vec<_> = fs::read_dir(dir)?.filter_map(Result::ok).collect();
