@@ -8,8 +8,8 @@ mod fake_editor;
 
 use fake_editor::{Call, FakeEditor};
 use frankmd_core::text::insertion::{
-    BlockInsert, EditorSurface, InlineInsert, insert_block_content, insert_code_block, insert_image,
-    insert_inline_content, insert_table, insert_video_embed,
+    BlockInsert, EditorSurface, InlineInsert, insert_block_content, insert_code_block,
+    insert_image, insert_inline_content, insert_table, insert_video_embed,
 };
 
 const T: &str = "codemirror_content_insertion.test.js";
@@ -31,7 +31,10 @@ fn rep(s: &str, from: usize, to: usize) -> Call {
 }
 
 fn edit(start: usize, end: usize) -> BlockInsert {
-    BlockInsert { edit: Some(start..end), ..BlockInsert::default() }
+    BlockInsert {
+        edit: Some(start..end),
+        ..BlockInsert::default()
+    }
 }
 
 // ---- insertBlockContent ----------------------------------------------------
@@ -39,7 +42,11 @@ fn edit(start: usize, end: usize) -> BlockInsert {
 // port: test/javascript/lib/codemirror_content_insertion.test.js:26 "returns 0 when controller is null"
 #[test]
 fn block_returns_0_when_controller_is_null() {
-    assert_eq!(insert_block_content(None, "content", &BlockInsert::default()), 0, "{T}");
+    assert_eq!(
+        insert_block_content(None, "content", &BlockInsert::default()),
+        0,
+        "{T}"
+    );
 }
 
 // port: test/javascript/lib/codemirror_content_insertion.test.js:30 "returns 0 when content is empty"
@@ -47,7 +54,11 @@ fn block_returns_0_when_controller_is_null() {
 fn block_returns_0_when_content_is_empty() {
     let mut ed = FakeEditor::default();
     assert_eq!(block(&mut ed, "", &BlockInsert::default()), 0);
-    assert!(ed.calls.is_empty(), "no edit for empty content: {:?}", ed.calls);
+    assert!(
+        ed.calls.is_empty(),
+        "no edit for empty content: {:?}",
+        ed.calls
+    );
 }
 
 // port: test/javascript/lib/codemirror_content_insertion.test.js:34 "inserts content at cursor in empty document"
@@ -111,7 +122,14 @@ fn block_adds_no_newline_suffix_before_blank_line() {
 #[test]
 fn block_replaces_slash_query_preserving_spacing() {
     let mut ed = FakeEditor::with_text("before /table after");
-    block(&mut ed, "table", &BlockInsert { replace: Some(7..13), ..BlockInsert::default() });
+    block(
+        &mut ed,
+        "table",
+        &BlockInsert {
+            replace: Some(7..13),
+            ..BlockInsert::default()
+        },
+    );
     assert_eq!(ed.replaces(), vec![&rep("\n\ntable\n\n", 6, 14)]);
     assert!(ed.inserts().is_empty());
 }
@@ -138,7 +156,10 @@ fn block_positions_cursor_at_end_in_edit_mode() {
 #[test]
 fn block_respects_cursor_offset_in_edit_mode() {
     let mut ed = FakeEditor::default();
-    let opts = BlockInsert { cursor_offset: Some(6), ..edit(10, 50) };
+    let opts = BlockInsert {
+        cursor_offset: Some(6),
+        ..edit(10, 50)
+    };
     block(&mut ed, "```js\ncode\n```", &opts);
     assert_eq!(ed.selections(), vec![&Call::SetSelection(16, 16)]);
 }
@@ -147,7 +168,10 @@ fn block_respects_cursor_offset_in_edit_mode() {
 #[test]
 fn block_respects_cursor_offset_in_insert_mode() {
     let mut ed = FakeEditor::with_text("").cursor_at(0);
-    let opts = BlockInsert { cursor_offset: Some(6), ..BlockInsert::default() };
+    let opts = BlockInsert {
+        cursor_offset: Some(6),
+        ..BlockInsert::default()
+    };
     block(&mut ed, "```js\ncode\n```", &opts);
     assert_eq!(ed.selections(), vec![&Call::SetSelection(6, 6)]);
 }
@@ -157,14 +181,20 @@ fn block_respects_cursor_offset_in_insert_mode() {
 // port: test/javascript/lib/codemirror_content_insertion.test.js:152 "returns 0 when controller is null"
 #[test]
 fn inline_returns_0_when_controller_is_null() {
-    assert_eq!(insert_inline_content(None, "😀", &InlineInsert::default()), 0);
+    assert_eq!(
+        insert_inline_content(None, "😀", &InlineInsert::default()),
+        0
+    );
 }
 
 // port: test/javascript/lib/codemirror_content_insertion.test.js:156 "returns 0 when content is empty"
 #[test]
 fn inline_returns_0_when_content_is_empty() {
     let mut ed = FakeEditor::default();
-    assert_eq!(insert_inline_content(dynm(&mut ed), "", &InlineInsert::default()), 0);
+    assert_eq!(
+        insert_inline_content(dynm(&mut ed), "", &InlineInsert::default()),
+        0
+    );
     assert!(ed.calls.is_empty());
 }
 
@@ -182,7 +212,10 @@ fn inline_replaces_selection_by_default() {
 #[test]
 fn inline_inserts_at_position_when_replace_selection_false() {
     let mut ed = FakeEditor::with_text("01234hello").selecting(5, 10);
-    let opts = InlineInsert { replace_selection: false, replace: None };
+    let opts = InlineInsert {
+        replace_selection: false,
+        replace: None,
+    };
     insert_inline_content(dynm(&mut ed), "😀", &opts);
     assert_eq!(ed.inserts(), vec![&ins(5, "😀")]);
     assert!(ed.replaces().is_empty());
@@ -200,7 +233,10 @@ fn inline_positions_cursor_after_inserted_content() {
 #[test]
 fn inline_replaces_specific_slash_query_range() {
     let mut ed = FakeEditor::default();
-    let opts = InlineInsert { replace: Some(5..11), ..InlineInsert::default() };
+    let opts = InlineInsert {
+        replace: Some(5..11),
+        ..InlineInsert::default()
+    };
     let pos = insert_inline_content(dynm(&mut ed), ":smile:", &opts);
     assert_eq!(ed.replaces(), vec![&rep(":smile:", 5, 11)]);
     assert_eq!(ed.selections(), vec![&Call::SetSelection(12, 12)]);
@@ -278,7 +314,10 @@ fn table_delegates_to_insert_block_content() {
 #[test]
 fn video_replaces_slash_query_at_saved_range() {
     let mut ed = FakeEditor::with_text("before /video after");
-    let opts = BlockInsert { replace: Some(7..13), ..BlockInsert::default() };
+    let opts = BlockInsert {
+        replace: Some(7..13),
+        ..BlockInsert::default()
+    };
     insert_video_embed(dynm(&mut ed), "<video></video>", &opts);
     assert_eq!(ed.replaces(), vec![&rep("\n\n<video></video>\n\n", 6, 14)]);
 }
@@ -327,7 +366,11 @@ fn code_block_works_in_edit_mode() {
 #[test]
 fn video_delegates_to_insert_block_content() {
     let mut ed = FakeEditor::with_text("text").cursor_at(4);
-    insert_video_embed(dynm(&mut ed), "{{< youtube abc123 >}}", &BlockInsert::default());
+    insert_video_embed(
+        dynm(&mut ed),
+        "{{< youtube abc123 >}}",
+        &BlockInsert::default(),
+    );
     assert_eq!(ed.inserts(), vec![&ins(4, "\n\n{{< youtube abc123 >}}")]);
 }
 

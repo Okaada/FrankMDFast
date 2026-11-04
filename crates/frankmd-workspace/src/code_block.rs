@@ -9,11 +9,50 @@ use frankmd_core::text::markdown::find_code_block_at_position;
 
 /// Language ids offered by the dialog, in FrankMD order.
 pub const LANGUAGES: [&str; 44] = [
-    "javascript", "typescript", "python", "ruby", "go", "rust", "java", "c", "cpp", "csharp",
-    "php", "swift", "kotlin", "scala", "haskell", "elixir", "erlang", "clojure", "lua", "perl",
-    "html", "css", "scss", "sass", "less", "json", "yaml", "toml", "xml", "markdown", "sql",
-    "graphql", "bash", "shell", "powershell", "dockerfile", "makefile", "nginx", "apache", "vim",
-    "regex", "diff", "git", "plaintext",
+    "javascript",
+    "typescript",
+    "python",
+    "ruby",
+    "go",
+    "rust",
+    "java",
+    "c",
+    "cpp",
+    "csharp",
+    "php",
+    "swift",
+    "kotlin",
+    "scala",
+    "haskell",
+    "elixir",
+    "erlang",
+    "clojure",
+    "lua",
+    "perl",
+    "html",
+    "css",
+    "scss",
+    "sass",
+    "less",
+    "json",
+    "yaml",
+    "toml",
+    "xml",
+    "markdown",
+    "sql",
+    "graphql",
+    "bash",
+    "shell",
+    "powershell",
+    "dockerfile",
+    "makefile",
+    "nginx",
+    "apache",
+    "vim",
+    "regex",
+    "diff",
+    "git",
+    "plaintext",
 ];
 
 /// Maximum number of language suggestion rows.
@@ -250,11 +289,16 @@ impl CodeBlockForm {
             } else if before.starts_with('\t') {
                 1
             } else if before.starts_with(' ') {
-                before.bytes().take_while(|b| *b == b' ').count().min(unit.len())
+                before
+                    .bytes()
+                    .take_while(|b| *b == b' ')
+                    .count()
+                    .min(unit.len())
             } else {
                 0
             };
-            self.content.replace_range(line_start..line_start + remove, "");
+            self.content
+                .replace_range(line_start..line_start + remove, "");
             return caret - remove..caret - remove;
         }
         self.replace_lines(&selection, |line| {
@@ -263,7 +307,10 @@ impl CodeBlockForm {
             } else if line.starts_with('\t') {
                 1
             } else if line.starts_with(' ') {
-                line.bytes().take_while(|b| *b == b' ').count().min(unit.len())
+                line.bytes()
+                    .take_while(|b| *b == b' ')
+                    .count()
+                    .min(unit.len())
             } else {
                 0
             };
@@ -302,8 +349,10 @@ impl CodeBlockForm {
 
     /// "Use <suggestion>": adopt the suggested language and insert.
     pub fn use_suggested(&mut self) -> Option<CodeBlockOutcome> {
-        let Some(CodeBlockOutcome::UnknownLanguage { did_you_mean: Some(lang), .. }) =
-            self.warning.take()
+        let Some(CodeBlockOutcome::UnknownLanguage {
+            did_you_mean: Some(lang),
+            ..
+        }) = self.warning.take()
         else {
             return None;
         };

@@ -6,7 +6,11 @@
 pub fn encode_path(path: Option<&str>) -> String {
     match path {
         None | Some("") => String::new(),
-        Some(path) => path.split('/').map(encode_uri_component).collect::<Vec<_>>().join("/"),
+        Some(path) => path
+            .split('/')
+            .map(encode_uri_component)
+            .collect::<Vec<_>>()
+            .join("/"),
     }
 }
 
@@ -27,18 +31,21 @@ pub fn encode_uri_component(segment: &str) -> String {
 /// `(?:youtube\.com/watch\?v=|youtu\.be/|youtube\.com/embed/|youtube\.com/v/)([a-zA-Z0-9_-]{11})`
 /// (unanchored), else the whole input if it is exactly an 11-char id; else `None`.
 pub fn extract_youtube_id(url: Option<&str>) -> Option<String> {
-    static PATTERNS: std::sync::LazyLock<[Option<regex::Regex>; 2]> = std::sync::LazyLock::new(|| {
-        [
+    static PATTERNS: std::sync::LazyLock<[Option<regex::Regex>; 2]> = std::sync::LazyLock::new(
+        || {
+            [
             regex::Regex::new(
                 r"(?:youtube\.com/watch\?v=|youtu\.be/|youtube\.com/embed/|youtube\.com/v/)([a-zA-Z0-9_-]{11})",
             )
             .ok(),
             regex::Regex::new(r"^([a-zA-Z0-9_-]{11})$").ok(),
         ]
-    });
+        },
+    );
     let url = url.filter(|u| !u.is_empty())?;
-    PATTERNS
-        .iter()
-        .flatten()
-        .find_map(|re| re.captures(url).and_then(|c| c.get(1)).map(|m| m.as_str().to_owned()))
+    PATTERNS.iter().flatten().find_map(|re| {
+        re.captures(url)
+            .and_then(|c| c.get(1))
+            .map(|m| m.as_str().to_owned())
+    })
 }

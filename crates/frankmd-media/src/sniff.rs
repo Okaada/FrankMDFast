@@ -63,8 +63,20 @@ pub struct Detected {
 
 /// Identify `bytes` by magic number; `None` when it is no supported media container.
 pub fn detect(bytes: &[u8]) -> Option<Detected> {
-    let image = |mime, extensions| Some(Detected { kind: MediaKind::Image, mime, extensions });
-    let video = |mime, extensions| Some(Detected { kind: MediaKind::Video, mime, extensions });
+    let image = |mime, extensions| {
+        Some(Detected {
+            kind: MediaKind::Image,
+            mime,
+            extensions,
+        })
+    };
+    let video = |mime, extensions| {
+        Some(Detected {
+            kind: MediaKind::Video,
+            mime,
+            extensions,
+        })
+    };
     const ISO: &[&str] = &[".mp4", ".m4v", ".mov"];
     const EBML: &[&str] = &[".webm", ".mkv"];
     if let Some(t) = infer::get(bytes) {
@@ -91,7 +103,9 @@ pub fn detect(bytes: &[u8]) -> Option<Detected> {
     // in the same container family (HEIF/AVIF) are excluded.
     if bytes.len() >= 12 && &bytes[4..8] == b"ftyp" {
         let brand = &bytes[8..12];
-        let still = [b"heic", b"heix", b"heim", b"heis", b"mif1", b"msf1", b"avif", b"avis"];
+        let still = [
+            b"heic", b"heix", b"heim", b"heis", b"mif1", b"msf1", b"avif", b"avis",
+        ];
         if !still.iter().any(|b| brand == *b) {
             return video("video/mp4", ISO);
         }
@@ -113,8 +127,14 @@ pub fn detect(bytes: &[u8]) -> Option<Detected> {
 /// (the configured, normalized extension list). Returns the detected type.
 pub fn check(bytes: &[u8], kind: MediaKind, allowed: &[String]) -> Result<Detected, MediaError> {
     let reject = || MediaError::Rejected(rejection_message(kind));
-    let detected = detect(bytes).filter(|d| d.kind == kind).ok_or_else(reject)?;
-    if !detected.extensions.iter().any(|ext| allowed.iter().any(|a| a == ext)) {
+    let detected = detect(bytes)
+        .filter(|d| d.kind == kind)
+        .ok_or_else(reject)?;
+    if !detected
+        .extensions
+        .iter()
+        .any(|ext| allowed.iter().any(|a| a == ext))
+    {
         return Err(reject());
     }
     if has_markup(bytes, kind) {
@@ -149,5 +169,7 @@ fn contains(haystack: &[u8], needle: &[u8]) -> bool {
 }
 
 fn contains_ignore_case(haystack: &[u8], needle: &[u8]) -> bool {
-    haystack.windows(needle.len()).any(|w| w.eq_ignore_ascii_case(needle))
+    haystack
+        .windows(needle.len())
+        .any(|w| w.eq_ignore_ascii_case(needle))
 }

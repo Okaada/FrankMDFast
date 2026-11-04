@@ -30,8 +30,14 @@ pub struct ImportRequest {
 }
 
 /// Accepted external content types (after `;` split, downcased).
-pub const IMPORT_MIME_TYPES: [&str; 6] =
-    ["image/jpeg", "image/png", "image/gif", "image/webp", "image/bmp", "image/x-ms-bmp"];
+pub const IMPORT_MIME_TYPES: [&str; 6] = [
+    "image/jpeg",
+    "image/png",
+    "image/gif",
+    "image/webp",
+    "image/bmp",
+    "image/x-ms-bmp",
+];
 
 /// `import_image(...)` → `url`. Errors (all `Invalid` unless noted):
 /// "Provide exactly one image URL or server image path", "Image not found",
@@ -41,17 +47,29 @@ pub const IMPORT_MIME_TYPES: [&str; 6] =
 pub async fn import_image(env: &MediaEnv, req: &ImportRequest) -> Result<String, MediaError> {
     let config = env.settings.current();
     let provider = us::provider(&config, &req.upload_to_s3)?;
-    let one_source = [&req.url, &req.path].iter().filter(|p| p.is_present()).count() == 1
-        && [&req.url, &req.path].iter().all(|p| matches!(p, Param::Nil | Param::Str(_)));
+    let one_source = [&req.url, &req.path]
+        .iter()
+        .filter(|p| p.is_present())
+        .count()
+        == 1
+        && [&req.url, &req.path]
+            .iter()
+            .all(|p| matches!(p, Param::Nil | Param::Str(_)));
     if !one_source {
-        return Err(MediaError::Invalid("Provide exactly one image URL or server image path".to_owned()));
+        return Err(MediaError::Invalid(
+            "Provide exactly one image URL or server image path".to_owned(),
+        ));
     }
 
     if let Param::Str(rel) = &req.path
         && req.path.is_present()
     {
-        let source = images::find_image(&config, rel).ok_or_else(|| MediaError::Invalid("Image not found".to_owned()))?;
-        let name = source.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default();
+        let source = images::find_image(&config, rel)
+            .ok_or_else(|| MediaError::Invalid("Image not found".to_owned()))?;
+        let name = source
+            .file_name()
+            .map(|n| n.to_string_lossy().into_owned())
+            .unwrap_or_default();
         us::validate_filename(&config, &name, UploadKind::Image)?;
         let bytes = std::fs::read(&source).map_err(|e| MediaError::Io(e.kind()))?;
         let mut upload = UploadRequest::new(UploadOrigin::Picker, MediaKind::Image, name, bytes);
@@ -59,7 +77,9 @@ pub async fn import_image(env: &MediaEnv, req: &ImportRequest) -> Result<String,
     }
 
     let Param::Str(url) = &req.url else {
-        return Err(MediaError::Invalid("Provide exactly one image URL or server image path".to_owned()));
+        return Err(MediaError::Invalid(
+            "Provide exactly one image URL or server image path".to_owned(),
+        ));
     };
     let fetched = images::fetch_external_image(env, url)
         .await
@@ -67,14 +87,25 @@ pub async fn import_image(env: &MediaEnv, req: &ImportRequest) -> Result<String,
     let mime = fetched.content_type.as_deref().unwrap_or_default();
     let mime = mime.split(';').next().unwrap_or_default().to_lowercase();
     if !IMPORT_MIME_TYPES.contains(&mime.as_str()) {
-        return Err(MediaError::Invalid("Unsupported image content type".to_owned()));
+        return Err(MediaError::Invalid(
+            "Unsupported image content type".to_owned(),
+        ));
     }
     let extension = images::extension_for_content_type(Some(&mime)).unwrap_or(".jpg");
     us::validate_filename(&config, &format!("image{extension}"), UploadKind::Image)?;
     let sanitized = us::sanitize_filename(basename(fetched.url.path()));
     let stem = us::ruby_basename_without_ext(&sanitized);
-    let stem = if stem.trim().is_empty() { "image" } else { stem };
-    let mut upload = UploadRequest::new(UploadOrigin::UrlImport, MediaKind::Image, format!("{stem}{extension}"), fetched.bytes);
+    let stem = if stem.trim().is_empty() {
+        "image"
+    } else {
+        stem
+    };
+    let mut upload = UploadRequest::new(
+        UploadOrigin::UrlImport,
+        MediaKind::Image,
+        format!("{stem}{extension}"),
+        fetched.bytes,
+    );
     // The original's temp file carried the mime-derived extension.
     upload.type_name = format!("import{extension}");
     store(env, &config, provider, req, &mut upload).await
@@ -93,5 +124,8 @@ async fn store(
         upload.s3_key.clone_from(&req.s3_key);
         upload.s3_prefix.clone_from(&req.s3_prefix);
     }
-    Ok(store_media(env, config, provider, upload.clone()).await?.url().to_owned())
+    Ok(store_media(env, config, provider, upload.clone())
+        .await?
+        .url()
+        .to_owned())
 }

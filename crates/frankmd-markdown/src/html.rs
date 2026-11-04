@@ -62,7 +62,9 @@ pub(crate) fn plain_text(inlines: &[Inline]) -> String {
             | Inline::Highlight(t) => s.push_str(t),
             Inline::Emph(c) | Inline::Strong(c) | Inline::Strike(c) => s.push_str(&plain_text(c)),
             Inline::Link { children, .. } => s.push_str(&plain_text(children)),
-            Inline::WikiLink { target, label } => s.push_str(&wikilink_display(target, label.as_deref())),
+            Inline::WikiLink { target, label } => {
+                s.push_str(&wikilink_display(target, label.as_deref()))
+            }
             Inline::Emoji { emoji, .. } => s.push_str(emoji),
             Inline::FootnoteRef(l) => s.push_str(l),
             Inline::SoftBreak => s.push(' '),
@@ -74,7 +76,10 @@ pub(crate) fn plain_text(inlines: &[Inline]) -> String {
 
 /// FrankMD's extension `escapeHtml`: `& " < >`.
 fn escape(s: &str) -> String {
-    s.replace('&', "&amp;").replace('"', "&quot;").replace('<', "&lt;").replace('>', "&gt;")
+    s.replace('&', "&amp;")
+        .replace('"', "&quot;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;")
 }
 
 /// Display text: the label, or the target's basename (an empty label counts as absent).
@@ -92,7 +97,12 @@ fn line_attr(span: SourceSpan) -> String {
 fn write_block(b: &Block, top: bool, out: &mut String) {
     let attr = |span: SourceSpan| if top { line_attr(span) } else { String::new() };
     match b {
-        Block::Heading { level, inlines, span, .. } => {
+        Block::Heading {
+            level,
+            inlines,
+            span,
+            ..
+        } => {
             out.push_str(&format!("<h{level}{}>", attr(*span)));
             write_inlines(inlines, out);
             out.push_str(&format!("</h{level}>\n"));
@@ -105,14 +115,22 @@ fn write_block(b: &Block, top: bool, out: &mut String) {
         Block::Code { lang, lines, span } => {
             let code: String = lines.iter().map(|l| format!("{}\n", l.text)).collect();
             match lang {
-                Some(l) => out.push_str(&format!("<pre{}><code class=\"language-{}\">", attr(*span), escape(l))),
+                Some(l) => out.push_str(&format!(
+                    "<pre{}><code class=\"language-{}\">",
+                    attr(*span),
+                    escape(l)
+                )),
                 None => out.push_str(&format!("<pre{}><code>", attr(*span))),
             }
             out.push_str(&escape(&code));
             out.push_str("</code></pre>\n");
         }
         Block::Math { tex, span } => {
-            out.push_str(&format!("<div class=\"math-block\"{}>{}</div>\n", attr(*span), escape(tex)));
+            out.push_str(&format!(
+                "<div class=\"math-block\"{}>{}</div>\n",
+                attr(*span),
+                escape(tex)
+            ));
         }
         Block::Quote { children, span, .. } => {
             out.push_str(&format!("<blockquote{}>\n", attr(*span)));
@@ -121,7 +139,12 @@ fn write_block(b: &Block, top: bool, out: &mut String) {
             }
             out.push_str("</blockquote>\n");
         }
-        Block::List { ordered, loose, items, span } => {
+        Block::List {
+            ordered,
+            loose,
+            items,
+            span,
+        } => {
             let tag = if ordered.is_some() { "ol" } else { "ul" };
             let start = match ordered {
                 Some(n) if *n != 1 => format!(" start=\"{n}\""),
@@ -133,7 +156,12 @@ fn write_block(b: &Block, top: bool, out: &mut String) {
             }
             out.push_str(&format!("</{tag}>\n"));
         }
-        Block::Table { align, header, rows, span } => {
+        Block::Table {
+            align,
+            header,
+            rows,
+            span,
+        } => {
             out.push_str(&format!("<table{}>\n<thead>\n<tr>\n", attr(*span)));
             for (i, cell) in header.iter().enumerate() {
                 write_cell("th", align.get(i).copied(), cell, out);
@@ -175,7 +203,11 @@ fn write_cell(tag: &str, align: Option<Align>, cell: &[Inline], out: &mut String
 fn write_item(it: &ListItem, loose: bool, out: &mut String) {
     out.push_str(&format!("<li{}>", line_attr(it.span)));
     let checkbox = it.task.map(|checked| {
-        if checked { "<input checked=\"\" type=\"checkbox\">" } else { "<input type=\"checkbox\">" }
+        if checked {
+            "<input checked=\"\" type=\"checkbox\">"
+        } else {
+            "<input type=\"checkbox\">"
+        }
     });
     let mut children = it.children.iter().peekable();
     if let Some(cb) = checkbox {

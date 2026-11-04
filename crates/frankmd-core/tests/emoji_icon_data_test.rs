@@ -29,8 +29,17 @@ fn has_no_duplicate_icon_names() {
 #[test]
 fn includes_icons_from_the_expanded_batch() {
     let map = icons::icon_map();
-    for name in ["rocket", "git-branch", "text-b", "paperclip", "seal-check", "play"] {
-        let glyph = map.get(name).unwrap_or_else(|| panic!("expected :ph-{name}: to resolve"));
+    for name in [
+        "rocket",
+        "git-branch",
+        "text-b",
+        "paperclip",
+        "seal-check",
+        "play",
+    ] {
+        let glyph = map
+            .get(name)
+            .unwrap_or_else(|| panic!("expected :ph-{name}: to resolve"));
         assert!(!glyph.path.is_empty());
         assert_eq!(glyph.view_box, VIEW_BOX);
         assert_eq!(icons::lookup(name), Some(*glyph));

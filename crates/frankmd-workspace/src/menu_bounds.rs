@@ -50,7 +50,11 @@ pub fn menu_max_height(top: f64, viewport_height: f64, padding: f64) -> i64 {
 
 /// Max height plus a horizontal shift that brings an overhanging menu back
 /// inside `[padding, viewport_width - padding]` (left edge wins).
-pub fn clamp_menu_to_viewport(rect: &MenuRect, viewport_height: f64, viewport_width: f64) -> MenuPlacement {
+pub fn clamp_menu_to_viewport(
+    rect: &MenuRect,
+    viewport_height: f64,
+    viewport_width: f64,
+) -> MenuPlacement {
     let max_height = menu_max_height(rect.top, viewport_height, VIEWPORT_PADDING);
     let shift_x = match (rect.left, rect.right) {
         (Some(left), Some(right)) if left.is_finite() && right.is_finite() => {
@@ -67,7 +71,10 @@ pub fn clamp_menu_to_viewport(rect: &MenuRect, viewport_height: f64, viewport_wi
         }
         _ => None,
     };
-    MenuPlacement { max_height, shift_x }
+    MenuPlacement {
+        max_height,
+        shift_x,
+    }
 }
 
 /// JS `Math.round` (halves round towards +∞).

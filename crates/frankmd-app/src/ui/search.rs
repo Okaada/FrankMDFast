@@ -37,7 +37,9 @@ impl SearchState {
             }
             // Plain Enter arrives as `list.confirm` (the input propagates it);
             // Ctrl+Enter opens and keeps the overlay (§5.3).
-            InputEvent::PressEnter { secondary: true, .. } => {
+            InputEvent::PressEnter {
+                secondary: true, ..
+            } => {
                 shell.search_activate(true, window, cx);
             }
             _ => {}
@@ -107,7 +109,11 @@ impl Shell {
     }
 
     fn run_search(&mut self, request: SearchRequest, cx: &mut Context<Self>) {
-        let Some(root) = self.core.as_ref().map(|c| c.vault.real_root().to_path_buf()) else {
+        let Some(root) = self
+            .core
+            .as_ref()
+            .map(|c| c.vault.real_root().to_path_buf())
+        else {
             return;
         };
         let SearchRequest { generation, query } = request;
@@ -173,8 +179,11 @@ impl Shell {
                 notes,
                 truncated,
             } => {
-                let matches_text =
-                    i18n::t_count(cx, "search.matches", i64::try_from(matches).unwrap_or(i64::MAX));
+                let matches_text = i18n::t_count(
+                    cx,
+                    "search.matches",
+                    i64::try_from(matches).unwrap_or(i64::MAX),
+                );
                 let notes_text =
                     i18n::t_count(cx, "search.notes", i64::try_from(notes).unwrap_or(i64::MAX));
                 let base = i18n::t_args(
@@ -183,7 +192,8 @@ impl Shell {
                     &[("matches", &matches_text), ("notes", &notes_text)],
                 );
                 if truncated {
-                    let more = i18n::t_args(cx, "search.truncated", &[("count", &matches.to_string())]);
+                    let more =
+                        i18n::t_args(cx, "search.truncated", &[("count", &matches.to_string())]);
                     format!("{base} {more}").into()
                 } else {
                     base
@@ -202,7 +212,11 @@ impl Shell {
         let selected = self.search.model.selected();
         let hits = self.search.model.results().to_vec();
         let groups = self.search.model.groups();
-        let toggle = |id: &'static str, label: &'static str, tooltip: &str, on: bool, cx: &mut Context<Self>| {
+        let toggle = |id: &'static str,
+                      label: &'static str,
+                      tooltip: &str,
+                      on: bool,
+                      cx: &mut Context<Self>| {
             let this = this.clone();
             Button::new(id)
                 .ghost()
@@ -222,7 +236,13 @@ impl Shell {
                     });
                 })
         };
-        let case = toggle("search-case", "Aa", "search.case_sensitive", options.case_sensitive, cx);
+        let case = toggle(
+            "search-case",
+            "Aa",
+            "search.case_sensitive",
+            options.case_sensitive,
+            cx,
+        );
         let regex = toggle("search-regex", ".*", "search.regex", options.regex, cx);
         let help = {
             let this = this.clone();
@@ -289,7 +309,9 @@ impl Shell {
                         .text_xs()
                         .bg(theme.secondary)
                         .when(is_selected, |el| {
-                            el.border_l_2().border_color(theme.primary).bg(theme.selection.opacity(0.5))
+                            el.border_l_2()
+                                .border_color(theme.primary)
+                                .bg(theme.selection.opacity(0.5))
                         })
                         .children(lines.collect::<Vec<_>>())
                         .on_click(move |_, window, cx| {
@@ -331,7 +353,11 @@ impl Shell {
                                 .font_family(theme.mono_font_family.clone())
                                 .child(pattern),
                         )
-                        .child(div().text_color(theme.muted_foreground).child(i18n::t(cx, key)))
+                        .child(
+                            div()
+                                .text_color(theme.muted_foreground)
+                                .child(i18n::t(cx, key)),
+                        )
                 }))
         });
         let down = this.clone();
@@ -369,7 +395,11 @@ impl Shell {
                     .px_3()
                     .gap_1()
                     .border_b_1()
-                    .border_color(if searching { theme.primary } else { theme.border })
+                    .border_color(if searching {
+                        theme.primary
+                    } else {
+                        theme.border
+                    })
                     .child(
                         div().flex_1().child(
                             Input::new(&self.search.input)

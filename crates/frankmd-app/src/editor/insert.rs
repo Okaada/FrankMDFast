@@ -19,7 +19,9 @@ use frankmd_core::text::link_completion::{
     CaretLink, LinkSuggestion, link_at_caret, link_destination_at, link_suggestions,
 };
 use frankmd_core::text::markdown::{find_code_block_at_position, find_table_at_position};
-use frankmd_core::text::pending::{BlockTarget, PendingAction, PendingInsertion, block_edit, inline_edit};
+use frankmd_core::text::pending::{
+    BlockTarget, PendingAction, PendingInsertion, block_edit, inline_edit,
+};
 use frankmd_core::text::slash::{SlashCommand, slash_trigger};
 use frankmd_core::wikilink::{WikiCompletion, WikiFile, complete as wiki_complete};
 use frankmd_vim::Mode;
@@ -92,8 +94,17 @@ impl EventEmitter<EditorRequest> for EditorPane {}
 /// An open caret popover.
 enum Popover {
     Slash(SlashMenuModel),
-    Wiki { from: usize, to: usize, options: Vec<WikiCompletion>, selected: usize },
-    Link { range: Range<usize>, rows: Vec<LinkSuggestion>, selected: usize },
+    Wiki {
+        from: usize,
+        to: usize,
+        options: Vec<WikiCompletion>,
+        selected: usize,
+    },
+    Link {
+        range: Range<usize>,
+        rows: Vec<LinkSuggestion>,
+        selected: usize,
+    },
 }
 
 impl Popover {
@@ -109,7 +120,9 @@ impl Popover {
         match self {
             Self::Slash(menu) if forward => menu.select_next(),
             Self::Slash(menu) => menu.select_prev(),
-            Self::Wiki { selected, options, .. } => *selected = wrap(*selected, options.len(), forward),
+            Self::Wiki {
+                selected, options, ..
+            } => *selected = wrap(*selected, options.len(), forward),
             Self::Link { selected, rows, .. } => *selected = wrap(*selected, rows.len(), forward),
         }
     }
@@ -152,7 +165,12 @@ impl EditorPane {
     /// Tell the pane about the open note: its vault-relative path (relative link
     /// completion) and whether it is markdown (`false` for `.fed`: no slash menu,
     /// completions or insert dialogs).
-    pub fn set_note_context(&mut self, path: Option<String>, markdown: bool, cx: &mut Context<Self>) {
+    pub fn set_note_context(
+        &mut self,
+        path: Option<String>,
+        markdown: bool,
+        cx: &mut Context<Self>,
+    ) {
         self.insert.note_path = path;
         self.insert.markdown = Some(markdown);
         if !markdown {
@@ -245,10 +263,17 @@ impl EditorPane {
 
     /// Insert image markdown padded with single newlines (**[COMPAT]**
     /// `insertImage`), over the selection or the pending `/image` query.
-    pub fn insert_image_markdown(&mut self, markdown: &str, window: &mut Window, cx: &mut Context<Self>) {
+    pub fn insert_image_markdown(
+        &mut self,
+        markdown: &str,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
         let (text, selection) = self.insert_text_and_selection(cx);
         let pending = self.insert.pending.take();
-        if let Some(edit) = frankmd_core::text::pending::image_edit(&text, selection, markdown, pending.as_ref()) {
+        if let Some(edit) =
+            frankmd_core::text::pending::image_edit(&text, selection, markdown, pending.as_ref())
+        {
             self.apply_insert_edit(edit, window, cx);
         }
     }
@@ -275,7 +300,11 @@ impl EditorPane {
         }
         let (text, selection) = self.insert_text_and_selection(cx);
         let template = i18n::t(cx, "dialogs.table_editor.header_n");
-        let template = if template.contains("%{n}") { template.to_string() } else { DEFAULT_HEADER_TEMPLATE.to_owned() };
+        let template = if template.contains("%{n}") {
+            template.to_string()
+        } else {
+            DEFAULT_HEADER_TEMPLATE.to_owned()
+        };
         let slash = self
             .insert
             .pending
@@ -318,19 +347,32 @@ impl EditorPane {
         cx: &mut Context<Self>,
     ) {
         self.insert.popover = None;
-        let sub = cx.subscribe_in(entity, window, |pane, _, event: &InsertDialogEvent, window, cx| {
-            pane.on_dialog_event(event.clone(), window, cx);
-        });
+        let sub = cx.subscribe_in(
+            entity,
+            window,
+            |pane, _, event: &InsertDialogEvent, window, cx| {
+                pane.on_dialog_event(event.clone(), window, cx);
+            },
+        );
         self.insert.dialog = Some(dialog);
         self.insert.dialog_sub = Some(sub);
         cx.notify();
     }
 
-    fn on_dialog_event(&mut self, event: InsertDialogEvent, window: &mut Window, cx: &mut Context<Self>) {
+    fn on_dialog_event(
+        &mut self,
+        event: InsertDialogEvent,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
         self.insert.dialog = None;
         self.insert.dialog_sub = None;
         match event {
-            InsertDialogEvent::Block { content, replace, cursor_offset } => {
+            InsertDialogEvent::Block {
+                content,
+                replace,
+                cursor_offset,
+            } => {
                 self.insert_block(&content, replace, cursor_offset, window, cx);
             }
             InsertDialogEvent::Inline { content } => self.insert_inline(&content, window, cx),
@@ -359,18 +401,25 @@ impl EditorPane {
                 CaretLink::Image(src) => ContextAction::ViewImage(src),
             });
         }
-        (self.is_markdown() && find_table_at_position(&text, caret).is_some()).then_some(ContextAction::EditTable)
+        (self.is_markdown() && find_table_at_position(&text, caret).is_some())
+            .then_some(ContextAction::EditTable)
     }
 
     /// Run the context action: the table / code dialogs open here; links and
     /// images go to the shell as an [`EditorRequest`]. Returns what ran.
-    pub fn run_context_action(&mut self, window: &mut Window, cx: &mut Context<Self>) -> Option<ContextAction> {
+    pub fn run_context_action(
+        &mut self,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) -> Option<ContextAction> {
         let action = self.context_action(cx)?;
         match &action {
             ContextAction::EditCodeBlock => self.open_code_dialog(window, cx),
             ContextAction::EditTable => self.open_table_editor(window, cx),
             ContextAction::OpenLink(url) => cx.emit(EditorRequest::OpenLink(url.clone())),
-            ContextAction::OpenWikilink(target) => cx.emit(EditorRequest::OpenWikilink(target.clone())),
+            ContextAction::OpenWikilink(target) => {
+                cx.emit(EditorRequest::OpenWikilink(target.clone()))
+            }
             ContextAction::ViewImage(src) => cx.emit(EditorRequest::ViewImage(src.clone())),
         }
         Some(action)
@@ -384,15 +433,26 @@ impl EditorPane {
             return;
         }
         let (text, selection) = self.insert_text_and_selection(cx);
-        let Some(range) = link_destination_at(&text, selection.end) else { return };
+        let Some(range) = link_destination_at(&text, selection.end) else {
+            return;
+        };
         self.show_link_rows(&text, range, cx);
     }
 
     fn show_link_rows(&mut self, text: &str, range: Range<usize>, cx: &mut Context<Self>) {
         let query = &text[range.clone()];
         let clipboard = cx.read_from_clipboard().and_then(|c| c.text());
-        let rows = link_suggestions(query, clipboard.as_deref(), &self.insert.notes, self.insert.note_path.as_deref());
-        self.insert.popover = (!rows.is_empty()).then_some(Popover::Link { range, rows, selected: 0 });
+        let rows = link_suggestions(
+            query,
+            clipboard.as_deref(),
+            &self.insert.notes,
+            self.insert.note_path.as_deref(),
+        );
+        self.insert.popover = (!rows.is_empty()).then_some(Popover::Link {
+            range,
+            rows,
+            selected: 0,
+        });
         cx.notify();
     }
 
@@ -412,7 +472,9 @@ impl EditorPane {
         };
         // Cheap line checks first: the full text is copied only when a trigger is possible.
         let maybe_slash = line_before.contains('/');
-        let maybe_wiki = line_before.rfind("[[").is_some_and(|i| !line_before[i..].contains("]]"));
+        let maybe_wiki = line_before
+            .rfind("[[")
+            .is_some_and(|i| !line_before[i..].contains("]]"));
         let in_link = matches!(self.insert.popover, Some(Popover::Link { .. }));
         if !maybe_slash && !maybe_wiki && !in_link {
             self.insert.popover = None;
@@ -430,7 +492,12 @@ impl EditorPane {
             let mut options = found.options;
             options.sort_by_key(|o| std::cmp::Reverse(o.boost));
             options.truncate(MAX_COMPLETIONS);
-            self.insert.popover = Some(Popover::Wiki { from: found.from, to: found.to, options, selected: 0 });
+            self.insert.popover = Some(Popover::Wiki {
+                from: found.from,
+                to: found.to,
+                options,
+                selected: 0,
+            });
             cx.notify();
             return;
         }
@@ -458,7 +525,9 @@ impl EditorPane {
     /// Caret moved: close the popover when the caret left its line or moved before
     /// its start (an edit refreshes it right after, see [`Self::refresh_popovers_after_edit`]).
     pub(super) fn refresh_popovers_after_move(&mut self, cx: &mut Context<Self>) {
-        let Some(anchor) = self.insert.popover.as_ref().map(Popover::anchor) else { return };
+        let Some(anchor) = self.insert.popover.as_ref().map(Popover::anchor) else {
+            return;
+        };
         let keep = {
             let s = self.state.read(cx);
             let caret = s.selected_range().end;
@@ -477,13 +546,21 @@ impl EditorPane {
         self.insert
             .notes
             .iter()
-            .map(|p| WikiFile { path: Some(p.clone()), name: None })
+            .map(|p| WikiFile {
+                path: Some(p.clone()),
+                name: None,
+            })
             .collect()
     }
 
     /// Keys for an open popover: ↑/↓ (and Ctrl+N/P) move, Enter/Tab accept, Esc
     /// dismisses (the typed text stays). `None` = not a popover key.
-    pub(super) fn popover_key(&mut self, key: &str, window: &mut Window, cx: &mut Context<Self>) -> Option<bool> {
+    pub(super) fn popover_key(
+        &mut self,
+        key: &str,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) -> Option<bool> {
         let popover = self.insert.popover.as_mut()?;
         match key {
             "down" | "ctrl-n" => popover.step(true),
@@ -506,8 +583,15 @@ impl EditorPane {
         Some(true)
     }
 
-    fn accept_popover(&mut self, index: Option<usize>, window: &mut Window, cx: &mut Context<Self>) {
-        let Some(popover) = self.insert.popover.take() else { return };
+    fn accept_popover(
+        &mut self,
+        index: Option<usize>,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        let Some(popover) = self.insert.popover.take() else {
+            return;
+        };
         let text = self.insert_text_and_selection(cx).0;
         match popover {
             Popover::Slash(menu) => {
@@ -517,26 +601,61 @@ impl EditorPane {
                 };
                 match outcome {
                     Some(SlashOutcome::Edit(edit)) => self.apply_insert_edit(edit, window, cx),
-                    Some(SlashOutcome::OpenDialog { command, range, query }) => {
-                        self.open_slash_dialog(command, range, query, window, cx)
-                    }
+                    Some(SlashOutcome::OpenDialog {
+                        command,
+                        range,
+                        query,
+                    }) => self.open_slash_dialog(command, range, query, window, cx),
                     None => {}
                 }
             }
-            Popover::Wiki { from, to, options, selected } => {
+            Popover::Wiki {
+                from,
+                to,
+                options,
+                selected,
+            } => {
                 if let Some(option) = options.get(index.unwrap_or(selected)) {
                     let caret = option.caret_after(from);
                     // The completion ends with `]]`; swallow a pair the editor auto-closed.
-                    let to = if text[to..].starts_with("]]") { to + 2 } else { to };
-                    self.apply_insert_edit(Edit { range: from..to, text: option.insert.clone(), selection: caret..caret }, window, cx);
+                    let to = if text[to..].starts_with("]]") {
+                        to + 2
+                    } else {
+                        to
+                    };
+                    self.apply_insert_edit(
+                        Edit {
+                            range: from..to,
+                            text: option.insert.clone(),
+                            selection: caret..caret,
+                        },
+                        window,
+                        cx,
+                    );
                 }
             }
-            Popover::Link { range, rows, selected } => {
+            Popover::Link {
+                range,
+                rows,
+                selected,
+            } => {
                 if let Some(row) = rows.get(index.unwrap_or(selected)) {
                     let caret = range.start + row.insert.len();
                     // Leave the caret after the `)` so typing continues after the link.
-                    let after = if text[range.end..].starts_with(')') { caret + 1 } else { caret };
-                    self.apply_insert_edit(Edit { range, text: row.insert.clone(), selection: after..after }, window, cx);
+                    let after = if text[range.end..].starts_with(')') {
+                        caret + 1
+                    } else {
+                        caret
+                    };
+                    self.apply_insert_edit(
+                        Edit {
+                            range,
+                            text: row.insert.clone(),
+                            selection: after..after,
+                        },
+                        window,
+                        cx,
+                    );
                 }
             }
         }
@@ -558,18 +677,28 @@ impl EditorPane {
             SlashCommand::Emoji => PendingAction::Emoji,
             _ => return,
         };
-        self.insert.pending = Some(PendingInsertion { action, range, query });
+        self.insert.pending = Some(PendingInsertion {
+            action,
+            range,
+            query,
+        });
         match action {
             PendingAction::Table => self.open_table_editor(window, cx),
             PendingAction::Emoji => self.open_emoji_picker(window, cx),
-            PendingAction::Image | PendingAction::Video => cx.emit(EditorRequest::OpenMediaDialog(action)),
+            PendingAction::Image | PendingAction::Video => {
+                cx.emit(EditorRequest::OpenMediaDialog(action))
+            }
         }
     }
 
     // ----- rendering --------------------------------------------------------------------------------
 
     /// The popover and dialog layers (deferred, so they paint over the pane).
-    pub(super) fn render_insert_layers(&self, window: &Window, cx: &mut Context<Self>) -> Vec<AnyElement> {
+    pub(super) fn render_insert_layers(
+        &self,
+        window: &Window,
+        cx: &mut Context<Self>,
+    ) -> Vec<AnyElement> {
         let mut layers = Vec::new();
         if let Some(popover) = self.render_popover(cx) {
             layers.push(popover);
@@ -580,9 +709,14 @@ impl EditorPane {
             } else {
                 let anchor = self.caret_anchor(cx);
                 layers.push(
-                    deferred(anchored().position(anchor).snap_to_window_with_margin(px(8.)).child(dialog.view()))
-                        .with_priority(1)
-                        .into_any_element(),
+                    deferred(
+                        anchored()
+                            .position(anchor)
+                            .snap_to_window_with_margin(px(8.))
+                            .child(dialog.view()),
+                    )
+                    .with_priority(1)
+                    .into_any_element(),
                 );
             }
         }
@@ -612,48 +746,83 @@ impl EditorPane {
         let (id, rows, selected): (&str, Vec<PopoverRow>, usize) = match popover {
             Popover::Slash(menu) => (
                 "slash-menu",
-                menu.rows().iter().map(|r| (Some(r.icon), r.label.clone().into(), None)).collect(),
+                menu.rows()
+                    .iter()
+                    .map(|r| (Some(r.icon), r.label.clone().into(), None))
+                    .collect(),
                 menu.selected(),
             ),
-            Popover::Wiki { options, selected, .. } => (
+            Popover::Wiki {
+                options, selected, ..
+            } => (
                 "wikilink-completion",
-                options.iter().map(|o| (None, o.label.clone().into(), o.detail.clone().map(Into::into))).collect(),
+                options
+                    .iter()
+                    .map(|o| {
+                        (
+                            None,
+                            o.label.clone().into(),
+                            o.detail.clone().map(Into::into),
+                        )
+                    })
+                    .collect(),
                 *selected,
             ),
             Popover::Link { rows, selected, .. } => (
                 "link-completion",
-                rows.iter().map(|r| (None, r.label.clone().into(), r.detail.clone().map(Into::into))).collect(),
+                rows.iter()
+                    .map(|r| {
+                        (
+                            None,
+                            r.label.clone().into(),
+                            r.detail.clone().map(Into::into),
+                        )
+                    })
+                    .collect(),
                 *selected,
             ),
         };
         let row_height = px(ROW_HEIGHT_PX);
-        let items = rows.into_iter().enumerate().map(|(i, (icon, label, detail))| {
-            let is_selected = i == selected;
-            h_flex()
-                .id(SharedString::from(format!("{id}-row-{i}")))
-                .test_support()
-                .h(row_height)
-                .flex_none()
-                .gap_2()
-                .px_2()
-                .items_center()
-                .text_sm()
-                .when(is_selected, |el| el.bg(theme.accent).text_color(theme.accent_foreground))
-                .when_some(icon, |el, icon| {
-                    el.child(
-                        svg()
-                            .path(SharedString::from(format!("icons/ph/{icon}.svg")))
-                            .size(px(14.))
-                            .flex_none()
-                            .text_color(theme.muted_foreground),
-                    )
-                })
-                .child(div().flex_1().min_w_0().overflow_hidden().child(label))
-                .when_some(detail, |el, d| {
-                    el.child(div().text_xs().text_color(theme.muted_foreground).overflow_hidden().child(d))
-                })
-                .on_click(cx.listener(move |this, _, window, cx| this.accept_popover(Some(i), window, cx)))
-        });
+        let items = rows
+            .into_iter()
+            .enumerate()
+            .map(|(i, (icon, label, detail))| {
+                let is_selected = i == selected;
+                h_flex()
+                    .id(SharedString::from(format!("{id}-row-{i}")))
+                    .test_support()
+                    .h(row_height)
+                    .flex_none()
+                    .gap_2()
+                    .px_2()
+                    .items_center()
+                    .text_sm()
+                    .when(is_selected, |el| {
+                        el.bg(theme.accent).text_color(theme.accent_foreground)
+                    })
+                    .when_some(icon, |el, icon| {
+                        el.child(
+                            svg()
+                                .path(SharedString::from(format!("icons/ph/{icon}.svg")))
+                                .size(px(14.))
+                                .flex_none()
+                                .text_color(theme.muted_foreground),
+                        )
+                    })
+                    .child(div().flex_1().min_w_0().overflow_hidden().child(label))
+                    .when_some(detail, |el, d| {
+                        el.child(
+                            div()
+                                .text_xs()
+                                .text_color(theme.muted_foreground)
+                                .overflow_hidden()
+                                .child(d),
+                        )
+                    })
+                    .on_click(cx.listener(move |this, _, window, cx| {
+                        this.accept_popover(Some(i), window, cx)
+                    }))
+            });
         let list = v_flex()
             .id(id)
             .test_support()
@@ -669,9 +838,14 @@ impl EditorPane {
             .shadow_md()
             .children(items.collect::<Vec<_>>());
         Some(
-            deferred(anchored().position(anchor).snap_to_window_with_margin(px(8.)).child(list))
-                .with_priority(1)
-                .into_any_element(),
+            deferred(
+                anchored()
+                    .position(anchor)
+                    .snap_to_window_with_margin(px(8.))
+                    .child(list),
+            )
+            .with_priority(1)
+            .into_any_element(),
         )
     }
 }

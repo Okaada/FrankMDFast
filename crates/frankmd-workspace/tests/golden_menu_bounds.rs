@@ -19,13 +19,19 @@ fn num(v: Option<&Value>) -> Option<f64> {
 }
 
 fn rect(v: &Value) -> MenuRect {
-    MenuRect { top: num(v.get("top")).unwrap(), left: num(v.get("left")), right: num(v.get("right")) }
+    MenuRect {
+        top: num(v.get("top")).unwrap(),
+        left: num(v.get("left")),
+        right: num(v.get("right")),
+    }
 }
 
 fn style(p: Option<MenuPlacement>) -> Value {
     let (transform, max_height) = match p {
         Some(p) => (
-            p.shift_x.map(|x| format!("translateX({x}px)")).unwrap_or_default(),
+            p.shift_x
+                .map(|x| format!("translateX({x}px)"))
+                .unwrap_or_default(),
             format!("{}px", p.max_height),
         ),
         None => (String::new(), String::new()),
@@ -41,7 +47,10 @@ fn check(case: &frankmd_testkit::Case) -> Result<(), String> {
         "menuMaxHeight" => {
             let top = num(args[0].get("top")).unwrap();
             let pad = num(args.get(2)).unwrap_or(VIEWPORT_PADDING);
-            json!(format!("{}px", menu_max_height(top, num(args.get(1)).unwrap(), pad)))
+            json!(format!(
+                "{}px",
+                menu_max_height(top, num(args.get(1)).unwrap(), pad)
+            ))
         }
         "clampMenuToViewport" => {
             let el = &args[0];
@@ -53,12 +62,22 @@ fn check(case: &frankmd_testkit::Case) -> Result<(), String> {
         "toggleMenu" => {
             let el = &args[0];
             let force = args.get(1).and_then(Value::as_bool).unwrap_or(false);
-            let t = toggle_menu(el["hidden"].as_bool().unwrap(), force, &rect(&el["rect"]), DEFAULT_H, DEFAULT_W);
+            let t = toggle_menu(
+                el["hidden"].as_bool().unwrap(),
+                force,
+                &rect(&el["rect"]),
+                DEFAULT_H,
+                DEFAULT_W,
+            );
             json!({"return": t.visible, "style": style(t.placement), "hidden": !t.visible})
         }
         other => return Err(format!("unknown fn {other}")),
     };
-    if got == expected { Ok(()) } else { Err(format!("expected {expected}, got {got}")) }
+    if got == expected {
+        Ok(())
+    } else {
+        Err(format!("expected {expected}, got {got}"))
+    }
 }
 
 #[test]

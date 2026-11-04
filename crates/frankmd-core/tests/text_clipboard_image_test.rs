@@ -8,22 +8,37 @@ use frankmd_core::text::clipboard::{
 };
 
 fn file(name: &str, mime: &str) -> PastedFile {
-    PastedFile { name: name.into(), mime: mime.into(), last_modified: None, bytes: b"x".to_vec() }
+    PastedFile {
+        name: name.into(),
+        mime: mime.into(),
+        last_modified: None,
+        bytes: b"x".to_vec(),
+    }
 }
 
 fn item(kind: ClipboardItemKind, mime: &str, f: Option<PastedFile>) -> ClipboardItem {
-    ClipboardItem { kind, mime: mime.into(), file: f }
+    ClipboardItem {
+        kind,
+        mime: mime.into(),
+        file: f,
+    }
 }
 
 fn has_pasted_name(name: &str, ext: &str) -> bool {
-    name.starts_with("pasted-image-") && name.ends_with(ext) && name.len() > "pasted-image-".len() + ext.len()
+    name.starts_with("pasted-image-")
+        && name.ends_with(ext)
+        && name.len() > "pasted-image-".len() + ext.len()
 }
 
 // port: test/javascript/lib/clipboard_image.test.js:12 "returns the image File when the clipboard carries one"
 #[test]
 fn returns_image_file_when_clipboard_carries_one() {
     let png = file("shot.png", "image/png");
-    let items = [item(ClipboardItemKind::File, "image/png", Some(png.clone()))];
+    let items = [item(
+        ClipboardItemKind::File,
+        "image/png",
+        Some(png.clone()),
+    )];
     let got = image_file_from_clipboard(Some(&items)).expect("image file");
     assert_eq!(got.name, "shot.png");
     assert_eq!(got, png);
@@ -34,7 +49,11 @@ fn returns_image_file_when_clipboard_carries_one() {
 fn skips_non_file_and_non_image_items() {
     let items = [
         item(ClipboardItemKind::String, "text/plain", None),
-        item(ClipboardItemKind::File, "application/pdf", Some(file("doc.pdf", "application/pdf"))),
+        item(
+            ClipboardItemKind::File,
+            "application/pdf",
+            Some(file("doc.pdf", "application/pdf")),
+        ),
     ];
     assert_eq!(image_file_from_clipboard(Some(&items)), None);
 }
@@ -65,8 +84,16 @@ fn leaves_named_file_untouched() {
 // port: test/javascript/lib/clipboard_image.test.js:46 "derives the extension from the MIME subtype for unknown image types"
 #[test]
 fn derives_extension_from_mime_subtype_for_unknown_types() {
-    assert!(normalize_image_file(file("", "image/tiff")).name.ends_with(".tiff"));
-    assert!(normalize_image_file(file("", "image/svg+xml")).name.ends_with(".svg"));
+    assert!(
+        normalize_image_file(file("", "image/tiff"))
+            .name
+            .ends_with(".tiff")
+    );
+    assert!(
+        normalize_image_file(file("", "image/svg+xml"))
+            .name
+            .ends_with(".svg")
+    );
 }
 
 // Rust-only: pins the exact synthesized names / MIME table read from clipboard_image.js.
@@ -74,7 +101,10 @@ fn derives_extension_from_mime_subtype_for_unknown_types() {
 fn exact_names_and_extension_table() {
     let mut f = file("", "image/jpeg");
     f.last_modified = Some(1_700_000_000_000);
-    assert_eq!(normalize_image_file(f).name, "pasted-image-1700000000000.jpg");
+    assert_eq!(
+        normalize_image_file(f).name,
+        "pasted-image-1700000000000.jpg"
+    );
     let mut z = file("noext", "image/gif");
     z.last_modified = Some(0); // JS `0 || "clip"`
     assert_eq!(normalize_image_file(z).name, "pasted-image-clip.gif");

@@ -3,7 +3,7 @@
 
 use std::time::{Duration, Instant, SystemTime};
 
-use frankmd_search::content::{search_lines, Hit, Results, SearchRegex, SEARCH_REGEX_TIMEOUT};
+use frankmd_search::content::{Hit, Results, SEARCH_REGEX_TIMEOUT, SearchRegex, search_lines};
 use frankmd_workspace::content_search::*;
 
 fn hit(path: &str, line: u32) -> Hit {
@@ -18,12 +18,18 @@ fn hit(path: &str, line: u32) -> Hit {
 }
 
 fn results(hits: Vec<Hit>, truncated: bool) -> Results {
-    Results { hits, skipped: vec![], truncated }
+    Results {
+        hits,
+        skipped: vec![],
+        truncated,
+    }
 }
 
 fn matches(pattern: &str, line: &str) -> bool {
     let re = SearchRegex::compile(pattern, SEARCH_REGEX_TIMEOUT).unwrap();
-    !search_lines(&[line.to_owned()], &re, 0, 10).unwrap().is_empty()
+    !search_lines(&[line.to_owned()], &re, 0, 10)
+        .unwrap()
+        .is_empty()
 }
 
 fn loaded(hits: Vec<Hit>) -> ContentSearchModel {
@@ -43,7 +49,13 @@ fn starts_empty() {
     assert_eq!(m.selected(), None);
     assert!(!m.searching());
     assert_eq!(m.status(), SearchStatus::Hint);
-    assert_eq!(m.options(), SearchOptions { case_sensitive: false, regex: true });
+    assert_eq!(
+        m.options(),
+        SearchOptions {
+            case_sensitive: false,
+            regex: true
+        }
+    );
 }
 
 // adapts: content_search_controller.test.js:74 "clears previous state"
@@ -51,7 +63,10 @@ fn starts_empty() {
 fn open_resets_but_keeps_options() {
     let mut m = loaded(vec![hit("a.md", 1), hit("b.md", 2), hit("c.md", 3)]);
     m.select(2);
-    let opts = SearchOptions { case_sensitive: true, regex: false };
+    let opts = SearchOptions {
+        case_sensitive: true,
+        regex: false,
+    };
     m.set_options(opts, Instant::now());
     m.open();
     assert_eq!(m.query(), "");
@@ -132,14 +147,30 @@ fn stale_generation_dropped() {
 #[test]
 fn status_counts() {
     let m = loaded(vec![hit("a.md", 1), hit("b.md", 2)]);
-    assert_eq!(m.status(), SearchStatus::Count { matches: 2, notes: 2, truncated: false });
+    assert_eq!(
+        m.status(),
+        SearchStatus::Count {
+            matches: 2,
+            notes: 2,
+            truncated: false
+        }
+    );
 
     let mut m = ContentSearchModel::default();
     m.set_query("x", Instant::now());
     let g = m.search_now().unwrap().generation;
-    let hits = (0..20).map(|i| hit(&format!("n{}.md", i % 7), i + 1)).collect();
+    let hits = (0..20)
+        .map(|i| hit(&format!("n{}.md", i % 7), i + 1))
+        .collect();
     m.apply_results(g, results(hits, true));
-    assert_eq!(m.status(), SearchStatus::Count { matches: 20, notes: 7, truncated: true });
+    assert_eq!(
+        m.status(),
+        SearchStatus::Count {
+            matches: 20,
+            notes: 7,
+            truncated: true
+        }
+    );
 }
 
 // adapts: content_search_controller.test.js:209 "shows no matches message"
@@ -189,7 +220,14 @@ fn effective_pattern_modes() {
 fn case_sensitive_wrapper_changes_matching() {
     let insens = effective_pattern("Hello", SearchOptions::default()).0;
     assert!(matches(&insens, "hello"));
-    let sens = effective_pattern("Hello", SearchOptions { case_sensitive: true, regex: true }).0;
+    let sens = effective_pattern(
+        "Hello",
+        SearchOptions {
+            case_sensitive: true,
+            regex: true,
+        },
+    )
+    .0;
     assert!(sens.starts_with("(?-i:"));
     assert!(!matches(&sens, "hello"));
     assert!(matches(&sens, "say Hello"));
@@ -216,10 +254,22 @@ fn invalid_regex_falls_back_to_literal() {
 fn options_change_rearms() {
     let mut m = ContentSearchModel::default();
     let t0 = Instant::now();
-    assert_eq!(m.set_options(SearchOptions { case_sensitive: true, regex: true }, t0), None);
+    assert_eq!(
+        m.set_options(
+            SearchOptions {
+                case_sensitive: true,
+                regex: true
+            },
+            t0
+        ),
+        None
+    );
     m.set_query("A", t0);
     let t1 = t0 + Duration::from_millis(500);
-    assert_eq!(m.set_options(SearchOptions::default(), t1), Some(t1 + DEBOUNCE));
+    assert_eq!(
+        m.set_options(SearchOptions::default(), t1),
+        Some(t1 + DEBOUNCE)
+    );
 }
 
 // adapts: content_search_controller.test.js:164 "updates results data from HTML response"
@@ -228,14 +278,25 @@ fn groups_in_first_appearance_order() {
     let m = loaded(vec![hit("b.md", 1), hit("a.md", 2), hit("b.md", 9)]);
     let g = m.groups();
     assert_eq!(g.len(), 2);
-    assert_eq!((g[0].path.as_str(), g[0].hits.as_slice()), ("b.md", [0usize, 2].as_slice()));
-    assert_eq!((g[1].path.as_str(), g[1].hits.as_slice()), ("a.md", [1usize].as_slice()));
+    assert_eq!(
+        (g[0].path.as_str(), g[0].hits.as_slice()),
+        ("b.md", [0usize, 2].as_slice())
+    );
+    assert_eq!(
+        (g[1].path.as_str(), g[1].hits.as_slice()),
+        ("a.md", [1usize].as_slice())
+    );
 }
 
 // adapts: content_search_controller.test.js:182 "resets selected index"
 #[test]
 fn results_select_first() {
-    let mut m = loaded(vec![hit("a.md", 1), hit("b.md", 2), hit("c.md", 3), hit("d.md", 4)]);
+    let mut m = loaded(vec![
+        hit("a.md", 1),
+        hit("b.md", 2),
+        hit("c.md", 3),
+        hit("d.md", 4),
+    ]);
     m.select(3);
     let g = m.search_now().unwrap().generation;
     m.apply_results(g, results(vec![hit("a.md", 1), hit("b.md", 2)], false));
@@ -271,7 +332,19 @@ fn navigation_on_empty_is_noop() {
 #[test]
 fn activate_returns_open_at() {
     let mut m = loaded(vec![hit("notes/a.md", 12), hit("folder/note.md", 25)]);
-    assert_eq!(m.activate(), Some(OpenAt { path: "notes/a.md".into(), line: 12 }));
+    assert_eq!(
+        m.activate(),
+        Some(OpenAt {
+            path: "notes/a.md".into(),
+            line: 12
+        })
+    );
     m.select(1);
-    assert_eq!(m.activate(), Some(OpenAt { path: "folder/note.md".into(), line: 25 }));
+    assert_eq!(
+        m.activate(),
+        Some(OpenAt {
+            path: "folder/note.md".into(),
+            line: 25
+        })
+    );
 }

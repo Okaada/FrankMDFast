@@ -54,7 +54,9 @@ pub fn link_destination_at(text: &str, caret: usize) -> Option<Range<usize>> {
 pub fn clipboard_url(clipboard: &str) -> Option<&str> {
     let url = clipboard.trim();
     let lower = url.to_ascii_lowercase();
-    let scheme_ok = ["http://", "https://", "mailto:"].iter().any(|s| lower.starts_with(s));
+    let scheme_ok = ["http://", "https://", "mailto:"]
+        .iter()
+        .any(|s| lower.starts_with(s));
     let well_formed = url.len() > 8 && !url.chars().any(|c| c.is_whitespace() || c.is_control());
     (scheme_ok && well_formed).then_some(url)
 }
@@ -125,7 +127,10 @@ pub fn link_suggestions(
         .filter_map(|path| note_score(path, &needle).map(|s| (s, path)))
         .collect();
     scored.sort_by(|a, b| b.0.cmp(&a.0).then_with(|| a.1.cmp(b.1)));
-    for (_, path) in scored.into_iter().take(MAX_SUGGESTIONS.saturating_sub(rows.len())) {
+    for (_, path) in scored
+        .into_iter()
+        .take(MAX_SUGGESTIONS.saturating_sub(rows.len()))
+    {
         let stem = path.strip_suffix(".md").unwrap_or(path);
         let (folder, name) = match stem.rsplit_once('/') {
             Some((folder, name)) => (Some(folder.to_owned()), name),
@@ -205,11 +210,18 @@ fn inline_link_at(line: &str, at: usize) -> Option<CaretLink> {
         if start <= at && at <= close + 1 {
             let dest = line[mid + 2..close].trim();
             let dest = dest.split_whitespace().next().unwrap_or("");
-            let dest = dest.trim_start_matches('<').trim_end_matches('>').to_owned();
+            let dest = dest
+                .trim_start_matches('<')
+                .trim_end_matches('>')
+                .to_owned();
             if dest.is_empty() {
                 return None;
             }
-            return Some(if image { CaretLink::Image(dest) } else { CaretLink::Url(dest) });
+            return Some(if image {
+                CaretLink::Image(dest)
+            } else {
+                CaretLink::Url(dest)
+            });
         }
         from = close + 1;
     }
@@ -243,12 +255,25 @@ mod tests {
 
     #[test]
     fn caret_links_are_recognised() {
-        let text = "a [doc](https://x.dev/a) and [[Some Note|alias]] ![p](img/p.png) see https://b.dev.";
+        let text =
+            "a [doc](https://x.dev/a) and [[Some Note|alias]] ![p](img/p.png) see https://b.dev.";
         let at = |needle: &str| text.find(needle).expect("needle");
-        assert_eq!(link_at_caret(text, at("doc")), Some(CaretLink::Url("https://x.dev/a".into())));
-        assert_eq!(link_at_caret(text, at("Some")), Some(CaretLink::Wiki("Some Note".into())));
-        assert_eq!(link_at_caret(text, at("[p]")), Some(CaretLink::Image("img/p.png".into())));
-        assert_eq!(link_at_caret(text, at("b.dev")), Some(CaretLink::Url("https://b.dev".into())));
+        assert_eq!(
+            link_at_caret(text, at("doc")),
+            Some(CaretLink::Url("https://x.dev/a".into()))
+        );
+        assert_eq!(
+            link_at_caret(text, at("Some")),
+            Some(CaretLink::Wiki("Some Note".into()))
+        );
+        assert_eq!(
+            link_at_caret(text, at("[p]")),
+            Some(CaretLink::Image("img/p.png".into()))
+        );
+        assert_eq!(
+            link_at_caret(text, at("b.dev")),
+            Some(CaretLink::Url("https://b.dev".into()))
+        );
         assert_eq!(link_at_caret(text, at("and")), None);
         assert_eq!(link_at_caret("x\n[a](b)", 0), None);
     }
@@ -265,8 +290,14 @@ mod tests {
 
     #[test]
     fn clipboard_url_must_be_a_single_web_url() {
-        assert_eq!(clipboard_url(" https://example.com/a \n"), Some("https://example.com/a"));
-        assert_eq!(clipboard_url("mailto:me@example.com"), Some("mailto:me@example.com"));
+        assert_eq!(
+            clipboard_url(" https://example.com/a \n"),
+            Some("https://example.com/a")
+        );
+        assert_eq!(
+            clipboard_url("mailto:me@example.com"),
+            Some("mailto:me@example.com")
+        );
         assert_eq!(clipboard_url("file:///etc/passwd"), None);
         assert_eq!(clipboard_url("https://a b"), None);
         assert_eq!(clipboard_url("hello"), None);
@@ -274,15 +305,27 @@ mod tests {
 
     #[test]
     fn relative_paths_walk_up_and_encode() {
-        assert_eq!(relative_note_path(Some("a/b/note.md"), "a/c/other.md"), "../c/other.md");
-        assert_eq!(relative_note_path(Some("note.md"), "dir/My Note.md"), "dir/My%20Note.md");
+        assert_eq!(
+            relative_note_path(Some("a/b/note.md"), "a/c/other.md"),
+            "../c/other.md"
+        );
+        assert_eq!(
+            relative_note_path(Some("note.md"), "dir/My Note.md"),
+            "dir/My%20Note.md"
+        );
         assert_eq!(relative_note_path(None, "x.md"), "x.md");
         assert_eq!(relative_note_path(Some("a/n.md"), "a/m.md"), "m.md");
     }
 
     #[test]
     fn clipboard_first_then_ranked_notes() {
-        let all = notes(&["work/meeting.md", "ideas.md", "projects/rust-ideas.md", "img.png", "cur.md"]);
+        let all = notes(&[
+            "work/meeting.md",
+            "ideas.md",
+            "projects/rust-ideas.md",
+            "img.png",
+            "cur.md",
+        ]);
         let rows = link_suggestions("url", Some("https://x.dev"), &all, Some("cur.md"));
         assert_eq!(rows[0].kind, LinkSuggestionKind::Clipboard);
         assert_eq!(rows.len(), 4);

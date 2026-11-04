@@ -5,7 +5,12 @@ use super::prelude::*;
 use gpui_kit::*;
 
 impl Shell {
-    pub(crate) fn open_initial(&mut self, arg: Option<&str>, window: &mut Window, cx: &mut Context<Self>) {
+    pub(crate) fn open_initial(
+        &mut self,
+        arg: Option<&str>,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
         let Some(core) = self.core.as_ref() else {
             self.focus_region(FocusRegion::Editor, window, cx);
             return;
@@ -62,7 +67,12 @@ impl Shell {
     }
 
     /// `[[target]]`: open the matching note, or the note-not-found flow.
-    pub(crate) fn open_wikilink(&mut self, target: &str, window: &mut Window, cx: &mut Context<Self>) {
+    pub(crate) fn open_wikilink(
+        &mut self,
+        target: &str,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
         let link = frankmd_core::wikilink::extract(&format!("[[{target}]]"))
             .into_iter()
             .next();
@@ -250,11 +260,19 @@ impl Shell {
     // ----- Ctrl+Tab recent switcher (ui-spec §5.2) --------------------------------
 
     /// Ctrl+Tab / Ctrl+Shift+Tab: open the switcher or move its selection.
-    pub(crate) fn recent_switch(&mut self, forward: bool, window: &mut Window, cx: &mut Context<Self>) {
+    pub(crate) fn recent_switch(
+        &mut self,
+        forward: bool,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
         if self.switcher.mru().is_empty() {
             return;
         }
-        if self.overlays.is_open(&OverlayKind::Dialog("recent-switcher")) {
+        if self
+            .overlays
+            .is_open(&OverlayKind::Dialog("recent-switcher"))
+        {
             self.switcher.step(forward);
         } else {
             self.switcher.start(forward);

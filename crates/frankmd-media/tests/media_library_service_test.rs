@@ -5,10 +5,10 @@
 #[path = "common/library.rs"]
 mod library;
 
-use library::{Notes, chmod, config, is_root};
 use frankmd_media::MediaKind;
 use frankmd_media::error::MediaError;
 use frankmd_media::library::MediaLibrary;
+use library::{Notes, chmod, config, is_root};
 
 fn paths(items: &[frankmd_media::library::MediaItem]) -> Vec<String> {
     let mut v: Vec<String> = items.iter().map(|i| i.path.clone()).collect();
@@ -29,7 +29,10 @@ fn list_returns_supported_images_and_videos_with_preview_paths() {
     let result = MediaLibrary::from_config(&vault, &config(n.root())).list();
 
     assert_eq!(paths(&result.images), vec!["images/photo.png"]);
-    assert_eq!(paths(&result.videos), vec!["videos/clip.mp4", "videos/nested/clip.webm"]);
+    assert_eq!(
+        paths(&result.videos),
+        vec!["videos/clip.mp4", "videos/nested/clip.webm"]
+    );
     let image = &result.images[0];
     assert_eq!(image.name, "photo.png");
     assert_eq!(image.kind, MediaKind::Image);
@@ -48,7 +51,14 @@ fn list_ignores_symlinked_files_and_directories() {
     n.symlink("images/linked.png", &outside);
     n.symlink("images/external", n.outside.path());
     let vault = n.vault();
-    assert_eq!(paths(&MediaLibrary::from_config(&vault, &config(n.root())).list().images), vec!["images/real.png"]);
+    assert_eq!(
+        paths(
+            &MediaLibrary::from_config(&vault, &config(n.root()))
+                .list()
+                .images
+        ),
+        vec!["images/real.png"]
+    );
 }
 
 // port: test/services/media_library_service_test.rb:50 "delete removes a supported file from a managed media directory"
@@ -57,7 +67,11 @@ fn delete_removes_supported_file() {
     let n = Notes::new();
     let path = n.write("images/nested/photo.png", "image");
     let vault = n.vault();
-    assert!(MediaLibrary::from_config(&vault, &config(n.root())).delete("images/nested/photo.png").expect("delete"));
+    assert!(
+        MediaLibrary::from_config(&vault, &config(n.root()))
+            .delete("images/nested/photo.png")
+            .expect("delete")
+    );
     assert!(!path.exists());
 }
 
@@ -76,9 +90,16 @@ fn delete_rejects_traversal_absolute_and_outside_roots() {
     let vault = n.vault();
     let lib = MediaLibrary::from_config(&vault, &config(n.root()));
 
-    let base = outside.file_name().expect("name").to_string_lossy().into_owned();
+    let base = outside
+        .file_name()
+        .expect("name")
+        .to_string_lossy()
+        .into_owned();
     assert!(!lib.delete(&format!("images/../{base}")).expect("no error"));
-    assert!(!lib.delete(&outside.display().to_string()).expect("no error"));
+    assert!(
+        !lib.delete(&outside.display().to_string())
+            .expect("no error")
+    );
     assert!(!lib.delete("notes.png").expect("no error"));
     assert!(!lib.delete("attachments/photo.png").expect("no error"));
     assert!(outside.exists());
@@ -93,7 +114,11 @@ fn delete_rejects_unsupported_extensions() {
     let n = Notes::new();
     let path = n.write("images/readme.md", "note content");
     let vault = n.vault();
-    assert!(!MediaLibrary::from_config(&vault, &config(n.root())).delete("images/readme.md").expect("no error"));
+    assert!(
+        !MediaLibrary::from_config(&vault, &config(n.root()))
+            .delete("images/readme.md")
+            .expect("no error")
+    );
     assert!(path.exists());
 }
 
@@ -118,7 +143,10 @@ fn delete_rejects_symlinked_nested_directory() {
     n.symlink("images/external", n.outside.path());
     let vault = n.vault();
     let lib = MediaLibrary::from_config(&vault, &config(n.root()));
-    assert!(!lib.delete("images/external/library_symlink_target.png").expect("no error"));
+    assert!(
+        !lib.delete("images/external/library_symlink_target.png")
+            .expect("no error")
+    );
     assert!(outside.exists());
     assert!(n.root().join("images/external").is_symlink());
 }
@@ -130,7 +158,11 @@ fn delete_rejects_symlinked_leaf() {
     let outside = n.write_outside("library_symlink_leaf_target.png", "outside");
     n.symlink("images/linked.png", &outside);
     let vault = n.vault();
-    assert!(!MediaLibrary::from_config(&vault, &config(n.root())).delete("images/linked.png").expect("no error"));
+    assert!(
+        !MediaLibrary::from_config(&vault, &config(n.root()))
+            .delete("images/linked.png")
+            .expect("no error")
+    );
     assert!(outside.exists());
     assert!(n.root().join("images/linked.png").is_symlink());
 }
@@ -147,7 +179,15 @@ fn delete_reports_filesystem_errors() {
     // `File.stubs(:delete).raises(Errno::EACCES)` → a read-only parent directory.
     let _guard = chmod(&n.root().join("images"), 0o555);
     let vault = n.vault();
-    let err = MediaLibrary::from_config(&vault, &config(n.root())).delete("images/protected.png").expect_err("EACCES");
-    assert!(matches!(err, MediaError::Io(std::io::ErrorKind::PermissionDenied) | MediaError::Fs(_)), "{err:?}");
+    let err = MediaLibrary::from_config(&vault, &config(n.root()))
+        .delete("images/protected.png")
+        .expect_err("EACCES");
+    assert!(
+        matches!(
+            err,
+            MediaError::Io(std::io::ErrorKind::PermissionDenied) | MediaError::Fs(_)
+        ),
+        "{err:?}"
+    );
     assert!(path.exists());
 }

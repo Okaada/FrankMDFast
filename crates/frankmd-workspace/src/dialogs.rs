@@ -3,13 +3,13 @@
 //!
 //! Labels are i18n keys; the GUI resolves them.
 
+use frankmd_core::RelPath;
 use frankmd_core::hugo::HugoPathStyle;
 use frankmd_core::new_note::{
     NotePreview, PreviewRequest, can_create_note, is_valid_note_name, preview_note_path,
     preview_slugify,
 };
 use frankmd_core::path::{is_config_file, is_within};
-use frankmd_core::RelPath;
 
 use crate::command::{Command, NoteTemplate, UserError};
 
@@ -128,7 +128,12 @@ impl NewNoteForm {
 
     /// Path preview for the dialog. `root_label` and `name_slot` are the
     /// localized root label and empty-name placeholder.
-    pub fn preview(&self, date: jiff::civil::Date, root_label: &str, name_slot: &str) -> NotePreview {
+    pub fn preview(
+        &self,
+        date: jiff::civil::Date,
+        root_label: &str,
+        name_slot: &str,
+    ) -> NotePreview {
         let parent = self.destination();
         let request = |name| PreviewRequest {
             name: Some(name),
@@ -205,7 +210,11 @@ pub struct NewFolderForm {
 impl NewFolderForm {
     /// Form creating inside `parent`.
     pub fn new(parent: &str) -> Self {
-        Self { parent: parent.to_owned(), name: String::new(), error: None }
+        Self {
+            parent: parent.to_owned(),
+            name: String::new(),
+            error: None,
+        }
     }
 
     /// Set the folder name (nested `a/b` allowed).
@@ -228,7 +237,10 @@ impl NewFolderForm {
         if !self.can_submit() {
             return None;
         }
-        Some(Command::CreateFolder { parent: rel(&self.parent)?, name: self.name.trim().to_owned() })
+        Some(Command::CreateFolder {
+            parent: rel(&self.parent)?,
+            name: self.name.trim().to_owned(),
+        })
     }
 
     /// `true` when the parent is the root: show `dialogs.new_item.root_location`.
@@ -252,7 +264,11 @@ fn split_parent(path: &str) -> (&str, &str) {
 }
 
 fn join(folder: &str, name: &str) -> String {
-    if folder.is_empty() { name.to_owned() } else { format!("{folder}/{name}") }
+    if folder.is_empty() {
+        name.to_owned()
+    } else {
+        format!("{folder}/{name}")
+    }
 }
 
 fn display_name(name: &str, kind: ItemKind) -> String {
@@ -454,7 +470,11 @@ impl DeleteConfirm {
             }
             kept.push((path.clone(), *kind));
         }
-        if kept.is_empty() { None } else { Some(Self { items: kept }) }
+        if kept.is_empty() {
+            None
+        } else {
+            Some(Self { items: kept })
+        }
     }
 
     /// Message i18n key and its interpolation args.
@@ -467,7 +487,10 @@ impl DeleteConfirm {
                 };
                 (key, vec![("name", split_parent(path).1.to_owned())])
             }
-            many => ("dialogs.delete.trash_multiple", vec![("count", many.len().to_string())]),
+            many => (
+                "dialogs.delete.trash_multiple",
+                vec![("count", many.len().to_string())],
+            ),
         }
     }
 

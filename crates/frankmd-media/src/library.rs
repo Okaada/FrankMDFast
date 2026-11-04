@@ -18,7 +18,8 @@ use crate::server_folder::{extname, iso8601_local, url_encode_segments};
 use crate::usage::MediaUsage;
 
 /// `MEDIA_DIRECTORIES` (root → kind).
-pub const MEDIA_DIRECTORIES: [(&str, MediaKind); 2] = [("images", MediaKind::Image), ("videos", MediaKind::Video)];
+pub const MEDIA_DIRECTORIES: [(&str, MediaKind); 2] =
+    [("images", MediaKind::Image), ("videos", MediaKind::Video)];
 
 /// One library item (local or S3).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -60,13 +61,25 @@ pub struct MediaLibrary<'a> {
 
 impl<'a> MediaLibrary<'a> {
     /// `MediaLibraryService.new(base_path: vault.root, config:)`.
-    pub fn new(vault: &'a frankmd_fs::Vault, image_extensions: Vec<String>, video_extensions: Vec<String>) -> Self {
-        Self { vault, image_extensions, video_extensions }
+    pub fn new(
+        vault: &'a frankmd_fs::Vault,
+        image_extensions: Vec<String>,
+        video_extensions: Vec<String>,
+    ) -> Self {
+        Self {
+            vault,
+            image_extensions,
+            video_extensions,
+        }
     }
 
     /// Extensions from config (`upload_extensions`).
     pub fn from_config(vault: &'a frankmd_fs::Vault, config: &MediaConfig) -> Self {
-        Self::new(vault, config.image_upload_extensions.clone(), config.video_upload_extensions.clone())
+        Self::new(
+            vault,
+            config.image_upload_extensions.clone(),
+            config.video_upload_extensions.clone(),
+        )
     }
 
     /// `list`. Vanished/unreadable entries are skipped, never fatal.
@@ -96,7 +109,11 @@ impl<'a> MediaLibrary<'a> {
 
     /// `list_directory`: the managed root (skipped when missing or a symlink),
     /// walked without following any symlink.
-    fn list_directory(&self, directory: &str, kind: MediaKind) -> Result<Vec<MediaItem>, MediaError> {
+    fn list_directory(
+        &self,
+        directory: &str,
+        kind: MediaKind,
+    ) -> Result<Vec<MediaItem>, MediaError> {
         let root = self.base().join(directory);
         let is_link = std::fs::symlink_metadata(&root).is_ok_and(|m| m.file_type().is_symlink());
         if is_link || !root.is_dir() {
@@ -113,7 +130,9 @@ impl<'a> MediaLibrary<'a> {
                     return None;
                 }
                 let rel = file.strip_prefix(self.base()).ok()?.to_str()?.to_owned();
-                if frankmd_fs::path_safety::contain(self.base(), Some(&rel)).as_deref() != Some(file.as_path()) {
+                if frankmd_fs::path_safety::contain(self.base(), Some(&rel)).as_deref()
+                    != Some(file.as_path())
+                {
                     return None;
                 }
                 // Vanished/unreadable entries are skipped (`rescue SystemCallError`).
@@ -135,7 +154,8 @@ impl<'a> MediaLibrary<'a> {
             })
             .collect();
         items.sort_by(|(ma, a), (mb, b)| {
-            mb.total_cmp(ma).then_with(|| a.path.to_lowercase().cmp(&b.path.to_lowercase()))
+            mb.total_cmp(ma)
+                .then_with(|| a.path.to_lowercase().cmp(&b.path.to_lowercase()))
         });
         Ok(items.into_iter().map(|(_, item)| item).collect())
     }
@@ -144,14 +164,26 @@ impl<'a> MediaLibrary<'a> {
     /// of a deletable file, or `None`.
     pub fn safe_media_file(&self, path: &str) -> Option<PathBuf> {
         let segments: Vec<&str> = path.split('/').collect();
-        let bad = |seg: &&str| seg.trim().is_empty() || *seg == "." || *seg == ".." || seg.contains('\\') || seg.contains('\0');
+        let bad = |seg: &&str| {
+            seg.trim().is_empty()
+                || *seg == "."
+                || *seg == ".."
+                || seg.contains('\\')
+                || seg.contains('\0')
+        };
         if segments.len() < 2 || segments.iter().any(bad) {
             return None;
         }
         let directory = segments[0];
-        let kind = MEDIA_DIRECTORIES.iter().find(|(d, _)| *d == directory).map(|(_, k)| *k)?;
+        let kind = MEDIA_DIRECTORIES
+            .iter()
+            .find(|(d, _)| *d == directory)
+            .map(|(_, k)| *k)?;
         let last = segments.last()?;
-        if !self.extensions(kind).contains(&extname(last).to_lowercase()) {
+        if !self
+            .extensions(kind)
+            .contains(&extname(last).to_lowercase())
+        {
             return None;
         }
         let rel = segments.join("/");
@@ -161,7 +193,9 @@ impl<'a> MediaLibrary<'a> {
             return None;
         }
         let managed_root = base.join(directory);
-        if frankmd_fs::path_safety::contain(&managed_root, Some(&segments[1..].join("/"))).as_deref() != Some(file.as_path())
+        if frankmd_fs::path_safety::contain(&managed_root, Some(&segments[1..].join("/")))
+            .as_deref()
+            != Some(file.as_path())
         {
             return None;
         }
@@ -197,7 +231,9 @@ impl<'a> MediaLibrary<'a> {
             Ok(()) => Ok(true),
             Err(e) if e.is_enoent() || matches!(e, frankmd_fs::FsError::NotFound(_)) => Ok(false),
             Err(e) if e.raw_os_error() == Some(frankmd_fs::errno::ENOTDIR) => Ok(false),
-            Err(e) if e.is_permission_denied() => Err(MediaError::Io(std::io::ErrorKind::PermissionDenied)),
+            Err(e) if e.is_permission_denied() => {
+                Err(MediaError::Io(std::io::ErrorKind::PermissionDenied))
+            }
             Err(e) => Err(MediaError::Fs(e)),
         }
     }
@@ -206,7 +242,9 @@ impl<'a> MediaLibrary<'a> {
 /// `media_files`: recursive, skipping symlinks and dot entries; regular files only.
 /// A directory that cannot be read aborts the listing (as in the original).
 fn media_files(directory: &Path, out: &mut Vec<PathBuf>) -> std::io::Result<()> {
-    let mut entries: Vec<_> = std::fs::read_dir(directory)?.filter_map(Result::ok).collect();
+    let mut entries: Vec<_> = std::fs::read_dir(directory)?
+        .filter_map(Result::ok)
+        .collect();
     entries.sort_by_key(std::fs::DirEntry::file_name);
     for entry in entries {
         if entry.file_name().to_string_lossy().starts_with('.') {
@@ -253,7 +291,9 @@ fn string_to_i(s: &str) -> i64 {
     for (i, c) in rest.chars().enumerate() {
         match c {
             '0'..='9' => {
-                n = n.saturating_mul(10).saturating_add(i64::from(c as u8 - b'0'));
+                n = n
+                    .saturating_mul(10)
+                    .saturating_add(i64::from(c as u8 - b'0'));
                 previous_underscore = false;
             }
             '_' if i > 0 && !previous_underscore => previous_underscore = true,
@@ -320,23 +360,43 @@ pub struct PickerQuery {
 /// **[COMPAT]** `ImageLibraryService#list` (+ `LibraryController#picker` param
 /// defaults). Unknown collection → [`LibraryError::BadRequest`]; filesystem
 /// failure → [`LibraryError::LoadFailed`] (no path in the error).
-pub fn picker_list(vault: &frankmd_fs::Vault, config: &MediaConfig, query: &PickerQuery) -> Result<PickerPage, LibraryError> {
-    let collection = if query.collection.is_present() { query.collection.ruby_to_s() } else { "managed".to_owned() };
+pub fn picker_list(
+    vault: &frankmd_fs::Vault,
+    config: &MediaConfig,
+    query: &PickerQuery,
+) -> Result<PickerPage, LibraryError> {
+    let collection = if query.collection.is_present() {
+        query.collection.ruby_to_s()
+    } else {
+        "managed".to_owned()
+    };
     let collection = match collection.as_str() {
         "managed" => PickerCollection::Managed,
         "server" => PickerCollection::Server,
-        _ => return Err(LibraryError::BadRequest("Unknown image collection".to_owned())),
+        _ => {
+            return Err(LibraryError::BadRequest(
+                "Unknown image collection".to_owned(),
+            ));
+        }
     };
-    let limit_param = if query.limit.is_present() { query.limit.clone() } else { Param::Int(10) };
+    let limit_param = if query.limit.is_present() {
+        query.limit.clone()
+    } else {
+        Param::Int(10)
+    };
     let limit = ruby_to_i(&limit_param).unwrap_or(10).clamp(1, 100) as usize;
-    let offset = usize::try_from(ruby_to_i(&query.offset).unwrap_or(0).max(0)).unwrap_or(usize::MAX);
+    let offset =
+        usize::try_from(ruby_to_i(&query.offset).unwrap_or(0).max(0)).unwrap_or(usize::MAX);
     let search = query.search.ruby_to_s();
     let search_present = !search.trim().is_empty();
 
     let (images, total) = match collection {
         PickerCollection::Managed => {
             let library = MediaLibrary::from_config(vault, config);
-            let mut all = library.try_list().map_err(|_| LibraryError::LoadFailed)?.images;
+            let mut all = library
+                .try_list()
+                .map_err(|_| LibraryError::LoadFailed)?
+                .images;
             if search_present {
                 let needle = search.to_lowercase();
                 all.retain(|image| image.name.to_lowercase().contains(&needle));
@@ -364,14 +424,28 @@ pub fn picker_list(vault: &frankmd_fs::Vault, config: &MediaConfig, query: &Pick
                 .into_iter()
                 .map(|image| {
                     let url = format!("/images/preview/{}", url_encode_segments(&image.path));
-                    PickerImage { name: image.name, path: image.path, preview_url: url.clone(), url, item: None }
+                    PickerImage {
+                        name: image.name,
+                        path: image.path,
+                        preview_url: url.clone(),
+                        url,
+                        item: None,
+                    }
                 })
                 .collect();
             (images, crate::server_folder::count(config, search))
         }
     };
-    let server_available = crate::server_folder::enabled(config) && config.images_path.as_ref().is_some_and(|p| p.is_dir());
-    Ok(PickerPage { images, collection, total, limit, offset, server_available })
+    let server_available = crate::server_folder::enabled(config)
+        && config.images_path.as_ref().is_some_and(|p| p.is_dir());
+    Ok(PickerPage {
+        images,
+        collection,
+        total,
+        limit,
+        offset,
+        server_available,
+    })
 }
 
 /// `LibraryController` errors (HTTP status in the original → variant). User
@@ -446,7 +520,11 @@ pub struct Library<'a> {
 impl<'a> Library<'a> {
     /// Bind to a vault and the injected media services (config read fresh per call).
     pub fn new(vault: &'a frankmd_fs::Vault, env: &'a MediaEnv) -> Self {
-        Self { vault, env, recovery: None }
+        Self {
+            vault,
+            env,
+            recovery: None,
+        }
     }
 
     /// Report storage recovery (`media_storage_fallback`) through the app's
@@ -486,7 +564,11 @@ impl<'a> Library<'a> {
             })?,
             Route::S3(library) => library.delete(path).await?,
         };
-        if deleted { Ok(()) } else { Err(LibraryError::NotFound) }
+        if deleted {
+            Ok(())
+        } else {
+            Err(LibraryError::NotFound)
+        }
     }
 
     /// `PATCH /library/file/*path {name}`: S3 only; the local provider refuses.
@@ -505,8 +587,14 @@ impl<'a> Library<'a> {
     }
 
     /// `GET /library/usage[?path=]`: builds the index exactly once per call.
-    pub fn usage(&self, usage: &MediaUsage, path: Option<&str>) -> Result<UsageResponse, LibraryError> {
-        let index = usage.build_index().map_err(|_| LibraryError::UsageScanFailed)?;
+    pub fn usage(
+        &self,
+        usage: &MediaUsage,
+        path: Option<&str>,
+    ) -> Result<UsageResponse, LibraryError> {
+        let index = usage
+            .build_index()
+            .map_err(|_| LibraryError::UsageScanFailed)?;
         Ok(match path {
             Some(path) => UsageResponse::Notes(index.get(path).cloned().unwrap_or_default()),
             None => UsageResponse::Counts(crate::usage::usage_counts(&index)),

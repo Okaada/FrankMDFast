@@ -231,7 +231,10 @@ fn alignment_is_preserved_and_editable() {
     assert_eq!(m.alignment(1), Alignment::Center);
     assert_eq!(m.alignment(2), Alignment::Right);
     assert!(!m.is_dirty());
-    assert_eq!(m.to_markdown(), "| L   | C   | R   |\n| :-- | :-: | --: |\n| 1   | 2   | 3   |");
+    assert_eq!(
+        m.to_markdown(),
+        "| L   | C   | R   |\n| :-- | :-: | --: |\n| 1   | 2   | 3   |"
+    );
     m.set_alignment(0, Alignment::None);
     assert!(m.to_markdown().contains("| --- | :-: | --: |"));
 }
@@ -240,10 +243,12 @@ fn alignment_is_preserved_and_editable() {
 fn slash_query_inside_the_table_is_stripped_from_the_copy() {
     // adapts: app_slash_commands.test.js:117 "removes a table slash query only from the editor draft"
     let text = "| /table | value |\n|---|---|";
-    let m = TableEditorModel::from_document(text, 4, Some((2..8, "/table")), DEFAULT_HEADER_TEMPLATE);
+    let m =
+        TableEditorModel::from_document(text, 4, Some((2..8, "/table")), DEFAULT_HEADER_TEMPLATE);
     assert_eq!(m.cells()[0], vec!["", "value"]);
     assert_eq!(*m.mode(), TableMode::Update(0..text.len()));
     // A stale query (document changed) is not stripped.
-    let m = TableEditorModel::from_document(text, 4, Some((2..8, "/tabXe")), DEFAULT_HEADER_TEMPLATE);
+    let m =
+        TableEditorModel::from_document(text, 4, Some((2..8, "/tabXe")), DEFAULT_HEADER_TEMPLATE);
     assert_eq!(m.cell(0, 0), "/table");
 }

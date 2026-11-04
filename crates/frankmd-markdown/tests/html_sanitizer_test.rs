@@ -39,7 +39,9 @@ fn preserves_checked_state() {
 // port: test/javascript/lib/html_sanitizer.test.js:25 "keeps a non-disabled checkbox with whitelisted attributes only"
 #[test]
 fn checkbox_keeps_only_whitelisted_attributes() {
-    let out = sanitize(r#"<input checked="" type="checkbox" name="evil" value="1" class="x" onclick="alert(1)">"#);
+    let out = sanitize(
+        r#"<input checked="" type="checkbox" name="evil" value="1" class="x" onclick="alert(1)">"#,
+    );
     assert!(has_input_with(&out, r#"type="checkbox""#), "{out}");
     assert!(has_input_with(&out, "checked"), "{out}");
     for banned in ["name=", "value=", "class=", "onclick", "disabled"] {
@@ -58,7 +60,9 @@ fn removes_non_checkbox_inputs() {
 // port: test/javascript/lib/html_sanitizer.test.js:42 "strips smuggled attributes from a kept checkbox"
 #[test]
 fn strips_smuggled_checkbox_attributes() {
-    let out = sanitize(r#"<input checked="" disabled="" type="checkbox" name="evil" value="1" class="x">"#);
+    let out = sanitize(
+        r#"<input checked="" disabled="" type="checkbox" name="evil" value="1" class="x">"#,
+    );
     assert!(has_input_with(&out, r#"type="checkbox""#), "{out}");
     for banned in ["name=", "value=", "class="] {
         assert!(!out.contains(banned), "{banned} in {out}");
@@ -106,7 +110,9 @@ fn removes_javascript_urls() {
 // port: test/javascript/lib/html_sanitizer.test.js:80 "removes iframe srcdoc"
 #[test]
 fn removes_iframe_srcdoc() {
-    let out = sanitize(r#"<iframe src="https://www.youtube.com/embed/a" srcdoc="<script>alert(1)</script>"></iframe>"#);
+    let out = sanitize(
+        r#"<iframe src="https://www.youtube.com/embed/a" srcdoc="<script>alert(1)</script>"></iframe>"#,
+    );
     assert!(!out.contains("srcdoc"), "{out}");
 }
 
@@ -115,14 +121,19 @@ fn removes_iframe_srcdoc() {
 fn keeps_youtube_embed() {
     let embed = r#"<div class="embed-container"><iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" title="t" frameborder="0" allow="autoplay" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe></div>"#;
     let out = sanitize(embed);
-    assert!(out.contains("https://www.youtube.com/embed/dQw4w9WgXcQ"), "{out}");
+    assert!(
+        out.contains("https://www.youtube.com/embed/dQw4w9WgXcQ"),
+        "{out}"
+    );
     assert!(out.contains("allowfullscreen"), "{out}");
 }
 
 // port: test/javascript/lib/html_sanitizer.test.js:95 "keeps a local video embed"
 #[test]
 fn keeps_local_video_embed() {
-    let out = sanitize(r#"<video controls class="video-player"><source src="/notes/videos/a.mp4" type="video/mp4"></video>"#);
+    let out = sanitize(
+        r#"<video controls class="video-player"><source src="/notes/videos/a.mp4" type="video/mp4"></video>"#,
+    );
     assert!(out.contains("<video"), "{out}");
     assert!(out.contains("a.mp4"), "{out}");
 }
@@ -157,13 +168,18 @@ fn keeps_ordinary_markdown_output() {
 // port: test/javascript/lib/html_sanitizer.test.js:126 "drops an iframe from a host that is not allow-listed"
 #[test]
 fn drops_iframe_from_unlisted_host() {
-    assert!(!sanitize(r#"<iframe src="https://evil.example/x"></iframe>"#).contains("evil.example"));
+    assert!(
+        !sanitize(r#"<iframe src="https://evil.example/x"></iframe>"#).contains("evil.example")
+    );
 }
 
 // port: test/javascript/lib/html_sanitizer.test.js:131 "drops an http (non-https) iframe"
 #[test]
 fn drops_http_iframe() {
-    assert!(!sanitize(r#"<iframe src="http://www.youtube.com/embed/a"></iframe>"#).contains("youtube.com"));
+    assert!(
+        !sanitize(r#"<iframe src="http://www.youtube.com/embed/a"></iframe>"#)
+            .contains("youtube.com")
+    );
 }
 
 // port: test/javascript/lib/html_sanitizer.test.js:136 "drops an iframe with no src"
@@ -175,22 +191,35 @@ fn drops_iframe_without_src() {
 // port: test/javascript/lib/html_sanitizer.test.js:140 "allows youtube-nocookie and vimeo players"
 #[test]
 fn allows_nocookie_and_vimeo() {
-    assert!(sanitize(r#"<iframe src="https://www.youtube-nocookie.com/embed/a"></iframe>"#).contains("youtube-nocookie"));
-    assert!(sanitize(r#"<iframe src="https://player.vimeo.com/video/1"></iframe>"#).contains("player.vimeo.com"));
+    assert!(
+        sanitize(r#"<iframe src="https://www.youtube-nocookie.com/embed/a"></iframe>"#)
+            .contains("youtube-nocookie")
+    );
+    assert!(
+        sanitize(r#"<iframe src="https://player.vimeo.com/video/1"></iframe>"#)
+            .contains("player.vimeo.com")
+    );
 }
 
 // port: test/javascript/lib/html_sanitizer.test.js:145 "defeats host-confusion tricks on the iframe allowlist"
 #[test]
 fn defeats_host_confusion() {
-    assert!(!sanitize(r#"<iframe src="https://www.youtube.com@evil.com/embed/a"></iframe>"#).contains("evil.com"));
-    assert!(!sanitize(r#"<iframe src="https://www.youtube.com.evil.com/embed/a"></iframe>"#).contains("evil.com"));
+    assert!(
+        !sanitize(r#"<iframe src="https://www.youtube.com@evil.com/embed/a"></iframe>"#)
+            .contains("evil.com")
+    );
+    assert!(
+        !sanitize(r#"<iframe src="https://www.youtube.com.evil.com/embed/a"></iframe>"#)
+            .contains("evil.com")
+    );
     assert!(!sanitize(r#"<iframe src="//evil.com/embed/a"></iframe>"#).contains("evil.com"));
 }
 
 // port: test/javascript/lib/html_sanitizer.test.js:156 "removes form and input tags but keeps their text content"
 #[test]
 fn strips_form_input_button() {
-    let out = sanitize(r#"<form action="https://evil.com"><input name="p"><button>Go</button></form>"#);
+    let out =
+        sanitize(r#"<form action="https://evil.com"><input name="p"><button>Go</button></form>"#);
     for banned in ["<form", "<input", "<button"] {
         assert!(!out.contains(banned), "{banned} in {out}");
     }

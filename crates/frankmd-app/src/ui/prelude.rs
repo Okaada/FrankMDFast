@@ -5,12 +5,12 @@ pub(crate) use std::rc::Rc;
 
 pub(crate) use frankmd_config::{Key, Value};
 pub(crate) use frankmd_core::RelPath;
+pub(crate) use frankmd_workspace::Command;
 pub(crate) use frankmd_workspace::banners::{BannerKind, BannerRole, BannerStack};
 pub(crate) use frankmd_workspace::focus::FocusRegion;
 pub(crate) use frankmd_workspace::layout::{PreviewMode, SidebarMode, WidthClass};
 pub(crate) use frankmd_workspace::overlay::{OverlayKind, PaletteMode};
 pub(crate) use frankmd_workspace::status::SaveState;
-pub(crate) use frankmd_workspace::Command;
 pub(crate) use gpui_kit::component::button::{Button, ButtonVariants as _};
 pub(crate) use gpui_kit::component::input::{Input, InputState};
 pub(crate) use gpui_kit::component::theme::Theme;

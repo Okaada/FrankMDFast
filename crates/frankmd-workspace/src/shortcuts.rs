@@ -52,11 +52,23 @@ pub struct Shortcut {
 impl Shortcut {
     /// Plain key, no modifiers, prevents default.
     pub const fn key(key: &'static str) -> Self {
-        Self { key: Cow::Borrowed(key), ctrl: false, shift: false, alt: false, prevent_default: true }
+        Self {
+            key: Cow::Borrowed(key),
+            ctrl: false,
+            shift: false,
+            alt: false,
+            prevent_default: true,
+        }
     }
     /// Owned-key constructor (user overrides).
     pub fn new(key: impl Into<String>) -> Self {
-        Self { key: Cow::Owned(key.into()), ctrl: false, shift: false, alt: false, prevent_default: true }
+        Self {
+            key: Cow::Owned(key.into()),
+            ctrl: false,
+            shift: false,
+            alt: false,
+            prevent_default: true,
+        }
     }
     /// Require Ctrl/Meta.
     pub const fn ctrl(mut self) -> Self {
@@ -123,7 +135,11 @@ pub struct KeyDispatch {
 impl ShortcutMap {
     /// The [`DEFAULT_SHORTCUTS`] table.
     pub fn defaults() -> Self {
-        Self::from_entries(DEFAULT_SHORTCUTS.iter().map(|(action, shortcut)| (*action, shortcut.clone())))
+        Self::from_entries(
+            DEFAULT_SHORTCUTS
+                .iter()
+                .map(|(action, shortcut)| (*action, shortcut.clone())),
+        )
     }
 
     /// Build from ordered entries. A repeated action keeps its first position and the last
@@ -152,7 +168,10 @@ impl ShortcutMap {
     /// `getShortcutForAction`. Unknown action → `None` (the JS prototype leak where
     /// `"constructor"`/`"toString"` returned functions is not replicated).
     pub fn get(&self, action: &str) -> Option<&Shortcut> {
-        self.entries.iter().find(|(a, _)| a == action).map(|(_, s)| s)
+        self.entries
+            .iter()
+            .find(|(a, _)| a == action)
+            .map(|(_, s)| s)
     }
 
     /// `findMatchingAction`: first action (in order) whose shortcut matches.
@@ -166,13 +185,22 @@ impl ShortcutMap {
     /// `createKeyHandler` decision: the matched action and whether to prevent default.
     /// `None` = no match (handler not called, default not prevented).
     pub fn dispatch(&self, event: &KeyEvent) -> Option<KeyDispatch> {
-        let (action, shortcut) = self.entries.iter().find(|(_, s)| match_shortcut(event, Some(s)))?;
-        Some(KeyDispatch { action: action.clone(), prevent_default: shortcut.prevent_default })
+        let (action, shortcut) = self
+            .entries
+            .iter()
+            .find(|(_, s)| match_shortcut(event, Some(s)))?;
+        Some(KeyDispatch {
+            action: action.clone(),
+            prevent_default: shortcut.prevent_default,
+        })
     }
 
     /// `mergeShortcuts`: overrides replace in place, new actions append, `None` removes.
     /// `self` is not mutated.
-    pub fn merge<S: AsRef<str>>(&self, overrides: impl IntoIterator<Item = (S, Option<Shortcut>)>) -> Self {
+    pub fn merge<S: AsRef<str>>(
+        &self,
+        overrides: impl IntoIterator<Item = (S, Option<Shortcut>)>,
+    ) -> Self {
         let mut merged = self.clone();
         for (action, shortcut) in overrides {
             let action = action.as_ref();
@@ -220,7 +248,9 @@ pub fn format_shortcut(shortcut: Option<&Shortcut>, mac: bool) -> String {
 /// Key label: `\` and `F1`..`F12` verbatim, single characters upper-cased
 /// (JS `length === 1` counts UTF-16 units, so astral characters stay as-is).
 fn display_key(key: &str) -> String {
-    const FUNCTION_KEYS: [&str; 12] = ["F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12"];
+    const FUNCTION_KEYS: [&str; 12] = [
+        "F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12",
+    ];
     let is_function_key = FUNCTION_KEYS.contains(&key);
     if key == "\\" || is_function_key || key.encode_utf16().count() != 1 {
         key.to_owned()
@@ -250,7 +280,11 @@ pub struct NavigatorInfo {
 impl Platform {
     /// Compile-time platform of this build.
     pub fn current() -> Self {
-        if cfg!(target_os = "macos") { Self::MacOS } else { Self::Other }
+        if cfg!(target_os = "macos") {
+            Self::MacOS
+        } else {
+            Self::Other
+        }
     }
 
     /// `isMacOS` over a navigator: none → Other; `userAgentData` wins when present
@@ -262,7 +296,9 @@ impl Platform {
         let mac = match &nav.user_agent_data_platform {
             Some(platform) => platform == "macOS",
             None => nav.user_agent.as_deref().is_some_and(|ua| {
-                ["Mac", "iPod", "iPhone", "iPad"].iter().any(|needle| ua.contains(needle))
+                ["Mac", "iPod", "iPhone", "iPad"]
+                    .iter()
+                    .any(|needle| ua.contains(needle))
             }),
         };
         if mac { Self::MacOS } else { Self::Other }

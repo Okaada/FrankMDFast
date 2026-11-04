@@ -18,7 +18,9 @@ use frankmd_fs::FsError;
 use frankmd_fs::service::NotesService;
 use frankmd_watch::{SharedSelfWrites, WatchEvent};
 
-use crate::autosave::{AutosaveConfig, AutosaveEffect, AutosaveSession, DeletionPrep, SaveOutcome, SaveRequest};
+use crate::autosave::{
+    AutosaveConfig, AutosaveEffect, AutosaveSession, DeletionPrep, SaveOutcome, SaveRequest,
+};
 use crate::command::{Command, Effect, Event, NoteTemplate, UserError};
 use crate::doc_index::DocIndex;
 use crate::draft_storage::{DraftBackend, DraftStorage, ItemKind};
@@ -152,7 +154,9 @@ impl<B: DraftBackend> Workspace<B> {
     /// Request a fresh tree scan (startup, manual refresh).
     pub fn rescan(&mut self) -> Effect {
         self.tree_generation = self.tree_generation.next();
-        Effect::ScanTree { generation: self.tree_generation }
+        Effect::ScanTree {
+            generation: self.tree_generation,
+        }
     }
 
     /// The autosave session (status, dirty state, draft store).
@@ -176,7 +180,9 @@ impl<B: DraftBackend> Workspace<B> {
 
     /// Clear the shared recents (empty state "Clear history…").
     pub fn clear_recents(&mut self) -> bool {
-        frankmd_fs::recent::RecentFilesService::new(&self.vault, &self.config).clear().unwrap_or(false)
+        frankmd_fs::recent::RecentFilesService::new(&self.vault, &self.config)
+            .clear()
+            .unwrap_or(false)
     }
 
     /// The vault this workspace edits.
@@ -219,10 +225,16 @@ impl<B: DraftBackend> Workspace<B> {
                     self.autosave.save_now();
                 }
             }
-            Command::CreateNote { parent, name, template } => self.create_note(&parent, &name, template, &mut out),
-            Command::CreateHugoPost { parent, title, slug } => {
-                self.create_hugo_post(&parent, &title, &slug, &mut out)
-            }
+            Command::CreateNote {
+                parent,
+                name,
+                template,
+            } => self.create_note(&parent, &name, template, &mut out),
+            Command::CreateHugoPost {
+                parent,
+                title,
+                slug,
+            } => self.create_hugo_post(&parent, &title, &slug, &mut out),
             Command::CreateFolder { parent, name } => self.create_folder(&parent, &name, &mut out),
             Command::Rename { from, to } => {
                 let _ = self.rename(&from, &to, &mut out);
@@ -233,13 +245,19 @@ impl<B: DraftBackend> Workspace<B> {
                 Ok(_) => out.events.push(Event::SettingsChanged),
                 Err(_) => out.error(UserError::new("errors.failed_to_save")),
             },
-            Command::UpdateGlobalSettings { changes } => match self.config.update_global(&changes) {
-                Ok(_) => out.events.push(Event::SettingsChanged),
-                Err(_) => out.error(UserError::new("errors.failed_to_save")),
-            },
-            Command::ResolveRecovery(resolution) => self.autosave.recovery_resolved(resolution, now),
+            Command::UpdateGlobalSettings { changes } => {
+                match self.config.update_global(&changes) {
+                    Ok(_) => out.events.push(Event::SettingsChanged),
+                    Err(_) => out.error(UserError::new("errors.failed_to_save")),
+                }
+            }
+            Command::ResolveRecovery(resolution) => {
+                self.autosave.recovery_resolved(resolution, now)
+            }
             Command::RecoveryKeepBoth(request) => self.keep_both(request, now, &mut out),
-            Command::ContentLossUndo { undid_editor_change } => self.autosave.undo_content_loss(undid_editor_change),
+            Command::ContentLossUndo {
+                undid_editor_change,
+            } => self.autosave.undo_content_loss(undid_editor_change),
             Command::ContentLossSaveAnyway => self.autosave.save_anyway_after_warning(),
             Command::FlushDrafts => {
                 let _ = self.autosave.flush_active_draft();
@@ -286,7 +304,9 @@ impl<B: DraftBackend> Workspace<B> {
         let result = match &path {
             Some(path) if !is_config_file(path.as_str()) => {
                 self.expect_write(path, request.content.as_bytes());
-                NotesService::new(&self.vault).update(path.as_str(), request.content.as_bytes()).map_err(Some)
+                NotesService::new(&self.vault)
+                    .update(path.as_str(), request.content.as_bytes())
+                    .map_err(Some)
             }
             _ => Err(None),
         };
@@ -295,11 +315,19 @@ impl<B: DraftBackend> Workspace<B> {
                 if let Some(open) = self.open.as_mut().filter(|o| o.id == request.doc) {
                     open.disk_revision = revision.clone();
                 }
-                out.events.push(Event::DocSaved { doc: request.doc, revision: revision.clone() });
-                SaveOutcome::Saved { revision: Some(revision.0) }
+                out.events.push(Event::DocSaved {
+                    doc: request.doc,
+                    revision: revision.clone(),
+                });
+                SaveOutcome::Saved {
+                    revision: Some(revision.0),
+                }
             }
             Err(err) => {
-                let error = err.map_or_else(|| UserError::new("errors.failed_to_save"), |e| user_error(Op::Save, &e, false));
+                let error = err.map_or_else(
+                    || UserError::new("errors.failed_to_save"),
+                    |e| user_error(Op::Save, &e, false),
+                );
                 out.error(error);
                 SaveOutcome::Failed
             }
@@ -309,14 +337,18 @@ impl<B: DraftBackend> Workspace<B> {
 
     fn expect_write(&self, path: &RelPath, bytes: &[u8]) {
         if let Some(tokens) = &self.self_writes {
-            let mut tokens = tokens.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            let mut tokens = tokens
+                .lock()
+                .unwrap_or_else(std::sync::PoisonError::into_inner);
             tokens.expect(path.as_str().into(), Revision::of(bytes));
         }
     }
 
     fn expect_removal(&self, path: &RelPath) {
         if let Some(tokens) = &self.self_writes {
-            let mut tokens = tokens.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            let mut tokens = tokens
+                .lock()
+                .unwrap_or_else(std::sync::PoisonError::into_inner);
             tokens.expect_removal(path.as_str().into());
         }
     }
@@ -346,11 +378,20 @@ impl<B: DraftBackend> Workspace<B> {
         let doc = self.registry.id_for(path);
         if let Some(previous) = self.index.record(path.as_str(), doc) {
             // Same note as in an earlier run: its drafts follow it to this run's id.
-            let _ = self.autosave.drafts_mut().remap_drafts(&draft_subject(previous), &draft_subject(doc), ItemKind::File);
+            let _ = self.autosave.drafts_mut().remap_drafts(
+                &draft_subject(previous),
+                &draft_subject(doc),
+                ItemKind::File,
+            );
         }
         self.autosave.set_editor_text(&text);
-        self.autosave.set_file(doc, path.as_str(), &text, Some(&file.revision.0));
-        let shown = if file.valid_utf8 { self.autosave.recover_draft(&text, &file.revision.0) } else { text };
+        self.autosave
+            .set_file(doc, path.as_str(), &text, Some(&file.revision.0));
+        let shown = if file.valid_utf8 {
+            self.autosave.recover_draft(&text, &file.revision.0)
+        } else {
+            text
+        };
         self.autosave.set_editor_text(&shown);
         self.open = Some(OpenDoc {
             id: doc,
@@ -360,8 +401,15 @@ impl<B: DraftBackend> Workspace<B> {
             read_only: !file.valid_utf8,
         });
         self.record_recent(path);
-        out.events.push(Event::DocOpened { doc, path: path.clone(), text: shown });
-        out.effects.push(Effect::Render { doc, generation: Generation::default() });
+        out.events.push(Event::DocOpened {
+            doc,
+            path: path.clone(),
+            text: shown,
+        });
+        out.effects.push(Effect::Render {
+            doc,
+            generation: Generation::default(),
+        });
     }
 
     /// Shared recents (`.fed` `recent_files`, FE-298…301): recorded on every
@@ -395,13 +443,19 @@ impl<B: DraftBackend> Workspace<B> {
                 match RelPath::parse(&raw) {
                     Ok(path) if !is_config_file(path.as_str()) => {
                         self.expect_write(&path, b"");
-                        service.create(path.as_str(), b"").map(|_| path).map_err(|e| user_error(Op::Create, &e, false))
+                        service
+                            .create(path.as_str(), b"")
+                            .map(|_| path)
+                            .map_err(|e| user_error(Op::Create, &e, false))
                     }
                     _ => Err(UserError::new("errors.failed_to_create")),
                 }
             }
             NoteTemplate::Hugo => {
-                let style_value = self.config.current().value(frankmd_config::Key::HugoPathStyle);
+                let style_value = self
+                    .config
+                    .current()
+                    .value(frankmd_config::Key::HugoPathStyle);
                 let style = frankmd_core::hugo::HugoPathStyle::from_config(match &style_value {
                     Some(frankmd_config::Value::Str(s)) => Some(s.as_str()),
                     _ => None,
@@ -410,7 +464,10 @@ impl<B: DraftBackend> Workspace<B> {
                 service
                     .create_hugo_post(name, parent, style, self.clock.now())
                     .map_err(|e| user_error(Op::Create, &e, false))
-                    .and_then(|post| RelPath::parse(&post.path).map_err(|_| UserError::new("errors.failed_to_create")))
+                    .and_then(|post| {
+                        RelPath::parse(&post.path)
+                            .map_err(|_| UserError::new("errors.failed_to_create"))
+                    })
             }
         };
         match created {
@@ -429,12 +486,19 @@ impl<B: DraftBackend> Workspace<B> {
     fn create_hugo_post(&mut self, parent: &RelPath, title: &str, slug: &str, out: &mut Out) {
         use frankmd_core::hugo;
         let slug = slug.trim();
-        let slug = if slug.is_empty() { frankmd_core::slug::slugify(title) } else { frankmd_core::slug::slugify(slug) };
+        let slug = if slug.is_empty() {
+            frankmd_core::slug::slugify(title)
+        } else {
+            frankmd_core::slug::slugify(slug)
+        };
         if slug.is_empty() {
             out.error(UserError::new("errors.failed_to_create"));
             return;
         }
-        let style_value = self.config.current().value(frankmd_config::Key::HugoPathStyle);
+        let style_value = self
+            .config
+            .current()
+            .value(frankmd_config::Key::HugoPathStyle);
         let style = hugo::HugoPathStyle::from_config(match &style_value {
             Some(frankmd_config::Value::Str(s)) => Some(s.as_str()),
             _ => None,
@@ -445,7 +509,9 @@ impl<B: DraftBackend> Workspace<B> {
             hugo::HugoPathStyle::Dated => format!("{}/{slug}/index.md", hugo::date_path(&now)),
         };
         let service = NotesService::new(&self.vault);
-        let template = service.hugo_template().map(|bytes| String::from_utf8_lossy(&bytes).into_owned());
+        let template = service
+            .hugo_template()
+            .map(|bytes| String::from_utf8_lossy(&bytes).into_owned());
         let content = hugo::render_template(
             template.as_deref().unwrap_or(hugo::DEFAULT_TEMPLATE),
             title,
@@ -469,17 +535,25 @@ impl<B: DraftBackend> Workspace<B> {
 
     /// "Keep both": the draft goes to a sibling copy (never overwriting a
     /// file), then the dialog resolves to the file on disk.
-    fn keep_both(&mut self, request: crate::autosave::RecoveryRequest, now: std::time::Instant, out: &mut Out) {
+    fn keep_both(
+        &mut self,
+        request: crate::autosave::RecoveryRequest,
+        now: std::time::Instant,
+        out: &mut Out,
+    ) {
         let Ok(path) = RelPath::parse(&request.path) else {
             out.error(UserError::new("errors.failed_to_create"));
-            out.events.push(Event::Autosave(AutosaveEffect::OpenRecovery(request)));
+            out.events
+                .push(Event::Autosave(AutosaveEffect::OpenRecovery(request)));
             return;
         };
         let zone = self.clock.now().time_zone().clone();
         let service = NotesService::new(&self.vault);
         let mut created = None;
         for attempt in 1..=20 {
-            let Some(copy) = crate::recovery_copy::copy_path(&path, request.backup_timestamp, &zone, attempt) else {
+            let Some(copy) =
+                crate::recovery_copy::copy_path(&path, request.backup_timestamp, &zone, attempt)
+            else {
                 break;
             };
             self.expect_write(&copy, request.backup_content.as_bytes());
@@ -491,17 +565,22 @@ impl<B: DraftBackend> Workspace<B> {
                 Err(FsError::AlreadyExists(_)) => {}
                 Err(err) => {
                     out.error(user_error(Op::Create, &err, false));
-                    out.events.push(Event::Autosave(AutosaveEffect::OpenRecovery(request)));
+                    out.events
+                        .push(Event::Autosave(AutosaveEffect::OpenRecovery(request)));
                     return;
                 }
             }
         }
         let Some(copy) = created else {
             out.error(UserError::new("errors.note_already_exists"));
-            out.events.push(Event::Autosave(AutosaveEffect::OpenRecovery(request)));
+            out.events
+                .push(Event::Autosave(AutosaveEffect::OpenRecovery(request)));
             return;
         };
-        self.autosave.recovery_resolved(crate::autosave::RecoveryResolution::accept_server(&request), now);
+        self.autosave.recovery_resolved(
+            crate::autosave::RecoveryResolution::accept_server(&request),
+            now,
+        );
         out.events.push(Event::Reveal { path: copy });
         out.effects.push(self.rescan());
     }
@@ -565,13 +644,21 @@ impl<B: DraftBackend> Workspace<B> {
     /// Sequential moves into `dest`, skipping items inside another selected
     /// item, stopping at the first failure (HP-029).
     fn move_many(&mut self, items: Vec<RelPath>, dest: &RelPath, out: &mut Out) {
-        let roots: Vec<&RelPath> =
-            items.iter().filter(|item| !items.iter().any(|other| other != *item && item.starts_with(other))).collect();
+        let roots: Vec<&RelPath> = items
+            .iter()
+            .filter(|item| {
+                !items
+                    .iter()
+                    .any(|other| other != *item && item.starts_with(other))
+            })
+            .collect();
         for item in roots {
             let Some(name) = item.file_name() else {
                 continue;
             };
-            if item.parent().as_ref() == Some(dest) || (dest.is_root() && item.parent().is_none_or(|p| p.is_root())) {
+            if item.parent().as_ref() == Some(dest)
+                || (dest.is_root() && item.parent().is_none_or(|p| p.is_root()))
+            {
                 continue;
             }
             let Ok(to) = RelPath::parse(&join(dest, name)) else {
@@ -591,7 +678,11 @@ impl<B: DraftBackend> Workspace<B> {
         }
         let service = NotesService::new(&self.vault);
         let folder = service.is_dir(path.as_str()).unwrap_or(false);
-        let active = self.open.as_ref().filter(|o| o.path.starts_with(path)).map(|o| (o.id, &o.path == path));
+        let active = self
+            .open
+            .as_ref()
+            .filter(|o| o.path.starts_with(path))
+            .map(|o| (o.id, &o.path == path));
         let mut expected_revision = None;
         match active {
             Some((doc, true)) => match self.autosave.prepare_for_file_deletion(doc) {
@@ -661,11 +752,14 @@ impl<B: DraftBackend> Workspace<B> {
             Err(FsError::NotFound(_)) => out.events.push(Event::DocDeletedOnDisk { doc: open.id }),
             Err(_) => {}
             Ok(file) if file.revision == open.disk_revision => {}
-            Ok(_) if self.autosave.has_unsaved_changes() => out.events.push(Event::DocConflict { doc: open.id }),
+            Ok(_) if self.autosave.has_unsaved_changes() => {
+                out.events.push(Event::DocConflict { doc: open.id })
+            }
             Ok(file) => {
                 let text = String::from_utf8_lossy(&file.bytes).into_owned();
                 self.autosave.set_editor_text(&text);
-                self.autosave.set_file(open.id, open.path.as_str(), &text, Some(&file.revision.0));
+                self.autosave
+                    .set_file(open.id, open.path.as_str(), &text, Some(&file.revision.0));
                 if let Some(o) = self.open.as_mut() {
                     o.disk_revision = file.revision;
                     o.read_only = !file.valid_utf8;
@@ -678,5 +772,9 @@ impl<B: DraftBackend> Workspace<B> {
 
 /// `parent/name` (just `name` at the root).
 fn join(parent: &RelPath, name: &str) -> String {
-    if parent.is_root() { name.to_owned() } else { format!("{}/{name}", parent.as_str()) }
+    if parent.is_root() {
+        name.to_owned()
+    } else {
+        format!("{}/{name}", parent.as_str())
+    }
 }

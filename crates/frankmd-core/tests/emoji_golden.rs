@@ -11,23 +11,46 @@ fn ensure(cond: bool, msg: impl FnOnce() -> String) -> Result<(), String> {
 }
 
 fn eq(got: &Value, want: &Value) -> Result<(), String> {
-    ensure(got == want, || format!("\n  got:  {}\n  want: {}", trunc(got), trunc(want)))
+    ensure(got == want, || {
+        format!("\n  got:  {}\n  want: {}", trunc(got), trunc(want))
+    })
 }
 
 fn trunc(v: &Value) -> String {
     let s = v.to_string();
-    if s.len() > 400 { format!("{}…", &s[..s.char_indices().take_while(|(i, _)| *i < 400).last().map_or(0, |(i, c)| i + c.len_utf8())]) } else { s }
+    if s.len() > 400 {
+        format!(
+            "{}…",
+            &s[..s
+                .char_indices()
+                .take_while(|(i, _)| *i < 400)
+                .last()
+                .map_or(0, |(i, c)| i + c.len_utf8())]
+        )
+    } else {
+        s
+    }
 }
 
 fn emoji_map_json() -> Value {
-    Value::Object(emoji::emoji_map().iter().map(|(k, v)| ((*k).to_owned(), json!(v))).collect())
+    Value::Object(
+        emoji::emoji_map()
+            .iter()
+            .map(|(k, v)| ((*k).to_owned(), json!(v)))
+            .collect(),
+    )
 }
 
 fn icon_map_json() -> Value {
     Value::Object(
         icons::icon_map()
             .iter()
-            .map(|(k, g)| ((*k).to_owned(), json!({"path": g.path, "viewBox": g.view_box})))
+            .map(|(k, g)| {
+                (
+                    (*k).to_owned(),
+                    json!({"path": g.path, "viewBox": g.view_box}),
+                )
+            })
             .collect(),
     )
 }
@@ -41,16 +64,21 @@ fn golden_js_emoji_data() {
         let want = decode_js(&c.expected);
         match c.func.as_deref() {
             Some("EMOJI_DATA") => {
-                let got: Vec<Value> =
-                    emoji::shortcodes().iter().map(|e| json!([e.shortcode, e.emoji, e.keywords])).collect();
+                let got: Vec<Value> = emoji::shortcodes()
+                    .iter()
+                    .map(|e| json!([e.shortcode, e.emoji, e.keywords]))
+                    .collect();
                 eq(&Value::Array(got), &want)
             }
             Some("EMOJI_DATA(shape)") => {
                 let rows = emoji::shortcodes();
                 let map = emoji::emoji_map();
                 let mut seen = std::collections::HashSet::new();
-                let dups: Vec<&str> =
-                    rows.iter().filter(|e| !seen.insert(e.shortcode.as_str())).map(|e| e.shortcode.as_str()).collect();
+                let dups: Vec<&str> = rows
+                    .iter()
+                    .filter(|e| !seen.insert(e.shortcode.as_str()))
+                    .map(|e| e.shortcode.as_str())
+                    .collect();
                 let got = json!({
                     "entries": rows.len(),
                     "mapSize": map.len(),
@@ -64,9 +92,14 @@ fn golden_js_emoji_data() {
                 eq(&emoji_map_json(), &want)?;
                 // lookup() must agree with the map for every shortcode.
                 for (k, v) in want.as_object().unwrap() {
-                    ensure(emoji::lookup(k) == v.as_str(), || format!("lookup({k:?}) != {v}"))?;
+                    ensure(emoji::lookup(k) == v.as_str(), || {
+                        format!("lookup({k:?}) != {v}")
+                    })?;
                 }
-                ensure(emoji::lookup("definitely_not_a_shortcode").is_none(), || "unknown shortcode resolved".into())
+                ensure(
+                    emoji::lookup("definitely_not_a_shortcode").is_none(),
+                    || "unknown shortcode resolved".into(),
+                )
             }
             other => Err(format!("unhandled fn {other:?}")),
         }
@@ -165,8 +198,10 @@ fn golden_js_icon_data() {
         let all = icons::icons();
         match c.func.as_deref() {
             Some("ICON_DATA") => {
-                let got: Vec<Value> =
-                    all.iter().map(|i| json!([i.name, i.path, i.view_box, i.keywords])).collect();
+                let got: Vec<Value> = all
+                    .iter()
+                    .map(|i| json!([i.name, i.path, i.view_box, i.keywords]))
+                    .collect();
                 eq(&Value::Array(got), &want)
             }
             Some("ICON_DATA(names)") => {
@@ -176,11 +211,17 @@ fn golden_js_icon_data() {
             Some("ICON_DATA(shape)") => {
                 let map = icons::icon_map();
                 let mut seen = std::collections::HashSet::new();
-                let dups: Vec<&str> =
-                    all.iter().filter(|i| !seen.insert(i.name.as_str())).map(|i| i.name.as_str()).collect();
+                let dups: Vec<&str> = all
+                    .iter()
+                    .filter(|i| !seen.insert(i.name.as_str()))
+                    .map(|i| i.name.as_str())
+                    .collect();
                 let mut vb_seen = std::collections::HashSet::new();
-                let vbs: Vec<&str> =
-                    all.iter().map(|i| i.view_box.as_str()).filter(|v| vb_seen.insert(*v)).collect();
+                let vbs: Vec<&str> = all
+                    .iter()
+                    .map(|i| i.view_box.as_str())
+                    .filter(|v| vb_seen.insert(*v))
+                    .collect();
                 let got = json!({
                     "entries": all.len(),
                     "mapSize": map.len(),

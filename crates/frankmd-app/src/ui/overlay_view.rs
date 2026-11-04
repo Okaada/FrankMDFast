@@ -31,8 +31,12 @@ impl Shell {
                 .into_any_element(),
             OverlayKind::Settings => self.render_settings(window, cx).into_any_element(),
             OverlayKind::Help => self.render_help(theme, cx).into_any_element(),
-            OverlayKind::Dialog("recovery") => self.render_recovery(theme, window, cx).into_any_element(),
-            OverlayKind::Dialog("recent-switcher") => self.render_switcher(theme, cx).into_any_element(),
+            OverlayKind::Dialog("recovery") => {
+                self.render_recovery(theme, window, cx).into_any_element()
+            }
+            OverlayKind::Dialog("recent-switcher") => {
+                self.render_switcher(theme, cx).into_any_element()
+            }
             OverlayKind::Dialog(kind) => match self.hosted_dialog(kind) {
                 Some(view) => view,
                 None => self.render_file_dialog(kind, window, cx),
@@ -53,7 +57,10 @@ impl Shell {
             .on_click(move |_, window, cx| {
                 if dismissible {
                     let _ = this.update(cx, |shell, cx| {
-                        shell.editor.pane.update(cx, |p, _| p.clear_pending_insertion());
+                        shell
+                            .editor
+                            .pane
+                            .update(cx, |p, _| p.clear_pending_insertion());
                         shell.close_overlay(window, cx)
                     });
                 }
@@ -69,7 +76,11 @@ impl Shell {
 
 impl Shell {
     /// Ctrl+Tab switcher (ui-spec §5.2): MRU notes of this session, 400 px.
-    fn render_switcher(&mut self, theme: &Theme, cx: &mut Context<Self>) -> impl IntoElement + use<> {
+    fn render_switcher(
+        &mut self,
+        theme: &Theme,
+        cx: &mut Context<Self>,
+    ) -> impl IntoElement + use<> {
         let selected = self.switcher.selected().map(str::to_owned);
         let this = cx.entity().downgrade();
         let rows: Vec<_> = self
@@ -91,7 +102,9 @@ impl Shell {
                     .px_3()
                     .gap_2()
                     .when(is_selected, |el| {
-                        el.bg(theme.selection).border_l_2().border_color(theme.primary)
+                        el.bg(theme.selection)
+                            .border_l_2()
+                            .border_color(theme.primary)
                     })
                     .child(div().truncate().child(name))
                     .child(

@@ -94,13 +94,21 @@ pub(crate) fn ruby_float_to_s(f: f64) -> String {
         return "NaN".to_owned();
     }
     if f.is_infinite() {
-        return if f > 0.0 { "Infinity".to_owned() } else { "-Infinity".to_owned() };
+        return if f > 0.0 {
+            "Infinity".to_owned()
+        } else {
+            "-Infinity".to_owned()
+        };
     }
     let abs = f.abs();
     if abs != 0.0 && !(1e-4..1e16).contains(&abs) {
         let s = format!("{f:e}");
         let (mantissa, exp) = s.split_once('e').unwrap_or((&s, "0"));
-        let mantissa = if mantissa.contains('.') { mantissa.to_owned() } else { format!("{mantissa}.0") };
+        let mantissa = if mantissa.contains('.') {
+            mantissa.to_owned()
+        } else {
+            format!("{mantissa}.0")
+        };
         let exp: i32 = exp.parse().unwrap_or(0);
         let sign = if exp < 0 { '-' } else { '+' };
         return format!("{mantissa}e{sign}{:02}", exp.abs());

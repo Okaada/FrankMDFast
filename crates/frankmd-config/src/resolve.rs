@@ -1,8 +1,8 @@
 //! `.fed > ENV > default` resolution with provenance.
 
+use crate::schema::KeyType;
 use crate::value::{cast, present_str};
 use crate::{ConfigError, EnvSnapshot, Key, Value, fed};
-use crate::schema::KeyType;
 use secrecy::SecretString;
 
 /// Where a resolved value came from (shown in Settings: "set by ENV", ...).
@@ -206,7 +206,12 @@ impl ResolvedConfig {
     /// Build from `.fed` text (or `None` if absent) and an ENV snapshot.
     pub fn new(fed_text: Option<&str>, env: EnvSnapshot) -> Self {
         let parsed = fed_text.map(fed::parse).unwrap_or_default();
-        Self { file: parsed.values, global: Vec::new(), env, warnings: parsed.warnings }
+        Self {
+            file: parsed.values,
+            global: Vec::new(),
+            env,
+            warnings: parsed.warnings,
+        }
     }
 
     /// Build from raw `.fed` bytes. Invalid UTF-8 → no file values at all plus
@@ -215,13 +220,21 @@ impl ResolvedConfig {
         match fed.map(std::str::from_utf8) {
             None => Self::new(None, env),
             Some(Ok(text)) => Self::new(Some(text), env),
-            Some(Err(_)) => Self::failed(env, "Failed to load .fed config: invalid byte sequence in UTF-8".to_owned()),
+            Some(Err(_)) => Self::failed(
+                env,
+                "Failed to load .fed config: invalid byte sequence in UTF-8".to_owned(),
+            ),
         }
     }
 
     /// No file values, one warning (the file could not be read or decoded).
     pub(crate) fn failed(env: EnvSnapshot, warning: String) -> Self {
-        Self { file: Vec::new(), global: Vec::new(), env, warnings: vec![warning] }
+        Self {
+            file: Vec::new(),
+            global: Vec::new(),
+            env,
+            warnings: vec![warning],
+        }
     }
 
     /// Attach the global layer (see [`crate::global::load_global`]); sits
@@ -269,18 +282,30 @@ impl ResolvedConfig {
     /// **[COMPAT]** `Config#get`, with the global layer between `.fed` and ENV.
     pub fn get(&self, key: Key) -> Resolved {
         if let Some(v) = self.file_value(key) {
-            return Resolved { value: v.clone(), source: Provenance::Fed };
+            return Resolved {
+                value: v.clone(),
+                source: Provenance::Fed,
+            };
         }
         if let Some(v) = self.global_value(key) {
-            return Resolved { value: v.clone(), source: Provenance::Global };
+            return Resolved {
+                value: v.clone(),
+                source: Provenance::Global,
+            };
         }
         let spec = key.spec();
         if let Some(var) = spec.env
             && let Some(raw) = self.env.present(var)
         {
-            return Resolved { value: cast(raw, spec.ty).ok().flatten(), source: Provenance::Env(var) };
+            return Resolved {
+                value: cast(raw, spec.ty).ok().flatten(),
+                source: Provenance::Env(var),
+            };
         }
-        Resolved { value: default_of(key), source: Provenance::Default }
+        Resolved {
+            value: default_of(key),
+            source: Provenance::Default,
+        }
     }
 
     /// `get(key).value`.
@@ -295,10 +320,19 @@ impl ResolvedConfig {
             return self.get(key);
         }
         match self.file_value(key) {
-            Some(v) => Resolved { value: v.clone(), source: Provenance::Fed },
+            Some(v) => Resolved {
+                value: v.clone(),
+                source: Provenance::Fed,
+            },
             None => match self.global_value(key) {
-                Some(v) => Resolved { value: v.clone(), source: Provenance::Global },
-                None => Resolved { value: default_of(key), source: Provenance::Default },
+                Some(v) => Resolved {
+                    value: v.clone(),
+                    source: Provenance::Global,
+                },
+                None => Resolved {
+                    value: default_of(key),
+                    source: Provenance::Default,
+                },
             },
         }
     }
@@ -309,7 +343,9 @@ impl ResolvedConfig {
     /// in `config.toml` gets the same ENV-ignoring file-only mode; lookups in
     /// that mode are `.fed > global > default`.
     pub fn ai_configured_in_file(&self) -> bool {
-        Key::AI_CREDENTIALS.iter().any(|k| self.file_value(*k).is_some() || self.global_value(*k).is_some())
+        Key::AI_CREDENTIALS
+            .iter()
+            .any(|k| self.file_value(*k).is_some() || self.global_value(*k).is_some())
     }
 
     /// **[COMPAT]** `ai_providers_available` (order: ollama, openrouter,
@@ -331,16 +367,22 @@ impl ResolvedConfig {
         let configured = present_string(self.get_ai(Key::AiProvider).value)
             .and_then(|name| AiProviderId::from_name(&name))
             .filter(|p| available.contains(p));
-        configured.or_else(|| AiProviderId::PRIORITY.into_iter().find(|p| available.contains(p)))
+        configured.or_else(|| {
+            AiProviderId::PRIORITY
+                .into_iter()
+                .find(|p| available.contains(p))
+        })
     }
 
     /// **[COMPAT]** `effective_ai_model`: `get_ai(ai_model)` if present, else
     /// `get_ai(<provider>_model)`; `None` without a provider.
     pub fn effective_ai_model(&self) -> Option<String> {
         let provider = self.effective_ai_provider()?;
-        present_string(self.get_ai(Key::AiModel).value).or_else(|| match self.get_ai(provider.model_key()).value {
-            Some(Value::Str(s)) => Some(s),
-            _ => None,
+        present_string(self.get_ai(Key::AiModel).value).or_else(|| {
+            match self.get_ai(provider.model_key()).value {
+                Some(Value::Str(s)) => Some(s),
+                _ => None,
+            }
         })
     }
 
@@ -354,7 +396,9 @@ impl ResolvedConfig {
         if let Some(Some(Value::Str(key))) = self.global_value(Key::OpenrouterApiKey) {
             return Some(SecretString::from(key.clone()));
         }
-        self.env.present("OPENROUTER_API_KEY").map(|key| SecretString::from(key.to_owned()))
+        self.env
+            .present("OPENROUTER_API_KEY")
+            .map(|key| SecretString::from(key.to_owned()))
     }
 
     /// **[COMPAT]** `upload_extensions`: split on `,`, trim, downcase, drop blanks.
@@ -372,7 +416,11 @@ impl ResolvedConfig {
     /// **[COMPAT]** `UploadStorage.s3_configured?`: access key, secret and bucket
     /// present, and `aws_s3_endpoint` (if set) a valid http(s) URL with a host.
     pub fn s3_configured(&self) -> bool {
-        let creds = [Key::AwsAccessKeyId, Key::AwsSecretAccessKey, Key::AwsS3Bucket];
+        let creds = [
+            Key::AwsAccessKeyId,
+            Key::AwsSecretAccessKey,
+            Key::AwsS3Bucket,
+        ];
         if !creds.iter().all(|k| is_present(self.value(*k).as_ref())) {
             return false;
         }
@@ -396,7 +444,10 @@ impl ResolvedConfig {
 
     /// **[COMPAT]** `ui_settings`: every `UI_KEYS` key with its resolved value.
     pub fn ui_settings(&self) -> Vec<(Key, Option<Value>)> {
-        Key::ui_keys().into_iter().map(|k| (k, self.value(k))).collect()
+        Key::ui_keys()
+            .into_iter()
+            .map(|k| (k, self.value(k)))
+            .collect()
     }
 
     /// **[COMPAT]** `all_settings` (masked): sensitive keys appear as
@@ -407,7 +458,10 @@ impl ResolvedConfig {
             .map(|k| {
                 let v = self.value(k);
                 if k.spec().secret {
-                    (format!("{}_configured", k.name()), serde_json::Value::Bool(is_present(v.as_ref())))
+                    (
+                        format!("{}_configured", k.name()),
+                        serde_json::Value::Bool(is_present(v.as_ref())),
+                    )
                 } else {
                     (k.name().to_owned(), json_of(v.as_ref()))
                 }
@@ -427,7 +481,13 @@ impl ResolvedConfig {
                 } else {
                     json_of(value.as_ref())
                 };
-                ConfigEntry { key, value, source, env_var: spec.env, sensitive: spec.secret }
+                ConfigEntry {
+                    key,
+                    value,
+                    source,
+                    env_var: spec.env,
+                    sensitive: spec.secret,
+                }
             })
             .collect()
     }

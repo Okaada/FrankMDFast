@@ -26,7 +26,11 @@ fn search_returns_matching_results() {
 fn search_returns_empty_array_for_no_matches() {
     let sb = Sandbox::new();
     sb.note("test.md", "Hello world", M);
-    assert!(content::search(&sb.root, &Query::ui("nonexistent")).hits.is_empty());
+    assert!(
+        content::search(&sb.root, &Query::ui("nonexistent"))
+            .hits
+            .is_empty()
+    );
 }
 
 // port: test/controllers/notes_controller_test.rb:603 "search supports regex patterns"
@@ -34,7 +38,12 @@ fn search_returns_empty_array_for_no_matches() {
 fn search_supports_regex_patterns() {
     let sb = Sandbox::new();
     sb.note("test.md", "foo123bar", M);
-    assert_eq!(content::search(&sb.root, &Query::ui(r"foo\d+bar")).hits.len(), 1);
+    assert_eq!(
+        content::search(&sb.root, &Query::ui(r"foo\d+bar"))
+            .hits
+            .len(),
+        1
+    );
 }
 
 // port: test/controllers/notes_controller_test.rb:613 "search returns context lines"

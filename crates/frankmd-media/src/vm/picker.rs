@@ -37,8 +37,15 @@ pub enum Source {
 
 impl Source {
     /// Rail order.
-    pub const ALL: [Source; 7] =
-        [Source::Upload, Source::Library, Source::Folder, Source::Web, Source::Google, Source::Pinterest, Source::Ai];
+    pub const ALL: [Source; 7] = [
+        Source::Upload,
+        Source::Library,
+        Source::Folder,
+        Source::Web,
+        Source::Google,
+        Source::Pinterest,
+        Source::Ai,
+    ];
 
     /// Position in the rail.
     pub fn index(self) -> usize {
@@ -144,7 +151,10 @@ impl PickerConfig {
 
     fn extensions(&self) -> Vec<String> {
         if self.image_extensions.is_empty() {
-            crate::config::DEFAULT_IMAGE_EXTENSIONS.iter().map(|e| (*e).to_owned()).collect()
+            crate::config::DEFAULT_IMAGE_EXTENSIONS
+                .iter()
+                .map(|e| (*e).to_owned())
+                .collect()
         } else {
             self.image_extensions.clone()
         }
@@ -322,10 +332,21 @@ pub struct StoreError {
 #[derive(Debug, Clone, PartialEq)]
 enum Target {
     File(LocalFile),
-    Managed { url: String },
-    Server { path: String, url: String },
-    Remote { url: String },
-    Generated { data: String, mime: String, filename: String },
+    Managed {
+        url: String,
+    },
+    Server {
+        path: String,
+        url: String,
+    },
+    Remote {
+        url: String,
+    },
+    Generated {
+        data: String,
+        mime: String,
+        filename: String,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -384,7 +405,15 @@ struct FolderState {
 
 impl Default for FolderState {
     fn default() -> Self {
-        Self { dir: None, all: Vec::new(), search: String::new(), limit: 10, offset: 0, error: None, loading: false }
+        Self {
+            dir: None,
+            all: Vec::new(),
+            search: String::new(),
+            limit: 10,
+            offset: 0,
+            error: None,
+            loading: false,
+        }
     }
 }
 
@@ -417,7 +446,9 @@ impl AiResult {
     /// The decoded image bytes (preview).
     pub fn decoded(&self) -> Option<Vec<u8>> {
         use base64::Engine as _;
-        base64::engine::general_purpose::STANDARD.decode(&self.data).ok()
+        base64::engine::general_purpose::STANDARD
+            .decode(&self.data)
+            .ok()
     }
 }
 
@@ -655,7 +686,9 @@ impl ImagePicker {
             Source::Library => vec![self.library_load()],
             Source::Ai if self.config.server_images && !self.ai.refs_loaded => {
                 self.ai.refs_loaded = true;
-                vec![PickerEffect::LoadRefImages { search: self.ai.ref_search.clone() }]
+                vec![PickerEffect::LoadRefImages {
+                    search: self.ai.ref_search.clone(),
+                }]
             }
             _ => Vec::new(),
         }
@@ -665,7 +698,11 @@ impl ImagePicker {
     pub fn step_source(&mut self, forward: bool) -> Vec<PickerEffect> {
         let n = Source::ALL.len();
         let index = self.source.index();
-        let next = if forward { (index + 1) % n } else { (index + n - 1) % n };
+        let next = if forward {
+            (index + 1) % n
+        } else {
+            (index + n - 1) % n
+        };
         self.select_source(Source::ALL[next])
     }
 
@@ -680,10 +717,19 @@ impl ImagePicker {
         self.row.set_mode(mode, key_mode);
         let today = self.today();
         match default_key {
-            Some(file) => self.row.set_default_key(&crate::s3_key::default_s3_key(&file, today)),
-            None => self.row.set_default_key(&crate::s3_key::default_s3_prefix(today)),
+            Some(file) => self
+                .row
+                .set_default_key(&crate::s3_key::default_s3_key(&file, today)),
+            None => self
+                .row
+                .set_default_key(&crate::s3_key::default_s3_prefix(today)),
         }
-        self.selected = Some(Selected { source, key, name, target });
+        self.selected = Some(Selected {
+            source,
+            key,
+            name,
+            target,
+        });
         self.alt = alt;
     }
 
@@ -697,7 +743,10 @@ impl ImagePicker {
 
     /// Whether the managed image (collection Managed) is selected: no storage row.
     pub fn storage_row_visible(&self) -> bool {
-        !matches!(self.selected.as_ref().map(|s| &s.target), Some(Target::Managed { .. }) | None)
+        !matches!(
+            self.selected.as_ref().map(|s| &s.target),
+            Some(Target::Managed { .. }) | None
+        )
     }
 
     // ----- Upload ------------------------------------------------------------------------
@@ -718,10 +767,18 @@ impl ImagePicker {
                     Some(dot) if dot + 1 < file.name.len() => file.name[dot..].to_lowercase(),
                     _ => String::new(),
                 };
-                let ext = if ext.is_empty() { Text::key("dialogs.image_picker.no_file_extension") } else { Text::Raw(ext) };
+                let ext = if ext.is_empty() {
+                    Text::key("dialogs.image_picker.no_file_extension")
+                } else {
+                    Text::Raw(ext)
+                };
                 rejected.push(Text::Key(
                     "dialogs.image_picker.drop_rejected",
-                    vec![("name", Text::Raw(file.name.clone())), ("ext", ext), ("list", Text::Raw(allowed.join(", ")))],
+                    vec![
+                        ("name", Text::Raw(file.name.clone())),
+                        ("ext", ext),
+                        ("list", Text::Raw(allowed.join(", "))),
+                    ],
                 ));
             }
         }
@@ -745,7 +802,13 @@ impl ImagePicker {
 
     fn select_upload(&mut self, index: usize, file: LocalFile) {
         let alt = markup::file_alt(&file.name);
-        self.select(Source::Upload, format!("upload-{index}"), file.name.clone(), alt, Target::File(file));
+        self.select(
+            Source::Upload,
+            format!("upload-{index}"),
+            file.name.clone(),
+            alt,
+            Target::File(file),
+        );
     }
 
     /// Per-file rejection lines (`drop_rejected`).
@@ -782,7 +845,11 @@ impl ImagePicker {
     }
 
     fn file_cards(&self, source: Source, files: &[LocalFile]) -> Vec<ImageCard> {
-        let selected = self.selected.as_ref().filter(|s| s.source == source).map(|s| s.key.as_str());
+        let selected = self
+            .selected
+            .as_ref()
+            .filter(|s| s.source == source)
+            .map(|s| s.key.as_str());
         let prefix = source.id();
         files
             .iter()
@@ -820,31 +887,62 @@ impl ImagePicker {
         let source = self.source;
         match source {
             Source::Upload | Source::Folder => {
-                let files = if source == Source::Upload { &self.upload.files } else { &self.folder_page_files() };
+                let files = if source == Source::Upload {
+                    &self.upload.files
+                } else {
+                    &self.folder_page_files()
+                };
                 let index = key.rsplit('-').next().and_then(|i| i.parse::<usize>().ok());
                 if let Some(file) = index.and_then(|i| files.get(i)).cloned() {
                     let alt = markup::file_alt(&file.name);
-                    self.select(source, key.to_owned(), file.name.clone(), alt, Target::File(file));
+                    self.select(
+                        source,
+                        key.to_owned(),
+                        file.name.clone(),
+                        alt,
+                        Target::File(file),
+                    );
                 }
             }
             Source::Library => {
-                let Some(page) = &self.library.page else { return };
-                let Some(image) = page.images.iter().find(|i| i.path == key).cloned() else { return };
+                let Some(page) = &self.library.page else {
+                    return;
+                };
+                let Some(image) = page.images.iter().find(|i| i.path == key).cloned() else {
+                    return;
+                };
                 let alt = markup::file_alt(&image.name);
                 let target = match page.collection {
-                    PickerCollection::Managed => Target::Managed { url: image.url.clone() },
-                    PickerCollection::Server => Target::Server { path: image.path.clone(), url: image.url.clone() },
+                    PickerCollection::Managed => Target::Managed {
+                        url: image.url.clone(),
+                    },
+                    PickerCollection::Server => Target::Server {
+                        path: image.path.clone(),
+                        url: image.url.clone(),
+                    },
                 };
                 self.select(source, key.to_owned(), image.name, alt, target);
             }
             Source::Web | Source::Google | Source::Pinterest => {
                 let state = self.search_state(source);
                 let index = key.parse::<usize>().ok();
-                let Some(image) = index.and_then(|i| state.results.get(i)).cloned() else { return };
+                let Some(image) = index.and_then(|i| state.results.get(i)).cloned() else {
+                    return;
+                };
                 let title = image.title.clone().unwrap_or_default();
-                let name = if title.is_empty() { "Image".to_owned() } else { title.clone() };
+                let name = if title.is_empty() {
+                    "Image".to_owned()
+                } else {
+                    title.clone()
+                };
                 let alt = markup::web_alt(&title);
-                self.select(source, key.to_owned(), name, alt, Target::Remote { url: image.url });
+                self.select(
+                    source,
+                    key.to_owned(),
+                    name,
+                    alt,
+                    Target::Remote { url: image.url },
+                );
             }
             Source::Ai => {}
         }
@@ -931,7 +1029,8 @@ impl ImagePicker {
             Ok(page) => {
                 self.library.error = None;
                 if !page.server_available && page.collection == PickerCollection::Server {
-                    self.library.error = Some(Text::key("dialogs.image_picker.local_path_required"));
+                    self.library.error =
+                        Some(Text::key("dialogs.image_picker.local_path_required"));
                 }
                 self.library.page = Some(page);
             }
@@ -959,8 +1058,14 @@ impl ImagePicker {
 
     /// Library grid (keys are the image paths).
     pub fn library_cards(&self) -> Vec<ImageCard> {
-        let Some(page) = &self.library.page else { return Vec::new() };
-        let selected = self.selected.as_ref().filter(|s| s.source == Source::Library).map(|s| s.key.as_str());
+        let Some(page) = &self.library.page else {
+            return Vec::new();
+        };
+        let selected = self
+            .selected
+            .as_ref()
+            .filter(|s| s.source == Source::Library)
+            .map(|s| s.key.as_str());
         page.images
             .iter()
             .map(|image| {
@@ -989,7 +1094,13 @@ impl ImagePicker {
         }
         let from = page.offset + 1;
         let to = (page.offset + page.images.len()).min(page.total);
-        Some((from, to, page.total, page.offset > 0, page.offset + page.limit < page.total))
+        Some((
+            from,
+            to,
+            page.total,
+            page.offset > 0,
+            page.offset + page.limit < page.total,
+        ))
     }
 
     /// Trash button: ask first (`dialogs.image_picker.delete_confirm`).
@@ -997,28 +1108,43 @@ impl ImagePicker {
         let page = self.library.page.as_ref()?;
         let image = page.images.iter().find(|i| i.path == path)?;
         self.library.confirm = Some((image.path.clone(), image.name.clone()));
-        Some(Text::with("dialogs.image_picker.delete_confirm", &[("name", &image.name)]))
+        Some(Text::with(
+            "dialogs.image_picker.delete_confirm",
+            &[("name", &image.name)],
+        ))
     }
 
     /// The pending delete confirmation `(path, name)`.
     pub fn pending_delete(&self) -> Option<(&str, &str)> {
-        self.library.confirm.as_ref().map(|(p, n)| (p.as_str(), n.as_str()))
+        self.library
+            .confirm
+            .as_ref()
+            .map(|(p, n)| (p.as_str(), n.as_str()))
     }
 
     /// The confirmation answered.
     pub fn confirm_delete(&mut self, accept: bool) -> Vec<PickerEffect> {
-        let Some((path, _)) = self.library.confirm.take() else { return Vec::new() };
+        let Some((path, _)) = self.library.confirm.take() else {
+            return Vec::new();
+        };
         if !accept {
             return Vec::new();
         }
-        vec![PickerEffect::DeleteImage { collection: self.library.collection, path }]
+        vec![PickerEffect::DeleteImage {
+            collection: self.library.collection,
+            path,
+        }]
     }
 
     /// The delete finished: reload (one page back when the page emptied).
     pub fn delete_result(&mut self, result: Result<(), Text>) -> Vec<PickerEffect> {
         match result {
             Ok(()) => {
-                let last_on_page = self.library.page.as_ref().is_some_and(|p| p.images.len() == 1);
+                let last_on_page = self
+                    .library
+                    .page
+                    .as_ref()
+                    .is_some_and(|p| p.images.len() == 1);
                 if last_on_page && self.library.offset > 0 {
                     self.library.offset = self.library.offset.saturating_sub(self.library.limit);
                 }
@@ -1043,9 +1169,16 @@ impl ImagePicker {
         match result {
             Ok(None) => Vec::new(),
             Ok(Some(dir)) => {
-                self.folder = FolderState { dir: Some(dir.clone()), loading: true, ..FolderState::default() };
+                self.folder = FolderState {
+                    dir: Some(dir.clone()),
+                    loading: true,
+                    ..FolderState::default()
+                };
                 self.deselect(Source::Folder);
-                vec![PickerEffect::ReadFolder { generation: self.issue(Slot::Folder), dir }]
+                vec![PickerEffect::ReadFolder {
+                    generation: self.issue(Slot::Folder),
+                    dir,
+                }]
             }
             Err(_) => {
                 self.folder.error = Some(Text::key("dialogs.image_picker.folder_access_failed"));
@@ -1118,11 +1251,20 @@ impl ImagePicker {
 
     fn folder_filtered(&self) -> Vec<&LocalFile> {
         let term = self.folder.search.trim().to_lowercase();
-        self.folder.all.iter().filter(|f| term.is_empty() || f.name.to_lowercase().contains(&term)).collect()
+        self.folder
+            .all
+            .iter()
+            .filter(|f| term.is_empty() || f.name.to_lowercase().contains(&term))
+            .collect()
     }
 
     fn folder_page_files(&self) -> Vec<LocalFile> {
-        self.folder_filtered().into_iter().skip(self.folder.offset).take(self.folder.limit).cloned().collect()
+        self.folder_filtered()
+            .into_iter()
+            .skip(self.folder.offset)
+            .take(self.folder.limit)
+            .cloned()
+            .collect()
     }
 
     /// Previous / Next.
@@ -1151,12 +1293,21 @@ impl ImagePicker {
         }
         let shown = self.folder_page_files().len();
         let from = self.folder.offset + 1;
-        Some((from, self.folder.offset + shown, total, self.folder.offset > 0, self.folder.offset + self.folder.limit < total))
+        Some((
+            from,
+            self.folder.offset + shown,
+            total,
+            self.folder.offset > 0,
+            self.folder.offset + self.folder.limit < total,
+        ))
     }
 
     /// Folder empty state (`no_images_in_folder`) once a folder was read.
     pub fn folder_empty(&self) -> bool {
-        self.folder.dir.is_some() && !self.folder.loading && self.folder.error.is_none() && self.folder_filtered().is_empty()
+        self.folder.dir.is_some()
+            && !self.folder.loading
+            && self.folder.error.is_none()
+            && self.folder_filtered().is_empty()
     }
 
     // ----- Web / Google / Pinterest ------------------------------------------------------
@@ -1208,7 +1359,12 @@ impl ImagePicker {
         state.status = Some(Text::key("status.searching"));
         state.status_error = false;
         state.next_start = None;
-        vec![PickerEffect::Search { generation, engine, query, start: 1 }]
+        vec![PickerEffect::Search {
+            generation,
+            engine,
+            query,
+            start: 1,
+        }]
     }
 
     /// Google infinite scroll: within 100 px of the bottom.
@@ -1217,16 +1373,30 @@ impl ImagePicker {
             return Vec::new();
         }
         let state = &self.google;
-        let Some(start) = state.next_start.filter(|_| !state.searching && !state.results.is_empty()) else {
+        let Some(start) = state
+            .next_start
+            .filter(|_| !state.searching && !state.results.is_empty())
+        else {
             return Vec::new();
         };
         let generation = self.issue(Slot::Google);
         self.google.searching = true;
-        vec![PickerEffect::Search { generation, engine, query: self.google.query.trim().to_owned(), start }]
+        vec![PickerEffect::Search {
+            generation,
+            engine,
+            query: self.google.query.trim().to_owned(),
+            start,
+        }]
     }
 
     /// Search results (or an error message).
-    pub fn search_result(&mut self, engine: Engine, generation: u64, start: i64, result: Result<SearchResults, Text>) {
+    pub fn search_result(
+        &mut self,
+        engine: Engine,
+        generation: u64,
+        start: i64,
+        result: Result<SearchResults, Text>,
+    ) {
         if generation != self.latest[Slot::from(engine) as usize] {
             return;
         }
@@ -1235,7 +1405,11 @@ impl ImagePicker {
         state.searched = true;
         match result {
             Ok(results) => {
-                if let Some(error) = results.error.filter(|e| !e.is_empty()).filter(|_| results.images.is_empty()) {
+                if let Some(error) = results
+                    .error
+                    .filter(|e| !e.is_empty())
+                    .filter(|_| results.images.is_empty())
+                {
                     state.status = Some(Text::Raw(error));
                     state.status_error = true;
                     return;
@@ -1261,7 +1435,10 @@ impl ImagePicker {
                 } else if count == 1 {
                     Text::key("dialogs.image_picker.search_result_one")
                 } else {
-                    Text::with("dialogs.image_picker.search_result_many", &[("count", &count.to_string())])
+                    Text::with(
+                        "dialogs.image_picker.search_result_many",
+                        &[("count", &count.to_string())],
+                    )
                 });
             }
             Err(error) => {
@@ -1285,14 +1462,23 @@ impl ImagePicker {
     /// Result grid (keys are result indexes). Unsafe thumbnail URLs get no thumbnail.
     pub fn search_cards(&self, engine: Engine) -> Vec<ImageCard> {
         let source = engine.source();
-        let selected = self.selected.as_ref().filter(|s| s.source == source).map(|s| s.key.clone());
+        let selected = self
+            .selected
+            .as_ref()
+            .filter(|s| s.source == source)
+            .map(|s| s.key.clone());
         self.search_state(source)
             .results
             .iter()
             .enumerate()
             .map(|(index, image)| {
-                let thumb_url = image.thumbnail.clone().filter(|t| !t.is_empty()).unwrap_or_else(|| image.url.clone());
-                let safe = crate::picker::is_safe_image_url(&thumb_url) && !thumb_url.starts_with('/');
+                let thumb_url = image
+                    .thumbnail
+                    .clone()
+                    .filter(|t| !t.is_empty())
+                    .unwrap_or_else(|| image.url.clone());
+                let safe =
+                    crate::picker::is_safe_image_url(&thumb_url) && !thumb_url.starts_with('/');
                 let title = image.title.clone().unwrap_or_default();
                 let badge = match (image.width, image.height) {
                     (Some(w), Some(h)) => markup::dims_badge(Some((
@@ -1307,7 +1493,11 @@ impl ImagePicker {
                     caption: image.source.clone().filter(|s| !s.is_empty()),
                     thumb: safe.then_some(Thumb::Url(thumb_url)),
                     badge,
-                    tooltip: if title.is_empty() { "Image".to_owned() } else { title },
+                    tooltip: if title.is_empty() {
+                        "Image".to_owned()
+                    } else {
+                        title
+                    },
                     selected: selected.as_deref() == Some(index.to_string().as_str()),
                 }
             })
@@ -1316,7 +1506,9 @@ impl ImagePicker {
 
     /// A thumbnail failed to load: the card is removed (FE-329).
     pub fn thumbnail_failed(&mut self, engine: Engine, key: &str) {
-        let Ok(index) = key.parse::<usize>() else { return };
+        let Ok(index) = key.parse::<usize>() else {
+            return;
+        };
         let source = engine.source();
         let state = self.search_state_mut(engine);
         if index >= state.results.len() {
@@ -1370,7 +1562,11 @@ impl ImagePicker {
         self.ai.generating = true;
         self.deselect(Source::Ai);
         let generation = self.issue(Slot::Ai);
-        vec![PickerEffect::Generate { generation, prompt, reference: self.ai.reference.as_ref().map(|r| r.0.clone()) }]
+        vec![PickerEffect::Generate {
+            generation,
+            prompt,
+            reference: self.ai.reference.as_ref().map(|r| r.0.clone()),
+        }]
     }
 
     /// Esc while generating.
@@ -1389,7 +1585,12 @@ impl ImagePicker {
     }
 
     /// The generation finished. `now_ms` names the file `ai_<ms>.png`.
-    pub fn generate_result(&mut self, generation: u64, result: Result<AiResult, Text>, now_ms: i64) {
+    pub fn generate_result(
+        &mut self,
+        generation: u64,
+        result: Result<AiResult, Text>,
+        now_ms: i64,
+    ) {
         if generation != self.latest[Slot::Ai as usize] || !self.ai.generating {
             return;
         }
@@ -1398,7 +1599,11 @@ impl ImagePicker {
             Ok(result) => {
                 let filename = format!("ai_{now_ms}.png");
                 let alt = markup::ai_alt(self.ai.prompt.trim());
-                let target = Target::Generated { data: result.data.clone(), mime: result.mime.clone(), filename: filename.clone() };
+                let target = Target::Generated {
+                    data: result.data.clone(),
+                    mime: result.mime.clone(),
+                    filename: filename.clone(),
+                };
                 self.ai.result = Some(result);
                 self.select(Source::Ai, "ai-result".to_owned(), filename, alt, target);
             }
@@ -1419,7 +1624,9 @@ impl ImagePicker {
     /// Reference search (debounced by the view).
     pub fn set_ref_search(&mut self, search: &str) -> Vec<PickerEffect> {
         search.clone_into(&mut self.ai.ref_search);
-        vec![PickerEffect::LoadRefImages { search: search.trim().to_owned() }]
+        vec![PickerEffect::LoadRefImages {
+            search: search.trim().to_owned(),
+        }]
     }
 
     /// Reference images `(path, name)`.
@@ -1437,7 +1644,11 @@ impl ImagePicker {
                 key: path.clone(),
                 label: name.clone(),
                 caption: None,
-                thumb: self.config.images_path.as_ref().map(|r| Thumb::File(r.join(path))),
+                thumb: self
+                    .config
+                    .images_path
+                    .as_ref()
+                    .map(|r| Thumb::File(r.join(path))),
                 badge: None,
                 tooltip: name.clone(),
                 selected: chosen == Some(path.as_str()),
@@ -1455,12 +1666,17 @@ impl ImagePicker {
     /// "Remove reference".
     pub fn clear_ref(&mut self) -> Vec<PickerEffect> {
         self.ai.reference = None;
-        vec![PickerEffect::LoadRefImages { search: self.ai.ref_search.trim().to_owned() }]
+        vec![PickerEffect::LoadRefImages {
+            search: self.ai.ref_search.trim().to_owned(),
+        }]
     }
 
     /// The reference `(path, name)`.
     pub fn reference(&self) -> Option<(&str, &str)> {
-        self.ai.reference.as_ref().map(|(p, n)| (p.as_str(), n.as_str()))
+        self.ai
+            .reference
+            .as_ref()
+            .map(|(p, n)| (p.as_str(), n.as_str()))
     }
 
     // ----- storage + insert --------------------------------------------------------------
@@ -1517,20 +1733,44 @@ impl ImagePicker {
             Target::Managed { url } => return self.finish(url),
             Target::Remote { url } if !row.stores() => return self.finish(url),
             Target::Server { url, .. } if !row.stores() => return self.finish(url),
-            Target::File(file) => StoreRequest::Upload { file, resize: row.resize_ratio(), s3_key: row.key_value() },
-            Target::Remote { url } => StoreRequest::ImportUrl { url, resize: row.resize_ratio(), s3_prefix: row.key_value() },
-            Target::Server { path, .. } => StoreRequest::ImportPath { path, resize: row.resize_ratio(), s3_key: row.key_value() },
-            Target::Generated { data, mime, filename } => {
-                StoreRequest::Base64 { data, mime, filename, s3_prefix: row.key_value() }
-            }
+            Target::File(file) => StoreRequest::Upload {
+                file,
+                resize: row.resize_ratio(),
+                s3_key: row.key_value(),
+            },
+            Target::Remote { url } => StoreRequest::ImportUrl {
+                url,
+                resize: row.resize_ratio(),
+                s3_prefix: row.key_value(),
+            },
+            Target::Server { path, .. } => StoreRequest::ImportPath {
+                path,
+                resize: row.resize_ratio(),
+                s3_key: row.key_value(),
+            },
+            Target::Generated {
+                data,
+                mime,
+                filename,
+            } => StoreRequest::Base64 {
+                data,
+                mime,
+                filename,
+                s3_prefix: row.key_value(),
+            },
         };
         vec![PickerEffect::Store(request)]
     }
 
     fn finish(&mut self, url: String) -> Vec<PickerEffect> {
         self.busy = None;
-        let name = self.selected.as_ref().map(|s| s.name.clone()).unwrap_or_default();
-        let result = markup::final_image_markdown(self.note.as_deref(), &url, &self.alt, &name, &self.link);
+        let name = self
+            .selected
+            .as_ref()
+            .map(|s| s.name.clone())
+            .unwrap_or_default();
+        let result =
+            markup::final_image_markdown(self.note.as_deref(), &url, &self.alt, &name, &self.link);
         vec![PickerEffect::Insert(result)]
     }
 
@@ -1548,8 +1788,15 @@ impl ImagePicker {
             }
             Err(error) => {
                 self.busy = None;
-                self.error = Some(Text::Key("dialogs.image_picker.insert_failed", vec![("error", Text::Raw(error.message))]));
-                if self.row.provider() == Provider::S3 || error.fallback { vec![PickerEffect::RefreshStorage] } else { Vec::new() }
+                self.error = Some(Text::Key(
+                    "dialogs.image_picker.insert_failed",
+                    vec![("error", Text::Raw(error.message))],
+                ));
+                if self.row.provider() == Provider::S3 || error.fallback {
+                    vec![PickerEffect::RefreshStorage]
+                } else {
+                    Vec::new()
+                }
             }
         }
     }
@@ -1567,6 +1814,9 @@ fn count_status(shown: usize, total: usize) -> Text {
     } else if shown == 1 {
         Text::key("dialogs.image_picker.folder_images_found_one")
     } else {
-        Text::with("dialogs.image_picker.folder_images_found_many", &[("count", &shown.to_string())])
+        Text::with(
+            "dialogs.image_picker.folder_images_found_many",
+            &[("count", &shown.to_string())],
+        )
     }
 }

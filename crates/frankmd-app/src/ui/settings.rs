@@ -228,37 +228,153 @@ const ROWS: &[RowSpec] = &[
         control: Control::NotesFolder,
     },
     // Media (§5.16)
-    row(Category::Media, "settings_sheet.media.provider", Control::MediaStorage),
-    row(Category::Media, "settings_sheet.media.images_path", Control::Text(Key::ImagesPath)),
-    row(Category::Media, "settings_sheet.media.image_types", Control::Text(Key::ImageUploadExtensions)),
-    row(Category::Media, "settings_sheet.media.video_types", Control::Text(Key::VideoUploadExtensions)),
-    row(Category::Media, "settings_sheet.media.s3_bucket", Control::Text(Key::AwsS3Bucket)),
-    row(Category::Media, "settings_sheet.media.s3_region", Control::Text(Key::AwsRegion)),
-    row(Category::Media, "settings_sheet.media.s3_endpoint", Control::Text(Key::AwsS3Endpoint)),
-    row(Category::Media, "settings_sheet.media.s3_path_style", Control::Switch(Key::AwsS3ForcePathStyle)),
-    row(Category::Media, "settings_sheet.media.s3_access_key", Control::Secret(Key::AwsAccessKeyId)),
-    row(Category::Media, "settings_sheet.media.s3_secret_key", Control::Secret(Key::AwsSecretAccessKey)),
+    row(
+        Category::Media,
+        "settings_sheet.media.provider",
+        Control::MediaStorage,
+    ),
+    row(
+        Category::Media,
+        "settings_sheet.media.images_path",
+        Control::Text(Key::ImagesPath),
+    ),
+    row(
+        Category::Media,
+        "settings_sheet.media.image_types",
+        Control::Text(Key::ImageUploadExtensions),
+    ),
+    row(
+        Category::Media,
+        "settings_sheet.media.video_types",
+        Control::Text(Key::VideoUploadExtensions),
+    ),
+    row(
+        Category::Media,
+        "settings_sheet.media.s3_bucket",
+        Control::Text(Key::AwsS3Bucket),
+    ),
+    row(
+        Category::Media,
+        "settings_sheet.media.s3_region",
+        Control::Text(Key::AwsRegion),
+    ),
+    row(
+        Category::Media,
+        "settings_sheet.media.s3_endpoint",
+        Control::Text(Key::AwsS3Endpoint),
+    ),
+    row(
+        Category::Media,
+        "settings_sheet.media.s3_path_style",
+        Control::Switch(Key::AwsS3ForcePathStyle),
+    ),
+    row(
+        Category::Media,
+        "settings_sheet.media.s3_access_key",
+        Control::Secret(Key::AwsAccessKeyId),
+    ),
+    row(
+        Category::Media,
+        "settings_sheet.media.s3_secret_key",
+        Control::Secret(Key::AwsSecretAccessKey),
+    ),
     // Integrations (§5.16, HP-020)
-    row(Category::Integrations, "settings_sheet.integrations.ai_provider", Control::Choice(Key::AiProvider, AI_PROVIDER_CHOICES)),
-    row(Category::Integrations, "settings_sheet.integrations.ai_model", Control::Text(Key::AiModel)),
-    row(Category::Integrations, "settings_sheet.integrations.openai_key", Control::Secret(Key::OpenaiApiKey)),
-    row(Category::Integrations, "settings_sheet.integrations.openai_model", Control::Text(Key::OpenaiModel)),
-    row(Category::Integrations, "settings_sheet.integrations.anthropic_key", Control::Secret(Key::AnthropicApiKey)),
-    row(Category::Integrations, "settings_sheet.integrations.anthropic_model", Control::Text(Key::AnthropicModel)),
-    row(Category::Integrations, "settings_sheet.integrations.openrouter_key", Control::Secret(Key::OpenrouterApiKey)),
-    row(Category::Integrations, "settings_sheet.integrations.openrouter_model", Control::Text(Key::OpenrouterModel)),
-    row(Category::Integrations, "settings_sheet.integrations.gemini_key", Control::Secret(Key::GeminiApiKey)),
-    row(Category::Integrations, "settings_sheet.integrations.gemini_model", Control::Text(Key::GeminiModel)),
-    row(Category::Integrations, "settings_sheet.integrations.ollama_base", Control::Text(Key::OllamaApiBase)),
-    row(Category::Integrations, "settings_sheet.integrations.ollama_model", Control::Text(Key::OllamaModel)),
-    row(Category::Integrations, "settings_sheet.integrations.image_model", Control::Text(Key::ImageGenerationModel)),
-    row(Category::Integrations, "settings_sheet.integrations.youtube_key", Control::Secret(Key::YoutubeApiKey)),
-    row(Category::Integrations, "settings_sheet.integrations.google_key", Control::Secret(Key::GoogleApiKey)),
-    row(Category::Integrations, "settings_sheet.integrations.google_cse", Control::Text(Key::GoogleCseId)),
+    row(
+        Category::Integrations,
+        "settings_sheet.integrations.ai_provider",
+        Control::Choice(Key::AiProvider, AI_PROVIDER_CHOICES),
+    ),
+    row(
+        Category::Integrations,
+        "settings_sheet.integrations.ai_model",
+        Control::Text(Key::AiModel),
+    ),
+    row(
+        Category::Integrations,
+        "settings_sheet.integrations.openai_key",
+        Control::Secret(Key::OpenaiApiKey),
+    ),
+    row(
+        Category::Integrations,
+        "settings_sheet.integrations.openai_model",
+        Control::Text(Key::OpenaiModel),
+    ),
+    row(
+        Category::Integrations,
+        "settings_sheet.integrations.anthropic_key",
+        Control::Secret(Key::AnthropicApiKey),
+    ),
+    row(
+        Category::Integrations,
+        "settings_sheet.integrations.anthropic_model",
+        Control::Text(Key::AnthropicModel),
+    ),
+    row(
+        Category::Integrations,
+        "settings_sheet.integrations.openrouter_key",
+        Control::Secret(Key::OpenrouterApiKey),
+    ),
+    row(
+        Category::Integrations,
+        "settings_sheet.integrations.openrouter_model",
+        Control::Text(Key::OpenrouterModel),
+    ),
+    row(
+        Category::Integrations,
+        "settings_sheet.integrations.gemini_key",
+        Control::Secret(Key::GeminiApiKey),
+    ),
+    row(
+        Category::Integrations,
+        "settings_sheet.integrations.gemini_model",
+        Control::Text(Key::GeminiModel),
+    ),
+    row(
+        Category::Integrations,
+        "settings_sheet.integrations.ollama_base",
+        Control::Text(Key::OllamaApiBase),
+    ),
+    row(
+        Category::Integrations,
+        "settings_sheet.integrations.ollama_model",
+        Control::Text(Key::OllamaModel),
+    ),
+    row(
+        Category::Integrations,
+        "settings_sheet.integrations.image_model",
+        Control::Text(Key::ImageGenerationModel),
+    ),
+    row(
+        Category::Integrations,
+        "settings_sheet.integrations.youtube_key",
+        Control::Secret(Key::YoutubeApiKey),
+    ),
+    row(
+        Category::Integrations,
+        "settings_sheet.integrations.google_key",
+        Control::Secret(Key::GoogleApiKey),
+    ),
+    row(
+        Category::Integrations,
+        "settings_sheet.integrations.google_cse",
+        Control::Text(Key::GoogleCseId),
+    ),
     // Hugo (§5.16)
-    row(Category::Hugo, "settings_sheet.hugo.path_style", Control::Choice(Key::HugoPathStyle, HUGO_STYLE_CHOICES)),
-    row(Category::Hugo, "settings_sheet.hugo.default_folder", Control::HugoFolder),
-    row(Category::Hugo, "settings_sheet.hugo.template", Control::HugoTemplate),
+    row(
+        Category::Hugo,
+        "settings_sheet.hugo.path_style",
+        Control::Choice(Key::HugoPathStyle, HUGO_STYLE_CHOICES),
+    ),
+    row(
+        Category::Hugo,
+        "settings_sheet.hugo.default_folder",
+        Control::HugoFolder,
+    ),
+    row(
+        Category::Hugo,
+        "settings_sheet.hugo.template",
+        Control::HugoTemplate,
+    ),
 ];
 
 /// Sheet state.
@@ -316,17 +432,21 @@ impl SettingsState {
                 .masked(secret)
                 .default_value(initial)
         });
-        let sub = cx.subscribe_in(&input, window, move |shell, input, ev: &InputEvent, window, cx| {
-            let commit = match ev {
-                InputEvent::PressEnter { .. } => true,
-                InputEvent::Blur => !secret,
-                _ => false,
-            };
-            if commit {
-                let value = input.read(cx).value().to_string();
-                shell.commit_setting_text(key, &value, secret, window, cx);
-            }
-        });
+        let sub = cx.subscribe_in(
+            &input,
+            window,
+            move |shell, input, ev: &InputEvent, window, cx| {
+                let commit = match ev {
+                    InputEvent::PressEnter { .. } => true,
+                    InputEvent::Blur => !secret,
+                    _ => false,
+                };
+                if commit {
+                    let value = input.read(cx).value().to_string();
+                    shell.commit_setting_text(key, &value, secret, window, cx);
+                }
+            },
+        );
         self.subscriptions.push(sub);
         self.inputs.insert(key, input.clone());
         input
@@ -684,7 +804,11 @@ impl Shell {
         let id_slug = row.label.rsplit('.').next().unwrap_or(row.label).to_owned();
         let this_reset = this.clone();
         let row_key = match row.control {
-            Control::Switch(k) | Control::Value(k) | Control::Text(k) | Control::Secret(k) | Control::Choice(k, _) => Some(k),
+            Control::Switch(k)
+            | Control::Value(k)
+            | Control::Text(k)
+            | Control::Secret(k)
+            | Control::Choice(k, _) => Some(k),
             Control::ViewMode => Some(Key::ViewMode),
             Control::MediaStorage => Some(Key::MediaStorageProvider),
             _ => None,
@@ -805,21 +929,31 @@ impl Shell {
                 let input = self.settings.input_for(key, &current, false, window, cx);
                 div()
                     .w(px(260.))
-                    .child(Input::new(&input).id(SharedString::from(format!("setting-{id_slug}"))).small())
+                    .child(
+                        Input::new(&input)
+                            .id(SharedString::from(format!("setting-{id_slug}")))
+                            .small(),
+                    )
                     .into_any_element()
             }
             Control::Secret(key) => {
                 let r = resolved(key);
                 chip = r.as_ref().map(|r| self.provenance_chip(r.source, cx));
                 let set = r.as_ref().is_some_and(|r| {
-                    r.value.as_ref().is_some_and(|v| !matches!(v, Value::Str(s) if s.is_empty()))
+                    r.value
+                        .as_ref()
+                        .is_some_and(|v| !matches!(v, Value::Str(s) if s.is_empty()))
                 });
                 if self.settings.editing_secrets.contains(&key) {
                     // Starts empty: the stored secret is never put back into the UI.
                     let input = self.settings.input_for(key, "", true, window, cx);
                     div()
                         .w(px(260.))
-                        .child(Input::new(&input).id(SharedString::from(format!("setting-{id_slug}"))).small())
+                        .child(
+                            Input::new(&input)
+                                .id(SharedString::from(format!("setting-{id_slug}")))
+                                .small(),
+                        )
                         .into_any_element()
                 } else {
                     let change = this.clone();
@@ -900,7 +1034,11 @@ impl Shell {
                             })
                     })
                     .collect();
-                h_flex().gap_1().flex_wrap().children(buttons).into_any_element()
+                h_flex()
+                    .gap_1()
+                    .flex_wrap()
+                    .children(buttons)
+                    .into_any_element()
             }
             Control::MediaStorage => match self.storage_row(cx) {
                 Some((provider, disabled, s3_reason)) => {
@@ -916,7 +1054,9 @@ impl Shell {
                                 .disabled(disabled)
                                 .label(i18n::t(cx, "settings_sheet.media.local"))
                                 .on_click(move |_, _, cx| {
-                                    let _ = local.update(cx, |shell, cx| shell.request_storage(Provider::Local, cx));
+                                    let _ = local.update(cx, |shell, cx| {
+                                        shell.request_storage(Provider::Local, cx)
+                                    });
                                 }),
                         )
                         .child(
@@ -926,16 +1066,27 @@ impl Shell {
                                 .disabled(disabled || s3_reason.is_some())
                                 .label(i18n::t(cx, "settings_sheet.media.s3"))
                                 .on_click(move |_, _, cx| {
-                                    let _ = s3.update(cx, |shell, cx| shell.request_storage(Provider::S3, cx));
+                                    let _ = s3.update(cx, |shell, cx| {
+                                        shell.request_storage(Provider::S3, cx)
+                                    });
                                 }),
                         )
                         .when_some(s3_reason, |el, reason| {
-                            el.child(div().text_xs().text_color(theme.muted_foreground).child(reason))
+                            el.child(
+                                div()
+                                    .text_xs()
+                                    .text_color(theme.muted_foreground)
+                                    .child(reason),
+                            )
                         })
                         .into_any_element()
                 }
                 None => div()
-                    .child(value_text(resolved(Key::MediaStorageProvider).as_ref().and_then(|r| r.value.as_ref())))
+                    .child(value_text(
+                        resolved(Key::MediaStorageProvider)
+                            .as_ref()
+                            .and_then(|r| r.value.as_ref()),
+                    ))
                     .into_any_element(),
             },
             Control::HugoFolder => div()
@@ -1011,7 +1162,11 @@ impl Shell {
     }
 
     /// `Scope: [ All vaults | This vault (<name>) ]` (§5.16).
-    fn render_scope_toggle(&self, theme: &Theme, cx: &mut Context<Self>) -> impl IntoElement + use<> {
+    fn render_scope_toggle(
+        &self,
+        theme: &Theme,
+        cx: &mut Context<Self>,
+    ) -> impl IntoElement + use<> {
         let scope = self.settings.scope;
         let this = cx.entity().downgrade();
         let button = |id: &'static str, label: SharedString, target: Scope| {
@@ -1035,7 +1190,11 @@ impl Shell {
         );
         let vault = button(
             "settings-scope-vault",
-            i18n::t_args(cx, "settings_sheet.scope_vault", &[("vault", &self.vault_name)]),
+            i18n::t_args(
+                cx,
+                "settings_sheet.scope_vault",
+                &[("vault", &self.vault_name)],
+            ),
             Scope::Vault,
         );
         h_flex()
@@ -1047,7 +1206,11 @@ impl Shell {
             .border_b_1()
             .border_color(theme.border)
             .text_xs()
-            .child(div().text_color(theme.muted_foreground).child(i18n::t(cx, "settings_sheet.scope")))
+            .child(
+                div()
+                    .text_color(theme.muted_foreground)
+                    .child(i18n::t(cx, "settings_sheet.scope")),
+            )
             .child(global)
             .child(vault)
     }

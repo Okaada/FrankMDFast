@@ -28,10 +28,17 @@ pub struct FakeEditor {
 
 impl FakeEditor {
     pub fn with_text(text: &str) -> Self {
-        Self { text: text.to_owned(), ..Self::default() }
+        Self {
+            text: text.to_owned(),
+            ..Self::default()
+        }
     }
     pub fn cursor_at(mut self, offset: usize) -> Self {
-        self.cursor = CursorPosition { line: 1, column: 1, offset };
+        self.cursor = CursorPosition {
+            line: 1,
+            column: 1,
+            offset,
+        };
         self
     }
     pub fn selecting(mut self, from: usize, to: usize) -> Self {
@@ -40,13 +47,22 @@ impl FakeEditor {
         self
     }
     pub fn inserts(&self) -> Vec<&Call> {
-        self.calls.iter().filter(|c| matches!(c, Call::InsertAt(..))).collect()
+        self.calls
+            .iter()
+            .filter(|c| matches!(c, Call::InsertAt(..)))
+            .collect()
     }
     pub fn replaces(&self) -> Vec<&Call> {
-        self.calls.iter().filter(|c| matches!(c, Call::ReplaceRange(..))).collect()
+        self.calls
+            .iter()
+            .filter(|c| matches!(c, Call::ReplaceRange(..)))
+            .collect()
     }
     pub fn selections(&self) -> Vec<&Call> {
-        self.calls.iter().filter(|c| matches!(c, Call::SetSelection(..))).collect()
+        self.calls
+            .iter()
+            .filter(|c| matches!(c, Call::SetSelection(..)))
+            .collect()
     }
 }
 
@@ -71,7 +87,8 @@ impl EditorSurface for FakeEditor {
         self.info
     }
     fn replace_range(&mut self, text: &str, from: usize, to: usize) {
-        self.calls.push(Call::ReplaceRange(text.to_owned(), from, to));
+        self.calls
+            .push(Call::ReplaceRange(text.to_owned(), from, to));
     }
     fn insert_at(&mut self, pos: usize, text: &str) {
         self.calls.push(Call::InsertAt(pos, text.to_owned()));

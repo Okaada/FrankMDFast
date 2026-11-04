@@ -16,24 +16,45 @@ fn local_upload_becomes_note_relative_with_escaped_alt() {
         "photo.png",
         "",
     );
-    assert_eq!(md.markdown, "![photo](../images/20260704_101500_ab12cd34_photo.png)");
+    assert_eq!(
+        md.markdown,
+        "![photo](../images/20260704_101500_ab12cd34_photo.png)"
+    );
     assert_eq!(md.url, "images/20260704_101500_ab12cd34_photo.png");
 }
 
 // adapts: image_picker_controller.test.js:124 "includes the uploaded image URL and Markdown options"
 #[test]
 fn root_note_keeps_images_path_and_link_wraps() {
-    let md = final_image_markdown(Some("note.md"), "images/photo.png", "photo", "photo.png", "");
+    let md = final_image_markdown(
+        Some("note.md"),
+        "images/photo.png",
+        "photo",
+        "photo.png",
+        "",
+    );
     assert_eq!(md.markdown, "![photo](images/photo.png)");
-    let linked = final_image_markdown(Some("note.md"), "images/photo.png", " photo ", "photo.png", " https://x.y ");
+    let linked = final_image_markdown(
+        Some("note.md"),
+        "images/photo.png",
+        " photo ",
+        "photo.png",
+        " https://x.y ",
+    );
     assert_eq!(linked.markdown, "[![photo](images/photo.png)](https://x.y)");
     assert_eq!(linked.link, "https://x.y");
 }
 
 #[test]
 fn alt_falls_back_to_name_then_image() {
-    assert_eq!(final_image_markdown(None, "https://a/b.png", "  ", "cat.png", "").markdown, "![cat.png](https://a/b.png)");
-    assert_eq!(final_image_markdown(None, "https://a/b.png", "", "", "").markdown, "![Image](https://a/b.png)");
+    assert_eq!(
+        final_image_markdown(None, "https://a/b.png", "  ", "cat.png", "").markdown,
+        "![cat.png](https://a/b.png)"
+    );
+    assert_eq!(
+        final_image_markdown(None, "https://a/b.png", "", "", "").markdown,
+        "![Image](https://a/b.png)"
+    );
 }
 
 // FrankMD quirk D1.7: remote/S3 alt is not escaped; only images/ URLs are rebuilt.
@@ -47,10 +68,22 @@ fn remote_alt_is_not_escaped_but_local_alt_is() {
 
 #[test]
 fn relative_media_path_rules() {
-    assert_eq!(relative_media_path("note.md", "images/a.png").as_deref(), Some("images/a.png"));
-    assert_eq!(relative_media_path("a/b/note.md", "images/a.png").as_deref(), Some("../../images/a.png"));
-    assert_eq!(relative_media_path("images/sub/n.md", "images/sub/a.png").as_deref(), Some("a.png"));
-    assert_eq!(relative_media_path("images/n.md", "images/sub/a.png").as_deref(), Some("sub/a.png"));
+    assert_eq!(
+        relative_media_path("note.md", "images/a.png").as_deref(),
+        Some("images/a.png")
+    );
+    assert_eq!(
+        relative_media_path("a/b/note.md", "images/a.png").as_deref(),
+        Some("../../images/a.png")
+    );
+    assert_eq!(
+        relative_media_path("images/sub/n.md", "images/sub/a.png").as_deref(),
+        Some("a.png")
+    );
+    assert_eq!(
+        relative_media_path("images/n.md", "images/sub/a.png").as_deref(),
+        Some("sub/a.png")
+    );
     assert_eq!(relative_media_path("a/../n.md", "images/a.png"), None);
     assert_eq!(relative_media_path("n.md", "other/a.png"), None);
     assert_eq!(relative_media_path("n.md", "images"), None);
@@ -59,10 +92,19 @@ fn relative_media_path_rules() {
 
 #[test]
 fn encoding_and_escaping_match_the_js() {
-    assert_eq!(encode_relative_media_path("../images/photo (one)!*'.png"), "../images/photo%20%28one%29%21%2A%27.png");
-    assert_eq!(encode_relative_media_path("images/café.png"), "images/caf%C3%A9.png");
+    assert_eq!(
+        encode_relative_media_path("../images/photo (one)!*'.png"),
+        "../images/photo%20%28one%29%21%2A%27.png"
+    );
+    assert_eq!(
+        encode_relative_media_path("images/café.png"),
+        "images/caf%C3%A9.png"
+    );
     assert_eq!(escape_markdown_alt("a\\b[c]\r\n\nd"), "a\\\\b\\[c\\] d");
-    assert_eq!(safe_remote_media_url("https://cdn.x/a (1).png").as_deref(), Some("https://cdn.x/a%20%281%29.png"));
+    assert_eq!(
+        safe_remote_media_url("https://cdn.x/a (1).png").as_deref(),
+        Some("https://cdn.x/a%20%281%29.png")
+    );
     assert_eq!(safe_remote_media_url("https://u:p@x/a.png"), None);
     assert_eq!(safe_remote_media_url("javascript:alert(1)"), None);
     assert_eq!(safe_remote_media_url("file:///etc/passwd"), None);
@@ -91,20 +133,36 @@ fn library_image_insert_is_note_relative() {
         s3_url: None,
     };
     let insert = library_insert(&entry, Some("folder/sub/note.md")).unwrap();
-    assert_eq!(insert, MediaInsert::Image("![photo one.png](../../images/photo%20%28one%29.png)".into()));
+    assert_eq!(
+        insert,
+        MediaInsert::Image("![photo one.png](../../images/photo%20%28one%29.png)".into())
+    );
 }
 
 #[test]
 fn library_video_and_s3_inserts() {
-    let video = LibraryEntry { name: "clip.mp4".into(), path: "videos/clip.MP4".into(), kind: MediaKind::Video, s3_url: None };
+    let video = LibraryEntry {
+        name: "clip.mp4".into(),
+        path: "videos/clip.MP4".into(),
+        kind: MediaKind::Video,
+        s3_url: None,
+    };
     assert_eq!(
         library_insert(&video, Some("n.md")).unwrap(),
         MediaInsert::Block("<video controls class=\"video-player\">\n  <source src=\"videos/clip.MP4\" type=\"video/mp4\">\n</video>".into())
     );
-    let unknown = LibraryEntry { name: "x.flv".into(), path: "videos/x.flv".into(), kind: MediaKind::Video, s3_url: None };
+    let unknown = LibraryEntry {
+        name: "x.flv".into(),
+        path: "videos/x.flv".into(),
+        kind: MediaKind::Video,
+        s3_url: None,
+    };
     assert_eq!(
         library_insert(&unknown, Some("n.md")).unwrap(),
-        MediaInsert::Block("<video controls class=\"video-player\">\n  <source src=\"videos/x.flv\">\n</video>".into())
+        MediaInsert::Block(
+            "<video controls class=\"video-player\">\n  <source src=\"videos/x.flv\">\n</video>"
+                .into()
+        )
     );
     let s3 = LibraryEntry {
         name: "a [1].png".into(),
@@ -114,22 +172,48 @@ fn library_video_and_s3_inserts() {
     };
     assert_eq!(
         library_insert(&s3, Some("x/n.md")).unwrap(),
-        MediaInsert::Image("![a \\[1\\].png](https://b.s3.amazonaws.com/frankmd/2026/07/a%20%281%29.png)".into())
+        MediaInsert::Image(
+            "![a \\[1\\].png](https://b.s3.amazonaws.com/frankmd/2026/07/a%20%281%29.png)".into()
+        )
     );
 }
 
 // adapts: app_library.test.js row 6 "Insert explains why it can't run"
 #[test]
 fn library_insert_refusals() {
-    let entry = LibraryEntry { name: "a.png".into(), path: "images/a.png".into(), kind: MediaKind::Image, s3_url: None };
-    assert_eq!(library_insert(&entry, None), Err(LibraryInsertError::NoOpenNote));
-    assert_eq!(library_insert(&entry, Some(".fed")), Err(LibraryInsertError::MarkdownNoteRequired));
+    let entry = LibraryEntry {
+        name: "a.png".into(),
+        path: "images/a.png".into(),
+        kind: MediaKind::Image,
+        s3_url: None,
+    };
+    assert_eq!(
+        library_insert(&entry, None),
+        Err(LibraryInsertError::NoOpenNote)
+    );
+    assert_eq!(
+        library_insert(&entry, Some(".fed")),
+        Err(LibraryInsertError::MarkdownNoteRequired)
+    );
     assert_eq!(LibraryInsertError::NoOpenNote.key(), "library.no_open_note");
-    let bad = LibraryEntry { path: "videos/a.png".into(), ..entry.clone() };
-    assert_eq!(library_insert(&bad, Some("n.md")), Err(LibraryInsertError::InvalidMedia));
-    let traversal = LibraryEntry { path: "images/../a.png".into(), ..entry.clone() };
+    let bad = LibraryEntry {
+        path: "videos/a.png".into(),
+        ..entry.clone()
+    };
+    assert_eq!(
+        library_insert(&bad, Some("n.md")),
+        Err(LibraryInsertError::InvalidMedia)
+    );
+    let traversal = LibraryEntry {
+        path: "images/../a.png".into(),
+        ..entry.clone()
+    };
     assert!(!is_valid_library_entry(&traversal));
-    let s3_creds = LibraryEntry { path: "frankmd/a.png".into(), s3_url: Some("https://u:p@h/a.png".into()), ..entry };
+    let s3_creds = LibraryEntry {
+        path: "frankmd/a.png".into(),
+        s3_url: Some("https://u:p@h/a.png".into()),
+        ..entry
+    };
     assert!(!is_valid_library_entry(&s3_creds));
 }
 
@@ -140,10 +224,21 @@ fn youtube_embeds_are_byte_exact() {
         youtube_embed("xyz789", None, false),
         "<div class=\"embed-container\">\n  <iframe\n    src=\"https://www.youtube.com/embed/xyz789\"\n    title=\"YouTube video player\"\n    frameborder=\"0\"\n    allow=\"accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share\"\n    referrerpolicy=\"strict-origin-when-cross-origin\"\n    allowfullscreen>\n  </iframe>\n</div>"
     );
-    assert!(youtube_embed("xyz789", Some("Test \"Title\""), false).contains("title=\"Test \"Title\"\""));
-    assert_eq!(youtube_embed("xyz789", Some("Test Title"), true), "{{< youtube id=\"xyz789\" title=\"Test Title\" >}}");
-    assert_eq!(youtube_embed("xyz789", None, true), "{{< youtube id=\"xyz789\" >}}");
-    assert_eq!(youtube_embed("xyz789", Some(YOUTUBE_DEFAULT_TITLE), true), "{{< youtube id=\"xyz789\" >}}");
+    assert!(
+        youtube_embed("xyz789", Some("Test \"Title\""), false).contains("title=\"Test \"Title\"\"")
+    );
+    assert_eq!(
+        youtube_embed("xyz789", Some("Test Title"), true),
+        "{{< youtube id=\"xyz789\" title=\"Test Title\" >}}"
+    );
+    assert_eq!(
+        youtube_embed("xyz789", None, true),
+        "{{< youtube id=\"xyz789\" >}}"
+    );
+    assert_eq!(
+        youtube_embed("xyz789", Some(YOUTUBE_DEFAULT_TITLE), true),
+        "{{< youtube id=\"xyz789\" >}}"
+    );
 }
 
 // FE-344: file embed with escaped URL and MIME by extension.
@@ -163,7 +258,10 @@ fn video_file_embed_is_byte_exact() {
 fn image_insertion_pads_with_single_newlines() {
     let image = MediaInsert::Image("![a](b)".into());
     let edit = insertion_edit("abcdef", 3..3, None, &image).unwrap();
-    assert_eq!((edit.range.clone(), edit.text.as_str()), (3..3, "\n![a](b)\n"));
+    assert_eq!(
+        (edit.range.clone(), edit.text.as_str()),
+        (3..3, "\n![a](b)\n")
+    );
     assert_eq!(edit.caret, 3 + "\n![a](b)\n".len());
     let edit = insertion_edit("ab\n\ncd", 4..4, None, &image).unwrap();
     assert_eq!(edit.text, "![a](b)\n");
@@ -178,10 +276,22 @@ fn image_insertion_pads_with_single_newlines() {
 #[test]
 fn block_insertion_normalizes_blank_lines_and_slash_range() {
     let block = MediaInsert::Block("<video>".into());
-    assert_eq!(insertion_edit("", 0..0, None, &block).unwrap().text, "<video>");
-    assert_eq!(insertion_edit("para", 4..4, None, &block).unwrap().text, "\n\n<video>");
-    assert_eq!(insertion_edit("para\n", 5..5, None, &block).unwrap().text, "\n<video>");
-    assert_eq!(insertion_edit("a\n\nb", 3..3, None, &block).unwrap().text, "<video>\n\n");
+    assert_eq!(
+        insertion_edit("", 0..0, None, &block).unwrap().text,
+        "<video>"
+    );
+    assert_eq!(
+        insertion_edit("para", 4..4, None, &block).unwrap().text,
+        "\n\n<video>"
+    );
+    assert_eq!(
+        insertion_edit("para\n", 5..5, None, &block).unwrap().text,
+        "\n<video>"
+    );
+    assert_eq!(
+        insertion_edit("a\n\nb", 3..3, None, &block).unwrap().text,
+        "<video>\n\n"
+    );
     let text = "intro\n  /video  \nend";
     let slash = 8..14;
     let edit = insertion_edit(text, 0..0, Some(slash), &block).unwrap();

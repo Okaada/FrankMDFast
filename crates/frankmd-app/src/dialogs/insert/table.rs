@@ -156,7 +156,11 @@ impl TableDialog {
 
     fn set_alignment(&mut self, alignment: Alignment, cx: &mut Context<Self>) {
         let col = self.current.1;
-        let next = if self.model.alignment(col) == alignment { Alignment::None } else { alignment };
+        let next = if self.model.alignment(col) == alignment {
+            Alignment::None
+        } else {
+            alignment
+        };
         self.model.set_alignment(col, next);
         cx.notify();
     }
@@ -174,10 +178,16 @@ impl TableDialog {
                 let placeholder = header_placeholder.clone();
                 let input = cx.new(|cx| {
                     let state = InputState::new(window, cx).default_value(value);
-                    if r == 0 { state.placeholder(placeholder) } else { state }
+                    if r == 0 {
+                        state.placeholder(placeholder)
+                    } else {
+                        state
+                    }
                 });
-                let sub = cx.subscribe_in(&input, window, move |this, input, event: &InputEvent, _, cx| {
-                    match event {
+                let sub = cx.subscribe_in(
+                    &input,
+                    window,
+                    move |this, input, event: &InputEvent, _, cx| match event {
                         InputEvent::Change => {
                             let value = input.read(cx).value();
                             this.model.set_cell(r, c, &value);
@@ -187,8 +197,8 @@ impl TableDialog {
                             cx.notify();
                         }
                         _ => {}
-                    }
-                });
+                    },
+                );
                 self.cell_subscriptions.push(sub);
                 row.push(input);
             }
@@ -221,10 +231,19 @@ impl TableDialog {
         self.cells
             .get(r)
             .and_then(|row| row.get(c))
-            .is_some_and(|input| input.update(cx, |s, cx| s.marked_text_range(window, cx)).is_some())
+            .is_some_and(|input| {
+                input
+                    .update(cx, |s, cx| s.marked_text_range(window, cx))
+                    .is_some()
+            })
     }
 
-    fn on_key(&mut self, keystroke: &Keystroke, window: &mut Window, cx: &mut Context<Self>) -> bool {
+    fn on_key(
+        &mut self,
+        keystroke: &Keystroke,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) -> bool {
         if !self.focus.contains_focused(window, cx) || self.composing(window, cx) {
             return false;
         }
@@ -285,7 +304,9 @@ impl TableDialog {
                     .ghost()
                     .disabled(count <= 1)
                     .tooltip(i18n::t(cx, titles.0))
-                    .on_click(cx.listener(move |this, _, window, cx| on_change(this, -1, window, cx))),
+                    .on_click(
+                        cx.listener(move |this, _, window, cx| on_change(this, -1, window, cx)),
+                    ),
             )
             .child(
                 div()
@@ -302,14 +323,20 @@ impl TableDialog {
                     .xsmall()
                     .ghost()
                     .tooltip(i18n::t(cx, titles.1))
-                    .on_click(cx.listener(move |this, _, window, cx| on_change(this, 1, window, cx))),
+                    .on_click(
+                        cx.listener(move |this, _, window, cx| on_change(this, 1, window, cx)),
+                    ),
             )
     }
 
     fn render_toolbar(&self, cx: &mut Context<Self>) -> impl IntoElement {
         let (rows, cols) = self.model.dimensions();
         let current = self.model.alignment(self.current.1);
-        let align = |id: &'static str, label: &'static str, a: Alignment, key: &str, cx: &mut Context<Self>| {
+        let align = |id: &'static str,
+                     label: &'static str,
+                     a: Alignment,
+                     key: &str,
+                     cx: &mut Context<Self>| {
             Button::new(id)
                 .label(label)
                 .xsmall()
@@ -325,7 +352,10 @@ impl TableDialog {
                 "table-rows",
                 "dialogs.table_editor.row",
                 rows,
-                ("dialogs.table_editor.remove_row", "dialogs.table_editor.add_row"),
+                (
+                    "dialogs.table_editor.remove_row",
+                    "dialogs.table_editor.add_row",
+                ),
                 |this, delta, window, cx| {
                     let rows = this.model.rows().saturating_add_signed(delta);
                     let cols = this.model.cols();
@@ -337,7 +367,10 @@ impl TableDialog {
                 "table-cols",
                 "dialogs.table_editor.column",
                 cols,
-                ("dialogs.table_editor.remove_column", "dialogs.table_editor.add_column"),
+                (
+                    "dialogs.table_editor.remove_column",
+                    "dialogs.table_editor.add_column",
+                ),
                 |this, delta, window, cx| {
                     let cols = this.model.cols().saturating_add_signed(delta);
                     let rows = this.model.rows();
@@ -350,9 +383,27 @@ impl TableDialog {
                     .id("table-align")
                     .test_support()
                     .gap_0p5()
-                    .child(align("table-align-left", "⇤", Alignment::Left, "insert_dialogs.table.align_left", cx))
-                    .child(align("table-align-center", "↔", Alignment::Center, "insert_dialogs.table.align_center", cx))
-                    .child(align("table-align-right", "⇥", Alignment::Right, "insert_dialogs.table.align_right", cx)),
+                    .child(align(
+                        "table-align-left",
+                        "⇤",
+                        Alignment::Left,
+                        "insert_dialogs.table.align_left",
+                        cx,
+                    ))
+                    .child(align(
+                        "table-align-center",
+                        "↔",
+                        Alignment::Center,
+                        "insert_dialogs.table.align_center",
+                        cx,
+                    ))
+                    .child(align(
+                        "table-align-right",
+                        "⇥",
+                        Alignment::Right,
+                        "insert_dialogs.table.align_right",
+                        cx,
+                    )),
             )
     }
 
@@ -368,12 +419,18 @@ impl TableDialog {
                     .flex_none()
                     .border_1()
                     .border_color(if focused { theme.ring } else { theme.border })
-                    .when(r == 0, |el| el.bg(theme.muted).font_weight(FontWeight::SEMIBOLD))
+                    .when(r == 0, |el| {
+                        el.bg(theme.muted).font_weight(FontWeight::SEMIBOLD)
+                    })
                     .on_mouse_down(
                         MouseButton::Right,
                         cx.listener(move |this, ev: &MouseDownEvent, window, cx| {
                             this.current = (r, c);
-                            this.menu = Some(CellMenu { row: r, col: c, position: ev.position });
+                            this.menu = Some(CellMenu {
+                                row: r,
+                                col: c,
+                                position: ev.position,
+                            });
                             this.focus(window, cx);
                             cx.notify();
                         }),
@@ -393,33 +450,53 @@ impl TableDialog {
     fn render_menu(&self, cx: &mut Context<Self>) -> Option<AnyElement> {
         let menu = self.menu?;
         let theme = cx.theme();
-        let rows = self.model.cell_menu(menu.row, menu.col).into_iter().map(|item| {
-            let action = item.action;
-            let color = if action.is_destructive() { theme.danger } else { theme.popover_foreground };
-            div()
-                .id(SharedString::from(format!("table-menu-{action:?}").to_lowercase()))
-                .test_support()
-                .flex()
-                .justify_between()
-                .gap_4()
-                .px_3()
-                .py_1()
-                .text_sm()
-                .text_color(color)
-                .when(!item.enabled, |el| el.opacity(0.5))
-                .when(item.enabled, |el| {
-                    el.hover(|s| s.bg(theme.accent)).on_click(cx.listener(move |this, _, window, cx| {
-                        this.run_at(action, menu.row, menu.col, window, cx)
-                    }))
-                })
-                .child(i18n::t(cx, action.label_key()))
-                .child(div().text_xs().text_color(theme.muted_foreground).child(action.shortcut()))
-                .into_any_element()
-        });
+        let rows = self
+            .model
+            .cell_menu(menu.row, menu.col)
+            .into_iter()
+            .map(|item| {
+                let action = item.action;
+                let color = if action.is_destructive() {
+                    theme.danger
+                } else {
+                    theme.popover_foreground
+                };
+                div()
+                    .id(SharedString::from(
+                        format!("table-menu-{action:?}").to_lowercase(),
+                    ))
+                    .test_support()
+                    .flex()
+                    .justify_between()
+                    .gap_4()
+                    .px_3()
+                    .py_1()
+                    .text_sm()
+                    .text_color(color)
+                    .when(!item.enabled, |el| el.opacity(0.5))
+                    .when(item.enabled, |el| {
+                        el.hover(|s| s.bg(theme.accent)).on_click(cx.listener(
+                            move |this, _, window, cx| {
+                                this.run_at(action, menu.row, menu.col, window, cx)
+                            },
+                        ))
+                    })
+                    .child(i18n::t(cx, action.label_key()))
+                    .child(
+                        div()
+                            .text_xs()
+                            .text_color(theme.muted_foreground)
+                            .child(action.shortcut()),
+                    )
+                    .into_any_element()
+            });
         let mut items: Vec<AnyElement> = rows.collect();
         // Divider between the column and the row groups.
         if items.len() > 3 {
-            items.insert(3, div().my_1().h(px(1.)).bg(theme.border).into_any_element());
+            items.insert(
+                3,
+                div().my_1().h(px(1.)).bg(theme.border).into_any_element(),
+            );
         }
         Some(
             deferred(
@@ -478,6 +555,15 @@ impl Render for TableDialog {
             .child(self.render_grid(cx));
         let title = i18n::t(cx, "dialogs.table_editor.title");
         let menu = self.render_menu(cx);
-        modal_frame("dialog-table", &self.focus, width, title, body, footer, menu, cx)
+        modal_frame(
+            "dialog-table",
+            &self.focus,
+            width,
+            title,
+            body,
+            footer,
+            menu,
+            cx,
+        )
     }
 }

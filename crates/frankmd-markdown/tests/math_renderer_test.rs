@@ -25,15 +25,23 @@ fn doc(md: &str) -> frankmd_markdown::RenderDoc {
 #[test]
 fn inline_math_is_inline_style() {
     let d = doc("$E = mc^2$");
-    assert_eq!(collect_math(&d), vec![(MathStyle::Inline, "E = mc^2".to_owned())]);
-    assert!(matches!(&d.blocks[0], Block::Paragraph { inlines, .. } if inlines == &[Inline::Math("E = mc^2".into())]));
+    assert_eq!(
+        collect_math(&d),
+        vec![(MathStyle::Inline, "E = mc^2".to_owned())]
+    );
+    assert!(
+        matches!(&d.blocks[0], Block::Paragraph { inlines, .. } if inlines == &[Inline::Math("E = mc^2".into())])
+    );
 }
 
 // port: test/javascript/lib/math_renderer.test.js:27 "renders a block placeholder with displayMode true"
 #[test]
 fn block_math_is_display_style() {
     let d = doc("$$\nx = \\frac{1}{2}\n$$");
-    assert_eq!(collect_math(&d), vec![(MathStyle::Display, r"x = \frac{1}{2}".to_owned())]);
+    assert_eq!(
+        collect_math(&d),
+        vec![(MathStyle::Display, r"x = \frac{1}{2}".to_owned())]
+    );
 }
 
 // port: test/javascript/lib/math_renderer.test.js:35 "always passes the hardened security options (trust:false)"
@@ -49,7 +57,10 @@ fn hardened_options() {
         Err(MathError::Unsupported(vec![r"\href".to_owned()]))
     );
     // maxExpand bounds recursive macros
-    assert!(matches!(validate(r"\def\a{\a\a}\a", MathStyle::Inline), Err(MathError::Parse(_))));
+    assert!(matches!(
+        validate(r"\def\a{\a\a}\a", MathStyle::Inline),
+        Err(MathError::Parse(_))
+    ));
 }
 
 // port: test/javascript/lib/math_renderer.test.js:43 "renders multiple independent placeholders"
@@ -58,7 +69,10 @@ fn multiple_independent_math_nodes() {
     let d = doc("$a$\n\nx\n\n$$b$$");
     assert_eq!(
         collect_math(&d),
-        vec![(MathStyle::Inline, "a".to_owned()), (MathStyle::Display, "b".to_owned())]
+        vec![
+            (MathStyle::Inline, "a".to_owned()),
+            (MathStyle::Display, "b".to_owned())
+        ]
     );
 }
 
@@ -68,6 +82,9 @@ fn bad_math_does_not_affect_other_nodes() {
     let d = doc(r"$\frac{1}$ and $x$");
     let math = collect_math(&d);
     assert_eq!(math.len(), 2, "{math:?}");
-    assert!(matches!(validate(&math[0].1, math[0].0), Err(MathError::Parse(_))));
+    assert!(matches!(
+        validate(&math[0].1, math[0].0),
+        Err(MathError::Parse(_))
+    ));
     assert_eq!(validate(&math[1].1, math[1].0), Ok(()));
 }

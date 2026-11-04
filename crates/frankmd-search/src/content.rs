@@ -66,7 +66,11 @@ impl Query {
 
     /// The parameters the UI search uses (context 3, max 20).
     pub fn ui(pattern: impl Into<String>) -> Self {
-        Self { context_lines: UI_CONTEXT_LINES, max_results: UI_MAX_RESULTS, ..Self::new(pattern) }
+        Self {
+            context_lines: UI_CONTEXT_LINES,
+            max_results: UI_MAX_RESULTS,
+            ..Self::new(pattern)
+        }
     }
 }
 
@@ -108,13 +112,29 @@ impl SearchRegex {
         if is_blank(query) {
             return None;
         }
-        let build = |pattern: &str| Regex::with_options(pattern, RegexOptions::REGEX_OPTION_IGNORECASE, Syntax::ruby());
+        let build = |pattern: &str| {
+            Regex::with_options(
+                pattern,
+                RegexOptions::REGEX_OPTION_IGNORECASE,
+                Syntax::ruby(),
+            )
+        };
         if let Ok(inner) = build(query) {
-            return Some(Self { inner, pattern: query.to_owned(), timeout, literal_fallback: false });
+            return Some(Self {
+                inner,
+                pattern: query.to_owned(),
+                timeout,
+                literal_fallback: false,
+            });
         }
         let escaped = ruby_regexp_escape(query);
         let inner = build(&escaped).ok()?;
-        Some(Self { inner, pattern: escaped, timeout, literal_fallback: true })
+        Some(Self {
+            inner,
+            pattern: escaped,
+            timeout,
+            literal_fallback: true,
+        })
     }
 
     /// True when `query` failed to compile and was escaped to a literal.
@@ -126,11 +146,22 @@ impl SearchRegex {
     pub fn is_match(&self, line: &str) -> Result<bool, MatchTimeout> {
         let started = Instant::now();
         let mut param = MatchParam::default();
-        let retries = self.timeout.as_millis().max(1).saturating_mul(RETRIES_PER_MS);
+        let retries = self
+            .timeout
+            .as_millis()
+            .max(1)
+            .saturating_mul(RETRIES_PER_MS);
         param.set_retry_limit_in_match(u32::try_from(retries).unwrap_or(u32::MAX));
         let found = self
             .inner
-            .search_with_param(line, 0, line.len(), SearchOptions::SEARCH_OPTION_NONE, None, param)
+            .search_with_param(
+                line,
+                0,
+                line.len(),
+                SearchOptions::SEARCH_OPTION_NONE,
+                None,
+                param,
+            )
             .map_err(|_| MatchTimeout)?;
         if started.elapsed() > self.timeout {
             return Err(MatchTimeout);
@@ -150,7 +181,8 @@ fn ruby_regexp_escape(s: &str) -> String {
     let mut out = String::with_capacity(s.len());
     for c in s.chars() {
         match c {
-            '[' | ']' | '{' | '}' | '(' | ')' | '|' | '-' | '*' | '.' | '\\' | '?' | '+' | '^' | '$' | '#' | ' ' => {
+            '[' | ']' | '{' | '}' | '(' | ')' | '|' | '-' | '*' | '.' | '\\' | '?' | '+' | '^'
+            | '$' | '#' | ' ' => {
                 out.push('\\');
                 out.push(c);
             }
@@ -293,7 +325,11 @@ fn context_window(lines: &[String], index: usize, context_lines: i64) -> Vec<Con
     let end = index_i.saturating_add(context_lines).min(last);
     (start..=end)
         .filter_map(|i| usize::try_from(i).ok())
-        .map(|i| ContextLine { line_number: i + 1, content: lines[i].clone(), is_match: i == index })
+        .map(|i| ContextLine {
+            line_number: i + 1,
+            content: lines[i].clone(),
+            is_match: i == index,
+        })
         .collect()
 }
 
@@ -306,13 +342,24 @@ fn context_window(lines: &[String], index: usize, context_lines: i64) -> Vec<Con
 /// is read, dangling links are ignored and link cycles cannot occur.
 pub fn search(root: &Path, query: &Query) -> Results {
     let mut results = Results::default();
-    let Some(regex) = query.pattern.as_deref().and_then(|p| SearchRegex::compile(p, query.timeout)) else {
+    let Some(regex) = query
+        .pattern
+        .as_deref()
+        .and_then(|p| SearchRegex::compile(p, query.timeout))
+    else {
         return results;
     };
-    let mut walk = Walk { root, query, regex: &regex, results: &mut results };
+    let mut walk = Walk {
+        root,
+        query,
+        regex: &regex,
+        results: &mut results,
+    };
     // Returns `false` when max_results stopped the walk (already in `truncated`).
     walk.dir(root);
-    results.hits.sort_by_key(|hit| std::cmp::Reverse(whole_seconds(hit.mtime)));
+    results
+        .hits
+        .sort_by_key(|hit| std::cmp::Reverse(whole_seconds(hit.mtime)));
     results
 }
 
@@ -323,7 +370,11 @@ fn whole_seconds(t: SystemTime) -> i64 {
         Err(e) => {
             let d = e.duration();
             let secs = i64::try_from(d.as_secs()).unwrap_or(i64::MAX);
-            if d.subsec_nanos() == 0 { -secs } else { -secs - 1 }
+            if d.subsec_nanos() == 0 {
+                -secs
+            } else {
+                -secs - 1
+            }
         }
     }
 }
@@ -338,7 +389,10 @@ struct Walk<'a> {
 
 impl Walk<'_> {
     fn rel(&self, path: &Path) -> String {
-        path.strip_prefix(self.root).unwrap_or(path).to_string_lossy().into_owned()
+        path.strip_prefix(self.root)
+            .unwrap_or(path)
+            .to_string_lossy()
+            .into_owned()
     }
 
     fn skip(&mut self, path: &Path, reason: SkipReason) {
@@ -368,7 +422,9 @@ impl Walk<'_> {
             if entry.file_name().to_string_lossy().starts_with('.') {
                 continue;
             }
-            let Ok(file_type) = entry.file_type() else { continue };
+            let Ok(file_type) = entry.file_type() else {
+                continue;
+            };
             let path = entry.path();
             if file_type.is_symlink() {
                 continue;
@@ -402,10 +458,11 @@ impl Walk<'_> {
         };
         let lines = split_lines(&bytes);
         let remaining = self.query.max_results - self.results.hits.len();
-        let (matches, capped) = match search_lines_capped(&lines, self.regex, self.query.context_lines, remaining) {
-            Ok(found) => found,
-            Err(MatchTimeout) => return self.skip(path, SkipReason::Timeout),
-        };
+        let (matches, capped) =
+            match search_lines_capped(&lines, self.regex, self.query.context_lines, remaining) {
+                Ok(found) => found,
+                Err(MatchTimeout) => return self.skip(path, SkipReason::Timeout),
+            };
         if matches.is_empty() {
             return;
         }
@@ -415,7 +472,10 @@ impl Walk<'_> {
         };
         self.results.truncated |= capped;
         let rel = self.rel(path);
-        let name = path.file_stem().map(|s| s.to_string_lossy().into_owned()).unwrap_or_default();
+        let name = path
+            .file_stem()
+            .map(|s| s.to_string_lossy().into_owned())
+            .unwrap_or_default();
         self.results.hits.extend(matches.into_iter().map(|m| Hit {
             path: rel.clone(),
             name: name.clone(),

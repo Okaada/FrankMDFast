@@ -9,7 +9,13 @@ use std::collections::HashSet;
 const KS: &str = "test/javascript/lib/keyboard_shortcuts.test.js";
 
 fn ev(key: &str, ctrl: bool, shift: bool, alt: bool, meta: bool) -> KeyEvent {
-    KeyEvent { key: key.to_owned(), ctrl, shift, alt, meta }
+    KeyEvent {
+        key: key.to_owned(),
+        ctrl,
+        shift,
+        alt,
+        meta,
+    }
 }
 fn plain(key: &str) -> KeyEvent {
     ev(key, false, false, false, false)
@@ -23,7 +29,11 @@ fn ctrl_shift(key: &str) -> KeyEvent {
 
 /// `SHORTCUTS.<action>` from the const table (independent of `ShortcutMap`).
 fn sc(action: &str) -> &'static Shortcut {
-    &DEFAULT_SHORTCUTS.iter().find(|(a, _)| *a == action).unwrap_or_else(|| panic!("{action} missing")).1
+    &DEFAULT_SHORTCUTS
+        .iter()
+        .find(|(a, _)| *a == action)
+        .unwrap_or_else(|| panic!("{action} missing"))
+        .1
 }
 
 fn defaults() -> ShortcutMap {
@@ -41,7 +51,11 @@ fn contains_expected_shortcut_definitions() {
     assert_eq!(*sc("findReplace"), Shortcut::key("h").ctrl());
     assert_eq!(*sc("help"), Shortcut::key("F1"));
     // Bold/italic belong to the editor keymap, not the app table.
-    assert!(!DEFAULT_SHORTCUTS.iter().any(|(a, _)| *a == "bold" || *a == "italic"));
+    assert!(
+        !DEFAULT_SHORTCUTS
+            .iter()
+            .any(|(a, _)| *a == "bold" || *a == "italic")
+    );
 }
 
 // port: test/javascript/lib/keyboard_shortcuts.test.js:41 "matches simple ctrl+key shortcuts"
@@ -53,7 +67,10 @@ fn matches_simple_ctrl_key_shortcuts() {
 // port: test/javascript/lib/keyboard_shortcuts.test.js:46 "matches meta+key shortcuts (macOS cmd)"
 #[test]
 fn matches_meta_key_shortcuts() {
-    assert!(match_shortcut(&ev("s", false, false, false, true), Some(sc("save"))));
+    assert!(match_shortcut(
+        &ev("s", false, false, false, true),
+        Some(sc("save"))
+    ));
 }
 
 // port: test/javascript/lib/keyboard_shortcuts.test.js:51 "matches ctrl+shift+key shortcuts"
@@ -121,8 +138,14 @@ fn formats_simple_ctrl_key_shortcuts() {
 // port: test/javascript/lib/keyboard_shortcuts.test.js:105 "formats ctrl+shift+key shortcuts"
 #[test]
 fn formats_ctrl_shift_key_shortcuts() {
-    assert_eq!(format_shortcut(Some(sc("togglePreview")), false), "Ctrl+Shift+V");
-    assert_eq!(format_shortcut(Some(sc("contentSearch")), false), "Ctrl+Shift+F");
+    assert_eq!(
+        format_shortcut(Some(sc("togglePreview")), false),
+        "Ctrl+Shift+V"
+    );
+    assert_eq!(
+        format_shortcut(Some(sc("contentSearch")), false),
+        "Ctrl+Shift+F"
+    );
 }
 
 // port: test/javascript/lib/keyboard_shortcuts.test.js:110 "formats function keys"
@@ -134,7 +157,10 @@ fn formats_function_keys() {
 // port: test/javascript/lib/keyboard_shortcuts.test.js:114 "formats backslash key"
 #[test]
 fn formats_backslash_key() {
-    assert_eq!(format_shortcut(Some(sc("typewriterMode")), false), "Ctrl+\\");
+    assert_eq!(
+        format_shortcut(Some(sc("typewriterMode")), false),
+        "Ctrl+\\"
+    );
 }
 
 // port: test/javascript/lib/keyboard_shortcuts.test.js:118 "uses Mac-style formatting when requested"
@@ -162,8 +188,10 @@ fn is_macos_reflects_build_target() {
 // (Rust has one table; `ShortcutMap::defaults()` must equal the const, in order.)
 #[test]
 fn defaults_map_is_the_const_table() {
-    let expected: Vec<(String, Shortcut)> =
-        DEFAULT_SHORTCUTS.iter().map(|(a, s)| ((*a).to_owned(), s.clone())).collect();
+    let expected: Vec<(String, Shortcut)> = DEFAULT_SHORTCUTS
+        .iter()
+        .map(|(a, s)| ((*a).to_owned(), s.clone()))
+        .collect();
     assert_eq!(defaults().entries(), expected.as_slice());
 }
 
@@ -191,11 +219,22 @@ fn includes_toggle_task_on_ctrl_enter() {
 // port: test/javascript/lib/keyboard_shortcuts.test.js:167 "binds every chord at most once (no collisions)"
 #[test]
 fn binds_every_chord_at_most_once() {
-    let sigs: Vec<_> = DEFAULT_SHORTCUTS.iter().map(|(_, s)| (s.key.clone(), s.ctrl, s.shift, s.alt)).collect();
+    let sigs: Vec<_> = DEFAULT_SHORTCUTS
+        .iter()
+        .map(|(_, s)| (s.key.clone(), s.ctrl, s.shift, s.alt))
+        .collect();
     let unique: HashSet<_> = sigs.iter().cloned().collect();
-    assert_eq!(unique.len(), sigs.len(), "duplicate chord in DEFAULT_SHORTCUTS");
+    assert_eq!(
+        unique.len(),
+        sigs.len(),
+        "duplicate chord in DEFAULT_SHORTCUTS"
+    );
     let actions: HashSet<_> = DEFAULT_SHORTCUTS.iter().map(|(a, _)| *a).collect();
-    assert_eq!(actions.len(), DEFAULT_SHORTCUTS.len(), "duplicate action id");
+    assert_eq!(
+        actions.len(),
+        DEFAULT_SHORTCUTS.len(),
+        "duplicate action id"
+    );
 }
 
 // port: test/javascript/lib/keyboard_shortcuts.test.js:186 "returns action name when shortcut matches"
@@ -213,14 +252,20 @@ fn find_returns_none_without_match() {
 // port: test/javascript/lib/keyboard_shortcuts.test.js:196 "matches shift+ctrl shortcuts correctly"
 #[test]
 fn find_matches_shift_ctrl() {
-    assert_eq!(defaults().find_matching_action(&ctrl_shift("V")), Some("togglePreview"));
+    assert_eq!(
+        defaults().find_matching_action(&ctrl_shift("V")),
+        Some("togglePreview")
+    );
 }
 
 // port: test/javascript/lib/keyboard_shortcuts.test.js:201 "matches Ctrl+Shift+\\ as toggleScrollSync (not typewriterMode)"
 #[test]
 fn find_ctrl_shift_backslash_is_scroll_sync() {
     let m = defaults();
-    assert_eq!(m.find_matching_action(&ctrl_shift("\\")), Some("toggleScrollSync"));
+    assert_eq!(
+        m.find_matching_action(&ctrl_shift("\\")),
+        Some("toggleScrollSync")
+    );
     assert_eq!(m.find_matching_action(&ctrl("\\")), Some("typewriterMode"));
 }
 
@@ -235,13 +280,18 @@ fn find_ctrl_enter_is_toggle_task() {
 // port: test/javascript/lib/keyboard_shortcuts.test.js:217 "matches Escape key"
 #[test]
 fn find_matches_escape() {
-    assert_eq!(defaults().find_matching_action(&plain("Escape")), Some("closeDialogs"));
+    assert_eq!(
+        defaults().find_matching_action(&plain("Escape")),
+        Some("closeDialogs")
+    );
 }
 
 // port: test/javascript/lib/keyboard_shortcuts.test.js:235 "calls action handler when shortcut matches"
 #[test]
 fn dispatch_reports_action_on_match() {
-    let d = defaults().dispatch(&ctrl("s")).expect("save should dispatch");
+    let d = defaults()
+        .dispatch(&ctrl("s"))
+        .expect("save should dispatch");
     assert_eq!(d.action, "save");
 }
 

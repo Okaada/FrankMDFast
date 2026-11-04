@@ -30,7 +30,10 @@ fn fed_input_bytes(input: &J) -> Option<Vec<u8>> {
     if let Some(b64) = input.get("fed_base64").and_then(J::as_str) {
         return Some(base64_decode(b64));
     }
-    input.get("fed").and_then(J::as_str).map(|s| s.as_bytes().to_vec())
+    input
+        .get("fed")
+        .and_then(J::as_str)
+        .map(|s| s.as_bytes().to_vec())
 }
 
 fn check_warnings(rc: &ResolvedConfig, log: &J) -> Result<(), String> {
@@ -53,8 +56,15 @@ fn check_warnings(rc: &ResolvedConfig, log: &J) -> Result<(), String> {
 fn golden_config_parse_values() {
     let g = golden("config_parse");
     assert_cases("config_parse", &g.cases, |c| {
-        let rc = ResolvedConfig::from_bytes(fed_input_bytes(&c.input).as_deref(), env_json(&c.input["env"], "/R"));
-        eq("file_values", &file_values_json(&rc), &c.expected["file_values"])?;
+        let rc = ResolvedConfig::from_bytes(
+            fed_input_bytes(&c.input).as_deref(),
+            env_json(&c.input["env"], "/R"),
+        );
+        eq(
+            "file_values",
+            &file_values_json(&rc),
+            &c.expected["file_values"],
+        )?;
         eq("resolved", &resolved_json(&rc), &c.expected["resolved"])?;
         check_warnings(&rc, &c.expected["log"])
     });
@@ -82,7 +92,11 @@ fn golden_config_parse_load_rewrites_file() {
                 String::from_utf8_lossy(&want)
             ));
         }
-        eq("resolved (store)", &resolved_json(&store.current()), &c.expected["resolved"])
+        eq(
+            "resolved (store)",
+            &resolved_json(&store.current()),
+            &c.expected["resolved"],
+        )
     });
 }
 
@@ -108,7 +122,10 @@ fn golden_config_env_precedence() {
         let e = &c.expected;
         eq("file_values", &file_values_json(&rc), &e["file_values"])?;
         eq("resolved", &resolved_json(&rc), &e["resolved"])?;
-        let sources: J = Key::ALL.iter().map(|k| (k.name().to_owned(), json!(rc.get(*k).source.as_str()))).collect();
+        let sources: J = Key::ALL
+            .iter()
+            .map(|k| (k.name().to_owned(), json!(rc.get(*k).source.as_str())))
+            .collect();
         eq("sources", &sources, &e["sources"])?;
         let get_ai: J = e["get_ai"]
             .as_object()
@@ -117,11 +134,31 @@ fn golden_config_env_precedence() {
             .map(|n| (n.clone(), opt_json(rc.get_ai(key(n)).value.as_ref())))
             .collect();
         eq("get_ai", &get_ai, &e["get_ai"])?;
-        eq("ai_configured_in_file", &json!(rc.ai_configured_in_file()), &e["ai_configured_in_file"])?;
-        let avail: Vec<&str> = rc.ai_providers_available().into_iter().map(AiProviderId::as_str).collect();
-        eq("ai_providers_available", &json!(avail), &e["ai_providers_available"])?;
-        eq("effective_ai_provider", &json!(rc.effective_ai_provider().map(AiProviderId::as_str)), &e["effective_ai_provider"])?;
-        eq("effective_ai_model", &json!(rc.effective_ai_model()), &e["effective_ai_model"])?;
+        eq(
+            "ai_configured_in_file",
+            &json!(rc.ai_configured_in_file()),
+            &e["ai_configured_in_file"],
+        )?;
+        let avail: Vec<&str> = rc
+            .ai_providers_available()
+            .into_iter()
+            .map(AiProviderId::as_str)
+            .collect();
+        eq(
+            "ai_providers_available",
+            &json!(avail),
+            &e["ai_providers_available"],
+        )?;
+        eq(
+            "effective_ai_provider",
+            &json!(rc.effective_ai_provider().map(AiProviderId::as_str)),
+            &e["effective_ai_provider"],
+        )?;
+        eq(
+            "effective_ai_model",
+            &json!(rc.effective_ai_model()),
+            &e["effective_ai_model"],
+        )?;
         for (name, want) in e["features"].as_object().unwrap() {
             // `bogus` → false in Ruby; unrepresentable as a typed Feature.
             let got = feature(name).is_some_and(|f| rc.feature_available(f));
@@ -143,13 +180,24 @@ fn golden_config_env_notes_root() {
     assert_cases("config_env Config.new", g.cases_for("Config.new"), |c| {
         let root = "/golden/R";
         let env = env_json(&c.input["env"], root);
-        let explicit = c.input.get("base_path").and_then(J::as_str).map(|p| p.replace("<ROOT>", root));
+        let explicit = c
+            .input
+            .get("base_path")
+            .and_then(J::as_str)
+            .map(|p| p.replace("<ROOT>", root));
         let got = dirs::notes_root(explicit.as_deref().map(Path::new), &env).unwrap();
-        let want = c.expected["base_path"].as_str().unwrap().replace("<ROOT>", root);
+        let want = c.expected["base_path"]
+            .as_str()
+            .unwrap()
+            .replace("<ROOT>", root);
         eq("base_path", &json!(got.to_string_lossy()), &json!(want))?;
         if let Some(cfp) = c.expected.get("config_file_path").and_then(J::as_str) {
             let got = dirs::config_file_path(&got);
-            eq("config_file_path", &json!(got.to_string_lossy()), &json!(cfp.replace("<ROOT>", root)))?;
+            eq(
+                "config_file_path",
+                &json!(got.to_string_lossy()),
+                &json!(cfp.replace("<ROOT>", root)),
+            )?;
         }
         Ok(())
     });
@@ -158,31 +206,47 @@ fn golden_config_env_notes_root() {
 #[test]
 fn golden_config_env_images_initializer() {
     let g = golden("config_env");
-    assert_cases("config_env images initializer", g.cases_for("config/initializers/images.rb"), |c| {
-        let root = "/golden/home";
-        let env = env_json(&c.input["env"], root);
-        let has_pictures = c.input["home_has_Pictures"].as_bool().unwrap();
-        let pictures = format!("{root}/Pictures");
-        let out = env.with_images_path_default(|p| has_pictures && p == Path::new(&pictures));
-        let want = c.expected["IMAGES_PATH"].as_str().map(|s| s.replace("<ROOT>", root));
-        eq("IMAGES_PATH", &json!(out.raw("IMAGES_PATH")), &json!(want))
-    });
+    assert_cases(
+        "config_env images initializer",
+        g.cases_for("config/initializers/images.rb"),
+        |c| {
+            let root = "/golden/home";
+            let env = env_json(&c.input["env"], root);
+            let has_pictures = c.input["home_has_Pictures"].as_bool().unwrap();
+            let pictures = format!("{root}/Pictures");
+            let out = env.with_images_path_default(|p| has_pictures && p == Path::new(&pictures));
+            let want = c.expected["IMAGES_PATH"]
+                .as_str()
+                .map(|s| s.replace("<ROOT>", root));
+            eq("IMAGES_PATH", &json!(out.raw("IMAGES_PATH")), &json!(want))
+        },
+    );
 }
 
 #[test]
 fn golden_config_env_openrouter_key_for_images() {
     use secrecy::ExposeSecret as _;
     let g = golden("config_env");
-    assert_cases("config_env openrouter_key_for_images", g.cases_for("AiService.openrouter_key_for_images (expression)"), |c| {
-        let rc = ResolvedConfig::new(c.input["fed"].as_str(), env_json(&c.input["env"], "/R"));
-        let key = rc.image_generation_key().map(|k| k.expose_secret().to_owned());
-        eq("openrouter_key_for_images", &json!(key), &c.expected["openrouter_key_for_images"])?;
-        eq(
-            "get_ai(openrouter_api_key)",
-            &opt_json(rc.get_ai(Key::OpenrouterApiKey).value.as_ref()),
-            &c.expected["get_ai_openrouter_api_key"],
-        )
-    });
+    assert_cases(
+        "config_env openrouter_key_for_images",
+        g.cases_for("AiService.openrouter_key_for_images (expression)"),
+        |c| {
+            let rc = ResolvedConfig::new(c.input["fed"].as_str(), env_json(&c.input["env"], "/R"));
+            let key = rc
+                .image_generation_key()
+                .map(|k| k.expose_secret().to_owned());
+            eq(
+                "openrouter_key_for_images",
+                &json!(key),
+                &c.expected["openrouter_key_for_images"],
+            )?;
+            eq(
+                "get_ai(openrouter_api_key)",
+                &opt_json(rc.get_ai(Key::OpenrouterApiKey).value.as_ref()),
+                &c.expected["get_ai_openrouter_api_key"],
+            )
+        },
+    );
 }
 
 #[test]
@@ -196,7 +260,9 @@ fn golden_config_env_schema_table() {
     for r in rows {
         let k = key(r["key"].as_str().unwrap());
         let spec = k.spec();
-        let default = spec.default.map(|d| frankmd_config::value::cast(d, spec.ty).unwrap());
+        let default = spec
+            .default
+            .map(|d| frankmd_config::value::cast(d, spec.ty).unwrap());
         let got = json!({
             "key": spec.name,
             "type": spec.ty.as_str(),
@@ -215,8 +281,17 @@ fn golden_config_env_schema_table() {
     let consts = &g["config_constants"];
     let ui: Vec<&str> = Key::ui_keys().iter().map(|k| k.name()).collect();
     assert_eq!(json!(ui), consts["UI_KEYS"]);
-    let mut sensitive: Vec<&str> = Key::ALL.iter().filter(|k| k.spec().secret).map(|k| k.name()).collect();
-    let mut want_sensitive: Vec<&str> = consts["SENSITIVE_KEYS"].as_array().unwrap().iter().map(|v| v.as_str().unwrap()).collect();
+    let mut sensitive: Vec<&str> = Key::ALL
+        .iter()
+        .filter(|k| k.spec().secret)
+        .map(|k| k.name())
+        .collect();
+    let mut want_sensitive: Vec<&str> = consts["SENSITIVE_KEYS"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|v| v.as_str().unwrap())
+        .collect();
     sensitive.sort_unstable();
     want_sensitive.sort_unstable();
     assert_eq!(sensitive, want_sensitive);
@@ -224,9 +299,15 @@ fn golden_config_env_schema_table() {
     assert_eq!(json!(creds), consts["AI_CREDENTIAL_KEYS"]);
     let prio: Vec<&str> = AiProviderId::PRIORITY.iter().map(|p| p.as_str()).collect();
     assert_eq!(json!(prio), consts["AI_PROVIDER_PRIORITY"]);
-    let order: Vec<&str> = AiProviderId::AVAILABILITY_ORDER.iter().map(|p| p.as_str()).collect();
+    let order: Vec<&str> = AiProviderId::AVAILABILITY_ORDER
+        .iter()
+        .map(|p| p.as_str())
+        .collect();
     assert_eq!(json!(order), consts["ai_providers_available_order"]);
-    assert_eq!(consts["CONFIG_FILE"], json!(frankmd_config::store::CONFIG_FILE));
+    assert_eq!(
+        consts["CONFIG_FILE"],
+        json!(frankmd_config::store::CONFIG_FILE)
+    );
     assert_eq!(consts["LOCK_FILE"], json!(frankmd_fs::lock::CONFIG_LOCK));
 }
 
@@ -234,13 +315,17 @@ fn golden_config_env_schema_table() {
 
 #[test]
 fn golden_fed_template_is_byte_identical() {
-    assert_eq!(fed::template().as_bytes(), frankmd_testkit::golden_bytes("fed_template.fed").as_slice());
+    assert_eq!(
+        fed::template().as_bytes(),
+        frankmd_testkit::golden_bytes("fed_template.fed").as_slice()
+    );
     assert_eq!(fed::template().len(), 3032);
 }
 
 #[test]
 fn golden_template_sections() {
-    let g: J = serde_json::from_slice(&frankmd_testkit::golden_bytes("config_template.json")).unwrap();
+    let g: J =
+        serde_json::from_slice(&frankmd_testkit::golden_bytes("config_template.json")).unwrap();
     let got: J = fed::template_sections()
         .iter()
         .map(|s| json!({"marker": s.marker, "lines": s.lines}))
@@ -249,7 +334,10 @@ fn golden_template_sections() {
     let last = g["template_sections"].as_array().unwrap().last().unwrap();
     assert_eq!(json!(fed::ai_section_lines()), last["lines"]);
     // template = sections joined by "\n" + "\n"
-    let joined: Vec<&str> = fed::template_sections().iter().flat_map(|s| s.lines.iter().copied()).collect();
+    let joined: Vec<&str> = fed::template_sections()
+        .iter()
+        .flat_map(|s| s.lines.iter().copied())
+        .collect();
     assert_eq!(format!("{}\n", joined.join("\n")), fed::template());
 }
 
@@ -263,7 +351,11 @@ fn check_modes(v: &TestVault, base_rel: &str, want: &J) -> Result<(), String> {
         if p.is_symlink() || p.is_dir() {
             continue;
         }
-        let got = format!("{:o}", std::os::unix::fs::PermissionsExt::mode(&std::fs::metadata(&p).unwrap().permissions()) & 0o777);
+        let got = format!(
+            "{:o}",
+            std::os::unix::fs::PermissionsExt::mode(&std::fs::metadata(&p).unwrap().permissions())
+                & 0o777
+        );
         eq(&format!("mode {base_rel}{rel}"), &json!(got), mode)?;
     }
     Ok(())
@@ -272,69 +364,120 @@ fn check_modes(v: &TestVault, base_rel: &str, want: &J) -> Result<(), String> {
 #[test]
 fn golden_config_template_creation() {
     let g = golden("config_template");
-    assert_cases("config_template creation", g.cases_for("Config.new (template creation)"), |c| {
-        let i = &c.input;
-        if i["base_path"] == json!("") {
-            return Ok(()); // cwd-relative empty NOTES_PATH: not supported natively (see module docs)
-        }
-        let mut v = TestVault::from_spec(&i["tree"]);
-        let tmp = v.notes.path().to_string_lossy().into_owned();
-        let env = env_json(&i["env"], &tmp);
-        let base = match (i["base_path"].as_str(), i["notes_path_env"].as_str()) {
-            (Some(b), _) => b.replace("<ROOT>", &tmp),
-            (None, Some(n)) => {
-                let env_with = frankmd_config::EnvSnapshot::from_pairs([("NOTES_PATH", n.replace("<ROOT>", &tmp))]);
-                dirs::notes_root(None, &env_with).unwrap().to_string_lossy().into_owned()
+    assert_cases(
+        "config_template creation",
+        g.cases_for("Config.new (template creation)"),
+        |c| {
+            let i = &c.input;
+            if i["base_path"] == json!("") {
+                return Ok(()); // cwd-relative empty NOTES_PATH: not supported natively (see module docs)
             }
-            (None, None) => unreachable!(),
-        };
-        v.root = base.into();
-        let readonly = i["readonly_root"].as_bool().unwrap_or(false);
-        if readonly && !make_readonly(&v.root) {
-            return Ok(()); // running as root: permission checks are meaningless
-        }
-        let store = v.open(env);
-        if readonly {
-            restore_writable(&v.root);
-        }
-        let e = &c.expected;
-        eq("config_file_path", &json!(v.normalize(&store.path().to_string_lossy())), &e["config_file_path"])?;
-        let content = std::fs::read_to_string(store.path()).ok().filter(|_| store.path().is_file());
-        eq("fed_content", &json!(content), &e["fed_content"])?;
-        eq("fed_equals_template", &json!(content.as_deref() == Some(fed::template())), &e["fed_equals_template"])?;
-        let rc = store.current();
-        eq("file_values", &file_values_json(&rc), &e["file_values"])?;
-        for (k, want) in e["resolved_sample"].as_object().unwrap() {
-            eq(&format!("resolved.{k}"), &get_json(&rc, k), want)?;
-        }
-        eq("tree_after", &v.snapshot(), &expand_template(&e["tree_after"]))?;
-        check_modes(&v, "", &e["modes"])
-    });
+            let mut v = TestVault::from_spec(&i["tree"]);
+            let tmp = v.notes.path().to_string_lossy().into_owned();
+            let env = env_json(&i["env"], &tmp);
+            let base = match (i["base_path"].as_str(), i["notes_path_env"].as_str()) {
+                (Some(b), _) => b.replace("<ROOT>", &tmp),
+                (None, Some(n)) => {
+                    let env_with = frankmd_config::EnvSnapshot::from_pairs([(
+                        "NOTES_PATH",
+                        n.replace("<ROOT>", &tmp),
+                    )]);
+                    dirs::notes_root(None, &env_with)
+                        .unwrap()
+                        .to_string_lossy()
+                        .into_owned()
+                }
+                (None, None) => unreachable!(),
+            };
+            v.root = base.into();
+            let readonly = i["readonly_root"].as_bool().unwrap_or(false);
+            if readonly && !make_readonly(&v.root) {
+                return Ok(()); // running as root: permission checks are meaningless
+            }
+            let store = v.open(env);
+            if readonly {
+                restore_writable(&v.root);
+            }
+            let e = &c.expected;
+            eq(
+                "config_file_path",
+                &json!(v.normalize(&store.path().to_string_lossy())),
+                &e["config_file_path"],
+            )?;
+            let content = std::fs::read_to_string(store.path())
+                .ok()
+                .filter(|_| store.path().is_file());
+            eq("fed_content", &json!(content), &e["fed_content"])?;
+            eq(
+                "fed_equals_template",
+                &json!(content.as_deref() == Some(fed::template())),
+                &e["fed_equals_template"],
+            )?;
+            let rc = store.current();
+            eq("file_values", &file_values_json(&rc), &e["file_values"])?;
+            for (k, want) in e["resolved_sample"].as_object().unwrap() {
+                eq(&format!("resolved.{k}"), &get_json(&rc, k), want)?;
+            }
+            eq(
+                "tree_after",
+                &v.snapshot(),
+                &expand_template(&e["tree_after"]),
+            )?;
+            check_modes(&v, "", &e["modes"])
+        },
+    );
 }
 
 #[test]
 fn golden_config_template_upgrade_pure() {
     let g = golden("config_template");
-    assert_cases("config_template upgrade (pure)", g.cases_for("upgrade_config_file (via Config.new)"), |c| {
-        let fed_in = c.input["fed"].as_str().unwrap();
-        let changed = c.expected["changed"].as_bool().unwrap();
-        eq("needs_ai_section", &json!(fed::needs_ai_section(fed_in)), &json!(changed))?;
-        let want = changed.then(|| c.expected["fed_after"].as_str().unwrap().to_owned());
-        eq("upgrade_ai_section", &json!(fed::upgrade_ai_section(fed_in)), &json!(want))
-    });
+    assert_cases(
+        "config_template upgrade (pure)",
+        g.cases_for("upgrade_config_file (via Config.new)"),
+        |c| {
+            let fed_in = c.input["fed"].as_str().unwrap();
+            let changed = c.expected["changed"].as_bool().unwrap();
+            eq(
+                "needs_ai_section",
+                &json!(fed::needs_ai_section(fed_in)),
+                &json!(changed),
+            )?;
+            let want = changed.then(|| c.expected["fed_after"].as_str().unwrap().to_owned());
+            eq(
+                "upgrade_ai_section",
+                &json!(fed::upgrade_ai_section(fed_in)),
+                &json!(want),
+            )
+        },
+    );
 }
 
 #[test]
 fn golden_config_template_upgrade_on_open() {
     let g = golden("config_template");
-    assert_cases("config_template upgrade (store)", g.cases_for("upgrade_config_file (via Config.new)"), |c| {
-        let v = TestVault::with_fed(c.input["fed"].as_str().unwrap());
-        chmod(&v.fed_path(), u32::from_str_radix(c.input["fed_mode"].as_str().unwrap(), 8).unwrap());
-        let store = v.open_empty_env();
-        eq("fed_after", &json!(v.read_fed()), &c.expected["fed_after"])?;
-        eq("fed_mode_after", &json!(format!("{:o}", v.mode(FED))), &c.expected["fed_mode_after"])?;
-        eq("file_values", &file_values_json(&store.current()), &c.expected["file_values"])
-    });
+    assert_cases(
+        "config_template upgrade (store)",
+        g.cases_for("upgrade_config_file (via Config.new)"),
+        |c| {
+            let v = TestVault::with_fed(c.input["fed"].as_str().unwrap());
+            chmod(
+                &v.fed_path(),
+                u32::from_str_radix(c.input["fed_mode"].as_str().unwrap(), 8).unwrap(),
+            );
+            let store = v.open_empty_env();
+            eq("fed_after", &json!(v.read_fed()), &c.expected["fed_after"])?;
+            eq(
+                "fed_mode_after",
+                &json!(format!("{:o}", v.mode(FED))),
+                &c.expected["fed_mode_after"],
+            )?;
+            eq(
+                "file_values",
+                &file_values_json(&store.current()),
+                &c.expected["file_values"],
+            )
+        },
+    );
 }
 
 // ------------------------------------------------------------------ config_writeback
@@ -352,7 +495,10 @@ impl<'de> Deserialize<'de> for Ordered {
             fn expecting(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
                 f.write_str("an object")
             }
-            fn visit_map<A: serde::de::MapAccess<'de>>(self, mut m: A) -> Result<Ordered, A::Error> {
+            fn visit_map<A: serde::de::MapAccess<'de>>(
+                self,
+                mut m: A,
+            ) -> Result<Ordered, A::Error> {
                 let mut out = Vec::new();
                 while let Some((k, v)) = m.next_entry::<String, J>()? {
                     out.push((k, v));
@@ -394,7 +540,8 @@ struct WbFile {
 }
 
 fn ordered_ops() -> std::collections::HashMap<String, Vec<WbOp>> {
-    let f: WbFile = serde_json::from_slice(&frankmd_testkit::golden_bytes("config_writeback.json")).unwrap();
+    let f: WbFile =
+        serde_json::from_slice(&frankmd_testkit::golden_bytes("config_writeback.json")).unwrap();
     f.cases.into_iter().map(|c| (c.name, c.input.ops)).collect()
 }
 
@@ -407,7 +554,9 @@ fn expected_disk_values(c: &Case, i: usize) -> J {
         return step["instance_values"].clone(); // nobody re-read the file yet
     }
     match steps.get(i + 1) {
-        Some(next) if next["op"] == json!("reload") => next["result"]["reloaded_file_values"].clone(),
+        Some(next) if next["op"] == json!("reload") => {
+            next["result"]["reloaded_file_values"].clone()
+        }
         None => c.expected["reread_file_values"].clone(),
         _ => step["instance_values"].clone(),
     }
@@ -419,7 +568,10 @@ fn uncast(v: &J) -> Option<Value> {
         J::Null => None,
         J::String(s) => Some(Value::Str(s.clone())),
         J::Bool(b) => Some(Value::Bool(*b)),
-        J::Number(n) => Some(n.as_i64().map_or_else(|| Value::Json(v.clone()), |i| Value::Int(i.into()))),
+        J::Number(n) => Some(
+            n.as_i64()
+                .map_or_else(|| Value::Json(v.clone()), |i| Value::Int(i.into())),
+        ),
         other => Some(Value::Json(other.clone())),
     }
 }
@@ -443,7 +595,14 @@ fn run_writeback_case(c: &Case, ops: &[WbOp]) -> Result<(), String> {
             J::String(s) if s == "<UNCHANGED>" => i["fed"].clone(),
             other => expand_template(other),
         };
-        eq("fed_after_load", &json!(v.read_fed_bytes().map(|b| String::from_utf8_lossy(&b).into_owned())), &after_load)?;
+        eq(
+            "fed_after_load",
+            &json!(
+                v.read_fed_bytes()
+                    .map(|b| String::from_utf8_lossy(&b).into_owned())
+            ),
+            &after_load,
+        )?;
 
         for (n, (op, step)) in ops.iter().zip(e["steps"].as_array().unwrap()).enumerate() {
             let tag = format!("step {n} {}", op.op);
@@ -452,7 +611,9 @@ fn run_writeback_case(c: &Case, ops: &[WbOp]) -> Result<(), String> {
                 "set" => {
                     let ok = match Key::from_name(op.key.as_deref().unwrap()) {
                         None => false,
-                        Some(k) => coerce(k, &op.value).ok().is_some_and(|val| store.update(&[(k, val)]).is_ok()),
+                        Some(k) => coerce(k, &op.value)
+                            .ok()
+                            .is_some_and(|val| store.update(&[(k, val)]).is_ok()),
                     };
                     eq(&tag, &json!(ok), &json!(want == &json!(true)))?;
                 }
@@ -486,14 +647,21 @@ fn run_writeback_case(c: &Case, ops: &[WbOp]) -> Result<(), String> {
                     let res = store.modify(k, |old| {
                         saw = opt_json(old.as_ref());
                         if append {
-                            let mut arr = old.map(|o| o.to_json()).and_then(|j| j.as_array().cloned()).unwrap_or_default();
+                            let mut arr = old
+                                .map(|o| o.to_json())
+                                .and_then(|j| j.as_array().cloned())
+                                .unwrap_or_default();
                             arr.push(item);
                             Some(Value::Json(J::Array(arr)))
                         } else {
                             coerce(k, &item).unwrap()
                         }
                     });
-                    eq(&tag, &json!({"returned": res.is_ok(), "block_saw": saw}), want)?;
+                    eq(
+                        &tag,
+                        &json!({"returned": res.is_ok(), "block_saw": saw}),
+                        want,
+                    )?;
                 }
                 "ui_settings" => {
                     eq(&tag, &J::Object(ui_settings_json(&store.current())), want)?;
@@ -506,16 +674,25 @@ fn run_writeback_case(c: &Case, ops: &[WbOp]) -> Result<(), String> {
                     let got = store
                         .current()
                         .format_line(k, uncast(&op.value).as_ref())
-                        .map_or_else(|e| json!({"error": "ArgumentError", "message": e.to_string()}), |l| json!(l));
+                        .map_or_else(
+                            |e| json!({"error": "ArgumentError", "message": e.to_string()}),
+                            |l| json!(l),
+                        );
                     eq(&tag, &got, want)?;
                 }
                 "generate_config_lines" => continue, // dead code in the original
                 other => return Err(format!("unknown op {other}")),
             }
-            let disk = v.read_fed_bytes().map(|b| String::from_utf8_lossy(&b).into_owned());
+            let disk = v
+                .read_fed_bytes()
+                .map(|b| String::from_utf8_lossy(&b).into_owned());
             let disk = disk.filter(|_| v.fed_exists());
             eq(&format!("{tag} fed"), &json!(disk), &step["fed"])?;
-            eq(&format!("{tag} snapshot"), &file_values_json(&store.current()), &expected_disk_values(c, n))?;
+            eq(
+                &format!("{tag} snapshot"),
+                &file_values_json(&store.current()),
+                &expected_disk_values(c, n),
+            )?;
         }
         Ok(())
     })();
@@ -524,8 +701,16 @@ fn run_writeback_case(c: &Case, ops: &[WbOp]) -> Result<(), String> {
     }
     result?;
     let fresh = v.open(env);
-    eq("reread_file_values", &file_values_json(&fresh.current()), &c.expected["reread_file_values"])?;
-    eq("tree_after", &v.snapshot(), &expand_template(&c.expected["tree_after"]))?;
+    eq(
+        "reread_file_values",
+        &file_values_json(&fresh.current()),
+        &c.expected["reread_file_values"],
+    )?;
+    eq(
+        "tree_after",
+        &v.snapshot(),
+        &expand_template(&c.expected["tree_after"]),
+    )?;
     check_modes(&v, "", &c.expected["modes"])
 }
 
@@ -533,5 +718,7 @@ fn run_writeback_case(c: &Case, ops: &[WbOp]) -> Result<(), String> {
 fn golden_config_writeback() {
     let g = golden("config_writeback");
     let ops = ordered_ops();
-    assert_cases("config_writeback", &g.cases, |c| run_writeback_case(c, &ops[&c.name]));
+    assert_cases("config_writeback", &g.cases, |c| {
+        run_writeback_case(c, &ops[&c.name])
+    });
 }

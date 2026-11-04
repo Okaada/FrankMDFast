@@ -23,12 +23,20 @@ impl EnvSnapshot {
         K: Into<String>,
         V: Into<String>,
     {
-        Self(pairs.into_iter().map(|(k, v)| (k.into(), v.into())).collect())
+        Self(
+            pairs
+                .into_iter()
+                .map(|(k, v)| (k.into(), v.into()))
+                .collect(),
+        )
     }
 
     /// **[COMPAT]** Rails `present?`: `Some` only if non-empty after trim.
     pub fn present(&self, name: &str) -> Option<&str> {
-        self.0.get(name).map(String::as_str).filter(|v| !v.trim().is_empty())
+        self.0
+            .get(name)
+            .map(String::as_str)
+            .filter(|v| !v.trim().is_empty())
     }
 
     /// Raw lookup (an empty string counts as *set*, e.g. `IMAGES_PATH` boot rule).
@@ -70,6 +78,8 @@ impl EnvSnapshot {
 
 impl std::fmt::Debug for EnvSnapshot {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_tuple("EnvSnapshot").field(&self.0.keys().collect::<Vec<_>>()).finish()
+        f.debug_tuple("EnvSnapshot")
+            .field(&self.0.keys().collect::<Vec<_>>())
+            .finish()
     }
 }

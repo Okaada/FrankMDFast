@@ -4,11 +4,16 @@
 mod client_picker;
 
 use client_picker::{FakeTransport, s};
-use frankmd_media::picker::{JsArg, PickerCx, PickerResponse, PinterestImageSource, external_grid_items};
+use frankmd_media::picker::{
+    JsArg, PickerCx, PickerResponse, PinterestImageSource, external_grid_items,
+};
 use serde_json::json;
 
 fn search(tr: &mut FakeTransport, src: &mut PinterestImageSource, q: &JsArg) -> serde_json::Value {
-    let mut cx = PickerCx { transport: tr, t: None };
+    let mut cx = PickerCx {
+        transport: tr,
+        t: None,
+    };
     src.search(&mut cx, q).expect("ok")
 }
 
@@ -21,7 +26,9 @@ fn initializes_empty() {
 // port: test/javascript/image_sources/pinterest_images.test.js:28 "clears results"
 #[test]
 fn reset_clears() {
-    let mut src = PinterestImageSource { results: vec![json!({"url": "test.jpg"})] };
+    let mut src = PinterestImageSource {
+        results: vec![json!({"url": "test.jpg"})],
+    };
     src.reset();
     assert!(src.results.is_empty());
 }
@@ -30,14 +37,20 @@ fn reset_clears() {
 #[test]
 fn empty_query() {
     let mut tr = FakeTransport::default();
-    assert_eq!(search(&mut tr, &mut PinterestImageSource::default(), &s(""))["error"], "Please enter search keywords");
+    assert_eq!(
+        search(&mut tr, &mut PinterestImageSource::default(), &s(""))["error"],
+        "Please enter search keywords"
+    );
 }
 
 // port: test/javascript/image_sources/pinterest_images.test.js:41 "returns error for null query"
 #[test]
 fn null_query() {
     let mut tr = FakeTransport::default();
-    assert_eq!(search(&mut tr, &mut PinterestImageSource::default(), &JsArg::Null)["error"], "Please enter search keywords");
+    assert_eq!(
+        search(&mut tr, &mut PinterestImageSource::default(), &JsArg::Null)["error"],
+        "Please enter search keywords"
+    );
 }
 
 // port: test/javascript/image_sources/pinterest_images.test.js:46 "fetches images from Pinterest API"
@@ -49,7 +62,10 @@ fn fetches_images() {
     let mut src = PinterestImageSource::default();
     let r = search(&mut tr, &mut src, &s("home decor"));
     assert_eq!(tr.requests[0].method, "GET");
-    assert_eq!(tr.requests[0].url, "/images/search_pinterest?q=home%20decor");
+    assert_eq!(
+        tr.requests[0].url,
+        "/images/search_pinterest?q=home%20decor"
+    );
     assert_eq!(r["images"], images);
     assert_eq!(r["message"], "Found 2 images - click to select");
     assert_eq!(json!(src.results), images);
@@ -61,7 +77,10 @@ fn api_error() {
     let mut tr = FakeTransport::default();
     tr.push_json(json!({"error": "Pinterest blocked"}));
     let mut src = PinterestImageSource::default();
-    assert_eq!(search(&mut tr, &mut src, &s("cats"))["error"], "Pinterest blocked");
+    assert_eq!(
+        search(&mut tr, &mut src, &s("cats"))["error"],
+        "Pinterest blocked"
+    );
     assert!(src.results.is_empty());
 }
 
@@ -71,7 +90,10 @@ fn empty_results() {
     let mut tr = FakeTransport::default();
     tr.push_json(json!({"images": []}));
     let mut src = PinterestImageSource::default();
-    assert_eq!(search(&mut tr, &mut src, &s("xyznonexistent"))["message"], "No images found");
+    assert_eq!(
+        search(&mut tr, &mut src, &s("xyznonexistent"))["message"],
+        "No images found"
+    );
     assert!(src.results.is_empty());
 }
 
@@ -79,9 +101,13 @@ fn empty_results() {
 #[test]
 fn network_error() {
     let mut tr = FakeTransport::default();
-    tr.replies.push_back(PickerResponse::NetworkError("Network error".into()));
+    tr.replies
+        .push_back(PickerResponse::NetworkError("Network error".into()));
     let mut src = PinterestImageSource::default();
-    assert_eq!(search(&mut tr, &mut src, &s("cats"))["error"], "Search failed. Please try again.");
+    assert_eq!(
+        search(&mut tr, &mut src, &s("cats"))["error"],
+        "Search failed. Please try again."
+    );
     assert!(src.results.is_empty());
 }
 
@@ -94,8 +120,10 @@ fn grid_empty() {
 // port: test/javascript/image_sources/pinterest_images.test.js:107 "renders Pinterest image buttons"
 #[test]
 fn grid_items() {
-    let items = external_grid_items(&[json!({"url": "https://pinterest.com/full.jpg", "thumbnail": "https://pinterest.com/thumb.jpg",
-        "title": "DIY Project", "source": "pinterest.com", "width": 600, "height": 800})]);
+    let items = external_grid_items(&[
+        json!({"url": "https://pinterest.com/full.jpg", "thumbnail": "https://pinterest.com/thumb.jpg",
+        "title": "DIY Project", "source": "pinterest.com", "width": 600, "height": 800}),
+    ]);
     let i = &items[0];
     assert_eq!(i.url, "https://pinterest.com/full.jpg");
     assert_eq!(i.thumbnail, "https://pinterest.com/thumb.jpg");

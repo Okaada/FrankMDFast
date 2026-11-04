@@ -29,7 +29,10 @@ pub struct Language {
 /// case-insensitively. Unknown → `None` (block left untouched, no label).
 pub fn language_for_fence(info: &str) -> Option<Language> {
     let key = info.to_lowercase();
-    LANGUAGE_PARSERS.iter().find(|(alias, _)| *alias == key).map(|(_, lang)| *lang)
+    LANGUAGE_PARSERS
+        .iter()
+        .find(|(alias, _)| *alias == key)
+        .map(|(_, lang)| *lang)
 }
 
 const fn lang(id: &'static str, label: &'static str) -> Language {
@@ -161,7 +164,11 @@ pub struct HighlightBudget {
 
 impl Default for HighlightBudget {
     fn default() -> Self {
-        Self { max_block_len: 20_000, max_total_len: 50_000, max_blocks: 100 }
+        Self {
+            max_block_len: 20_000,
+            max_total_len: 50_000,
+            max_blocks: 100,
+        }
     }
 }
 
@@ -185,7 +192,10 @@ pub struct BlockPlan {
 /// total is skipped without consuming the total; once the total reaches 0
 /// nothing else is highlighted (labels are still assigned).
 pub fn plan(blocks: &[(&str, usize)], budget: &HighlightBudget) -> Vec<BlockPlan> {
-    let skipped = BlockPlan { language: None, highlight: false };
+    let skipped = BlockPlan {
+        language: None,
+        highlight: false,
+    };
     let mut remaining = budget.max_total_len;
     let mut out = Vec::with_capacity(blocks.len());
     for (ix, &(token, len)) in blocks.iter().enumerate() {
@@ -202,7 +212,10 @@ pub fn plan(blocks: &[(&str, usize)], budget: &HighlightBudget) -> Vec<BlockPlan
         if fits {
             remaining -= len;
         }
-        out.push(BlockPlan { language: Some(language), highlight: fits });
+        out.push(BlockPlan {
+            language: Some(language),
+            highlight: fits,
+        });
     }
     out
 }
@@ -212,7 +225,12 @@ pub fn plan(blocks: &[(&str, usize)], budget: &HighlightBudget) -> Vec<BlockPlan
 /// Use this for blocks the [`plan`] does not highlight so the text matches
 /// what [`BuiltinHighlighter`] would have produced.
 pub fn plain_lines(code: &str) -> Vec<HighlightedLine> {
-    split_code_lines(code).map(|text| HighlightedLine { text: text.to_owned(), runs: Vec::new() }).collect()
+    split_code_lines(code)
+        .map(|text| HighlightedLine {
+            text: text.to_owned(),
+            runs: Vec::new(),
+        })
+        .collect()
 }
 
 /// Split code into lines without their newlines (see [`plain_lines`]).

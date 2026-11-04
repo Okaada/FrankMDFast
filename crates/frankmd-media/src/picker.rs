@@ -79,7 +79,12 @@ pub trait Translator {
 /// `imagePickerText(key, options = {}, fallback = key)`: `window.t("dialogs.image_picker.<key>")`
 /// unless absent or it returns the key; else `fallback` with `%{name}` replaced
 /// by `String(options[name])` when defined (unknown / undefined tokens kept).
-pub fn image_picker_text(t: Option<&dyn Translator>, key: &str, options: &TextOptions, fallback: Option<&str>) -> String {
+pub fn image_picker_text(
+    t: Option<&dyn Translator>,
+    key: &str,
+    options: &TextOptions,
+    fallback: Option<&str>,
+) -> String {
     let full_key = format!("dialogs.image_picker.{key}");
     if let Some(t) = t {
         let translated = t.t(&full_key, options);
@@ -92,7 +97,10 @@ pub fn image_picker_text(t: Option<&dyn Translator>, key: &str, options: &TextOp
     let mut rest = fallback;
     while let Some(start) = rest.find("%{") {
         let after = &rest[start + 2..];
-        let name_len = after.bytes().take_while(|b| b.is_ascii_alphanumeric() || *b == b'_').count();
+        let name_len = after
+            .bytes()
+            .take_while(|b| b.is_ascii_alphanumeric() || *b == b'_')
+            .count();
         if name_len == 0 || !after[name_len..].starts_with('}') {
             out.push_str(&rest[..start + 2]);
             rest = after;
@@ -117,9 +125,17 @@ pub fn image_picker_search_result_message(t: Option<&dyn Translator>, count: &Js
     let (key, fallback) = if image_count == 1.0 {
         ("search_result_one", "Found 1 image - click to select")
     } else {
-        ("search_result_many", "Found %{count} images - click to select")
+        (
+            "search_result_many",
+            "Found %{count} images - click to select",
+        )
     };
-    image_picker_text(t, key, &vec![("count".to_owned(), JsArg::Number(image_count))], Some(fallback))
+    image_picker_text(
+        t,
+        key,
+        &vec![("count".to_owned(), JsArg::Number(image_count))],
+        Some(fallback),
+    )
 }
 
 /// `DEFAULT_IMAGE_EXTENSIONS`.
@@ -245,14 +261,26 @@ impl WebImageSource {
     }
     /// `saveCopy(url, resize, s3Prefix = "")` → POST `/images/import {url, resize[, s3_prefix]}`;
     /// non-ok throws `data.error || "Failed to upload to S3"`.
-    pub fn save_copy(&self, cx: &mut PickerCx<'_>, url: &Value, resize: &Value, s3_prefix: Option<&str>) -> Outcome {
+    pub fn save_copy(
+        &self,
+        cx: &mut PickerCx<'_>,
+        url: &Value,
+        resize: &Value,
+        s3_prefix: Option<&str>,
+    ) -> Outcome {
         let mut body = serde_json::Map::new();
         body.insert("url".into(), defined(url));
         body.insert("resize".into(), defined(resize));
         if let Some(prefix) = s3_prefix.filter(|p| !p.is_empty()) {
             body.insert("s3_prefix".into(), Value::String(prefix.to_owned()));
         }
-        post_or_throw(cx, "/images/import", RequestBody::Json(Value::Object(body)), "image_upload_failed", "Failed to upload to S3")
+        post_or_throw(
+            cx,
+            "/images/import",
+            RequestBody::Json(Value::Object(body)),
+            "image_upload_failed",
+            "Failed to upload to S3",
+        )
     }
 }
 
@@ -270,7 +298,13 @@ impl PinterestImageSource {
     }
     /// `search(query)`.
     pub fn search(&mut self, cx: &mut PickerCx<'_>, query: &JsArg) -> Outcome {
-        ddg_search(cx, &mut self.results, "/images/search_pinterest", query, false)
+        ddg_search(
+            cx,
+            &mut self.results,
+            "/images/search_pinterest",
+            query,
+            false,
+        )
     }
 }
 
@@ -292,7 +326,13 @@ pub struct GoogleImageSource {
 impl Default for GoogleImageSource {
     /// The JS constructor (`nextStart = 0`).
     fn default() -> Self {
-        Self { enabled: false, results: Vec::new(), next_start: Value::from(0), loading: false, query: String::new() }
+        Self {
+            enabled: false,
+            results: Vec::new(),
+            next_start: Value::from(0),
+            loading: false,
+            query: String::new(),
+        }
     }
 }
 
@@ -307,7 +347,11 @@ impl GoogleImageSource {
     /// `search(query)`: blank → `{error}`; else reset to `nextStart = 1` and `loadMore()`.
     pub fn search(&mut self, cx: &mut PickerCx<'_>, query: &JsArg) -> Outcome {
         if !query.truthy() {
-            return Ok(error_json(text(cx.t, "search_keywords_required", "Please enter search keywords")));
+            return Ok(error_json(text(
+                cx.t,
+                "search_keywords_required",
+                "Please enter search keywords",
+            )));
         }
         self.results.clear();
         self.next_start = Value::from(1);
@@ -321,11 +365,24 @@ impl GoogleImageSource {
         }
         self.loading = true;
         // JS template-literal stringification; a missing `next_start` reads "undefined".
-        let start = if self.next_start.is_null() { "undefined".to_owned() } else { value_to_js_string(&self.next_start) };
-        let url = format!("/images/search_google?q={}&start={start}", encode_uri_component(&self.query));
+        let start = if self.next_start.is_null() {
+            "undefined".to_owned()
+        } else {
+            value_to_js_string(&self.next_start)
+        };
+        let url = format!(
+            "/images/search_google?q={}&start={start}",
+            encode_uri_component(&self.query)
+        );
         let outcome = self.apply_google_page(cx, url);
         self.loading = false;
-        Ok(outcome.unwrap_or_else(|()| error_json(text(cx.t, "search_failed", "Search failed. Please try again."))))
+        Ok(outcome.unwrap_or_else(|()| {
+            error_json(text(
+                cx.t,
+                "search_failed",
+                "Search failed. Please try again.",
+            ))
+        }))
     }
     /// `shouldLoadMore(scrollBottom)`: `< 100 && !loading && results non-empty`.
     pub fn should_load_more(&self, scroll_bottom: f64) -> bool {
@@ -347,13 +404,30 @@ impl LocalImageSource {
     }
     /// `load(search = "", {limit = 10, offset = 0})` → GET `/images?[search=]&limit=&offset=`
     /// (each value `encodeURIComponent(String(v))`); non-ok → `{error: data.error || "Error loading images"}`.
-    pub fn load(&mut self, cx: &mut PickerCx<'_>, search: &JsArg, limit: &JsArg, offset: &JsArg) -> Outcome {
+    pub fn load(
+        &mut self,
+        cx: &mut PickerCx<'_>,
+        search: &JsArg,
+        limit: &JsArg,
+        offset: &JsArg,
+    ) -> Outcome {
         let mut params = Vec::new();
         if search.truthy() {
-            params.push(format!("search={}", encode_uri_component(&search.to_js_string())));
+            params.push(format!(
+                "search={}",
+                encode_uri_component(&search.to_js_string())
+            ));
         }
-        let limit = if *limit == JsArg::Undefined { "10".to_owned() } else { limit.to_js_string() };
-        let offset = if *offset == JsArg::Undefined { "0".to_owned() } else { offset.to_js_string() };
+        let limit = if *limit == JsArg::Undefined {
+            "10".to_owned()
+        } else {
+            limit.to_js_string()
+        };
+        let offset = if *offset == JsArg::Undefined {
+            "0".to_owned()
+        } else {
+            offset.to_js_string()
+        };
         params.push(format!("limit={}", encode_uri_component(&limit)));
         params.push(format!("offset={}", encode_uri_component(&offset)));
         Ok(get_or_error(cx, format!("/images?{}", params.join("&"))))
@@ -361,22 +435,40 @@ impl LocalImageSource {
     /// `deleteImage(path)` → DELETE `/images/file/<encodePath>`; non-ok throws.
     pub fn delete_image(&self, cx: &mut PickerCx<'_>, path: &str) -> Outcome {
         let url = format!("/images/file/{}", encode_path(Some(path)));
-        let (ok, data) = send(cx, "DELETE", url, RequestBody::None, false).map_err(RequestFailure::thrown)?;
+        let (ok, data) =
+            send(cx, "DELETE", url, RequestBody::None, false).map_err(RequestFailure::thrown)?;
         if !ok {
             let error = prop(&data, "error")?;
-            return Err(js_error(&or_text(error, cx.t, "image_delete_failed", "Failed to delete image")));
+            return Err(js_error(&or_text(
+                error,
+                cx.t,
+                "image_delete_failed",
+                "Failed to delete image",
+            )));
         }
         Ok(data)
     }
     /// `saveCopy(path, resize, s3Key = "")` → POST `/images/import {path, resize[, s3_key]}`.
-    pub fn save_copy(&self, cx: &mut PickerCx<'_>, path: &Value, resize: &Value, s3_key: Option<&str>) -> Outcome {
+    pub fn save_copy(
+        &self,
+        cx: &mut PickerCx<'_>,
+        path: &Value,
+        resize: &Value,
+        s3_key: Option<&str>,
+    ) -> Outcome {
         let mut body = serde_json::Map::new();
         body.insert("path".into(), defined(path));
         body.insert("resize".into(), defined(resize));
         if let Some(key) = s3_key.filter(|k| !k.is_empty()) {
             body.insert("s3_key".into(), Value::String(key.to_owned()));
         }
-        post_or_throw(cx, "/images/import", RequestBody::Json(Value::Object(body)), "image_upload_failed", "Failed to upload to S3")
+        post_or_throw(
+            cx,
+            "/images/import",
+            RequestBody::Json(Value::Object(body)),
+            "image_upload_failed",
+            "Failed to upload to S3",
+        )
     }
 }
 
@@ -410,8 +502,13 @@ impl AiImageSource {
     }
     /// `loadConfig()` → GET `/ai/image_config`; failures keep the previous values.
     pub fn load_config(&mut self, cx: &mut PickerCx<'_>) -> Outcome {
-        if let Ok((true, config)) = send(cx, "GET", "/ai/image_config".to_owned(), RequestBody::None, false)
-            && let (Ok(enabled), Ok(model)) = (prop(&config, "enabled"), prop(&config, "model"))
+        if let Ok((true, config)) = send(
+            cx,
+            "GET",
+            "/ai/image_config".to_owned(),
+            RequestBody::None,
+            false,
+        ) && let (Ok(enabled), Ok(model)) = (prop(&config, "enabled"), prop(&config, "model"))
         {
             self.enabled = truthy(&enabled);
             self.model = model.as_str().map(str::to_owned);
@@ -439,16 +536,33 @@ impl AiImageSource {
         let mut body = serde_json::Map::new();
         body.insert("prompt".into(), prompt.to_json());
         if let Some(reference) = self.ref_image.as_ref().filter(|r| !r.path.is_empty()) {
-            body.insert("reference_image_path".into(), Value::String(reference.path.clone()));
+            body.insert(
+                "reference_image_path".into(),
+                Value::String(reference.path.clone()),
+            );
         }
         let t = cx.t;
-        let failed = || error_json(text(t, "ai_generation_failed", "Failed to generate image. Please try again."));
-        let data = match send(cx, "POST", "/ai/generate_image".to_owned(), RequestBody::Json(Value::Object(body)), true) {
+        let failed = || {
+            error_json(text(
+                t,
+                "ai_generation_failed",
+                "Failed to generate image. Please try again.",
+            ))
+        };
+        let data = match send(
+            cx,
+            "POST",
+            "/ai/generate_image".to_owned(),
+            RequestBody::Json(Value::Object(body)),
+            true,
+        ) {
             Ok((_, data)) => data,
             Err(RequestFailure::Aborted) => return Ok(serde_json::json!({ "cancelled": true })),
             Err(RequestFailure::Network(_)) => return Ok(failed()),
         };
-        let Ok(error) = prop(&data, "error") else { return Ok(failed()) };
+        let Ok(error) = prop(&data, "error") else {
+            return Ok(failed());
+        };
         if truthy(&error) {
             return Ok(error_json(error));
         }
@@ -462,8 +576,15 @@ impl AiImageSource {
         });
         let preview = if truthy(&field("data")) {
             let mime = field("mime_type");
-            let mime = if truthy(&mime) { value_to_js_string(&mime) } else { "image/png".to_owned() };
-            Value::String(format!("data:{mime};base64,{}", value_to_js_string(&field("data"))))
+            let mime = if truthy(&mime) {
+                value_to_js_string(&mime)
+            } else {
+                "image/png".to_owned()
+            };
+            Value::String(format!(
+                "data:{mime};base64,{}",
+                value_to_js_string(&field("data"))
+            ))
         } else {
             field("url")
         };
@@ -482,7 +603,10 @@ impl AiImageSource {
     }
     /// `setRefImage(path, name)`.
     pub fn set_ref_image(&mut self, path: &str, name: &str) {
-        self.ref_image = Some(RefImage { path: path.to_owned(), name: name.to_owned() });
+        self.ref_image = Some(RefImage {
+            path: path.to_owned(),
+            name: name.to_owned(),
+        });
     }
     /// `clearRefImage()`.
     pub fn clear_ref_image(&mut self) {
@@ -491,7 +615,10 @@ impl AiImageSource {
     /// `loadRefImages(search = "")` → GET `/images[?search=]`.
     pub fn load_ref_images(&self, cx: &mut PickerCx<'_>, search: &JsArg) -> Outcome {
         let url = if search.truthy() {
-            format!("/images?search={}", encode_uri_component(&search.to_js_string()))
+            format!(
+                "/images?search={}",
+                encode_uri_component(&search.to_js_string())
+            )
         } else {
             "/images".to_owned()
         };
@@ -502,7 +629,11 @@ impl AiImageSource {
     /// URL → POST `/images/import {url[, s3_prefix]}`; non-ok throws.
     pub fn save(&self, cx: &mut PickerCx<'_>, s3_prefix: Option<&str>, now_ms: i64) -> Outcome {
         let Some(generated) = &self.generated_data else {
-            return Ok(error_json(text(cx.t, "ai_no_generated_data", "No generated image data available")));
+            return Ok(error_json(text(
+                cx.t,
+                "ai_no_generated_data",
+                "No generated image data available",
+            )));
         };
         let field = |key: &str| prop(generated, key).unwrap_or(Value::Null);
         let has_data = truthy(&field("data"));
@@ -517,8 +648,18 @@ impl AiImageSource {
         if let Some(prefix) = s3_prefix.filter(|p| !p.is_empty()) {
             body.insert("s3_prefix".into(), Value::String(prefix.to_owned()));
         }
-        let endpoint = if has_data { "/images/upload_base64" } else { "/images/import" };
-        post_or_throw(cx, endpoint, RequestBody::Json(Value::Object(body)), "ai_save_failed", "Failed to save image")
+        let endpoint = if has_data {
+            "/images/upload_base64"
+        } else {
+            "/images/import"
+        };
+        post_or_throw(
+            cx,
+            endpoint,
+            RequestBody::Json(Value::Object(body)),
+            "ai_save_failed",
+            "Failed to save image",
+        )
     }
 }
 
@@ -590,14 +731,29 @@ impl FolderImageSource {
     /// `browse(allowed)`: `picker` `None` → `folder_api_not_supported`; abort →
     /// `{cancelled}`; error → `folder_access_failed`; else `{count}` (files whose
     /// lowercased name ends with an allowed ext; dirs skipped).
-    pub fn browse(&mut self, t: Option<&dyn Translator>, picker: Option<&mut dyn DirectoryPicker>, allowed: Option<&[String]>) -> Outcome {
+    pub fn browse(
+        &mut self,
+        t: Option<&dyn Translator>,
+        picker: Option<&mut dyn DirectoryPicker>,
+        allowed: Option<&[String]>,
+    ) -> Outcome {
         let Some(picker) = picker else {
-            return Ok(error_json(text(t, "folder_api_not_supported", "File System Access API not supported")));
+            return Ok(error_json(text(
+                t,
+                "folder_api_not_supported",
+                "File System Access API not supported",
+            )));
         };
         let entries = match picker.pick() {
             Ok(entries) => entries,
             Err(PickError::Aborted) => return Ok(serde_json::json!({ "cancelled": true })),
-            Err(PickError::Failed(_)) => return Ok(error_json(text(t, "folder_access_failed", "Error accessing folder"))),
+            Err(PickError::Failed(_)) => {
+                return Ok(error_json(text(
+                    t,
+                    "folder_access_failed",
+                    "Error accessing folder",
+                )));
+            }
         };
         self.reset();
         let allowed = allowed_extensions(allowed);
@@ -613,7 +769,12 @@ impl FolderImageSource {
     }
     /// `ingest(files, allowed)` → `{count, rejected: [{name, ext}]}` (sort by
     /// `lastModified` desc, then `filter("")`).
-    pub fn ingest(&mut self, t: Option<&dyn Translator>, files: Vec<PickedFile>, allowed: Option<&[String]>) -> Outcome {
+    pub fn ingest(
+        &mut self,
+        t: Option<&dyn Translator>,
+        files: Vec<PickedFile>,
+        allowed: Option<&[String]>,
+    ) -> Outcome {
         self.reset();
         let allowed = allowed_extensions(allowed);
         let mut rejected = Vec::new();
@@ -621,7 +782,8 @@ impl FolderImageSource {
             if has_allowed_extension(&file.name, &allowed) {
                 self.all_images.push(file);
             } else {
-                rejected.push(serde_json::json!({ "name": file.name, "ext": ext_of(t, &file.name) }));
+                rejected
+                    .push(serde_json::json!({ "name": file.name, "ext": ext_of(t, &file.name) }));
             }
         }
         self.sort_and_show();
@@ -631,8 +793,11 @@ impl FolderImageSource {
     /// (case-insensitive trimmed substring).
     pub fn filter(&mut self, term: &str, offset: usize, limit: usize) -> Outcome {
         let term = js_trim(&term.to_lowercase()).to_owned();
-        let filtered: Vec<&PickedFile> =
-            self.all_images.iter().filter(|img| term.is_empty() || img.name.to_lowercase().contains(&term)).collect();
+        let filtered: Vec<&PickedFile> = self
+            .all_images
+            .iter()
+            .filter(|img| term.is_empty() || img.name.to_lowercase().contains(&term))
+            .collect();
         let total = filtered.len();
         self.displayed_images = filtered
             .into_iter()
@@ -644,7 +809,9 @@ impl FolderImageSource {
                 file: file.clone(),
             })
             .collect();
-        Ok(serde_json::json!({ "displayed": self.displayed_images.len(), "total": total, "offset": offset, "limit": limit }))
+        Ok(
+            serde_json::json!({ "displayed": self.displayed_images.len(), "total": total, "offset": offset, "limit": limit }),
+        )
     }
     /// `getImage(index)`.
     pub fn get_image(&self, index: usize) -> Option<&DisplayedImage> {
@@ -662,7 +829,10 @@ impl FolderImageSource {
             Some(total) if total > shown => image_picker_text(
                 t,
                 "folder_showing_recent",
-                &vec![("shown".to_owned(), number(shown)), ("total".to_owned(), number(total))],
+                &vec![
+                    ("shown".to_owned(), number(shown)),
+                    ("total".to_owned(), number(total)),
+                ],
                 Some("Showing %{shown} most recent of %{total} images"),
             ),
             _ => {
@@ -671,16 +841,31 @@ impl FolderImageSource {
                 } else {
                     ("folder_images_found_many", "%{count} images found")
                 };
-                image_picker_text(t, key, &vec![("count".to_owned(), number(shown))], Some(fallback))
+                image_picker_text(
+                    t,
+                    key,
+                    &vec![("count".to_owned(), number(shown))],
+                    Some(fallback),
+                )
             }
         }
     }
     /// `upload(file, resize, s3Key = "")` → POST `/images/upload` FormData
     /// `file[, resize][, s3_key]` (falsy values omitted); non-ok throws `"Upload failed"`.
-    pub fn upload(&self, cx: &mut PickerCx<'_>, file: &PickedFile, resize: &JsArg, s3_key: Option<&str>) -> Outcome {
+    pub fn upload(
+        &self,
+        cx: &mut PickerCx<'_>,
+        file: &PickedFile,
+        resize: &JsArg,
+        s3_key: Option<&str>,
+    ) -> Outcome {
         let mut form = vec![(
             "file".to_owned(),
-            FormField::File { name: file.name.clone(), size: file.size, mime: file.mime.clone() },
+            FormField::File {
+                name: file.name.clone(),
+                size: file.size,
+                mime: file.mime.clone(),
+            },
         )];
         if resize.truthy() {
             form.push(("resize".to_owned(), FormField::Text(resize.to_js_string())));
@@ -688,7 +873,13 @@ impl FolderImageSource {
         if let Some(key) = s3_key.filter(|k| !k.is_empty()) {
             form.push(("s3_key".to_owned(), FormField::Text(key.to_owned())));
         }
-        post_or_throw(cx, "/images/upload", RequestBody::Form(form), "image_upload_failed", "Upload failed")
+        post_or_throw(
+            cx,
+            "/images/upload",
+            RequestBody::Form(form),
+            "image_upload_failed",
+            "Upload failed",
+        )
     }
 }
 
@@ -705,7 +896,9 @@ pub fn is_safe_image_url(url: &str) -> bool {
         return false;
     }
     let lower = url.to_ascii_lowercase();
-    ["http:", "https:", "data:image/", "blob:"].iter().any(|p| lower.starts_with(p))
+    ["http:", "https:", "data:image/", "blob:"]
+        .iter()
+        .any(|p| lower.starts_with(p))
         || (url.starts_with('/') && !url.starts_with("//") && !url.starts_with("/\\"))
 }
 
@@ -713,7 +906,8 @@ pub fn is_safe_image_url(url: &str) -> bool {
 /// `"0"`, `"a"`, missing → no label).
 pub fn dimensions_label(width: &Value, height: &Value) -> Option<String> {
     let (w, h) = (value_to_number(width), value_to_number(height));
-    (w.is_finite() && h.is_finite() && w > 0.0 && h > 0.0).then(|| format!("{}x{}", js_number_string(w), js_number_string(h)))
+    (w.is_finite() && h.is_finite() && w > 0.0 && h > 0.0)
+        .then(|| format!("{}x{}", js_number_string(w), js_number_string(h)))
 }
 
 /// One web/Google/Pinterest result tile.
@@ -744,7 +938,11 @@ pub fn external_grid_items(results: &[Value]) -> Vec<ExternalGridItem> {
         .map(|(index, image)| {
             let field = |key: &str| image.get(key).cloned().unwrap_or(Value::Null);
             let url = field("url");
-            let thumbnail = if truthy(&field("thumbnail")) { field("thumbnail") } else { url.clone() };
+            let thumbnail = if truthy(&field("thumbnail")) {
+                field("thumbnail")
+            } else {
+                url.clone()
+            };
             let image_src = match &thumbnail {
                 Value::String(s) if is_safe_image_url(s) => s.clone(),
                 _ => String::new(),
@@ -798,7 +996,10 @@ impl AiImageSource {
     /// `renderRefImageGrid(images)` data.
     pub fn ref_grid_items(&self, images: &[Value]) -> Vec<LocalGridItem> {
         let selected = self.ref_image.as_ref().map(|r| r.path.as_str());
-        images.iter().map(|image| local_grid_item(image, selected)).collect()
+        images
+            .iter()
+            .map(|image| local_grid_item(image, selected))
+            .collect()
     }
 }
 
@@ -854,7 +1055,9 @@ impl JsArg {
         match self {
             JsArg::Undefined | JsArg::Null => Value::Null,
             JsArg::Bool(b) => Value::Bool(*b),
-            JsArg::Number(n) if n.is_finite() && n.fract() == 0.0 && n.abs() < 9e15 => Value::from(*n as i64),
+            JsArg::Number(n) if n.is_finite() && n.fract() == 0.0 && n.abs() < 9e15 => {
+                Value::from(*n as i64)
+            }
             JsArg::Number(n) => serde_json::Number::from_f64(*n).map_or(Value::Null, Value::Number),
             JsArg::Str(s) => Value::String(s.clone()),
         }
@@ -899,7 +1102,13 @@ fn value_to_js_string(v: &Value) -> String {
         Value::String(s) => s.clone(),
         Value::Array(items) => items
             .iter()
-            .map(|item| if item.is_null() { String::new() } else { value_to_js_string(item) })
+            .map(|item| {
+                if item.is_null() {
+                    String::new()
+                } else {
+                    value_to_js_string(item)
+                }
+            })
             .collect::<Vec<_>>()
             .join(","),
         Value::Object(_) => "[object Object]".to_owned(),
@@ -908,7 +1117,11 @@ fn value_to_js_string(v: &Value) -> String {
 
 /// `escapeHtml(x)`'s text before escaping: falsy → `""`, else `String(x)`.
 fn js_text(v: &Value) -> String {
-    if truthy(v) { value_to_js_string(v) } else { String::new() }
+    if truthy(v) {
+        value_to_js_string(v)
+    } else {
+        String::new()
+    }
 }
 
 /// JS `Number(x)` for a JSON value (a missing field is `undefined` → NaN).
@@ -936,12 +1149,19 @@ fn prop(v: &Value, key: &str) -> Result<Value, Thrown> {
 
 /// `value || imagePickerText(key, {}, fallback)`.
 fn or_text(value: Value, t: Option<&dyn Translator>, key: &str, fallback: &str) -> Value {
-    if truthy(&value) { value } else { Value::String(text(t, key, fallback)) }
+    if truthy(&value) {
+        value
+    } else {
+        Value::String(text(t, key, fallback))
+    }
 }
 
 /// `new Error(message)`.
 fn js_error(message: &Value) -> Thrown {
-    Thrown { name: "Error".to_owned(), message: value_to_js_string(message) }
+    Thrown {
+        name: "Error".to_owned(),
+        message: value_to_js_string(message),
+    }
 }
 
 /// JS `String.prototype.trim` whitespace.
@@ -961,7 +1181,11 @@ fn js_number_string(n: f64) -> String {
         return "NaN".to_owned();
     }
     if n.is_infinite() {
-        return if n > 0.0 { "Infinity".to_owned() } else { "-Infinity".to_owned() };
+        return if n > 0.0 {
+            "Infinity".to_owned()
+        } else {
+            "-Infinity".to_owned()
+        };
     }
     if n == 0.0 {
         return "0".to_owned();
@@ -975,13 +1199,21 @@ fn js_number_string(n: f64) -> String {
     let body = if k <= point && point <= 21 {
         format!("{digits}{}", "0".repeat((point - k) as usize))
     } else if 0 < point && point <= 21 {
-        format!("{}.{}", &digits[..point as usize], &digits[point as usize..])
+        format!(
+            "{}.{}",
+            &digits[..point as usize],
+            &digits[point as usize..]
+        )
     } else if -6 < point && point <= 0 {
         format!("0.{}{digits}", "0".repeat((-point) as usize))
     } else {
         let e = point - 1;
         let exp_sign = if e < 0 { '-' } else { '+' };
-        let rest = if k > 1 { format!(".{}", &digits[1..]) } else { String::new() };
+        let rest = if k > 1 {
+            format!(".{}", &digits[1..])
+        } else {
+            String::new()
+        };
         format!("{}{rest}e{exp_sign}{}", &digits[..1], e.abs())
     };
     format!("{sign}{body}")
@@ -1009,11 +1241,19 @@ fn js_string_to_number(s: &str) -> f64 {
         if digits.is_empty() || !digits.chars().all(|c| c.is_digit(radix)) {
             return f64::NAN;
         }
-        return digits.chars().fold(0.0, |acc, c| acc * f64::from(radix) + f64::from(c.to_digit(radix).unwrap_or(0)));
+        return digits.chars().fold(0.0, |acc, c| {
+            acc * f64::from(radix) + f64::from(c.to_digit(radix).unwrap_or(0))
+        });
     }
-    let valid = s.bytes().all(|b| b.is_ascii_digit() || matches!(b, b'+' | b'-' | b'.' | b'e' | b'E'))
+    let valid = s
+        .bytes()
+        .all(|b| b.is_ascii_digit() || matches!(b, b'+' | b'-' | b'.' | b'e' | b'E'))
         && s.bytes().any(|b| b.is_ascii_digit());
-    if valid { s.parse::<f64>().unwrap_or(f64::NAN) } else { f64::NAN }
+    if valid {
+        s.parse::<f64>().unwrap_or(f64::NAN)
+    } else {
+        f64::NAN
+    }
 }
 
 /// Why a request produced no reply.
@@ -1028,10 +1268,14 @@ impl RequestFailure {
     /// The rejection a caller that does not catch would rethrow.
     fn thrown(self) -> Thrown {
         match self {
-            RequestFailure::Network(message) => Thrown { name: "Error".to_owned(), message },
-            RequestFailure::Aborted => {
-                Thrown { name: "AbortError".to_owned(), message: "The operation was aborted.".to_owned() }
-            }
+            RequestFailure::Network(message) => Thrown {
+                name: "Error".to_owned(),
+                message,
+            },
+            RequestFailure::Aborted => Thrown {
+                name: "AbortError".to_owned(),
+                message: "The operation was aborted.".to_owned(),
+            },
         }
     }
 }
@@ -1044,7 +1288,12 @@ fn send(
     body: RequestBody,
     abortable: bool,
 ) -> Result<(bool, Value), RequestFailure> {
-    match cx.transport.send(PickerRequest { method, url, body, abortable }) {
+    match cx.transport.send(PickerRequest {
+        method,
+        url,
+        body,
+        abortable,
+    }) {
         PickerResponse::Reply { ok, json, .. } => Ok((ok, json)),
         PickerResponse::NetworkError(message) => Err(RequestFailure::Network(message)),
         PickerResponse::Aborted => Err(RequestFailure::Aborted),
@@ -1058,7 +1307,12 @@ fn get_or_error(cx: &mut PickerCx<'_>, url: String) -> Value {
     match send(cx, "GET", url, RequestBody::None, false) {
         Ok((true, data)) => data,
         Ok((false, data)) => match prop(&data, "error") {
-            Ok(error) => error_json(or_text(error, cx.t, "image_load_failed", "Error loading images")),
+            Ok(error) => error_json(or_text(
+                error,
+                cx.t,
+                "image_load_failed",
+                "Error loading images",
+            )),
             Err(_) => failed(cx.t),
         },
         Err(_) => failed(cx.t),
@@ -1066,8 +1320,15 @@ fn get_or_error(cx: &mut PickerCx<'_>, url: String) -> Value {
 }
 
 /// POST whose non-ok reply throws `data.error || <fallback>`; rejections propagate.
-fn post_or_throw(cx: &mut PickerCx<'_>, url: &str, body: RequestBody, key: &str, fallback: &str) -> Outcome {
-    let (ok, data) = send(cx, "POST", url.to_owned(), body, false).map_err(RequestFailure::thrown)?;
+fn post_or_throw(
+    cx: &mut PickerCx<'_>,
+    url: &str,
+    body: RequestBody,
+    key: &str,
+    fallback: &str,
+) -> Outcome {
+    let (ok, data) =
+        send(cx, "POST", url.to_owned(), body, false).map_err(RequestFailure::thrown)?;
     if !ok {
         let error = prop(&data, "error")?;
         return Err(js_error(&or_text(error, cx.t, key, fallback)));
@@ -1077,11 +1338,24 @@ fn post_or_throw(cx: &mut PickerCx<'_>, url: &str, body: RequestBody, key: &str,
 
 /// The shared `search(query)` of the DuckDuckGo-backed web and Pinterest
 /// sources (`use_note`: only the web source shows the server's `note`).
-fn ddg_search(cx: &mut PickerCx<'_>, results: &mut Vec<Value>, endpoint: &str, query: &JsArg, use_note: bool) -> Outcome {
+fn ddg_search(
+    cx: &mut PickerCx<'_>,
+    results: &mut Vec<Value>,
+    endpoint: &str,
+    query: &JsArg,
+    use_note: bool,
+) -> Outcome {
     if !query.truthy() {
-        return Ok(error_json(text(cx.t, "search_keywords_required", "Please enter search keywords")));
+        return Ok(error_json(text(
+            cx.t,
+            "search_keywords_required",
+            "Please enter search keywords",
+        )));
     }
-    let url = format!("{endpoint}?q={}", encode_uri_component(&query.to_js_string()));
+    let url = format!(
+        "{endpoint}?q={}",
+        encode_uri_component(&query.to_js_string())
+    );
     let failed = |t| error_json(text(t, "search_failed", "Search failed. Please try again."));
     let data = match send(cx, "GET", url, RequestBody::None, false) {
         Ok((_, data)) => data,
@@ -1090,7 +1364,11 @@ fn ddg_search(cx: &mut PickerCx<'_>, results: &mut Vec<Value>, endpoint: &str, q
             return Ok(failed(cx.t));
         }
     };
-    let (Ok(error), Ok(images), Ok(note)) = (prop(&data, "error"), prop(&data, "images"), prop(&data, "note")) else {
+    let (Ok(error), Ok(images), Ok(note)) = (
+        prop(&data, "error"),
+        prop(&data, "images"),
+        prop(&data, "note"),
+    ) else {
         results.clear();
         return Ok(failed(cx.t));
     };
@@ -1100,9 +1378,16 @@ fn ddg_search(cx: &mut PickerCx<'_>, results: &mut Vec<Value>, endpoint: &str, q
     }
     *results = images.as_array().cloned().unwrap_or_default();
     let message = if results.is_empty() {
-        if use_note && truthy(&note) { note } else { Value::String(text(cx.t, "no_images_found", "No images found")) }
+        if use_note && truthy(&note) {
+            note
+        } else {
+            Value::String(text(cx.t, "no_images_found", "No images found"))
+        }
     } else {
-        Value::String(image_picker_search_result_message(cx.t, &JsArg::Number(results.len() as f64)))
+        Value::String(image_picker_search_result_message(
+            cx.t,
+            &JsArg::Number(results.len() as f64),
+        ))
     };
     Ok(serde_json::json!({ "images": results, "message": message }))
 }
@@ -1124,7 +1409,11 @@ impl GoogleImageSource {
         let message = if self.results.is_empty() {
             text(cx.t, "no_images_found", "No images found")
         } else {
-            let count = if truthy(&total) { JsArg::from_json(&total) } else { JsArg::Number(self.results.len() as f64) };
+            let count = if truthy(&total) {
+                JsArg::from_json(&total)
+            } else {
+                JsArg::Number(self.results.len() as f64)
+            };
             image_picker_search_result_message(cx.t, &count)
         };
         Ok(serde_json::json!({ "images": self.results, "total": total, "message": message }))
@@ -1134,7 +1423,8 @@ impl GoogleImageSource {
 impl FolderImageSource {
     /// Newest first (stable, like `Array#sort`), then show the first page.
     fn sort_and_show(&mut self) {
-        self.all_images.sort_by_key(|img| std::cmp::Reverse(img.last_modified));
+        self.all_images
+            .sort_by_key(|img| std::cmp::Reverse(img.last_modified));
         // `filter` never fails; its summary is not needed here.
         let _ = self.filter("", 0, 10);
     }
@@ -1144,7 +1434,10 @@ impl FolderImageSource {
 fn allowed_extensions(allowed: Option<&[String]>) -> Vec<String> {
     match allowed {
         Some(list) => list.iter().map(|e| e.to_lowercase()).collect(),
-        None => DEFAULT_IMAGE_EXTENSIONS.iter().map(|e| (*e).to_owned()).collect(),
+        None => DEFAULT_IMAGE_EXTENSIONS
+            .iter()
+            .map(|e| (*e).to_owned())
+            .collect(),
     }
 }
 

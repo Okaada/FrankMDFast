@@ -10,8 +10,17 @@ use crate::parse::RenderOptions;
 
 /// Lower block tokens; `line_offset` is added to every (1-based) line.
 /// `line_map` maps lexer lines to note lines (empty = identity, see `marked::lex`).
-pub(crate) fn blocks(tokens: &[BlockTok], line_map: &[u32], line_offset: u32, opts: &RenderOptions) -> Vec<Block> {
-    let mut cx = Cx { slugs: Slugger::default(), line_map, offset: line_offset };
+pub(crate) fn blocks(
+    tokens: &[BlockTok],
+    line_map: &[u32],
+    line_offset: u32,
+    opts: &RenderOptions,
+) -> Vec<Block> {
+    let mut cx = Cx {
+        slugs: Slugger::default(),
+        line_map,
+        offset: line_offset,
+    };
     let mut out = lower_blocks(tokens, &mut cx);
     apply_highlighting(&mut out, opts);
     out
@@ -29,7 +38,10 @@ impl Cx<'_> {
     fn span(&self, raw: &str, line: u32) -> SourceSpan {
         let map = |l: u32| self.line_map.get(l as usize).copied().unwrap_or(l);
         let end = line + newlines(raw.trim_end_matches('\n'));
-        SourceSpan { start_line: self.offset + map(line) + 1, end_line: self.offset + map(end) + 1 }
+        SourceSpan {
+            start_line: self.offset + map(line) + 1,
+            end_line: self.offset + map(end) + 1,
+        }
     }
 }
 
@@ -42,41 +54,85 @@ fn lower_block(t: &BlockTok, cx: &mut Cx<'_>) -> Option<Block> {
     Some(match &t.kind {
         BlockKind::Space => return None,
         BlockKind::Code { lang, text } => {
-            let lang = lang.as_deref().map(first_word).filter(|l| !l.is_empty()).map(str::to_owned);
-            Block::Code { lang, lines: Arc::new(highlight::plain_lines(&code_text(text))), span }
+            let lang = lang
+                .as_deref()
+                .map(first_word)
+                .filter(|l| !l.is_empty())
+                .map(str::to_owned);
+            Block::Code {
+                lang,
+                lines: Arc::new(highlight::plain_lines(&code_text(text))),
+                span,
+            }
         }
         BlockKind::Heading { depth, inl } => {
             let inlines = inlines(&inl.tokens);
             let anchor = cx.slugs.slug(&crate::html::plain_text(&inlines));
-            Block::Heading { level: *depth, inlines, anchor, span }
+            Block::Heading {
+                level: *depth,
+                inlines,
+                anchor,
+                span,
+            }
         }
         BlockKind::Hr => Block::Rule { span },
-        BlockKind::Blockquote { children, .. } => {
-            Block::Quote { alert: None, children: lower_blocks(children, cx), span }
-        }
-        BlockKind::List { ordered, start, loose, items } => Block::List {
+        BlockKind::Blockquote { children, .. } => Block::Quote {
+            alert: None,
+            children: lower_blocks(children, cx),
+            span,
+        },
+        BlockKind::List {
+            ordered,
+            start,
+            loose,
+            items,
+        } => Block::List {
             ordered: ordered.then_some(*start),
             loose: *loose,
             items: items.iter().map(|it| list_item(it, cx)).collect(),
             span,
         },
         BlockKind::Html { text } => match embed::from_html_block(text) {
-            Some(e) => Block::Embed { embed: e, html: text.clone(), span },
-            None => Block::Html { text: text.clone(), span },
+            Some(e) => Block::Embed {
+                embed: e,
+                html: text.clone(),
+                span,
+            },
+            None => Block::Html {
+                text: text.clone(),
+                span,
+            },
         },
-        BlockKind::Table { align, header, rows } => Block::Table {
+        BlockKind::Table {
+            align,
+            header,
+            rows,
+        } => Block::Table {
             align: align.clone(),
             header: header.iter().map(|c| inlines(&c.tokens)).collect(),
-            rows: rows.iter().map(|r| r.iter().map(|c| inlines(&c.tokens)).collect()).collect(),
+            rows: rows
+                .iter()
+                .map(|r| r.iter().map(|c| inlines(&c.tokens)).collect())
+                .collect(),
             span,
         },
-        BlockKind::Paragraph { inl } | BlockKind::Text { inl } => Block::Paragraph { inlines: inlines(&inl.tokens), span },
-        BlockKind::MathBlock { text } => Block::Math { tex: text.clone(), span },
+        BlockKind::Paragraph { inl } | BlockKind::Text { inl } => Block::Paragraph {
+            inlines: inlines(&inl.tokens),
+            span,
+        },
+        BlockKind::MathBlock { text } => Block::Math {
+            tex: text.clone(),
+            span,
+        },
     })
 }
 
 fn list_item(it: &ListItemTok, cx: &mut Cx<'_>) -> ListItem {
-    ListItem { task: it.task, span: cx.span(&it.raw, it.line), children: lower_blocks(&it.children, cx) }
+    ListItem {
+        task: it.task,
+        span: cx.span(&it.raw, it.line),
+        children: lower_blocks(&it.children, cx),
+    }
 }
 
 /// marked's renderer: `text.replace(/\n$/, '') + '\n'`.
@@ -97,7 +153,11 @@ pub(crate) fn inlines(tokens: &[InlineTok]) -> Vec<Inline> {
         match t {
             InlineTok::Escape(s) => out.push(Inline::Text(s.clone())),
             InlineTok::Html(s) => out.push(Inline::Html(s.clone())),
-            InlineTok::Link { href, title, children } => out.push(Inline::Link {
+            InlineTok::Link {
+                href,
+                title,
+                children,
+            } => out.push(Inline::Link {
                 url: safe_url(href, false),
                 title: title.as_deref().map(decode_entities),
                 children: inlines(children),
@@ -112,19 +172,37 @@ pub(crate) fn inlines(tokens: &[InlineTok]) -> Vec<Inline> {
             InlineTok::Del(c) => out.push(Inline::Strike(inlines(c))),
             InlineTok::Codespan(s) => out.push(Inline::Code(s.clone())),
             InlineTok::Br => out.push(Inline::HardBreak),
-            InlineTok::Text { text, escaped: true, .. } => out.push(Inline::Html(text.clone())),
+            InlineTok::Text {
+                text,
+                escaped: true,
+                ..
+            } => out.push(Inline::Html(text.clone())),
             InlineTok::Text { text, .. } => out.push(Inline::Text(decode_entities(text))),
             InlineTok::Superscript(s) => out.push(Inline::Superscript(s.clone())),
             InlineTok::Subscript(s) => out.push(Inline::Subscript(s.clone())),
             InlineTok::Highlight(s) => out.push(Inline::Highlight(s.clone())),
             InlineTok::Emoji { shortcode, emoji } => {
-                out.push(Inline::Emoji { shortcode: shortcode.clone(), emoji: (*emoji).to_owned() });
+                out.push(Inline::Emoji {
+                    shortcode: shortcode.clone(),
+                    emoji: (*emoji).to_owned(),
+                });
             }
-            InlineTok::Icon { name, path, view_box } => {
-                out.push(Inline::Icon { name: name.clone(), path: path.clone(), view_box: view_box.clone() });
+            InlineTok::Icon {
+                name,
+                path,
+                view_box,
+            } => {
+                out.push(Inline::Icon {
+                    name: name.clone(),
+                    path: path.clone(),
+                    view_box: view_box.clone(),
+                });
             }
             InlineTok::Wikilink { target, display } => {
-                out.push(Inline::WikiLink { target: target.clone(), label: display.clone() });
+                out.push(Inline::WikiLink {
+                    target: target.clone(),
+                    label: display.clone(),
+                });
             }
             InlineTok::Math(s) => out.push(Inline::Math(s.clone())),
         }
@@ -148,7 +226,9 @@ fn apply_highlighting(blocks: &mut [Block], opts: &RenderOptions) {
         .filter_map(|((lang, _), text)| lang.as_deref().map(|l| (l, text.encode_utf16().count())))
         .collect();
     let plans: Vec<BlockPlan> = highlight::plan(&listed, &opts.highlight_budget);
-    let Some(highlighter) = &opts.highlighter else { return };
+    let Some(highlighter) = &opts.highlighter else {
+        return;
+    };
     let mut plans = plans.into_iter();
     for ((lang, lines), text) in codes.into_iter().zip(&texts) {
         if lang.is_none() {
@@ -163,7 +243,10 @@ fn apply_highlighting(blocks: &mut [Block], opts: &RenderOptions) {
     }
 }
 
-fn collect_code<'a>(blocks: &'a mut [Block], out: &mut Vec<(&'a mut Option<String>, &'a mut Arc<Vec<HighlightedLine>>)>) {
+fn collect_code<'a>(
+    blocks: &'a mut [Block],
+    out: &mut Vec<(&'a mut Option<String>, &'a mut Arc<Vec<HighlightedLine>>)>,
+) {
     for b in blocks {
         match b {
             Block::Code { lang, lines, .. } => out.push((lang, lines)),
@@ -191,7 +274,11 @@ fn join_lines(lines: &[HighlightedLine]) -> String {
 fn safe_url(href: &str, image: bool) -> Option<SafeUrl> {
     let url = decode_entities(&encode_uri(href));
     let squeezed: String = url.chars().filter(|&c| !is_attr_whitespace(c)).collect();
-    if is_allowed_uri(&squeezed) || (image && url.starts_with("data:")) { Some(SafeUrl(url)) } else { None }
+    if is_allowed_uri(&squeezed) || (image && url.starts_with("data:")) {
+        Some(SafeUrl(url))
+    } else {
+        None
+    }
 }
 
 /// DOMPurify `ATTR_WHITESPACE`.
@@ -202,8 +289,9 @@ fn is_attr_whitespace(c: char) -> bool {
 /// DOMPurify's `IS_ALLOWED_URI`: `^(?:(?:(?:f|ht)tps?|mailto|tel|callto|sms|cid|xmpp|matrix):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))`, case-insensitive.
 fn is_allowed_uri(url: &str) -> bool {
     let lower = url.to_ascii_lowercase();
-    const SCHEMES: [&str; 10] =
-        ["ftp:", "ftps:", "http:", "https:", "mailto:", "tel:", "callto:", "sms:", "cid:", "xmpp:"];
+    const SCHEMES: [&str; 10] = [
+        "ftp:", "ftps:", "http:", "https:", "mailto:", "tel:", "callto:", "sms:", "cid:", "xmpp:",
+    ];
     if SCHEMES.iter().any(|s| lower.starts_with(s)) || lower.starts_with("matrix:") {
         return true;
     }
@@ -273,8 +361,12 @@ fn decode_one(s: &str) -> Option<(String, usize)> {
     let body = &s[1..semi];
     if let Some(num) = body.strip_prefix('#') {
         let (digits, radix) = match num.strip_prefix(['x', 'X']) {
-            Some(h) if (1..=6).contains(&h.len()) && h.chars().all(|c| c.is_ascii_hexdigit()) => (h, 16),
-            None if (1..=7).contains(&num.len()) && num.chars().all(|c| c.is_ascii_digit()) => (num, 10),
+            Some(h) if (1..=6).contains(&h.len()) && h.chars().all(|c| c.is_ascii_hexdigit()) => {
+                (h, 16)
+            }
+            None if (1..=7).contains(&num.len()) && num.chars().all(|c| c.is_ascii_digit()) => {
+                (num, 10)
+            }
             _ => return None,
         };
         let code = u32::from_str_radix(digits, radix).ok()?;
@@ -298,7 +390,9 @@ fn numeric_char(code: u32) -> char {
         return '\u{FFFD}';
     }
     if (0x80..=0x9F).contains(&code)
-        && let Some(Some((_, c))) = markup5ever::data::C1_REPLACEMENTS.get((code - 0x80) as usize).map(|r| r.map(|c| ((), c)))
+        && let Some(Some((_, c))) = markup5ever::data::C1_REPLACEMENTS
+            .get((code - 0x80) as usize)
+            .map(|r| r.map(|c| ((), c)))
     {
         return c;
     }
@@ -345,13 +439,19 @@ mod tests {
     #[test]
     fn slugs_dedupe_like_before() {
         let mut s = Slugger::default();
-        let got: Vec<String> = ["a", "a", "a 1", "a", "b", "a-2", "a"].iter().map(|t| s.slug(t)).collect();
+        let got: Vec<String> = ["a", "a", "a 1", "a", "b", "a-2", "a"]
+            .iter()
+            .map(|t| s.slug(t))
+            .collect();
         assert_eq!(got, ["a", "a-1", "a-1-1", "a-2", "b", "a-2-1", "a-3"]);
     }
 
     #[test]
     fn entities() {
-        assert_eq!(decode_entities("&amp; &copy; &#169; &#x1F600; &nope; & x"), "& © © 😀 &nope; & x");
+        assert_eq!(
+            decode_entities("&amp; &copy; &#169; &#x1F600; &nope; & x"),
+            "& © © 😀 &nope; & x"
+        );
     }
 
     #[test]

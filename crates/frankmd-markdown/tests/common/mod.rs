@@ -8,7 +8,12 @@
 //! - IR walkers (plain text, math nodes, list-item lines, code blocks).
 //! - Lezer `tok-*` class → [`TokenStyle`] mapping (from FrankMD's `prose.css`).
 //! - UTF-16 offset conversion for JS fixtures.
-#![allow(dead_code, unreachable_pub, clippy::unwrap_used, clippy::missing_panics_doc)]
+#![allow(
+    dead_code,
+    unreachable_pub,
+    clippy::unwrap_used,
+    clippy::missing_panics_doc
+)]
 
 use frankmd_markdown::RenderDoc;
 use frankmd_markdown::highlight::{BuiltinHighlighter, CodeHighlighter, language_for_fence};
@@ -35,7 +40,9 @@ pub const KNOWN_DIVERGENCES: &[(&str, &str, &str)] = &[(
 
 /// True when `(fixture, case)` is an accepted divergence.
 pub fn is_known_divergence(fixture: &str, case: &str) -> bool {
-    KNOWN_DIVERGENCES.iter().any(|(f, c, _)| *f == fixture && *c == case)
+    KNOWN_DIVERGENCES
+        .iter()
+        .any(|(f, c, _)| *f == fixture && *c == case)
 }
 
 // ---------------------------------------------------------------------------
@@ -92,16 +99,57 @@ pub fn utf16_len(s: &str) -> usize {
 // ---------------------------------------------------------------------------
 
 const VOID: &[&str] = &[
-    "area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "track", "wbr",
+    "area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "source", "track",
+    "wbr",
 ];
 
 /// Elements around which whitespace is insignificant (block-level boxes, plus
 /// `br`, after/before which leading/trailing whitespace does not render).
 const BLOCKISH: &[&str] = &[
-    "address", "article", "aside", "blockquote", "br", "dd", "details", "dialog", "div", "dl", "dt",
-    "fieldset", "figcaption", "figure", "footer", "form", "h1", "h2", "h3", "h4", "h5", "h6", "header",
-    "hr", "li", "main", "nav", "ol", "p", "pre", "section", "summary", "table", "tbody", "td", "tfoot",
-    "th", "thead", "tr", "ul", "iframe", "video", "source", "picture",
+    "address",
+    "article",
+    "aside",
+    "blockquote",
+    "br",
+    "dd",
+    "details",
+    "dialog",
+    "div",
+    "dl",
+    "dt",
+    "fieldset",
+    "figcaption",
+    "figure",
+    "footer",
+    "form",
+    "h1",
+    "h2",
+    "h3",
+    "h4",
+    "h5",
+    "h6",
+    "header",
+    "hr",
+    "li",
+    "main",
+    "nav",
+    "ol",
+    "p",
+    "pre",
+    "section",
+    "summary",
+    "table",
+    "tbody",
+    "td",
+    "tfoot",
+    "th",
+    "thead",
+    "tr",
+    "ul",
+    "iframe",
+    "video",
+    "source",
+    "picture",
 ];
 
 fn is_blockish(name: &str) -> bool {
@@ -133,7 +181,13 @@ pub fn normalize_structure(html: &str) -> String {
     normalize_html(html, &["data-source-line"])
 }
 
-fn write_children(el: ElementRef<'_>, drop: &[&str], in_pre: bool, parent_blockish: bool, out: &mut String) {
+fn write_children(
+    el: ElementRef<'_>,
+    drop: &[&str],
+    in_pre: bool,
+    parent_blockish: bool,
+    out: &mut String,
+) {
     let kids: Vec<_> = el.children().collect();
     let elem_name = |i: usize| -> Option<String> {
         kids.get(i).and_then(|k| match k.value() {
@@ -148,9 +202,16 @@ fn write_children(el: ElementRef<'_>, drop: &[&str], in_pre: bool, parent_blocki
                     out.push_str(&escape_text(t));
                     continue;
                 }
-                let prev_block = if i == 0 { parent_blockish } else { elem_name(i - 1).is_some_and(|n| is_blockish(&n)) };
-                let next_block =
-                    if i + 1 == kids.len() { parent_blockish } else { elem_name(i + 1).is_some_and(|n| is_blockish(&n)) };
+                let prev_block = if i == 0 {
+                    parent_blockish
+                } else {
+                    elem_name(i - 1).is_some_and(|n| is_blockish(&n))
+                };
+                let next_block = if i + 1 == kids.len() {
+                    parent_blockish
+                } else {
+                    elem_name(i + 1).is_some_and(|n| is_blockish(&n))
+                };
                 let mut s = collapse_ws(t);
                 if prev_block {
                     s = s.trim_start().to_owned();
@@ -172,7 +233,8 @@ fn write_children(el: ElementRef<'_>, drop: &[&str], in_pre: bool, parent_blocki
                 let name = e.name();
                 out.push('<');
                 out.push_str(name);
-                let mut attrs: Vec<(&str, &str)> = e.attrs().filter(|(k, _)| !drop.contains(k)).collect();
+                let mut attrs: Vec<(&str, &str)> =
+                    e.attrs().filter(|(k, _)| !drop.contains(k)).collect();
                 attrs.sort();
                 for (k, v) in attrs {
                     out.push(' ');
@@ -214,13 +276,21 @@ fn collapse_ws(s: &str) -> String {
 }
 
 fn escape_text(s: &str) -> String {
-    s.replace('&', "&amp;").replace('<', "&lt;").replace('>', "&gt;")
+    s.replace('&', "&amp;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;")
 }
 
 /// Compare two HTML strings after [`normalize_structure`].
 pub fn check_same_structure(actual: &str, expected: &str) -> Result<(), String> {
     let (a, e) = (normalize_structure(actual), normalize_structure(expected));
-    if a == e { Ok(()) } else { Err(format!("HTML differs after normalization\n    actual:   {a}\n    expected: {e}")) }
+    if a == e {
+        Ok(())
+    } else {
+        Err(format!(
+            "HTML differs after normalization\n    actual:   {a}\n    expected: {e}"
+        ))
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -228,8 +298,22 @@ pub fn check_same_structure(actual: &str, expected: &str) -> Result<(), String> 
 // ---------------------------------------------------------------------------
 
 /// Block tags FrankMD's line mapper annotates (`markdown_line_mapper.js`).
-pub const ANNOTATED_TAGS: &[&str] =
-    &["h1", "h2", "h3", "h4", "h5", "h6", "p", "ul", "ol", "blockquote", "pre", "hr", "table", "div"];
+pub const ANNOTATED_TAGS: &[&str] = &[
+    "h1",
+    "h2",
+    "h3",
+    "h4",
+    "h5",
+    "h6",
+    "p",
+    "ul",
+    "ol",
+    "blockquote",
+    "pre",
+    "hr",
+    "table",
+    "div",
+];
 
 /// The `data-source-line` annotations of an original FrankMD output.
 #[derive(Debug, Default)]
@@ -292,7 +376,9 @@ impl ExpectedAnchors {
 }
 
 fn line_attr(el: ElementRef<'_>) -> Option<i64> {
-    el.value().attr("data-source-line").and_then(|v| v.parse().ok())
+    el.value()
+        .attr("data-source-line")
+        .and_then(|v| v.parse().ok())
 }
 
 /// Element tag the original renders for a top-level IR block (`None` for raw
@@ -304,7 +390,9 @@ pub fn block_tag(b: &Block) -> Option<String> {
         Block::Code { .. } => "pre".into(),
         Block::Math { .. } => "div".into(),
         Block::Quote { .. } => "blockquote".into(),
-        Block::List { ordered: Some(_), .. } => "ol".into(),
+        Block::List {
+            ordered: Some(_), ..
+        } => "ol".into(),
         Block::List { ordered: None, .. } => "ul".into(),
         Block::Table { .. } => "table".into(),
         Block::Rule { .. } => "hr".into(),
@@ -345,20 +433,41 @@ pub fn check_anchors(doc: &RenderDoc, expected_html: &str, line_shift: i64) -> R
         let actual: Vec<(String, i64)> = doc
             .blocks
             .iter()
-            .map(|b| (block_tag(b).unwrap(), i64::from(b.span().start_line) + line_shift))
+            .map(|b| {
+                (
+                    block_tag(b).unwrap(),
+                    i64::from(b.span().start_line) + line_shift,
+                )
+            })
             .collect();
-        let want: Vec<(String, i64)> = exp.top.iter().map(|(t, l)| (t.clone(), l.unwrap())).collect();
+        let want: Vec<(String, i64)> = exp
+            .top
+            .iter()
+            .map(|(t, l)| (t.clone(), l.unwrap()))
+            .collect();
         if actual != want {
-            errs.push(format!("top-level blocks (tag, line): actual {actual:?}, expected {want:?}"));
+            errs.push(format!(
+                "top-level blocks (tag, line): actual {actual:?}, expected {want:?}"
+            ));
         }
     }
     if !exp.li_slot_shifted() {
-        let actual: Vec<i64> = ir_li_lines(doc).into_iter().map(|l| l + line_shift).collect();
+        let actual: Vec<i64> = ir_li_lines(doc)
+            .into_iter()
+            .map(|l| l + line_shift)
+            .collect();
         if actual != exp.li {
-            errs.push(format!("list-item lines: actual {actual:?}, expected {:?}", exp.li));
+            errs.push(format!(
+                "list-item lines: actual {actual:?}, expected {:?}",
+                exp.li
+            ));
         }
     }
-    if errs.is_empty() { Ok(()) } else { Err(errs.join("; ")) }
+    if errs.is_empty() {
+        Ok(())
+    } else {
+        Err(errs.join("; "))
+    }
 }
 
 /// FrankMD's preview reports body lines as `bodyLine + frontmatterLines`, where
@@ -392,7 +501,11 @@ pub fn plain_text(inlines: &[Inline]) -> String {
             Inline::Emph(c) | Inline::Strong(c) | Inline::Strike(c) => s.push_str(&plain_text(c)),
             Inline::Link { children, .. } => s.push_str(&plain_text(children)),
             Inline::WikiLink { target, label } => {
-                s.push_str(label.as_deref().unwrap_or_else(|| target.rsplit('/').next().unwrap_or(target)));
+                s.push_str(
+                    label
+                        .as_deref()
+                        .unwrap_or_else(|| target.rsplit('/').next().unwrap_or(target)),
+                );
             }
             Inline::Emoji { emoji, .. } => s.push_str(emoji),
             Inline::FootnoteRef(l) => s.push_str(l),
@@ -410,7 +523,10 @@ pub fn block_text(b: &Block) -> String {
         Block::Code { lines, .. } => lines.iter().map(|l| format!("{}\n", l.text)).collect(),
         Block::Math { tex, .. } => tex.clone(),
         Block::Quote { children, .. } => children.iter().map(block_text).collect(),
-        Block::List { items, .. } => items.iter().map(|i| i.children.iter().map(block_text).collect::<String>()).collect(),
+        Block::List { items, .. } => items
+            .iter()
+            .map(|i| i.children.iter().map(block_text).collect::<String>())
+            .collect(),
         Block::Table { header, rows, .. } => {
             let mut s: String = header.iter().map(|c| plain_text(c)).collect();
             for r in rows {
@@ -514,7 +630,9 @@ pub fn collect_code(doc: &RenderDoc) -> Vec<(Option<String>, Vec<HighlightedLine
 
 /// Whether highlighted lines carry any non-plain token.
 pub fn is_highlighted(lines: &[HighlightedLine]) -> bool {
-    lines.iter().any(|l| l.runs.iter().any(|(_, s)| s.class != TokenClass::Plain))
+    lines
+        .iter()
+        .any(|l| l.runs.iter().any(|(_, s)| s.class != TokenClass::Plain))
 }
 
 // ---------------------------------------------------------------------------
@@ -531,7 +649,9 @@ pub fn lezer_style(class_attr: &str) -> Option<TokenStyle> {
             "tok-keyword" | "tok-modifier" => TokenClass::Keyword,
             "tok-function" => TokenClass::Function,
             "tok-operator" | "tok-derefOperator" => TokenClass::Operator,
-            "tok-string" | "tok-string2" | "tok-character" | "tok-attributeValue" => TokenClass::String,
+            "tok-string" | "tok-string2" | "tok-character" | "tok-attributeValue" => {
+                TokenClass::String
+            }
             "tok-number" | "tok-unit" => TokenClass::Number,
             "tok-constant" | "tok-bool" | "tok-null" | "tok-atom" => TokenClass::Constant,
             "tok-comment" | "tok-docComment" => TokenClass::Comment,
@@ -559,8 +679,11 @@ pub fn style(class: TokenClass, definition: bool) -> TokenStyle {
 /// Highlight `code` with the builtin highlighter under fence alias `alias`,
 /// flattened to `(token text, style)` for every non-plain run.
 pub fn tokens(alias: &str, code: &str) -> Vec<(String, TokenStyle)> {
-    let lang = language_for_fence(alias).unwrap_or_else(|| panic!("no language for fence {alias:?}"));
-    let lines = BuiltinHighlighter.highlight(lang, code).unwrap_or_else(|| panic!("{alias}: not highlighted"));
+    let lang =
+        language_for_fence(alias).unwrap_or_else(|| panic!("no language for fence {alias:?}"));
+    let lines = BuiltinHighlighter
+        .highlight(lang, code)
+        .unwrap_or_else(|| panic!("{alias}: not highlighted"));
     flatten_runs(&lines)
 }
 
@@ -578,7 +701,12 @@ pub fn flatten_runs(lines: &[HighlightedLine]) -> Vec<(String, TokenStyle)> {
 }
 
 /// Assert a token with exactly this text and style exists.
-pub fn assert_token(toks: &[(String, TokenStyle)], text: &str, class: TokenClass, definition: bool) {
+pub fn assert_token(
+    toks: &[(String, TokenStyle)],
+    text: &str,
+    class: TokenClass,
+    definition: bool,
+) {
     let want = style(class, definition);
     assert!(
         toks.iter().any(|(t, s)| t == text && *s == want),
@@ -588,7 +716,10 @@ pub fn assert_token(toks: &[(String, TokenStyle)], text: &str, class: TokenClass
 
 /// Assert some token has this text and class (any `definition` flag).
 pub fn assert_token_class(toks: &[(String, TokenStyle)], text: &str, class: TokenClass) {
-    assert!(toks.iter().any(|(t, s)| t == text && s.class == class), "no token {text:?} with {class:?}; got {toks:?}");
+    assert!(
+        toks.iter().any(|(t, s)| t == text && s.class == class),
+        "no token {text:?} with {class:?}; got {toks:?}"
+    );
 }
 
 /// One `pre > code[class]` block read from an HTML string.
@@ -608,7 +739,9 @@ pub struct HtmlCodeBlock {
 impl HtmlCodeBlock {
     /// Whether the original emitted Lezer token spans.
     pub fn highlighted(&self) -> bool {
-        self.spans.iter().any(|(_, c)| c.split_whitespace().any(|x| x.starts_with("tok-")))
+        self.spans
+            .iter()
+            .any(|(_, c)| c.split_whitespace().any(|x| x.starts_with("tok-")))
     }
 }
 
@@ -629,7 +762,12 @@ pub fn html_code_blocks(html: &str) -> Vec<HtmlCodeBlock> {
                 .children()
                 .filter_map(ElementRef::wrap)
                 .filter(|e| e.value().name() == "span")
-                .map(|e| (e.text().collect::<String>(), e.value().attr("class").unwrap_or("").to_owned()))
+                .map(|e| {
+                    (
+                        e.text().collect::<String>(),
+                        e.value().attr("class").unwrap_or("").to_owned(),
+                    )
+                })
                 .collect();
             HtmlCodeBlock {
                 lang,
@@ -685,23 +823,37 @@ pub fn katex_verdict(el: ElementRef<'_>) -> KatexVerdict {
             }
         }
     }
-    if red.is_empty() { KatexVerdict::Ok } else { KatexVerdict::Unsupported(red) }
+    if red.is_empty() {
+        KatexVerdict::Ok
+    } else {
+        KatexVerdict::Unsupported(red)
+    }
 }
 
 /// `(style, placeholder text, verdict)` for every math placeholder in a final
 /// (post-KaTeX) HTML string, document order. The TeX comes from `before_html`
 /// (the same placeholders before KaTeX ran).
-pub fn katex_verdicts(before_html: &str, after_html: &str) -> Vec<(MathStyle, String, KatexVerdict)> {
+pub fn katex_verdicts(
+    before_html: &str,
+    after_html: &str,
+) -> Vec<(MathStyle, String, KatexVerdict)> {
     let sel = scraper::Selector::parse(".math-inline, .math-block").unwrap();
     let before = Html::parse_fragment(before_html);
     let after = Html::parse_fragment(after_html);
     let texs: Vec<(MathStyle, String)> = before
         .select(&sel)
         .map(|e| {
-            let st = if e.value().classes().any(|c| c == "math-block") { MathStyle::Display } else { MathStyle::Inline };
+            let st = if e.value().classes().any(|c| c == "math-block") {
+                MathStyle::Display
+            } else {
+                MathStyle::Inline
+            };
             (st, e.text().collect())
         })
         .collect();
     let verdicts: Vec<KatexVerdict> = after.select(&sel).map(katex_verdict).collect();
-    texs.into_iter().zip(verdicts).map(|((s, t), v)| (s, t, v)).collect()
+    texs.into_iter()
+        .zip(verdicts)
+        .map(|((s, t), v)| (s, t, v))
+        .collect()
 }

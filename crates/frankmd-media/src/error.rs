@@ -22,7 +22,9 @@ pub enum MediaError {
     NotConfigured(String),
     /// **[COMPAT]** `MediaStorageRecovery`: S3 was selected but unusable, `.fed`
     /// now says `local`; the caller reports `media_storage_fallback: true`.
-    #[error("S3 is no longer available. The upload provider is now Local. Please retry the upload.")]
+    #[error(
+        "S3 is no longer available. The upload provider is now Local. Please retry the upload."
+    )]
     StorageFallback,
     /// S3 call failed (provider detail never shown to the user).
     #[error("storage request failed")]

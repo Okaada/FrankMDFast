@@ -35,8 +35,12 @@ impl EventEmitter<StorageEvent> for StorageModel {}
 impl StorageModel {
     /// Start from Local and read the real value in the background.
     pub fn new(services: Arc<MediaServices>, cx: &mut Context<Self>) -> Self {
-        let mut model =
-            Self { services, state: MediaStorageState::new(Provider::Local, false), save: None, refresh: None };
+        let mut model = Self {
+            services,
+            state: MediaStorageState::new(Provider::Local, false),
+            save: None,
+            refresh: None,
+        };
         model.refresh(cx);
         model
     }
@@ -71,7 +75,9 @@ impl StorageModel {
             let result = work.await;
             this.update(cx, |this, cx| {
                 let outcome = this.state.ack(result.map_err(|_| None));
-                cx.emit(StorageEvent::Acked { saved: outcome.saved });
+                cx.emit(StorageEvent::Acked {
+                    saved: outcome.saved,
+                });
                 cx.emit(StorageEvent::Changed);
                 cx.notify();
             })
@@ -82,7 +88,9 @@ impl StorageModel {
     /// Re-read `.fed` (dialog open, after an S3 failure, `.fed` changed).
     pub fn refresh(&mut self, cx: &mut Context<Self>) {
         let services = Arc::clone(&self.services);
-        let work = cx.background_executor().spawn(async move { services.storage_snapshot() });
+        let work = cx
+            .background_executor()
+            .spawn(async move { services.storage_snapshot() });
         self.refresh = Some(cx.spawn(async move |this, cx| {
             let snapshot = work.await;
             this.update(cx, |this, cx| this.apply(snapshot, cx)).ok();
@@ -91,7 +99,9 @@ impl StorageModel {
 
     /// Apply a snapshot read elsewhere (e.g. with the picker config).
     pub fn apply(&mut self, snapshot: StorageSnapshot, cx: &mut Context<Self>) {
-        let announce = self.state.apply(snapshot.provider, snapshot.s3_available, snapshot.fallback);
+        let announce =
+            self.state
+                .apply(snapshot.provider, snapshot.s3_available, snapshot.fallback);
         if announce {
             cx.emit(StorageEvent::Fallback);
         }

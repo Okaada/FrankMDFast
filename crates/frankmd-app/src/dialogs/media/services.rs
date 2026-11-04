@@ -37,7 +37,10 @@ pub struct FedSettings {
 impl FedSettings {
     fn new(vault: frankmd_fs::Vault, env: EnvSnapshot) -> Self {
         let notes_root = vault.root().to_path_buf();
-        Self { store: Mutex::new(ConfigStore::open(vault, env)), notes_root }
+        Self {
+            store: Mutex::new(ConfigStore::open(vault, env)),
+            notes_root,
+        }
     }
 
     /// A fresh resolved config.
@@ -49,7 +52,10 @@ impl FedSettings {
     /// Persist `media_storage_provider`.
     pub fn set_provider(&self, provider: Provider) -> Result<Arc<ResolvedConfig>, String> {
         let mut store = self.store.lock().unwrap_or_else(PoisonError::into_inner);
-        let change = [(Key::MediaStorageProvider, Some(Value::Str(provider.as_setting().to_owned())))];
+        let change = [(
+            Key::MediaStorageProvider,
+            Some(Value::Str(provider.as_setting().to_owned())),
+        )];
         store.update(&change).map_err(|e| e.to_string())
     }
 }
@@ -84,7 +90,9 @@ pub struct MediaServices {
 
 impl std::fmt::Debug for MediaServices {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("MediaServices").field("vault", &self.vault.root()).finish_non_exhaustive()
+        f.debug_struct("MediaServices")
+            .field("vault", &self.vault.root())
+            .finish_non_exhaustive()
     }
 }
 
@@ -99,7 +107,15 @@ impl MediaServices {
         let search = frankmd_media::search::ImageSearch::new(http.clone(), Default::default());
         let youtube = frankmd_media::youtube::YoutubeSearch::new(http.clone());
         let usage = frankmd_media::usage::MediaUsage::new(vault.root());
-        Ok(Arc::new(Self { api: MediaApi::new(env), vault, settings, search, youtube, http, usage }))
+        Ok(Arc::new(Self {
+            api: MediaApi::new(env),
+            vault,
+            settings,
+            search,
+            youtube,
+            http,
+            usage,
+        }))
     }
 
     /// The notes root.
@@ -139,14 +155,21 @@ impl MediaServices {
     /// `GET /config`: the provider and whether recovery switched it (consumed).
     pub fn storage_status(&self) -> (Provider, bool) {
         let status = self.api.storage_status();
-        (Provider::from_setting(status.media_storage_provider.as_deref()), status.media_storage_fallback)
+        (
+            Provider::from_setting(status.media_storage_provider.as_deref()),
+            status.media_storage_fallback,
+        )
     }
 
     /// Provider + S3 availability + consumed fallback.
     pub fn storage_snapshot(&self) -> StorageSnapshot {
         let (provider, fallback) = self.storage_status();
         let s3_available = frankmd_media::images::s3_enabled(&self.media_config());
-        StorageSnapshot { provider, s3_available, fallback }
+        StorageSnapshot {
+            provider,
+            s3_available,
+            fallback,
+        }
     }
 
     /// The AI service over a fresh config.

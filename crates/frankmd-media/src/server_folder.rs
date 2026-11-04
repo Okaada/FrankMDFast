@@ -11,7 +11,8 @@ use crate::config::MediaConfig;
 use crate::param::Param;
 
 /// `SUPPORTED_EXTENSIONS` (listing filter; note `.svg` is listed but not uploadable).
-pub const SUPPORTED_EXTENSIONS: [&str; 7] = [".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg", ".bmp"];
+pub const SUPPORTED_EXTENSIONS: [&str; 7] =
+    [".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg", ".bmp"];
 /// `MAX_RESULTS`.
 pub const MAX_RESULTS: usize = 10;
 
@@ -45,7 +46,10 @@ pub struct Dimensions {
 
 /// `enabled?`: `images_path` present.
 pub fn enabled(config: &MediaConfig) -> bool {
-    config.images_path.as_ref().is_some_and(|p| !p.as_os_str().is_empty())
+    config
+        .images_path
+        .as_ref()
+        .is_some_and(|p| !p.as_os_str().is_empty())
 }
 
 /// `clamp_limit`: `Integer(v).clamp(1, 100)`, [`MAX_RESULTS`] when `Integer()`
@@ -63,7 +67,12 @@ pub fn clamp_offset(value: &Param) -> usize {
 /// [`SUPPORTED_EXTENSIONS`] only (case-insensitive), case-insensitive basename
 /// substring `search`, newest mtime first, then sliced. `[]` when disabled or
 /// the folder is missing.
-pub fn list(config: &MediaConfig, search: Option<&str>, limit: &Param, offset: &Param) -> Vec<ServerImage> {
+pub fn list(
+    config: &MediaConfig,
+    search: Option<&str>,
+    limit: &Param,
+    offset: &Param,
+) -> Vec<ServerImage> {
     let Some(root) = existing_root(config) else {
         return Vec::new();
     };
@@ -82,8 +91,14 @@ pub fn list(config: &MediaConfig, search: Option<&str>, limit: &Param, offset: &
         .map(|(file, meta)| {
             let dimensions = image_dimensions(&file);
             ServerImage {
-                name: file.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default(),
-                path: file.strip_prefix(&root).map(|r| r.to_string_lossy().into_owned()).unwrap_or_default(),
+                name: file
+                    .file_name()
+                    .map(|n| n.to_string_lossy().into_owned())
+                    .unwrap_or_default(),
+                path: file
+                    .strip_prefix(&root)
+                    .map(|r| r.to_string_lossy().into_owned())
+                    .unwrap_or_default(),
                 mtime: meta.modified().map(iso8601_local).unwrap_or_default(),
                 size: meta.len(),
                 width: dimensions.width,
@@ -111,7 +126,10 @@ pub fn find_image(config: &MediaConfig, rel: &str) -> Option<PathBuf> {
         return None;
     }
     let ext = extname(&full.to_string_lossy()).to_lowercase();
-    let allowed = config.image_upload_extensions.iter().chain(&config.video_upload_extensions);
+    let allowed = config
+        .image_upload_extensions
+        .iter()
+        .chain(&config.video_upload_extensions);
     allowed.into_iter().any(|e| *e == ext).then_some(full)
 }
 
@@ -131,7 +149,11 @@ pub fn delete(config: &MediaConfig, rel: &str) -> bool {
     let Ok(real) = full.canonicalize() else {
         return false;
     };
-    let Some(rel) = real.strip_prefix(vault.real_root()).ok().and_then(|r| r.to_str()) else {
+    let Some(rel) = real
+        .strip_prefix(vault.real_root())
+        .ok()
+        .and_then(|r| r.to_str())
+    else {
         return false;
     };
     match vault.safe_path(rel, true) {
@@ -147,7 +169,10 @@ pub fn image_dimensions(path: &Path) -> Dimensions {
         .and_then(|r| r.with_guessed_format().ok())
         .and_then(|r| r.into_dimensions().ok());
     match dims {
-        Some((w, h)) => Dimensions { width: Some(w), height: Some(h) },
+        Some((w, h)) => Dimensions {
+            width: Some(w),
+            height: Some(h),
+        },
         None => Dimensions::default(),
     }
 }
@@ -168,7 +193,9 @@ fn existing_root(config: &MediaConfig) -> Option<PathBuf> {
 /// [`find_image`]'s containment check anyway).
 fn find_images(root: &Path, search: Option<&str>) -> Vec<PathBuf> {
     let real_root = root.canonicalize().unwrap_or_else(|_| root.to_path_buf());
-    let needle = search.filter(|s| !s.trim().is_empty()).map(str::to_lowercase);
+    let needle = search
+        .filter(|s| !s.trim().is_empty())
+        .map(str::to_lowercase);
     let mut out = Vec::new();
     walk(root, &real_root, needle.as_deref(), &mut out);
     out
@@ -187,7 +214,11 @@ fn walk(dir: &Path, real_root: &Path, needle: Option<&str>, out: &mut Vec<PathBu
         }
         let path = entry.path();
         let is_link = entry.file_type().is_ok_and(|t| t.is_symlink());
-        if is_link && !path.canonicalize().is_ok_and(|real| real.starts_with(real_root)) {
+        if is_link
+            && !path
+                .canonicalize()
+                .is_ok_and(|real| real.starts_with(real_root))
+        {
             continue;
         }
         if path.is_file() {
@@ -236,7 +267,11 @@ fn parse_ruby_integer(raw: &str) -> Option<i64> {
     if digits.is_empty() && radix == 8 && lower.chars().all(|c| c == '0' || c == '_') {
         return Some(0);
     }
-    if digits.is_empty() || digits.starts_with('_') || digits.ends_with('_') || digits.contains("__") {
+    if digits.is_empty()
+        || digits.starts_with('_')
+        || digits.ends_with('_')
+        || digits.contains("__")
+    {
         return None;
     }
     let clean: String = digits.chars().filter(|c| *c != '_').collect();
@@ -249,19 +284,28 @@ fn parse_ruby_integer(raw: &str) -> Option<i64> {
 pub(crate) fn extname(path: &str) -> String {
     let base = path.rsplit('/').next().unwrap_or(path);
     let trimmed = base.trim_start_matches('.');
-    trimmed.rfind('.').map_or_else(String::new, |i| trimmed[i..].to_owned())
+    trimmed
+        .rfind('.')
+        .map_or_else(String::new, |i| trimmed[i..].to_owned())
 }
 
 /// `Time#iso8601` in the process zone, whole seconds (`2026-01-01T12:00:00+00:00`).
 pub(crate) fn iso8601_local(time: std::time::SystemTime) -> String {
     jiff::Timestamp::try_from(time)
-        .map(|ts| ts.to_zoned(jiff::tz::TimeZone::system()).strftime("%Y-%m-%dT%H:%M:%S%:z").to_string())
+        .map(|ts| {
+            ts.to_zoned(jiff::tz::TimeZone::system())
+                .strftime("%Y-%m-%dT%H:%M:%S%:z")
+                .to_string()
+        })
         .unwrap_or_default()
 }
 
 /// `ERB::Util.url_encode` of every `/` segment, rejoined with `/`.
 pub(crate) fn url_encode_segments(path: &str) -> String {
-    path.split('/').map(url_encode).collect::<Vec<_>>().join("/")
+    path.split('/')
+        .map(url_encode)
+        .collect::<Vec<_>>()
+        .join("/")
 }
 
 /// `ERB::Util.url_encode`: everything but `[A-Za-z0-9_.~-]` percent-encoded (UTF-8).

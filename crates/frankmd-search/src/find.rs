@@ -27,8 +27,16 @@ pub struct FindOptions {
 impl FindOptions {
     /// The JS regex source searched for `query` under these options.
     pub fn pattern(&self, query: &str) -> String {
-        let inner = if self.use_regex { query.to_owned() } else { escape_regex_chars(query) };
-        if self.whole_word { format!("\\b(?:{inner})\\b") } else { inner }
+        let inner = if self.use_regex {
+            query.to_owned()
+        } else {
+            escape_regex_chars(query)
+        };
+        if self.whole_word {
+            format!("\\b(?:{inner})\\b")
+        } else {
+            inner
+        }
     }
 }
 
@@ -71,7 +79,11 @@ pub fn escape_regex_chars(s: &str) -> String {
 /// Compile a JS pattern with flags `g` (+ `i` unless case sensitive).
 fn compile(pattern: &str, case_sensitive: bool) -> Option<fancy_regex::Regex> {
     let translated = js_regex::translate(pattern).ok()?;
-    let source = if case_sensitive { translated } else { format!("(?i){translated}") };
+    let source = if case_sensitive {
+        translated
+    } else {
+        format!("(?i){translated}")
+    };
     fancy_regex::Regex::new(&source).ok()
 }
 
@@ -102,18 +114,33 @@ pub fn find_all_matches(text: &str, query: &str, opts: FindOptions) -> Vec<Match
         return Vec::new();
     }
     let pattern = opts.pattern(query);
-    let Some(regex) = compile(&pattern, opts.case_sensitive) else { return Vec::new() };
+    let Some(regex) = compile(&pattern, opts.case_sensitive) else {
+        return Vec::new();
+    };
 
     let mut matches = Vec::new();
-    let mut cursor = Utf16Cursor { text, byte: 0, unit: 0 };
+    let mut cursor = Utf16Cursor {
+        text,
+        byte: 0,
+        unit: 0,
+    };
     let mut pos = 0;
     while pos <= text.len() {
-        let Ok(Some(caps)) = regex.captures_from_pos(text, pos) else { break };
+        let Ok(Some(caps)) = regex.captures_from_pos(text, pos) else {
+            break;
+        };
         let Some(whole) = caps.get(0) else { break };
-        let groups = (1..caps.len()).map(|i| caps.get(i).map(|g| g.as_str().to_owned())).collect();
+        let groups = (1..caps.len())
+            .map(|i| caps.get(i).map(|g| g.as_str().to_owned()))
+            .collect();
         let start = cursor.advance_to(whole.start());
         let end = cursor.advance_to(whole.end());
-        matches.push(Match { start, end, text: whole.as_str().to_owned(), groups });
+        matches.push(Match {
+            start,
+            end,
+            text: whole.as_str().to_owned(),
+            groups,
+        });
         pos = if whole.start() == whole.end() {
             // JS `lastIndex += 1`, by a whole char (see the module docs).
             match text[whole.end()..].chars().next() {
@@ -131,7 +158,12 @@ pub fn find_all_matches(text: &str, query: &str, opts: FindOptions) -> Vec<Match
 /// the replacement expands `$$` → `$`, `$&`/`$0` → match, `$N` (any digit
 /// run, `$01` = group 1) → group or `""`; literal mode inserts it verbatim.
 /// Empty `text` or no matches → `text` unchanged.
-pub fn replace_matches(text: &str, matches: &[Match], replacement: &str, use_regex: bool) -> String {
+pub fn replace_matches(
+    text: &str,
+    matches: &[Match],
+    replacement: &str,
+    use_regex: bool,
+) -> String {
     if text.is_empty() || matches.is_empty() {
         return text.to_owned();
     }
@@ -141,7 +173,11 @@ pub fn replace_matches(text: &str, matches: &[Match], replacement: &str, use_reg
         let len = units.len();
         let (a, b) = (m.start.min(len), m.end.min(len));
         let (start, end) = (a.min(b), a.max(b));
-        let resolved = if use_regex { resolve_regex_replacement(replacement, m) } else { replacement.to_owned() };
+        let resolved = if use_regex {
+            resolve_regex_replacement(replacement, m)
+        } else {
+            replacement.to_owned()
+        };
         units.splice(start..end, resolved.encode_utf16());
     }
     String::from_utf16_lossy(&units)
@@ -184,16 +220,28 @@ fn resolve_regex_replacement(replacement: &str, m: &Match) -> String {
 /// `findClosestMatchIndex`: Next → first match with `start >= position`,
 /// wrapping to 0; Previous → last match with `end <= position`, wrapping to
 /// the last. `None` (JS `-1`) when there are no matches.
-pub fn find_closest_match_index(matches: &[Match], position: i64, direction: Direction) -> Option<usize> {
+pub fn find_closest_match_index(
+    matches: &[Match],
+    position: i64,
+    direction: Direction,
+) -> Option<usize> {
     if matches.is_empty() {
         return None;
     }
     let as_i64 = |n: usize| i64::try_from(n).unwrap_or(i64::MAX);
     match direction {
-        Direction::Previous => {
-            Some(matches.iter().rposition(|m| as_i64(m.end) <= position).unwrap_or(matches.len() - 1))
-        }
-        Direction::Next => Some(matches.iter().position(|m| as_i64(m.start) >= position).unwrap_or(0)),
+        Direction::Previous => Some(
+            matches
+                .iter()
+                .rposition(|m| as_i64(m.end) <= position)
+                .unwrap_or(matches.len() - 1),
+        ),
+        Direction::Next => Some(
+            matches
+                .iter()
+                .position(|m| as_i64(m.start) >= position)
+                .unwrap_or(0),
+        ),
     }
 }
 
@@ -215,8 +263,15 @@ mod tests {
     use super::*;
 
     fn texts(text: &str, query: &str) -> Vec<String> {
-        let opts = FindOptions { case_sensitive: true, use_regex: true, whole_word: false };
-        find_all_matches(text, query, opts).into_iter().map(|m| m.text).collect()
+        let opts = FindOptions {
+            case_sensitive: true,
+            use_regex: true,
+            whole_word: false,
+        };
+        find_all_matches(text, query, opts)
+            .into_iter()
+            .map(|m| m.text)
+            .collect()
     }
 
     #[test]
@@ -238,19 +293,32 @@ mod tests {
 
     #[test]
     fn whole_word_matches_only_complete_words() {
-        let opts = FindOptions { whole_word: true, ..FindOptions::default() };
-        let found: Vec<_> = find_all_matches("cat catalog Cat c.t", "cat", opts).into_iter().map(|m| m.start).collect();
+        let opts = FindOptions {
+            whole_word: true,
+            ..FindOptions::default()
+        };
+        let found: Vec<_> = find_all_matches("cat catalog Cat c.t", "cat", opts)
+            .into_iter()
+            .map(|m| m.start)
+            .collect();
         assert_eq!(found, vec![0, 12]);
         // Literal queries stay escaped inside the word boundaries.
         let found = find_all_matches("c.t cat", "c.t", opts);
         assert_eq!(found.len(), 1);
-        let regex = FindOptions { use_regex: true, whole_word: true, ..FindOptions::default() };
+        let regex = FindOptions {
+            use_regex: true,
+            whole_word: true,
+            ..FindOptions::default()
+        };
         assert_eq!(find_all_matches("ab abc", "ab|abc", regex).len(), 2);
     }
 
     #[test]
     fn validate_reports_v8_reasons() {
-        assert_eq!(validate_regex("[b-a]").unwrap_err(), "Invalid regular expression: /[b-a]/: Range out of order in character class");
+        assert_eq!(
+            validate_regex("[b-a]").unwrap_err(),
+            "Invalid regular expression: /[b-a]/: Range out of order in character class"
+        );
         assert!(validate_regex("(?<=a)*").is_err());
         assert!(validate_regex("(?=a)*").is_ok());
         assert!(validate_regex("a{,2}").is_ok());

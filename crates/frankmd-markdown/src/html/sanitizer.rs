@@ -24,8 +24,13 @@ use std::sync::LazyLock;
 use dom::{Dom, Id, Kind, Ns};
 
 /// Hosts allowed as `<iframe src>` (`ALLOWED_EMBED_HOSTS`).
-const ALLOWED_EMBED_HOSTS: &[&str] =
-    &["www.youtube.com", "youtube.com", "www.youtube-nocookie.com", "youtube-nocookie.com", "player.vimeo.com"];
+const ALLOWED_EMBED_HOSTS: &[&str] = &[
+    "www.youtube.com",
+    "youtube.com",
+    "www.youtube-nocookie.com",
+    "youtube-nocookie.com",
+    "player.vimeo.com",
+];
 
 /// `FORBID_TAGS` from FrankMD's config.
 const FORBID_TAGS: &[&str] = &["form", "button", "textarea", "select", "option", "style"];
@@ -37,8 +42,16 @@ const ADD_ATTR: &[&str] = &["allow", "allowfullscreen", "frameborder", "referrer
 const BASE_URL: &str = "http://localhost:3000/";
 
 /// DOMPurify `LITERAL_TEXT_ELEMENTS`.
-const LITERAL_TEXT_ELEMENTS: &[&str] =
-    &["style", "script", "xmp", "iframe", "noembed", "noframes", "plaintext", "noscript"];
+const LITERAL_TEXT_ELEMENTS: &[&str] = &[
+    "style",
+    "script",
+    "xmp",
+    "iframe",
+    "noembed",
+    "noframes",
+    "plaintext",
+    "noscript",
+];
 
 /// DOMPurify `MATHML_TEXT_INTEGRATION_POINTS`.
 const MATHML_TEXT_INTEGRATION_POINTS: &[&str] = &["mi", "mo", "mn", "ms", "mtext"];
@@ -54,18 +67,36 @@ fn set(lists: &[&[&'static str]]) -> Set {
 
 /// `ALLOWED_TAGS`: the default profiles + `#text`, `ADD_TAGS` and `tbody`.
 static ALLOWED_TAGS: LazyLock<Set> = LazyLock::new(|| {
-    set(&[tables::HTML_TAGS, tables::SVG_TAGS, tables::SVG_FILTERS, tables::MATHML_TAGS, &["#text", "iframe", "tbody"]])
+    set(&[
+        tables::HTML_TAGS,
+        tables::SVG_TAGS,
+        tables::SVG_FILTERS,
+        tables::MATHML_TAGS,
+        &["#text", "iframe", "tbody"],
+    ])
 });
 
 /// `ALLOWED_ATTR`: the default attribute profiles + `ADD_ATTR`.
 static ALLOWED_ATTR: LazyLock<Set> = LazyLock::new(|| {
-    set(&[tables::HTML_ATTRS, tables::SVG_ATTRS, tables::MATHML_ATTRS, tables::XML_ATTRS, ADD_ATTR])
+    set(&[
+        tables::HTML_ATTRS,
+        tables::SVG_ATTRS,
+        tables::MATHML_ATTRS,
+        tables::XML_ATTRS,
+        ADD_ATTR,
+    ])
 });
 
-static ALL_SVG_TAGS: LazyLock<Set> =
-    LazyLock::new(|| set(&[tables::SVG_TAGS, tables::SVG_FILTERS, tables::SVG_DISALLOWED]));
+static ALL_SVG_TAGS: LazyLock<Set> = LazyLock::new(|| {
+    set(&[
+        tables::SVG_TAGS,
+        tables::SVG_FILTERS,
+        tables::SVG_DISALLOWED,
+    ])
+});
 
-static ALL_MATHML_TAGS: LazyLock<Set> = LazyLock::new(|| set(&[tables::MATHML_TAGS, tables::MATHML_DISALLOWED]));
+static ALL_MATHML_TAGS: LazyLock<Set> =
+    LazyLock::new(|| set(&[tables::MATHML_TAGS, tables::MATHML_DISALLOWED]));
 
 pub(super) fn sanitize(html: &str) -> String {
     if html.is_empty() {
@@ -76,7 +107,9 @@ pub(super) fn sanitize(html: &str) -> String {
         return html.to_owned();
     }
     let mut dom = dom::parse_document(html);
-    let Some(body) = dom.body() else { return String::new() };
+    let Some(body) = dom.body() else {
+        return String::new();
+    };
     // The document parser drops leading whitespace; DOMPurify puts it back.
     let rest = html.trim_start_matches(['\r', '\n', '\t', ' ']);
     let leading = &html[..html.len() - rest.len()];
@@ -100,11 +133,15 @@ fn walk(dom: &mut Dom, root: Id) {
             // Resume after the node that preceded the removed one.
             current = match prev {
                 Some(p) => next_skipping_children(dom, p, root),
-                None => dom.first_child(parent).or_else(|| next_skipping_children(dom, parent, root)),
+                None => dom
+                    .first_child(parent)
+                    .or_else(|| next_skipping_children(dom, parent, root)),
             };
         } else {
             sanitize_attributes(dom, node);
-            current = dom.first_child(node).or_else(|| next_skipping_children(dom, node, root));
+            current = dom
+                .first_child(node)
+                .or_else(|| next_skipping_children(dom, node, root));
         }
     }
 }
@@ -163,7 +200,10 @@ fn sanitize_node(dom: &mut Dom, id: Id) -> bool {
     }
     if matches!(tag.as_str(), "noscript" | "noembed" | "noframes") {
         let inner = dom.inner_html(id).to_ascii_lowercase();
-        if ["</noscript", "</noembed", "</noframes"].iter().any(|t| inner.contains(t)) {
+        if ["</noscript", "</noembed", "</noframes"]
+            .iter()
+            .any(|t| inner.contains(t))
+        {
             dom.detach(id);
             return true;
         }
@@ -194,15 +234,25 @@ fn frankmd_element_hook(dom: &mut Dom, id: Id, tag: &str) -> bool {
 
 /// `new URL(src, location.href)` is https and its host is allowlisted.
 fn is_allowed_embed(src: &str) -> bool {
-    let Ok(base) = url::Url::parse(BASE_URL) else { return false };
-    let Ok(url) = base.join(src) else { return false };
-    url.scheme() == "https" && url.host_str().is_some_and(|h| ALLOWED_EMBED_HOSTS.contains(&h))
+    let Ok(base) = url::Url::parse(BASE_URL) else {
+        return false;
+    };
+    let Ok(url) = base.join(src) else {
+        return false;
+    };
+    url.scheme() == "https"
+        && url
+            .host_str()
+            .is_some_and(|h| ALLOWED_EMBED_HOSTS.contains(&h))
 }
 
 /// `element.getAttribute(name)` (first attribute with that qualified name).
 fn get_attribute<'a>(dom: &'a Dom, id: Id, name: &str) -> Option<&'a str> {
     let elem = dom.elem(id)?;
-    elem.attrs.iter().find(|a| dom::attr_name(a).eq_ignore_ascii_case(name)).map(|a| &*a.value)
+    elem.attrs
+        .iter()
+        .find(|a| dom::attr_name(a).eq_ignore_ascii_case(name))
+        .map(|a| &*a.value)
 }
 
 /// DOMPurify `ELEMENT_MARKUP_PROBE` `/<[/\w!]/`.
@@ -212,9 +262,13 @@ fn has_element_markup(s: &str) -> bool {
 
 /// `<` followed by `/`, an ASCII word char, or (when `bang`) `!`.
 fn markup_probe(s: &str, bang: bool) -> bool {
-    s.as_bytes()
-        .windows(2)
-        .any(|w| w[0] == b'<' && (w[1] == b'/' || w[1] == b'_' || w[1].is_ascii_alphanumeric() || (bang && w[1] == b'!')))
+    s.as_bytes().windows(2).any(|w| {
+        w[0] == b'<'
+            && (w[1] == b'/'
+                || w[1] == b'_'
+                || w[1].is_ascii_alphanumeric()
+                || (bang && w[1] == b'!'))
+    })
 }
 
 /// `_isUnsafeNode`.
@@ -242,9 +296,14 @@ fn is_unsafe_node(dom: &Dom, id: Id, tag: &str) -> bool {
 /// `_checkValidNamespace`: could a spec-compliant parser have produced this
 /// element under its current parent?
 fn has_valid_namespace(dom: &Dom, id: Id, tag: &str) -> bool {
-    let Some(elem) = dom.elem(id) else { return true };
+    let Some(elem) = dom.elem(id) else {
+        return true;
+    };
     let (parent_ns, parent_tag) = match dom.parent(id).and_then(|p| dom.elem(p)) {
-        Some(parent) => (Ns::of(&parent.name.ns), parent.name.local.to_string().to_ascii_lowercase()),
+        Some(parent) => (
+            Ns::of(&parent.name.ns),
+            parent.name.local.to_string().to_ascii_lowercase(),
+        ),
         None => (Ns::Html, "template".to_owned()),
     };
     let parent_tag = parent_tag.as_str();
@@ -283,8 +342,13 @@ fn sanitize_attributes(dom: &mut Dom, id: Id) {
     for mut attr in std::mem::take(&mut elem.attrs) {
         let name = dom::attr_name(&attr).into_owned();
         let lc_name = name.to_ascii_lowercase();
-        let value = if name == "value" { attr.value.to_string() } else { js_trim(&attr.value).to_owned() };
-        let keep = !is_unsafe_attribute_value(&name, &value) && is_valid_attribute(&lc_tag, &lc_name, &value);
+        let value = if name == "value" {
+            attr.value.to_string()
+        } else {
+            js_trim(&attr.value).to_owned()
+        };
+        let keep = !is_unsafe_attribute_value(&name, &value)
+            && is_valid_attribute(&lc_tag, &lc_name, &value);
         if keep {
             if *attr.value != *value {
                 attr.value = value.into();
@@ -306,9 +370,13 @@ fn is_unsafe_attribute_value(name: &str, value: &str) -> bool {
         return true;
     }
     let lower = value.to_ascii_lowercase();
-    const RAW_TEXT_END: &[&str] =
-        &["style", "script", "title", "xmp", "textarea", "noscript", "iframe", "noembed", "noframes"];
-    if lower.match_indices("</").any(|(i, _)| RAW_TEXT_END.iter().any(|t| lower[i + 2..].starts_with(t))) {
+    const RAW_TEXT_END: &[&str] = &[
+        "style", "script", "title", "xmp", "textarea", "noscript", "iframe", "noembed", "noframes",
+    ];
+    if lower
+        .match_indices("</")
+        .any(|(i, _)| RAW_TEXT_END.iter().any(|t| lower[i + 2..].starts_with(t)))
+    {
         return true;
     }
     name.eq_ignore_ascii_case("attributename") && value.contains("href")
@@ -324,7 +392,9 @@ fn is_valid_attribute(lc_tag: &str, lc_name: &str, value: &str) -> bool {
         return false;
     }
     // SANITIZE_DOM: no DOM clobbering through id/name.
-    if (lc_name == "id" || lc_name == "name") && tables::DOM_PROPERTY_NAMES.binary_search(&value).is_ok() {
+    if (lc_name == "id" || lc_name == "name")
+        && tables::DOM_PROPERTY_NAMES.binary_search(&value).is_ok()
+    {
         return false;
     }
     if is_data_attr(lc_name) || is_aria_attr(lc_name) {
@@ -355,27 +425,36 @@ fn is_valid_attribute(lc_tag: &str, lc_name: &str, value: &str) -> bool {
 fn is_data_attr(name: &str) -> bool {
     name.strip_prefix("data-").is_some_and(|rest| {
         !rest.is_empty()
-            && rest.chars().all(|c| c == '-' || c == '.' || c == '_' || c.is_ascii_alphanumeric() || c as u32 >= 0xB7)
+            && rest.chars().all(|c| {
+                c == '-' || c == '.' || c == '_' || c.is_ascii_alphanumeric() || c as u32 >= 0xB7
+            })
     })
 }
 
 /// `ARIA_ATTR` `/^aria-[\-\w]+$/`.
 fn is_aria_attr(name: &str) -> bool {
     name.strip_prefix("aria-").is_some_and(|rest| {
-        !rest.is_empty() && rest.chars().all(|c| c == '-' || c == '_' || c.is_ascii_alphanumeric())
+        !rest.is_empty()
+            && rest
+                .chars()
+                .all(|c| c == '-' || c == '_' || c.is_ascii_alphanumeric())
     })
 }
 
 /// `IS_ALLOWED_URI`:
 /// `/^(?:(?:(?:f|ht)tps?|mailto|tel|callto|sms|cid|xmpp|matrix):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i`.
 fn is_allowed_uri(value: &str) -> bool {
-    const SCHEMES: &[&str] =
-        &["http:", "https:", "ftp:", "ftps:", "mailto:", "tel:", "callto:", "sms:", "cid:", "xmpp:", "matrix:"];
+    const SCHEMES: &[&str] = &[
+        "http:", "https:", "ftp:", "ftps:", "mailto:", "tel:", "callto:", "sms:", "cid:", "xmpp:",
+        "matrix:",
+    ];
     let lower = value.to_ascii_lowercase();
     if SCHEMES.iter().any(|s| lower.starts_with(s)) {
         return true;
     }
-    let Some(first) = value.chars().next() else { return false };
+    let Some(first) = value.chars().next() else {
+        return false;
+    };
     if !first.is_ascii_alphabetic() {
         return true;
     }
@@ -394,20 +473,14 @@ fn js_trim(s: &str) -> &str {
     s.trim_matches(|c: char| {
         matches!(
             c,
-            '\t' | '\n'
-                | '\u{b}'
-                | '\u{c}'
-                | '\r'
-                | ' '
-                | '\u{a0}'
-                | '\u{1680}'
-                | '\u{2000}'..='\u{200a}'
-                | '\u{2028}'
-                | '\u{2029}'
-                | '\u{202f}'
-                | '\u{205f}'
-                | '\u{3000}'
-                | '\u{feff}'
+            '\t' | '\n' | '\u{b}' | '\u{c}' | '\r' | ' ' | '\u{a0}' | '\u{1680}' | '\u{2000}'
+                ..='\u{200a}'
+                    | '\u{2028}'
+                    | '\u{2029}'
+                    | '\u{202f}'
+                    | '\u{205f}'
+                    | '\u{3000}'
+                    | '\u{feff}'
         )
     })
 }

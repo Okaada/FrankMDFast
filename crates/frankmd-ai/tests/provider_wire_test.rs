@@ -24,7 +24,10 @@ async fn openrouter_grammar_fix_uses_chat_completions() {
         .expect(1)
         .mount(&server)
         .await;
-    let fix = mocked(&server.uri(), None, &[("OPENROUTER_API_KEY", "sk-or-test")]).fix_grammar(Some("teh text")).await.expect("fix");
+    let fix = mocked(&server.uri(), None, &[("OPENROUTER_API_KEY", "sk-or-test")])
+        .fix_grammar(Some("teh text"))
+        .await
+        .expect("fix");
     assert_eq!(fix.corrected, "the text");
     assert_eq!(fix.provider, AiProviderId::Openrouter);
 }
@@ -44,7 +47,10 @@ async fn gemini_grammar_fix_uses_generate_content() {
         .expect(1)
         .mount(&server)
         .await;
-    let fix = mocked(&server.uri(), None, &[("GEMINI_API_KEY", "gemini-test")]).fix_grammar(Some("teh text")).await.expect("fix");
+    let fix = mocked(&server.uri(), None, &[("GEMINI_API_KEY", "gemini-test")])
+        .fix_grammar(Some("teh text"))
+        .await
+        .expect("fix");
     assert_eq!(fix.corrected, "the text");
     assert_eq!(fix.model, "gemini-2.0-flash");
 }
@@ -55,16 +61,25 @@ async fn ollama_grammar_fix_posts_to_configured_base_without_auth() {
     let server = MockServer::start().await;
     Mock::given(method("POST"))
         .and(path("/v1/chat/completions"))
-        .and(body_partial_json(serde_json::json!({"model": "llama3.2:latest"})))
+        .and(body_partial_json(
+            serde_json::json!({"model": "llama3.2:latest"}),
+        ))
         .respond_with(ResponseTemplate::new(200).set_body_json(chat_completion("the text")))
         .expect(1)
         .mount(&server)
         .await;
     let base = format!("{}/v1", server.uri());
-    let fix = service(None, &[("OLLAMA_API_BASE", base.as_str())]).fix_grammar(Some("teh text")).await.expect("fix");
+    let fix = service(None, &[("OLLAMA_API_BASE", base.as_str())])
+        .fix_grammar(Some("teh text"))
+        .await
+        .expect("fix");
     assert_eq!(fix.provider, AiProviderId::Ollama);
     let reqs = server.received_requests().await.unwrap_or_default();
-    assert!(reqs.iter().all(|r| !r.headers.contains_key("authorization")), "ollama must not get a bearer token");
+    assert!(
+        reqs.iter()
+            .all(|r| !r.headers.contains_key("authorization")),
+        "ollama must not get a bearer token"
+    );
 }
 
 // derived from: ai_service.rb configure_client ("Clear ALL provider keys first to avoid cross-contamination")
@@ -76,11 +91,21 @@ async fn only_the_selected_providers_key_is_sent() {
         .respond_with(ResponseTemplate::new(200).set_body_json(chat_completion("ok")))
         .mount(&server)
         .await;
-    let s = mocked(&server.uri(), None, &[("OPENAI_API_KEY", "sk-openai"), ("ANTHROPIC_API_KEY", "sk-ant-secret")]);
+    let s = mocked(
+        &server.uri(),
+        None,
+        &[
+            ("OPENAI_API_KEY", "sk-openai"),
+            ("ANTHROPIC_API_KEY", "sk-ant-secret"),
+        ],
+    );
     s.fix_grammar(Some("x")).await.expect("fix");
     for r in server.received_requests().await.unwrap_or_default() {
         let all = format!("{:?}{}", r.headers, String::from_utf8_lossy(&r.body));
-        assert!(!all.contains("sk-ant-secret"), "anthropic key leaked into openai request");
+        assert!(
+            !all.contains("sk-ant-secret"),
+            "anthropic key leaked into openai request"
+        );
     }
 }
 
@@ -90,10 +115,16 @@ async fn anthropic_error_body_is_not_surfaced() {
     let server = MockServer::start().await;
     Mock::given(method("POST"))
         .and(path("/v1/messages"))
-        .respond_with(ResponseTemplate::new(401).set_body_string(r#"{"error":{"message":"invalid x-api-key sk-ant-xyz"}}"#))
+        .respond_with(
+            ResponseTemplate::new(401)
+                .set_body_string(r#"{"error":{"message":"invalid x-api-key sk-ant-xyz"}}"#),
+        )
         .mount(&server)
         .await;
-    let err = mocked(&server.uri(), None, &[("ANTHROPIC_API_KEY", "sk-ant-xyz")]).fix_grammar(Some("x")).await.expect_err("401");
+    let err = mocked(&server.uri(), None, &[("ANTHROPIC_API_KEY", "sk-ant-xyz")])
+        .fix_grammar(Some("x"))
+        .await
+        .expect_err("401");
     assert_eq!(err.to_string(), "AI provider request failed");
 }
 
@@ -101,11 +132,18 @@ async fn anthropic_error_body_is_not_surfaced() {
 #[tokio::test]
 async fn gemini_key_is_not_put_in_the_query_string() {
     let server = MockServer::start().await;
-    Mock::given(method("POST")).and(query_param("key", "gemini-test")).respond_with(ResponseTemplate::new(500)).expect(0).mount(&server).await;
+    Mock::given(method("POST"))
+        .and(query_param("key", "gemini-test"))
+        .respond_with(ResponseTemplate::new(500))
+        .expect(0)
+        .mount(&server)
+        .await;
     Mock::given(method("POST"))
         .respond_with(ResponseTemplate::new(200).set_body_json(serde_json::json!({
             "candidates": [{"content": {"parts": [{"text": "ok"}]}}]})))
         .mount(&server)
         .await;
-    let _ = mocked(&server.uri(), None, &[("GEMINI_API_KEY", "gemini-test")]).fix_grammar(Some("x")).await;
+    let _ = mocked(&server.uri(), None, &[("GEMINI_API_KEY", "gemini-test")])
+        .fix_grammar(Some("x"))
+        .await;
 }

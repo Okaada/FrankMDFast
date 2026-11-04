@@ -15,16 +15,35 @@ fn covers_all_built_in_themes() {
     assert_eq!(
         ids,
         [
-            "catppuccin", "catppuccin-latte", "dark", "ethereal", "everforest", "flexoki-light", "gruvbox",
-            "hackerman", "kanagawa", "light", "matte-black", "nord", "osaka-jade", "ristretto", "rose-pine",
-            "solarized-dark", "solarized-light", "tokyo-night",
+            "catppuccin",
+            "catppuccin-latte",
+            "dark",
+            "ethereal",
+            "everforest",
+            "flexoki-light",
+            "gruvbox",
+            "hackerman",
+            "kanagawa",
+            "light",
+            "matte-black",
+            "nord",
+            "osaka-jade",
+            "ristretto",
+            "rose-pine",
+            "solarized-dark",
+            "solarized-light",
+            "tokyo-night",
         ]
     );
 }
 
 fn defines_every_syntax_role_with_readable_contrast(id: &str) {
     let tokens = frankmd_theme::builtin(id).unwrap_or_else(|| panic!("{id} must exist"));
-    let failures = syntax_contrast_failures(|k| tokens.get(k).unwrap_or_else(|| panic!("{id} must define --theme-{k}")));
+    let failures = syntax_contrast_failures(|k| {
+        tokens
+            .get(k)
+            .unwrap_or_else(|| panic!("{id} must define --theme-{k}"))
+    });
     assert!(failures.is_empty(), "{id}: {failures:?}");
 }
 

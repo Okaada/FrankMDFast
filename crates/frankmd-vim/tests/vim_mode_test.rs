@@ -14,7 +14,9 @@ use frankmd_vim::keymap::{Key, PASSTHROUGH, app_owned_keys, is_app_owned};
 use frankmd_vim::{AppCommand, Mode, Outcome, VimState};
 use std::collections::HashSet;
 
-const APP_OWNED: [&str; 7] = ["<C-f>", "<C-n>", "<C-p>", "<C-e>", "<C-b>", "<C-i>", "<C-v>"];
+const APP_OWNED: [&str; 7] = [
+    "<C-f>", "<C-n>", "<C-p>", "<C-e>", "<C-b>", "<C-i>", "<C-v>",
+];
 
 // port: test/javascript/lib/vim_mode.test.js:17 "hands the app-owned shortcuts back to FrankMD"
 #[test]
@@ -28,8 +30,15 @@ fn hands_the_app_owned_shortcuts_back_to_frankmd() {
     let mut buf = FakeBuffer::new("one\ntwo\n");
     let mut vim = VimState::new(false);
     for k in PASSTHROUGH {
-        assert!(is_app_owned(&Key::ctrl(k), false), "<C-{k}> should be app-owned");
-        assert_eq!(vim.feed(&Key::ctrl(k), false, &mut buf), Outcome::PassThrough, "<C-{k}>");
+        assert!(
+            is_app_owned(&Key::ctrl(k), false),
+            "<C-{k}> should be app-owned"
+        );
+        assert_eq!(
+            vim.feed(&Key::ctrl(k), false, &mut buf),
+            Outcome::PassThrough,
+            "<C-{k}>"
+        );
     }
     // ...but stays with vim on macOS.
     let mut vim = VimState::new(true);
@@ -47,7 +56,10 @@ fn passthrough_policy_is_stable_across_calls() {
     let mut buf = FakeBuffer::new("x");
     let mut a = VimState::new(false);
     let mut b = VimState::new(false);
-    assert_eq!(a.feed(&Key::ctrl("p"), false, &mut buf), b.feed(&Key::ctrl("p"), false, &mut buf));
+    assert_eq!(
+        a.feed(&Key::ctrl("p"), false, &mut buf),
+        b.feed(&Key::ctrl("p"), false, &mut buf)
+    );
 }
 
 // port: test/javascript/lib/vim_mode.test.js:39 "covers the shortcuts the app and the markdown keymap bind"
@@ -77,11 +89,18 @@ fn defines_one_ex_command_per_entry_with_prefix() {
     // :noh is intentionally NOT overridden (engine owns it).
     assert!(!names.contains(&"nohlsearch"));
     for c in EX_COMMANDS {
-        assert!(c.name.starts_with(c.prefix), "{} prefix {}", c.name, c.prefix);
+        assert!(
+            c.name.starts_with(c.prefix),
+            "{} prefix {}",
+            c.name,
+            c.prefix
+        );
     }
     // Full table, verbatim.
-    let table: Vec<(&str, &str, &str)> =
-        EX_COMMANDS.iter().map(|c| (c.name, c.prefix, c.command.logical_name())).collect();
+    let table: Vec<(&str, &str, &str)> = EX_COMMANDS
+        .iter()
+        .map(|c| (c.name, c.prefix, c.command.logical_name()))
+        .collect();
     assert_eq!(
         table,
         vec![
@@ -121,24 +140,48 @@ fn defines_one_ex_command_per_entry_with_prefix() {
 // port: test/javascript/lib/vim_mode.test.js:63 "invokes onCommand with the logical command name when an ex-command runs"
 #[test]
 fn ex_command_invokes_logical_command() {
-    assert_eq!(ex::parse("write"), Some(ExCall { command: AppCommand::Save, args: vec![] }));
+    assert_eq!(
+        ex::parse("write"),
+        Some(ExCall {
+            command: AppCommand::Save,
+            args: vec![]
+        })
+    );
     assert_eq!(AppCommand::Save.logical_name(), "save");
-    assert_eq!(ex::parse("Explore").unwrap().command.logical_name(), "toggle-sidebar");
+    assert_eq!(
+        ex::parse("Explore").unwrap().command.logical_name(),
+        "toggle-sidebar"
+    );
     assert_eq!(
         ex::parse("e notes/a.md"),
-        Some(ExCall { command: AppCommand::OpenFinder, args: vec!["notes/a.md".into()] })
+        Some(ExCall {
+            command: AppCommand::OpenFinder,
+            args: vec!["notes/a.md".into()]
+        })
     );
 
     // Through the engine: typing `:w<Enter>` in normal mode yields the app command.
     let mut buf = FakeBuffer::new("hello\n");
     let mut vim = VimState::new(false);
     let out = feed_str(&mut vim, &mut buf, ":w\n");
-    assert_eq!(out.last(), Some(&Outcome::App(ExCall { command: AppCommand::Save, args: vec![] })));
+    assert_eq!(
+        out.last(),
+        Some(&Outcome::App(ExCall {
+            command: AppCommand::Save,
+            args: vec![]
+        }))
+    );
     assert_eq!(vim.mode(), Mode::Normal);
     assert_eq!(buf.text, "hello\n", ":w must not edit the buffer");
 
     let out = feed_str(&mut vim, &mut buf, ":Explore\n");
-    assert_eq!(out.last(), Some(&Outcome::App(ExCall { command: AppCommand::ToggleSidebar, args: vec![] })));
+    assert_eq!(
+        out.last(),
+        Some(&Outcome::App(ExCall {
+            command: AppCommand::ToggleSidebar,
+            args: vec![]
+        }))
+    );
 
     // While typing, the command line is visible.
     let _ = feed_str(&mut vim, &mut buf, ":wq");
@@ -173,7 +216,10 @@ fn maps_mode_changes_including_visual_submode() {
     feed_str(&mut vim, &mut buf, "\x1b");
     assert_eq!(vim.take_mode_change(), Some(Mode::Normal));
     feed_str(&mut vim, &mut buf, "V");
-    assert_eq!(vim.take_mode_change().map(Mode::label), Some("visual-linewise"));
+    assert_eq!(
+        vim.take_mode_change().map(Mode::label),
+        Some("visual-linewise")
+    );
 }
 
 // port: test/javascript/lib/vim_mode.test.js:101 "ignores events with no mode"
@@ -226,14 +272,25 @@ fn ex_commands_dispatch_registered_shortcut_actions() {
             assert!(actions.contains(a), "{} → unknown action {a}", c.name);
         }
     }
-    assert_eq!(AppCommand::SaveAndClose.shortcut_actions(), &["save", "closeDialogs"]);
-    assert_eq!(AppCommand::CloseDialogs.shortcut_actions(), &["closeDialogs"]);
+    assert_eq!(
+        AppCommand::SaveAndClose.shortcut_actions(),
+        &["save", "closeDialogs"]
+    );
+    assert_eq!(
+        AppCommand::CloseDialogs.shortcut_actions(),
+        &["closeDialogs"]
+    );
     assert_eq!(AppCommand::OpenFinder.shortcut_actions(), &["fileFinder"]);
-    assert_eq!(AppCommand::ToggleSidebar.shortcut_actions(), &["toggleSidebar"]);
+    assert_eq!(
+        AppCommand::ToggleSidebar.shortcut_actions(),
+        &["toggleSidebar"]
+    );
     assert!(AppCommand::NextNote.shortcut_actions().is_empty());
     for k in ["f", "n", "p", "e"] {
         assert!(
-            DEFAULT_SHORTCUTS.iter().any(|(_, s)| s.key == k && s.ctrl && !s.shift && !s.alt),
+            DEFAULT_SHORTCUTS
+                .iter()
+                .any(|(_, s)| s.key == k && s.ctrl && !s.shift && !s.alt),
             "Ctrl+{k} should be an app shortcut"
         );
     }

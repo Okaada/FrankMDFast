@@ -4,7 +4,7 @@
 
 use std::time::{Duration, Instant};
 
-use frankmd_search::content::{Hit, Query, Results, SearchRegex, SEARCH_REGEX_TIMEOUT};
+use frankmd_search::content::{Hit, Query, Results, SEARCH_REGEX_TIMEOUT, SearchRegex};
 
 /// Quiet period after the last keystroke before a search is requested.
 pub const DEBOUNCE: Duration = Duration::from_millis(300);
@@ -20,7 +20,10 @@ pub struct SearchOptions {
 
 impl Default for SearchOptions {
     fn default() -> Self {
-        Self { case_sensitive: false, regex: true }
+        Self {
+            case_sensitive: false,
+            regex: true,
+        }
     }
 }
 
@@ -33,7 +36,9 @@ pub fn effective_pattern(query: &str, options: SearchOptions) -> (String, bool) 
     let mut fell_back = false;
     let mut pattern = if !options.regex {
         frankmd_search::content::regexp_escape(query)
-    } else if SearchRegex::compile(query, SEARCH_REGEX_TIMEOUT).is_some_and(|r| r.is_literal_fallback()) {
+    } else if SearchRegex::compile(query, SEARCH_REGEX_TIMEOUT)
+        .is_some_and(|r| r.is_literal_fallback())
+    {
         fell_back = true;
         frankmd_search::content::regexp_escape(query)
     } else {
@@ -99,7 +104,11 @@ pub struct OpenAt {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Outcome {
     None,
-    Done { matches: usize, notes: usize, truncated: bool },
+    Done {
+        matches: usize,
+        notes: usize,
+        truncated: bool,
+    },
     Error,
 }
 
@@ -188,7 +197,10 @@ impl ContentSearchModel {
         self.generation += 1;
         let (pattern, fell_back) = effective_pattern(&self.query, self.options);
         self.invalid = fell_back;
-        SearchRequest { generation: self.generation, query: Query::ui(pattern) }
+        SearchRequest {
+            generation: self.generation,
+            query: Query::ui(pattern),
+        }
     }
 
     /// Emit the request once the debounce deadline has passed.
@@ -220,11 +232,23 @@ impl ContentSearchModel {
             }
         }
         self.outcome = if results.hits.is_empty() {
-            Outcome::Done { matches: 0, notes: 0, truncated: false }
+            Outcome::Done {
+                matches: 0,
+                notes: 0,
+                truncated: false,
+            }
         } else {
-            Outcome::Done { matches: results.hits.len(), notes: notes.len(), truncated: results.truncated }
+            Outcome::Done {
+                matches: results.hits.len(),
+                notes: notes.len(),
+                truncated: results.truncated,
+            }
         };
-        self.selected = if results.hits.is_empty() { None } else { Some(0) };
+        self.selected = if results.hits.is_empty() {
+            None
+        } else {
+            Some(0)
+        };
         self.hits = results.hits;
     }
 
@@ -249,7 +273,15 @@ impl ContentSearchModel {
         match self.outcome {
             Outcome::Error => SearchStatus::Error,
             Outcome::Done { matches: 0, .. } => SearchStatus::NoMatches,
-            Outcome::Done { matches, notes, truncated } => SearchStatus::Count { matches, notes, truncated },
+            Outcome::Done {
+                matches,
+                notes,
+                truncated,
+            } => SearchStatus::Count {
+                matches,
+                notes,
+                truncated,
+            },
             Outcome::None if self.searching() => SearchStatus::Searching,
             Outcome::None => SearchStatus::Hint,
         }
@@ -271,7 +303,11 @@ impl ContentSearchModel {
         for (ix, h) in self.hits.iter().enumerate() {
             match groups.iter_mut().find(|g| g.path == h.path) {
                 Some(g) => g.hits.push(ix),
-                None => groups.push(ResultGroup { path: h.path.clone(), name: h.name.clone(), hits: vec![ix] }),
+                None => groups.push(ResultGroup {
+                    path: h.path.clone(),
+                    name: h.name.clone(),
+                    hits: vec![ix],
+                }),
             }
         }
         groups
@@ -308,6 +344,9 @@ impl ContentSearchModel {
     /// The selected hit as an open target.
     pub fn activate(&self) -> Option<OpenAt> {
         let h = self.hits.get(self.selected?)?;
-        Some(OpenAt { path: h.path.clone(), line: h.line_number })
+        Some(OpenAt {
+            path: h.path.clone(),
+            line: h.line_number,
+        })
     }
 }

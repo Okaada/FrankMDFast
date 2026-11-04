@@ -95,9 +95,8 @@ fn open_probe(cx: &mut TestAppContext) -> (gpui_kit::AnyWindowHandle, gpui_kit::
             KeyBinding::new("f6", FocusB, Some("Probe")),
         ]);
     });
-    let (handle, probe) = support::harness::open_window(cx, size(px(1280.), px(800.)), |_, cx| {
-        cx.new(Probe::new)
-    });
+    let (handle, probe) =
+        support::harness::open_window(cx, size(px(1280.), px(800.)), |_, cx| cx.new(Probe::new));
     (handle.into(), probe)
 }
 
@@ -141,7 +140,8 @@ fn keystroke_dispatches_bound_action(cx: &mut TestAppContext) {
 #[gpui_kit::test]
 fn simulate_keystrokes_and_dispatch_action(cx: &mut TestAppContext) {
     let (handle, probe) = open_probe(cx);
-    cx.update_window(handle, |_, window, cx| window.click("pane-a", cx)).unwrap();
+    cx.update_window(handle, |_, window, cx| window.click("pane-a", cx))
+        .unwrap();
     cx.simulate_keystrokes(handle, "ctrl-shift-p");
     cx.dispatch_action(handle, Toggle);
     cx.run_until_parked();
@@ -181,7 +181,8 @@ fn click_hits_target(cx: &mut TestAppContext) {
 fn window_resize_is_seen_by_render(cx: &mut TestAppContext) {
     let (handle, probe) = open_probe(cx);
     cx.simulate_window_resize(handle, size(px(700.), px(600.)));
-    cx.update_window(handle, |_, window, cx| window.render_frame(cx)).unwrap();
+    cx.update_window(handle, |_, window, cx| window.render_frame(cx))
+        .unwrap();
     assert_eq!(probe.read_with(cx, |p, _| p.width_seen), 700.0);
 }
 
@@ -206,7 +207,8 @@ async fn timers_advance_on_test_clock(cx: &mut TestAppContext) {
     cx.run_until_parked();
     assert!(probe.read_with(cx, |p, _| p.ticked));
     // wait_for polls frames on the test clock.
-    cx.wait_for(handle, Duration::from_millis(50), |_, _| true).await;
+    cx.wait_for(handle, Duration::from_millis(50), |_, _| true)
+        .await;
 }
 
 // The test platform clipboard round-trips (Copy path / Copy contents).
@@ -232,7 +234,8 @@ fn opened_url_is_recorded(cx: &mut TestAppContext) {
 #[gpui_kit::test]
 fn keystroke_without_focus_is_not_dispatched(cx: &mut TestAppContext) {
     let (handle, probe) = open_probe(cx);
-    cx.update_window(handle, |_, window, cx| window.press("ctrl-shift-p", cx)).unwrap();
+    cx.update_window(handle, |_, window, cx| window.press("ctrl-shift-p", cx))
+        .unwrap();
     assert_eq!(probe.read_with(cx, |p, _| p.toggles), 0);
 }
 
@@ -241,14 +244,17 @@ struct Label;
 impl Render for Label {
     fn render(&mut self, _: &mut Window, _: &mut Context<Self>) -> impl IntoElement {
         use gpui_kit::base::TestTextExt as _;
-        div().size_full().child(div().child("✓ Saved").test_text("✓ Saved"))
+        div()
+            .size_full()
+            .child(div().child("✓ Saved").test_text("✓ Saved"))
     }
 }
 
 #[gpui_kit::test]
 fn rendered_text_is_observable_when_recorded(cx: &mut TestAppContext) {
     cx.update(gpui_kit::init);
-    let (handle, _) = support::harness::open_window(cx, size(px(400.), px(200.)), |_, cx| cx.new(|_| Label));
+    let (handle, _) =
+        support::harness::open_window(cx, size(px(400.), px(200.)), |_, cx| cx.new(|_| Label));
     cx.update_window(handle.into(), |_, window, cx| {
         window.render_frame(cx);
         let texts = gpui_kit::base::test_support::texts(window);

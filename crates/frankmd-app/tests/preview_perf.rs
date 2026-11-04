@@ -8,7 +8,9 @@ use std::time::Instant;
 
 use frankmd_app::preview::PreviewPane;
 use gpui_kit::test::TestWindowExt as _;
-use gpui_kit::{AppContext as _, Bounds, Point, TestAppContext, WindowBounds, WindowOptions, px, size};
+use gpui_kit::{
+    AppContext as _, Bounds, Point, TestAppContext, WindowBounds, WindowOptions, px, size,
+};
 
 /// A realistic mixed note of about `target` bytes.
 fn note(target: usize) -> String {
@@ -31,9 +33,15 @@ fn measure(cx: &mut TestAppContext, label: &str, bytes: usize) {
     let parse = t.elapsed();
 
     let (window, pane) = cx.update(|cx| {
-        let bounds = Bounds { origin: Point::default(), size: size(px(1280.), px(800.)) };
+        let bounds = Bounds {
+            origin: Point::default(),
+            size: size(px(1280.), px(800.)),
+        };
         gpui_kit::open_window(
-            WindowOptions { window_bounds: Some(WindowBounds::Windowed(bounds)), ..Default::default() },
+            WindowOptions {
+                window_bounds: Some(WindowBounds::Windowed(bounds)),
+                ..Default::default()
+            },
             cx,
             |window, cx| cx.new(|cx| PreviewPane::new(window, cx)),
         )
@@ -44,18 +52,21 @@ fn measure(cx: &mut TestAppContext, label: &str, bytes: usize) {
     cx.run_until_parked();
     let pipeline = t.elapsed();
     let t = Instant::now();
-    cx.update_window(window, |_, w, cx| w.render_frame(cx)).unwrap();
+    cx.update_window(window, |_, w, cx| w.render_frame(cx))
+        .unwrap();
     let first_frame = t.elapsed();
     let mid = doc.total_lines / 2;
     let t = Instant::now();
     pane.update(cx, |p, cx| p.scroll_to_source_line(mid, cx));
-    cx.update_window(window, |_, w, cx| w.render_frame(cx)).unwrap();
+    cx.update_window(window, |_, w, cx| w.render_frame(cx))
+        .unwrap();
     let jump = t.elapsed();
     let t = Instant::now();
     let edited = format!("{src}\nOne more line.\n");
     pane.update(cx, |p, cx| p.set_markdown(edited, None, cx));
     cx.run_until_parked();
-    cx.update_window(window, |_, w, cx| w.render_frame(cx)).unwrap();
+    cx.update_window(window, |_, w, cx| w.render_frame(cx))
+        .unwrap();
     let rerender = t.elapsed();
     let rows = pane.read_with(cx, |p, _| p.row_count());
     println!(

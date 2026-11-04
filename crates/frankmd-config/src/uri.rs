@@ -18,7 +18,11 @@ pub(crate) fn is_plain_http_url(s: &str) -> bool {
     };
     let end = after.find(['/', '?', '#']).unwrap_or(after.len());
     let (authority, tail) = after.split_at(end);
-    if tail.contains(['[', ']']) || tail.split_once('#').is_some_and(|(_, frag)| frag.contains('#')) {
+    if tail.contains(['[', ']'])
+        || tail
+            .split_once('#')
+            .is_some_and(|(_, frag)| frag.contains('#'))
+    {
         return false;
     }
     if authority.contains('@') {
@@ -56,7 +60,8 @@ fn split_scheme(s: &str) -> Option<(&str, &str)> {
     let (scheme, rest) = s.split_once(':')?;
     let mut bytes = scheme.bytes();
     let first_ok = bytes.next().is_some_and(|b| b.is_ascii_alphabetic());
-    (first_ok && bytes.all(|b| b.is_ascii_alphanumeric() || matches!(b, b'+' | b'-' | b'.'))).then_some((scheme, rest))
+    (first_ok && bytes.all(|b| b.is_ascii_alphanumeric() || matches!(b, b'+' | b'-' | b'.')))
+        .then_some((scheme, rest))
 }
 
 /// Unreserved, reserved and `%`.
@@ -67,9 +72,14 @@ fn is_uri_byte(b: u8) -> bool {
 /// Every `%` starts a `%HH` escape.
 fn percent_escapes_ok(s: &str) -> bool {
     let bytes = s.as_bytes();
-    bytes.iter().enumerate().filter(|(_, b)| **b == b'%').all(|(i, _)| {
-        bytes.get(i + 1).is_some_and(u8::is_ascii_hexdigit) && bytes.get(i + 2).is_some_and(u8::is_ascii_hexdigit)
-    })
+    bytes
+        .iter()
+        .enumerate()
+        .filter(|(_, b)| **b == b'%')
+        .all(|(i, _)| {
+            bytes.get(i + 1).is_some_and(u8::is_ascii_hexdigit)
+                && bytes.get(i + 2).is_some_and(u8::is_ascii_hexdigit)
+        })
 }
 
 #[cfg(test)]

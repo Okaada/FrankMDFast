@@ -79,7 +79,9 @@ impl Render for Shell {
                     if !ev.modifiers.control {
                         let _ = this.update(cx, |shell, cx| {
                             if shell.switcher.is_active()
-                                && shell.overlays.is_open(&OverlayKind::Dialog("recent-switcher"))
+                                && shell
+                                    .overlays
+                                    .is_open(&OverlayKind::Dialog("recent-switcher"))
                             {
                                 shell.recent_switch_commit(window, cx);
                             }
@@ -160,12 +162,11 @@ impl Shell {
             .flex()
             .justify_center()
             .cursor_col_resize()
-            .child(
-                div()
-                    .w(px(1.))
-                    .h_full()
-                    .bg(if active { theme.primary } else { theme.sidebar_border }),
-            )
+            .child(div().w(px(1.)).h_full().bg(if active {
+                theme.primary
+            } else {
+                theme.sidebar_border
+            }))
             .on_mouse_down(MouseButton::Left, {
                 let this = this.clone();
                 let focus = focus.clone();
@@ -222,7 +223,9 @@ impl Shell {
         self.splitter = None;
         match which {
             Splitter::Sidebar => self.ui_state.update(|s| s.sidebar_width = SIDEBAR_WIDTH),
-            Splitter::Preview => self.ui_state.update(|s| s.preview_ratio = PREVIEW_RATIO_DEFAULT),
+            Splitter::Preview => self
+                .ui_state
+                .update(|s| s.preview_ratio = PREVIEW_RATIO_DEFAULT),
         }
         cx.notify();
     }

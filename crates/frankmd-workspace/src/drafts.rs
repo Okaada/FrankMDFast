@@ -51,7 +51,11 @@ impl FileDraftBackend {
             Ok(bytes) => serde_json::from_slice::<Vec<(String, String)>>(&bytes)
                 .map_err(|e| BackendError::new(format!("Corrupt draft store: {e}")))?,
             Err(e) if e.kind() == std::io::ErrorKind::NotFound => Vec::new(),
-            Err(e) => return Err(BackendError::new(format!("Unable to read draft store: {e}"))),
+            Err(e) => {
+                return Err(BackendError::new(format!(
+                    "Unable to read draft store: {e}"
+                )));
+            }
         };
         Ok(Self { path, entries })
     }
@@ -63,8 +67,12 @@ impl FileDraftBackend {
 
     fn persist(&mut self, next: Vec<(String, String)>) -> Result<(), BackendError> {
         let bytes = serde_json::to_vec(&next).map_err(|e| BackendError::new(e.to_string()))?;
-        frankmd_fs::atomic::atomic_replace(&self.path, &bytes, frankmd_fs::atomic::ModePolicy::Fixed(0o600))
-            .map_err(|e| BackendError::new(format!("Unable to write draft store: {e}")))?;
+        frankmd_fs::atomic::atomic_replace(
+            &self.path,
+            &bytes,
+            frankmd_fs::atomic::ModePolicy::Fixed(0o600),
+        )
+        .map_err(|e| BackendError::new(format!("Unable to write draft store: {e}")))?;
         self.entries = next;
         Ok(())
     }
@@ -80,7 +88,11 @@ impl DraftBackend for FileDraftBackend {
     }
 
     fn get_item(&self, key: &str) -> Result<Option<String>, BackendError> {
-        Ok(self.entries.iter().find(|(k, _)| k == key).map(|(_, v)| v.clone()))
+        Ok(self
+            .entries
+            .iter()
+            .find(|(k, _)| k == key)
+            .map(|(_, v)| v.clone()))
     }
 
     fn set_item(&mut self, key: &str, value: &str) -> Result<(), BackendError> {
@@ -96,13 +108,20 @@ impl DraftBackend for FileDraftBackend {
         if !self.entries.iter().any(|(k, _)| k == key) {
             return Ok(());
         }
-        let next = self.entries.iter().filter(|(k, _)| k != key).cloned().collect();
+        let next = self
+            .entries
+            .iter()
+            .filter(|(k, _)| k != key)
+            .cloned()
+            .collect();
         self.persist(next)
     }
 }
 
 /// Open the on-disk draft store for one vault (`vault_state_dir` is
 /// `AppDirs::vault_state(realpath)` from `frankmd-config`).
-pub fn open_draft_storage(vault_state_dir: &Path) -> Result<DraftStorage<FileDraftBackend>, BackendError> {
+pub fn open_draft_storage(
+    vault_state_dir: &Path,
+) -> Result<DraftStorage<FileDraftBackend>, BackendError> {
     FileDraftBackend::open(vault_state_dir).map(DraftStorage::new)
 }

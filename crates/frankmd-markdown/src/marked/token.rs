@@ -21,7 +21,10 @@ pub(crate) struct Inl {
 
 impl Inl {
     pub(crate) fn new(text: impl Into<String>) -> Self {
-        Self { text: text.into(), tokens: Vec::new() }
+        Self {
+            text: text.into(),
+            tokens: Vec::new(),
+        }
     }
 }
 
@@ -29,18 +32,44 @@ impl Inl {
 pub(crate) enum BlockKind {
     Space,
     /// `lang` is marked's processed info string (`None` when absent/empty).
-    Code { lang: Option<String>, text: String },
-    Heading { depth: u8, inl: Inl },
+    Code {
+        lang: Option<String>,
+        text: String,
+    },
+    Heading {
+        depth: u8,
+        inl: Inl,
+    },
     Hr,
-    Blockquote { text: String, children: Vec<BlockTok> },
-    List { ordered: bool, start: u64, loose: bool, items: Vec<ListItemTok> },
-    Html { text: String },
-    Table { align: Vec<Align>, header: Vec<Inl>, rows: Vec<Vec<Inl>> },
-    Paragraph { inl: Inl },
+    Blockquote {
+        text: String,
+        children: Vec<BlockTok>,
+    },
+    List {
+        ordered: bool,
+        start: u64,
+        loose: bool,
+        items: Vec<ListItemTok>,
+    },
+    Html {
+        text: String,
+    },
+    Table {
+        align: Vec<Align>,
+        header: Vec<Inl>,
+        rows: Vec<Vec<Inl>>,
+    },
+    Paragraph {
+        inl: Inl,
+    },
     /// marked's block `text` token (list items: `top == false`).
-    Text { inl: Inl },
+    Text {
+        inl: Inl,
+    },
     /// FrankMD `mathBlock`.
-    MathBlock { text: String },
+    MathBlock {
+        text: String,
+    },
 }
 
 #[derive(Debug, Clone)]
@@ -58,20 +87,42 @@ pub(crate) enum InlineTok {
     Escape(String),
     /// Inline raw HTML (`tag`).
     Html(String),
-    Link { href: String, title: Option<String>, children: Vec<InlineTok> },
-    Image { href: String, title: Option<String>, text: String },
+    Link {
+        href: String,
+        title: Option<String>,
+        children: Vec<InlineTok>,
+    },
+    Image {
+        href: String,
+        title: Option<String>,
+        text: String,
+    },
     Strong(Vec<InlineTok>),
     Em(Vec<InlineTok>),
     Del(Vec<InlineTok>),
     Codespan(String),
     Br,
     /// `escaped` = marked's `inRawBlock` flag: printed without escaping.
-    Text { raw: String, text: String, escaped: bool },
+    Text {
+        raw: String,
+        text: String,
+        escaped: bool,
+    },
     Superscript(String),
     Subscript(String),
     Highlight(String),
-    Emoji { shortcode: String, emoji: &'static str },
-    Icon { name: String, path: String, view_box: String },
-    Wikilink { target: String, display: Option<String> },
+    Emoji {
+        shortcode: String,
+        emoji: &'static str,
+    },
+    Icon {
+        name: String,
+        path: String,
+        view_box: String,
+    },
+    Wikilink {
+        target: String,
+        display: Option<String>,
+    },
     Math(String),
 }

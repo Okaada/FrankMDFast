@@ -52,7 +52,10 @@ impl LineNumberMode {
 /// whitespace skipped, optional sign, leading digits only: `"2px"` → 2,
 /// `" 1"` → 1, `"1.9"` → 1); anything that does not parse to 0/1/2 → `fallback`.
 pub fn normalize_line_number_mode(value: Option<&str>, fallback: LineNumberMode) -> LineNumberMode {
-    value.and_then(parse_int_prefix).and_then(LineNumberMode::from_value).unwrap_or(fallback)
+    value
+        .and_then(parse_int_prefix)
+        .and_then(LineNumberMode::from_value)
+        .unwrap_or(fallback)
 }
 
 /// JS `parseInt(s, 10)` reduced to what mode matching needs: `None` for NaN,
@@ -68,9 +71,9 @@ fn parse_int_prefix(s: &str) -> Option<i64> {
     if digits.is_empty() {
         return None;
     }
-    let magnitude = digits
-        .bytes()
-        .fold(0_i64, |acc, d| acc.saturating_mul(10).saturating_add(i64::from(d - b'0')));
+    let magnitude = digits.bytes().fold(0_i64, |acc, d| {
+        acc.saturating_mul(10).saturating_add(i64::from(d - b'0'))
+    });
     Some(if negative { -magnitude } else { magnitude })
 }
 
@@ -78,7 +81,13 @@ fn parse_int_prefix(s: &str) -> Option<i64> {
 fn is_js_space(c: char) -> bool {
     matches!(
         c,
-        '\t' | '\n' | '\u{0B}' | '\u{0C}' | '\r' | ' ' | '\u{A0}' | '\u{1680}' | '\u{2000}'..='\u{200A}'
-            | '\u{2028}' | '\u{2029}' | '\u{202F}' | '\u{205F}' | '\u{3000}' | '\u{FEFF}'
+        '\t' | '\n' | '\u{0B}' | '\u{0C}' | '\r' | ' ' | '\u{A0}' | '\u{1680}' | '\u{2000}'
+            ..='\u{200A}'
+                | '\u{2028}'
+                | '\u{2029}'
+                | '\u{202F}'
+                | '\u{205F}'
+                | '\u{3000}'
+                | '\u{FEFF}'
     )
 }

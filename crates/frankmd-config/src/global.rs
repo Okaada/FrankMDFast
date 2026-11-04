@@ -34,11 +34,21 @@ pub fn load_global(path: &Path) -> (Vec<(Key, Option<Value>)>, Vec<String>) {
     let text = match std::fs::read_to_string(path) {
         Ok(t) => t,
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => return (Vec::new(), Vec::new()),
-        Err(e) => return (Vec::new(), vec![format!("Failed to load global config: {e}")]),
+        Err(e) => {
+            return (
+                Vec::new(),
+                vec![format!("Failed to load global config: {e}")],
+            );
+        }
     };
     let table = match text.parse::<toml::Table>() {
         Ok(t) => t,
-        Err(e) => return (Vec::new(), vec![format!("Failed to parse global config: {}", e.message())]),
+        Err(e) => {
+            return (
+                Vec::new(),
+                vec![format!("Failed to parse global config: {}", e.message())],
+            );
+        }
     };
     let mut values = Vec::new();
     let mut warnings = Vec::new();
@@ -48,12 +58,16 @@ pub fn load_global(path: &Path) -> (Vec<(Key, Option<Value>)>, Vec<String>) {
             continue;
         };
         if global_forbidden(key) {
-            warnings.push(format!("Global config: {name} is not allowed in the global config"));
+            warnings.push(format!(
+                "Global config: {name} is not allowed in the global config"
+            ));
             continue;
         }
         match from_toml(key, raw) {
             Ok(v) => values.push((key, v)),
-            Err(reason) => warnings.push(format!("Global config: invalid value for {name}: {reason}")),
+            Err(reason) => {
+                warnings.push(format!("Global config: invalid value for {name}: {reason}"))
+            }
         }
     }
     (values, warnings)
@@ -71,14 +85,18 @@ fn from_toml(key: Key, raw: &toml::Value) -> Result<Option<Value>, String> {
         (KeyType::String, _) => Err("expected a string".to_owned()),
         (KeyType::Integer, _) => Err("expected an integer".to_owned()),
         (KeyType::Boolean, _) => Err("expected a boolean".to_owned()),
-        (KeyType::Json | KeyType::CustomTheme, _) => Err("expected a string holding JSON".to_owned()),
+        (KeyType::Json | KeyType::CustomTheme, _) => {
+            Err("expected a string holding JSON".to_owned())
+        }
     }
 }
 
 fn to_toml(value: &Value) -> Result<toml::Value, String> {
     Ok(match value {
         Value::Str(s) => toml::Value::String(s.clone()),
-        Value::Int(i) => toml::Value::Integer(i64::try_from(*i).map_err(|_| "integer out of range".to_owned())?),
+        Value::Int(i) => {
+            toml::Value::Integer(i64::try_from(*i).map_err(|_| "integer out of range".to_owned())?)
+        }
         Value::Bool(b) => toml::Value::Boolean(*b),
         Value::Json(j) => toml::Value::String(j.to_string()),
         Value::CustomTheme(t) => toml::Value::String(t.to_json_string()),
@@ -93,7 +111,9 @@ pub fn write_global(path: &Path, changes: &[(Key, Option<Value>)]) -> Result<(),
         return Err(ConfigError::GlobalKeyNotAllowed { key: *key });
     }
     let mut table = match std::fs::read_to_string(path) {
-        Ok(text) => text.parse::<toml::Table>().map_err(|e| ConfigError::GlobalFile(e.message().to_owned()))?,
+        Ok(text) => text
+            .parse::<toml::Table>()
+            .map_err(|e| ConfigError::GlobalFile(e.message().to_owned()))?,
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => toml::Table::new(),
         Err(e) => return Err(FsError::Io(e).into()),
     };
@@ -103,7 +123,8 @@ pub fn write_global(path: &Path, changes: &[(Key, Option<Value>)]) -> Result<(),
                 table.remove(key.name());
             }
             Some(v) => {
-                let t = to_toml(v).map_err(|reason| ConfigError::InvalidValue { key: *key, reason })?;
+                let t =
+                    to_toml(v).map_err(|reason| ConfigError::InvalidValue { key: *key, reason })?;
                 table.insert(key.name().to_owned(), t);
             }
         }

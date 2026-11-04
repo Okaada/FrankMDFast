@@ -85,7 +85,11 @@ impl MessageSlot {
     /// Show a message now (replaces the previous one).
     pub fn show(&mut self, text: &str, error: bool, now: Instant) {
         let ttl = if error { ERROR_TTL } else { INFO_TTL };
-        self.current = Some(StatusMessage { text: text.to_owned(), error, expires: now + ttl });
+        self.current = Some(StatusMessage {
+            text: text.to_owned(),
+            error,
+            expires: now + ttl,
+        });
     }
 
     /// Current message at `now`, if not expired.

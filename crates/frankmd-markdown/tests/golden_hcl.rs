@@ -60,7 +60,11 @@ fn golden_hcl_tokenize() {
         }
         let got = json!({"lines": lines, "endState": state_json(&state)});
         let want = expected(case);
-        if got == want { Ok(()) } else { Err(format!("\n    got:      {got}\n    expected: {want}")) }
+        if got == want {
+            Ok(())
+        } else {
+            Err(format!("\n    got:      {got}\n    expected: {want}"))
+        }
     });
 }
 
@@ -69,11 +73,19 @@ fn golden_hcl_states() {
     let g = golden(FIXTURE);
     assert_cases(FIXTURE, g.cases_for("startState"), |case| {
         let got = state_json(&HclState::default());
-        if got == expected(case) { Ok(()) } else { Err(format!("got {got}")) }
+        if got == expected(case) {
+            Ok(())
+        } else {
+            Err(format!("got {got}"))
+        }
     });
     assert_cases(FIXTURE, g.cases_for("copyState"), |case| {
         let original = state_from(&arg(case, 0));
         let got = state_json(&original.clone());
-        if got == expected(case) { Ok(()) } else { Err(format!("got {got}")) }
+        if got == expected(case) {
+            Ok(())
+        } else {
+            Err(format!("got {got}"))
+        }
     });
 }

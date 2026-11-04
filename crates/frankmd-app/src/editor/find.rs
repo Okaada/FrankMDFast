@@ -181,8 +181,12 @@ impl FindState {
             return None;
         }
         let count = self.matches.len();
-        let updated =
-            replace_matches(text, &self.matches, &self.replacement, self.options.use_regex);
+        let updated = replace_matches(
+            text,
+            &self.matches,
+            &self.replacement,
+            self.options.use_regex,
+        );
         let caret = caret.min(updated.len());
         let caret = (0..=caret)
             .rev()

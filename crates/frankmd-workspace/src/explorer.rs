@@ -235,7 +235,11 @@ impl Explorer {
             self.select_only(to);
             return;
         };
-        let mut next = if additive { self.selection.clone() } else { Vec::new() };
+        let mut next = if additive {
+            self.selection.clone()
+        } else {
+            Vec::new()
+        };
         for item in range {
             if !next.iter().any(|i| i.path == item.path) {
                 next.push(item.clone());
@@ -323,7 +327,10 @@ impl Explorer {
     pub fn menu_items(target: &MenuTarget) -> Vec<MenuItem> {
         use MenuItem::*;
         match target {
-            MenuTarget::Row(Item { kind: ItemKind::File, .. }) => vec![Rename, MoveTo, Delete],
+            MenuTarget::Row(Item {
+                kind: ItemKind::File,
+                ..
+            }) => vec![Rename, MoveTo, Delete],
             MenuTarget::Row(_) => vec![NewNote, NewFolder, Rename, MoveTo, Delete],
             MenuTarget::Background => vec![NewNote, NewFolder, SelectAll, FindFile, CollapseAll],
         }
@@ -343,7 +350,12 @@ impl Explorer {
     /// else the root (`""`).
     pub fn creation_folder(&self) -> String {
         match self.selection.as_slice() {
-            [Item { path, kind: ItemKind::Folder }] => path.clone(),
+            [
+                Item {
+                    path,
+                    kind: ItemKind::Folder,
+                },
+            ] => path.clone(),
             _ => String::new(),
         }
     }
@@ -399,9 +411,10 @@ impl Explorer {
             DropHover::File(p) => parent_of(p),
             DropHover::Background => "",
         };
-        let blocked = self.drag.iter().any(|d| {
-            d.kind == ItemKind::Folder && is_same_or_inside(dest, &d.path)
-        });
+        let blocked = self
+            .drag
+            .iter()
+            .any(|d| d.kind == ItemKind::Folder && is_same_or_inside(dest, &d.path));
         let all_there = self.drag.iter().all(|d| parent_of(&d.path) == dest);
         if blocked || all_there {
             return None;

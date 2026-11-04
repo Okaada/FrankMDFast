@@ -11,7 +11,10 @@ use frankmd_media::usage::MediaUsage;
 use library::{Notes, chmod, is_root};
 
 fn index(pairs: &[(&str, &[&str])]) -> BTreeMap<String, Vec<String>> {
-    pairs.iter().map(|(k, v)| ((*k).to_owned(), v.iter().map(|s| (*s).to_owned()).collect())).collect()
+    pairs
+        .iter()
+        .map(|(k, v)| ((*k).to_owned(), v.iter().map(|s| (*s).to_owned()).collect()))
+        .collect()
 }
 
 fn build(n: &Notes) -> BTreeMap<String, Vec<String>> {
@@ -35,7 +38,10 @@ fn indexes_images_links_and_html_video_sources_by_distinct_note() {
         build(&n),
         index(&[
             ("images/diagram (draft).png", &["projects/guides/guide.md"]),
-            ("images/my cat.png", &["index.md", "projects/guides/guide.md"]),
+            (
+                "images/my cat.png",
+                &["index.md", "projects/guides/guide.md"]
+            ),
             ("videos/clips/clip one.mp4", &["projects/guides/guide.md"]),
         ])
     );
@@ -118,8 +124,14 @@ fn does_not_count_an_unused_reference_definition() {
 #[test]
 fn counts_duplicate_reference_uses_once_per_note() {
     let n = Notes::new();
-    n.write("duplicates.md", "![first][photo]\n[second][  PHOTO ]\n![photo][]\n[photo]\n[photo]: images/photo.png\n");
-    assert_eq!(build(&n), index(&[("images/photo.png", &["duplicates.md"])]));
+    n.write(
+        "duplicates.md",
+        "![first][photo]\n[second][  PHOTO ]\n![photo][]\n[photo]\n[photo]: images/photo.png\n",
+    );
+    assert_eq!(
+        build(&n),
+        index(&[("images/photo.png", &["duplicates.md"])])
+    );
 }
 
 // port: test/services/media_usage_service_test.rb:125 "ignores plain text, unrelated URL substrings, and references inside code"
@@ -153,7 +165,10 @@ fn resolves_note_relative_and_rejects_outside_root() {
         "nested/page.md",
         "![photo](../images/photo.png)\n![outside](../../images/outside.png)\n![wrong root](../notes/images/wrong-root.png)\n",
     );
-    assert_eq!(build(&n), index(&[("images/photo.png", &["nested/page.md"])]));
+    assert_eq!(
+        build(&n),
+        index(&[("images/photo.png", &["nested/page.md"])])
+    );
 }
 
 // port: test/services/media_usage_service_test.rb:159 "ignores hidden notes and symlinked Markdown files"
@@ -179,7 +194,9 @@ fn raises_instead_of_partial_index_when_a_note_cannot_be_read() {
     let unreadable = n.write("unreadable.md", "![other](images/other.png)");
     // `Pathname.any_instance.stubs(:read).raises(Errno::EACCES)` → mode 000.
     let _guard = chmod(&unreadable, 0o000);
-    let err = MediaUsage::new(n.root()).build_index().expect_err("scan error");
+    let err = MediaUsage::new(n.root())
+        .build_index()
+        .expect_err("scan error");
     match err {
         MediaError::Scan(msg) => assert!(msg.contains("Could not read Markdown note"), "{msg}"),
         other => panic!("expected ScanError, got {other:?}"),
@@ -204,9 +221,15 @@ fn rebuilds_the_index_after_a_note_is_edited() {
     let n = Notes::new();
     let note = n.write("edited.md", "![photo](images/old.png)");
     let usage = MediaUsage::new(n.root());
-    assert_eq!(*usage.build_index().expect("first"), index(&[("images/old.png", &["edited.md"])]));
+    assert_eq!(
+        *usage.build_index().expect("first"),
+        index(&[("images/old.png", &["edited.md"])])
+    );
     std::fs::write(&note, "![photo](images/new.png)").expect("edit");
-    assert_eq!(*usage.build_index().expect("second"), index(&[("images/new.png", &["edited.md"])]));
+    assert_eq!(
+        *usage.build_index().expect("second"),
+        index(&[("images/new.png", &["edited.md"])])
+    );
 }
 
 // security: a symlinked directory whose target is outside the notes root is never scanned.

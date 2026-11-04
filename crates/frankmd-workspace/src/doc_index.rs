@@ -40,7 +40,10 @@ impl DocIndex {
             .ok()
             .and_then(|bytes| serde_json::from_slice::<BTreeMap<String, DocId>>(&bytes).ok())
             .unwrap_or_default();
-        Self { file: Some(file), by_path }
+        Self {
+            file: Some(file),
+            by_path,
+        }
     }
 
     /// The id last recorded for `path`.
@@ -87,7 +90,11 @@ impl DocIndex {
             return;
         };
         if let Ok(bytes) = serde_json::to_vec(&self.by_path) {
-            let _ = frankmd_fs::atomic::atomic_replace(file, &bytes, frankmd_fs::atomic::ModePolicy::Fixed(0o600));
+            let _ = frankmd_fs::atomic::atomic_replace(
+                file,
+                &bytes,
+                frankmd_fs::atomic::ModePolicy::Fixed(0o600),
+            );
         }
     }
 }

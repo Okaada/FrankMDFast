@@ -24,27 +24,42 @@ fn relative_is_two() {
 // port: test/javascript/lib/line_numbers.test.js:27 "returns fallback for undefined value"
 #[test]
 fn undefined_returns_fallback() {
-    assert_eq!(normalize_line_number_mode(None, LineNumberMode::Off), LineNumberMode::Off);
+    assert_eq!(
+        normalize_line_number_mode(None, LineNumberMode::Off),
+        LineNumberMode::Off
+    );
 }
 
 // port: test/javascript/lib/line_numbers.test.js:31 "parses string values"
 #[test]
 fn parses_string_values() {
-    assert_eq!(normalize_line_number_mode(Some("1"), LineNumberMode::Off), LineNumberMode::Absolute);
+    assert_eq!(
+        normalize_line_number_mode(Some("1"), LineNumberMode::Off),
+        LineNumberMode::Absolute
+    );
 }
 
 // port: test/javascript/lib/line_numbers.test.js:35 "accepts numeric values"
 // (numbers arrive as their string form, e.g. from `.fed`)
 #[test]
 fn accepts_numeric_values() {
-    assert_eq!(normalize_line_number_mode(Some(&2.to_string()), LineNumberMode::Off), LineNumberMode::Relative);
+    assert_eq!(
+        normalize_line_number_mode(Some(&2.to_string()), LineNumberMode::Off),
+        LineNumberMode::Relative
+    );
 }
 
 // port: test/javascript/lib/line_numbers.test.js:39 "returns fallback for invalid values"
 #[test]
 fn invalid_returns_fallback() {
-    assert_eq!(normalize_line_number_mode(Some("99"), LineNumberMode::Absolute), LineNumberMode::Absolute);
-    assert_eq!(normalize_line_number_mode(Some("invalid"), LineNumberMode::Off), LineNumberMode::Off);
+    assert_eq!(
+        normalize_line_number_mode(Some("99"), LineNumberMode::Absolute),
+        LineNumberMode::Absolute
+    );
+    assert_eq!(
+        normalize_line_number_mode(Some("invalid"), LineNumberMode::Off),
+        LineNumberMode::Off
+    );
 }
 
 // port: test/javascript/lib/line_numbers.test.js:46 "cycles OFF to ABSOLUTE"

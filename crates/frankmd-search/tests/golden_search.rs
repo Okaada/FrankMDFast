@@ -59,12 +59,21 @@ fn run_service_case(case: &Case) -> Result<(), String> {
     sb.build(&sb.outside, &input["outside"], &|_| None);
     let reported: BTreeMap<String, f64> = expected
         .iter()
-        .map(|h| (h["path"].as_str().unwrap().to_owned(), parse_iso_millis_utc(h["mtime"].as_str().unwrap())))
+        .map(|h| {
+            (
+                h["path"].as_str().unwrap().to_owned(),
+                parse_iso_millis_utc(h["mtime"].as_str().unwrap()),
+            )
+        })
         .collect();
     sb.build(&sb.root, &input["tree"], &|rel| {
         // explicit mtimes in the spec win (applied inside build when this is None)
         let explicit = input["tree"][rel].get("mtime").is_some();
-        if explicit { None } else { reported.get(rel).copied() }
+        if explicit {
+            None
+        } else {
+            reported.get(rel).copied()
+        }
     });
 
     // Per-case setup done by the Ruby generator's block.
@@ -99,7 +108,11 @@ fn run_service_case(case: &Case) -> Result<(), String> {
     if case.name.contains("readdir order") {
         // Only the count and the mtime-desc ordering are contractual.
         if actual.len() != expected.len() {
-            return Err(format!("expected {} results, got {}", expected.len(), actual.len()));
+            return Err(format!(
+                "expected {} results, got {}",
+                expected.len(),
+                actual.len()
+            ));
         }
         let keys: Vec<i64> = actual.iter().map(mtime_key).collect();
         if keys.windows(2).any(|w| w[0] < w[1]) {
@@ -113,7 +126,11 @@ fn run_service_case(case: &Case) -> Result<(), String> {
 #[test]
 fn golden_search_content() {
     let g = golden("search");
-    assert_cases("search.json", g.cases_for("NotesService#search_content"), run_service_case);
+    assert_cases(
+        "search.json",
+        g.cases_for("NotesService#search_content"),
+        run_service_case,
+    );
 }
 
 /// `GET /notes/search` = `search_content(q, context_lines: 3, max_results: 20)`.
@@ -122,13 +139,23 @@ fn golden_search_content() {
 #[test]
 fn golden_search_http() {
     let g = golden("search");
-    let cases = g.cases_for("http").filter(|c| c.input["accept"] == "application/json");
+    let cases = g
+        .cases_for("http")
+        .filter(|c| c.input["accept"] == "application/json");
     assert_cases("search.json#http", cases, |case| {
         let sb = Sandbox::new();
         for i in 0..25 {
-            sb.note(&format!("n{i:02}.md"), format!("findme {i}"), (BASE_MTIME - i) as f64);
+            sb.note(
+                &format!("n{i:02}.md"),
+                format!("findme {i}"),
+                (BASE_MTIME - i) as f64,
+            );
         }
-        sb.note("one.md", "single <b>hit</b> & \"q\"", (BASE_MTIME + 100) as f64);
+        sb.note(
+            "one.md",
+            "single <b>hit</b> & \"q\"",
+            (BASE_MTIME + 100) as f64,
+        );
         let r = content::search(&sb.root, &Query::ui(case.input["query"].as_str().unwrap()));
         let actual: Vec<Value> = r.hits.iter().map(hit_json).collect();
         let exp = &case.expected;

@@ -50,15 +50,21 @@ impl MediaHost {
             cx.new(|cx| GrammarDialog::new(services, window, cx))
         });
         if let Some(hub) = &hub {
-            subs.push(cx.subscribe_in(&hub.picker, window, |shell, _, ev: &MediaEvent, window, cx| {
-                shell.on_media_event(ev, window, cx)
-            }));
-            subs.push(cx.subscribe_in(&hub.video, window, |shell, _, ev: &MediaEvent, window, cx| {
-                shell.on_media_event(ev, window, cx)
-            }));
-            subs.push(cx.subscribe_in(&hub.library, window, |shell, _, ev: &MediaEvent, window, cx| {
-                shell.on_media_event(ev, window, cx)
-            }));
+            subs.push(cx.subscribe_in(
+                &hub.picker,
+                window,
+                |shell, _, ev: &MediaEvent, window, cx| shell.on_media_event(ev, window, cx),
+            ));
+            subs.push(cx.subscribe_in(
+                &hub.video,
+                window,
+                |shell, _, ev: &MediaEvent, window, cx| shell.on_media_event(ev, window, cx),
+            ));
+            subs.push(cx.subscribe_in(
+                &hub.library,
+                window,
+                |shell, _, ev: &MediaEvent, window, cx| shell.on_media_event(ev, window, cx),
+            ));
             subs.push(cx.subscribe_in(
                 &hub.storage,
                 window,
@@ -71,9 +77,11 @@ impl MediaHost {
             ));
         }
         if let Some(grammar) = &grammar {
-            subs.push(cx.subscribe_in(grammar, window, |shell, _, ev: &GrammarEvent, window, cx| {
-                shell.on_grammar_event(ev, window, cx)
-            }));
+            subs.push(cx.subscribe_in(
+                grammar,
+                window,
+                |shell, _, ev: &GrammarEvent, window, cx| shell.on_grammar_event(ev, window, cx),
+            ));
         }
         (
             Self {
@@ -94,12 +102,19 @@ impl Shell {
         cx: &mut Context<Self>,
     ) -> Subscription {
         let pane = self.editor.pane.clone();
-        cx.subscribe_in(&pane, window, |shell, _, req: &EditorRequest, window, cx| {
-            shell.on_editor_request(req, window, cx)
-        })
+        cx.subscribe_in(
+            &pane,
+            window,
+            |shell, _, req: &EditorRequest, window, cx| shell.on_editor_request(req, window, cx),
+        )
     }
 
-    fn on_editor_request(&mut self, req: &EditorRequest, window: &mut Window, cx: &mut Context<Self>) {
+    fn on_editor_request(
+        &mut self,
+        req: &EditorRequest,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
         match req {
             EditorRequest::OpenLink(url) => self.open_link(url, window, cx),
             EditorRequest::OpenWikilink(target) => self.open_wikilink(target, window, cx),
@@ -110,8 +125,12 @@ impl Shell {
                 }
                 self.focus_region(FocusRegion::Preview, window, cx);
             }
-            EditorRequest::OpenMediaDialog(PendingAction::Image) => self.open_insert_image(window, cx),
-            EditorRequest::OpenMediaDialog(PendingAction::Video) => self.open_insert_video(window, cx),
+            EditorRequest::OpenMediaDialog(PendingAction::Image) => {
+                self.open_insert_image(window, cx)
+            }
+            EditorRequest::OpenMediaDialog(PendingAction::Video) => {
+                self.open_insert_video(window, cx)
+            }
             EditorRequest::OpenMediaDialog(_) => {}
         }
     }
@@ -120,7 +139,10 @@ impl Shell {
     /// SECURITY allowlist); a relative link opens the note it names.
     fn open_link(&mut self, url: &str, window: &mut Window, cx: &mut Context<Self>) {
         let lower = url.trim().to_ascii_lowercase();
-        if lower.starts_with("https://") || lower.starts_with("http://") || lower.starts_with("mailto:") {
+        if lower.starts_with("https://")
+            || lower.starts_with("http://")
+            || lower.starts_with("mailto:")
+        {
             cx.open_url(url.trim());
             return;
         }
@@ -237,7 +259,11 @@ impl Shell {
         match kind {
             INSERT_IMAGE => Some(hub.picker.clone().into_any_element()),
             INSERT_VIDEO => Some(hub.video.clone().into_any_element()),
-            GRAMMAR => self.media.grammar.clone().map(IntoElement::into_any_element),
+            GRAMMAR => self
+                .media
+                .grammar
+                .clone()
+                .map(IntoElement::into_any_element),
             _ => None,
         }
     }
@@ -273,7 +299,9 @@ impl Shell {
                 self.focus_region(FocusRegion::Editor, window, cx);
             }
             MediaEvent::Closed => {
-                self.editor.pane.update(cx, |p, _| p.clear_pending_insertion());
+                self.editor
+                    .pane
+                    .update(cx, |p, _| p.clear_pending_insertion());
                 if self.overlays.current().is_some() {
                     self.close_overlay(window, cx);
                 }
@@ -318,7 +346,12 @@ impl Shell {
     fn on_grammar_event(&mut self, ev: &GrammarEvent, window: &mut Window, cx: &mut Context<Self>) {
         match ev {
             GrammarEvent::FlushAutosave => {
-                if let Some(doc) = self.core.as_ref().and_then(|c| c.ws.open_doc()).map(|d| d.id) {
+                if let Some(doc) = self
+                    .core
+                    .as_ref()
+                    .and_then(|c| c.ws.open_doc())
+                    .map(|d| d.id)
+                {
                     self.dispatch(Command::SaveNow { doc }, window, cx);
                 }
             }
@@ -337,7 +370,9 @@ impl Shell {
                 }
                 .minimized(&old);
                 self.overlays.close();
-                self.editor.pane.update(cx, |p, cx| p.apply_edit(edit, window, cx));
+                self.editor
+                    .pane
+                    .update(cx, |p, cx| p.apply_edit(edit, window, cx));
                 self.focus_region(FocusRegion::Editor, window, cx);
             }
             GrammarEvent::Closed => {

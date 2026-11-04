@@ -12,10 +12,20 @@ fn provider_switch_waits_for_the_ack_and_releases_uploads() {
     let mut s = MediaStorageState::new(Provider::Local, true);
     assert!(s.request(Provider::S3));
     assert!(s.controls_disabled());
-    assert_eq!(s.provider(), Provider::Local, "shows the acknowledged value while pending");
+    assert_eq!(
+        s.provider(),
+        Provider::Local,
+        "shows the acknowledged value while pending"
+    );
     assert_eq!(s.ready(), Ready::Wait);
     let out = s.ack(Ok((Provider::S3, true)));
-    assert_eq!(out, AckOutcome { saved: true, released: 1 });
+    assert_eq!(
+        out,
+        AckOutcome {
+            saved: true,
+            released: 1
+        }
+    );
     assert_eq!(s.provider(), Provider::S3);
     assert!(!s.controls_disabled());
     assert_eq!(s.ready(), Ready::Go);
@@ -28,7 +38,13 @@ fn failed_save_keeps_the_previous_provider_and_fails_waiters() {
     s.request(Provider::S3);
     assert_eq!(s.ready(), Ready::Wait);
     let out = s.ack(Err(None));
-    assert_eq!(out, AckOutcome { saved: false, released: 1 });
+    assert_eq!(
+        out,
+        AckOutcome {
+            saved: false,
+            released: 1
+        }
+    );
     assert_eq!(s.provider(), Provider::Local);
     assert_eq!(s.error(), Some(&Text::key("media_storage.save_failed")));
     s.request(Provider::S3);
@@ -41,7 +57,10 @@ fn failed_save_keeps_the_previous_provider_and_fails_waiters() {
 fn s3_cannot_be_picked_when_not_configured() {
     let mut s = MediaStorageState::new(Provider::Local, false);
     assert!(!s.request(Provider::S3));
-    assert_eq!(s.s3_disabled_reason(), Some(Text::key("media_storage.not_configured")));
+    assert_eq!(
+        s.s3_disabled_reason(),
+        Some(Text::key("media_storage.not_configured"))
+    );
     assert!(!s.request(Provider::Local), "same value: nothing to save");
 }
 
@@ -56,7 +75,10 @@ fn fallback_is_announced_exactly_once() {
     let mut user = MediaStorageState::new(Provider::S3, true);
     user.request(Provider::Local);
     user.ack(Ok((Provider::Local, true)));
-    assert!(!user.apply(Provider::Local, true, false), "a user switch is not a fallback");
+    assert!(
+        !user.apply(Provider::Local, true, false),
+        "a user switch is not a fallback"
+    );
 }
 
 // adapts: s3_option_controller.test.js rows 1, 5-10
@@ -86,7 +108,10 @@ fn s3_availability_drives_the_row() {
     assert_eq!(row.provider(), Provider::Local);
     assert_eq!(row.resize(), 0.5);
     assert!(!row.s3_enabled());
-    assert_eq!(StorageRow::new(Provider::S3, false).provider(), Provider::Local);
+    assert_eq!(
+        StorageRow::new(Provider::S3, false).provider(),
+        Provider::Local
+    );
 }
 
 // adapts: s3_option_controller.test.js rows 11-15
@@ -100,7 +125,11 @@ fn destination_key_defaults_trim_and_stick() {
     row.on_key_edited("  blog/hero.png  ");
     assert_eq!(row.key_value().as_deref(), Some("blog/hero.png"));
     row.set_default_key("frankmd/2026/07/b.png");
-    assert_eq!(row.key_text(), "  blog/hero.png  ", "user edits survive a new selection");
+    assert_eq!(
+        row.key_text(),
+        "  blog/hero.png  ",
+        "user edits survive a new selection"
+    );
     row.set_provider(Provider::Local);
     assert_eq!(row.key_value(), None, "key only for S3");
     row.reset(Provider::Local);
@@ -114,7 +143,11 @@ fn reset_and_default_row() {
     let mut row = StorageRow::new(Provider::S3, true);
     row.set_resize(1.0);
     row.reset(Provider::Local);
-    assert_eq!(row.provider(), Provider::Local, "reset goes to the global default");
+    assert_eq!(
+        row.provider(),
+        Provider::Local,
+        "reset goes to the global default"
+    );
     assert!(!row.resize_enabled());
     assert_eq!(row.resize(), 0.5);
     row.reset(Provider::S3);

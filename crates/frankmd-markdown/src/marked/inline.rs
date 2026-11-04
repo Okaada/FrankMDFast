@@ -23,7 +23,9 @@ impl Lexer {
     pub(super) fn fill_inline(&mut self, tokens: &mut [BlockTok]) {
         for t in tokens {
             match &mut t.kind {
-                BlockKind::Heading { inl, .. } | BlockKind::Paragraph { inl } | BlockKind::Text { inl } => {
+                BlockKind::Heading { inl, .. }
+                | BlockKind::Paragraph { inl }
+                | BlockKind::Text { inl } => {
                     inl.tokens = self.inline_tokens(&inl.text);
                 }
                 BlockKind::Table { header, rows, .. } => {
@@ -59,7 +61,9 @@ impl Lexer {
             }
             keep_prev_char = false;
             let masked_rest = &masked[masked.len() - rest.len()..];
-            let Some((len, tok)) = self.inline_step(rest, masked_rest, prev_char, &mut keep_prev_char) else {
+            let Some((len, tok)) =
+                self.inline_step(rest, masked_rest, prev_char, &mut keep_prev_char)
+            else {
                 break;
             };
             if let InlineTok::Text { raw, .. } = &tok
@@ -88,15 +92,31 @@ impl Lexer {
                 if self.links.contains_key(label) {
                     masked = blot(&masked, whole.clone(), '[', 'a', ']');
                 }
-                last = if whole.is_empty() { whole.end + 1 } else { whole.end };
+                last = if whole.is_empty() {
+                    whole.end + 1
+                } else {
+                    whole.end
+                };
             }
         }
-        let mut last = if src.contains(['[', '`', '<']) { 0 } else { masked.len() + 1 };
+        let mut last = if src.contains(['[', '`', '<']) {
+            0
+        } else {
+            masked.len() + 1
+        };
         while let Some(whole) = match_range(&rules::BLOCK_SKIP, &masked, last) {
             masked = blot(&masked, whole.clone(), '[', 'a', ']');
-            last = if whole.is_empty() { whole.end + 1 } else { whole.end };
+            last = if whole.is_empty() {
+                whole.end + 1
+            } else {
+                whole.end
+            };
         }
-        let mut last = if src.contains('\\') { 0 } else { masked.len() + 1 };
+        let mut last = if src.contains('\\') {
+            0
+        } else {
+            masked.len() + 1
+        };
         while let Some(whole) = match_range(&rules::ANY_PUNCTUATION, &masked, last) {
             masked = blot(&masked, whole.clone(), '+', '+', '+');
             last = whole.end.max(last + 1);
@@ -117,8 +137,14 @@ impl Lexer {
             return Some(r);
         }
         // escape
-        if let Some(cap) = (first == b'\\').then(|| exec(&rules::ESCAPE, src)).flatten() {
-            return Some((group(&cap, 0).len(), InlineTok::Escape(group(&cap, 1).to_owned())));
+        if let Some(cap) = (first == b'\\')
+            .then(|| exec(&rules::ESCAPE, src))
+            .flatten()
+        {
+            return Some((
+                group(&cap, 0).len(),
+                InlineTok::Escape(group(&cap, 1).to_owned()),
+            ));
         }
         // tag
         if let Some(cap) = (first == b'<').then(|| exec(&rules::TAG, src)).flatten() {
@@ -145,11 +171,17 @@ impl Lexer {
             return Some(r);
         }
         // em & strong
-        if let Some(r) = matches!(first, b'*' | b'_').then(|| self.em_strong(src, masked, prev_char)).flatten() {
+        if let Some(r) = matches!(first, b'*' | b'_')
+            .then(|| self.em_strong(src, masked, prev_char))
+            .flatten()
+        {
             return Some(r);
         }
         // code
-        if let Some(cap) = (first == b'`').then(|| exec(&rules::CODESPAN, src)).flatten() {
+        if let Some(cap) = (first == b'`')
+            .then(|| exec(&rules::CODESPAN, src))
+            .flatten()
+        {
             let mut text = group(&cap, 2).replace('\n', " ");
             let has_non_space = text.bytes().any(|b| b != b' ');
             if has_non_space && text.starts_with(' ') && text.ends_with(' ') {
@@ -158,7 +190,10 @@ impl Lexer {
             return Some((group(&cap, 0).len(), InlineTok::Codespan(text)));
         }
         // br
-        if let Some(cap) = matches!(first, b' ' | b'\\' | b'\n').then(|| exec(&rules::BR, src)).flatten() {
+        if let Some(cap) = matches!(first, b' ' | b'\\' | b'\n')
+            .then(|| exec(&rules::BR, src))
+            .flatten()
+        {
             return Some((group(&cap, 0).len(), InlineTok::Br));
         }
         // del (gfm)
@@ -167,9 +202,16 @@ impl Lexer {
             return Some((group(&cap, 0).len(), InlineTok::Del(children)));
         }
         // autolink
-        if let Some(cap) = (first == b'<').then(|| exec(&rules::AUTOLINK, src)).flatten() {
+        if let Some(cap) = (first == b'<')
+            .then(|| exec(&rules::AUTOLINK, src))
+            .flatten()
+        {
             let text = group(&cap, 1).to_owned();
-            let href = if group(&cap, 2) == "@" { format!("mailto:{text}") } else { text.clone() };
+            let href = if group(&cap, 2) == "@" {
+                format!("mailto:{text}")
+            } else {
+                text.clone()
+            };
             return Some((group(&cap, 0).len(), link_token(href, text)));
         }
         // url (gfm)
@@ -183,13 +225,18 @@ impl Lexer {
             } else {
                 let mut cur = group(&cap, 0).to_owned();
                 loop {
-                    let next = search(&rules::BACKPEDAL, &cur).map_or(String::new(), |m| group(&m, 0).to_owned());
+                    let next = search(&rules::BACKPEDAL, &cur)
+                        .map_or(String::new(), |m| group(&m, 0).to_owned());
                     if next == cur {
                         break;
                     }
                     cur = next;
                 }
-                let href = if group(&cap, 1) == "www." { format!("http://{cur}") } else { cur.clone() };
+                let href = if group(&cap, 1) == "www." {
+                    format!("http://{cur}")
+                } else {
+                    cur.clone()
+                };
                 (cur, href)
             };
             if !text.is_empty() {
@@ -207,7 +254,14 @@ impl Lexer {
         }
         let raw = &cut[..inline_text_len(cut)?];
         *keep_prev_char = true;
-        Some((raw.len(), InlineTok::Text { raw: raw.to_owned(), text: raw.to_owned(), escaped: self.in_raw_block }))
+        Some((
+            raw.len(),
+            InlineTok::Text {
+                raw: raw.to_owned(),
+                text: raw.to_owned(),
+                escaped: self.in_raw_block,
+            },
+        ))
     }
 
     /// `Tokenizer.link`.
@@ -234,14 +288,25 @@ impl Lexer {
             whole = js_trim(&whole[..link_len.min(whole.len())]);
             title_src = "";
         }
-        let title = if title_src.is_empty() { String::new() } else { title_src[1..title_src.len() - 1].to_owned() };
+        let title = if title_src.is_empty() {
+            String::new()
+        } else {
+            title_src[1..title_src.len() - 1].to_owned()
+        };
         let mut href = js_trim(href_src);
         if href.starts_with('<') {
-            href = if href.len() >= 2 { &href[1..href.len() - 1] } else { "" };
+            href = if href.len() >= 2 {
+                &href[1..href.len() - 1]
+            } else {
+                ""
+            };
         }
         let href = rules::unescape_punctuation(href);
         let title = rules::unescape_punctuation(&title);
-        let def = LinkDef { href, title: (!title.is_empty()).then_some(title) };
+        let def = LinkDef {
+            href,
+            title: (!title.is_empty()).then_some(title),
+        };
         Some((whole.len(), self.output_link(whole, label, &def)))
     }
 
@@ -254,7 +319,14 @@ impl Lexer {
         let key = collapse_js_space(reference).to_lowercase();
         let Some(def) = self.links.get(&key).cloned() else {
             let first = whole.chars().next().map_or_else(String::new, String::from);
-            return Some((first.len(), InlineTok::Text { raw: first.clone(), text: first, escaped: false }));
+            return Some((
+                first.len(),
+                InlineTok::Text {
+                    raw: first.clone(),
+                    text: first,
+                    escaped: false,
+                },
+            ));
         };
         Some((whole.len(), self.output_link(whole, label, &def)))
     }
@@ -263,16 +335,29 @@ impl Lexer {
     fn output_link(&mut self, whole: &str, label: &str, def: &LinkDef) -> InlineTok {
         let text = label.replace("\\[", "[").replace("\\]", "]");
         if whole.starts_with('!') {
-            return InlineTok::Image { href: def.href.clone(), title: def.title.clone(), text };
+            return InlineTok::Image {
+                href: def.href.clone(),
+                title: def.title.clone(),
+                text,
+            };
         }
         self.in_link = true;
         let children = self.inline_tokens(&text);
         self.in_link = false;
-        InlineTok::Link { href: def.href.clone(), title: def.title.clone(), children }
+        InlineTok::Link {
+            href: def.href.clone(),
+            title: def.title.clone(),
+            children,
+        }
     }
 
     /// `Tokenizer.emStrong(src, maskedSrc, prevChar)`.
-    fn em_strong(&mut self, src: &str, masked: &str, prev_char: Option<char>) -> Option<(usize, InlineTok)> {
+    fn em_strong(
+        &mut self,
+        src: &str,
+        masked: &str,
+        prev_char: Option<char>,
+    ) -> Option<(usize, InlineTok)> {
         let m = exec(&rules::EM_STRONG_LDELIM, src)?;
         let prev = prev_char.map(String::from).unwrap_or_default();
         if has(&m, 3) && search(&rules::UNICODE_ALNUM, &prev).is_some() {
@@ -287,18 +372,31 @@ impl Lexer {
         let l_bytes = m0.len() - m0.chars().last().map_or(0, char::len_utf8);
         let mut delim_total = l_length as i64;
         let mut mid_delim_total: i64 = 0;
-        let end_re = if m0.starts_with('*') { &rules::EM_STRONG_RDELIM_AST } else { &rules::EM_STRONG_RDELIM_UND };
+        let end_re = if m0.starts_with('*') {
+            &rules::EM_STRONG_RDELIM_AST
+        } else {
+            &rules::EM_STRONG_RDELIM_UND
+        };
         let masked = tail(masked, l_bytes);
         let mut last_index = 0;
         while let Some(mm) = exec_from(end_re, masked, last_index) {
             let whole = mm.get(0).map_or(0..0, |g| g.range());
-            last_index = if whole.is_empty() { whole.end + 1 } else { whole.end };
-            let Some(r_delim) = (1..=6).find(|&i| has(&mm, i)).map(|i| group(&mm, i)) else { continue };
+            last_index = if whole.is_empty() {
+                whole.end + 1
+            } else {
+                whole.end
+            };
+            let Some(r_delim) = (1..=6).find(|&i| has(&mm, i)).map(|i| group(&mm, i)) else {
+                continue;
+            };
             let mut r_length = r_delim.chars().count() as i64;
             if has(&mm, 3) || has(&mm, 4) {
                 delim_total += r_length;
                 continue;
-            } else if (has(&mm, 5) || has(&mm, 6)) && !l_length.is_multiple_of(3) && (l_length as i64 + r_length) % 3 == 0 {
+            } else if (has(&mm, 5) || has(&mm, 6))
+                && !l_length.is_multiple_of(3)
+                && (l_length as i64 + r_length) % 3 == 0
+            {
                 mid_delim_total += r_length;
                 continue;
             }
@@ -307,14 +405,25 @@ impl Lexer {
                 continue;
             }
             r_length = r_length.min(r_length + delim_total + mid_delim_total);
-            let last_char_len = masked[whole.start..].chars().next().map_or(0, char::len_utf8);
-            let end = l_bytes + whole.start + last_char_len + usize::try_from(r_length).unwrap_or(0);
+            let last_char_len = masked[whole.start..]
+                .chars()
+                .next()
+                .map_or(0, char::len_utf8);
+            let end =
+                l_bytes + whole.start + last_char_len + usize::try_from(r_length).unwrap_or(0);
             let raw = src.get(..end)?;
             let em = (l_length as i64).min(r_length) % 2 == 1;
             let cut = if em { 1 } else { 2 };
             let text = raw.get(cut..raw.len().checked_sub(cut)?)?.to_owned();
             let children = self.inline_tokens(&text);
-            return Some((raw.len(), if em { InlineTok::Em(children) } else { InlineTok::Strong(children) }));
+            return Some((
+                raw.len(),
+                if em {
+                    InlineTok::Em(children)
+                } else {
+                    InlineTok::Strong(children)
+                },
+            ));
         }
         None
     }
@@ -323,24 +432,53 @@ impl Lexer {
 /// Try FrankMD's inline extension tokenizers at the start of `src`.
 fn extension(src: &str) -> Option<(usize, InlineTok)> {
     // Every extension token starts with one of these (`$ [ : = ~ ^`).
-    if !matches!(src.as_bytes().first(), Some(b'$' | b'[' | b':' | b'=' | b'~' | b'^')) {
+    if !matches!(
+        src.as_bytes().first(),
+        Some(b'$' | b'[' | b':' | b'=' | b'~' | b'^')
+    ) {
         return None;
     }
     for e in INLINE_EXTENSIONS {
         let r = match e {
-            Extension::MathInline => ext::scan_math_inline(src).map(|s| (s.raw_len, InlineTok::Math(s.value))),
-            Extension::Wikilink => ext::scan_wikilink(src)
-                .map(|s| (s.raw_len, InlineTok::Wikilink { target: s.value.target, display: s.value.display })),
+            Extension::MathInline => {
+                ext::scan_math_inline(src).map(|s| (s.raw_len, InlineTok::Math(s.value)))
+            }
+            Extension::Wikilink => ext::scan_wikilink(src).map(|s| {
+                (
+                    s.raw_len,
+                    InlineTok::Wikilink {
+                        target: s.value.target,
+                        display: s.value.display,
+                    },
+                )
+            }),
             Extension::Icon => ext::scan_icon(src).map(|s| {
                 let v = s.value;
-                (s.raw_len, InlineTok::Icon { name: v.name, path: v.path, view_box: v.view_box })
+                (
+                    s.raw_len,
+                    InlineTok::Icon {
+                        name: v.name,
+                        path: v.path,
+                        view_box: v.view_box,
+                    },
+                )
             }),
             Extension::Emoji => ext::scan_emoji(src).map(|s| {
                 let shortcode = src[1..s.raw_len - 1].to_owned();
-                (s.raw_len, InlineTok::Emoji { shortcode, emoji: s.value })
+                (
+                    s.raw_len,
+                    InlineTok::Emoji {
+                        shortcode,
+                        emoji: s.value,
+                    },
+                )
             }),
-            Extension::Highlight => ext::scan_highlight(src).map(|s| (s.raw_len, InlineTok::Highlight(s.value))),
-            Extension::Subscript => ext::scan_subscript(src).map(|s| (s.raw_len, InlineTok::Subscript(s.value))),
+            Extension::Highlight => {
+                ext::scan_highlight(src).map(|s| (s.raw_len, InlineTok::Highlight(s.value)))
+            }
+            Extension::Subscript => {
+                ext::scan_subscript(src).map(|s| (s.raw_len, InlineTok::Subscript(s.value)))
+            }
             Extension::Superscript => {
                 ext::scan_superscript(src).map(|s| (s.raw_len, InlineTok::Superscript(s.value)))
             }
@@ -371,7 +509,9 @@ fn inline_text_len(src: &str) -> Option<usize> {
     }
     loop {
         let rest = &src[p..];
-        let Some(c) = rest.chars().next() else { return Some(p) };
+        let Some(c) = rest.chars().next() else {
+            return Some(p);
+        };
         if stops_text(rest) {
             return Some(p);
         }
@@ -390,7 +530,10 @@ fn spaces_then_newline(s: &str) -> bool {
 
 /// `(?=[a-zA-Z0-9.!#$%&'*+/=?_`{|}~-]+@)`.
 fn email_then_at(s: &str) -> bool {
-    let run = s.bytes().take_while(|&b| is_email_char(char::from(b))).count();
+    let run = s
+        .bytes()
+        .take_while(|&b| is_email_char(char::from(b)))
+        .count();
     run > 0 && s.as_bytes().get(run) == Some(&b'@')
 }
 
@@ -402,7 +545,9 @@ fn is_email_char(c: char) -> bool {
 fn stops_text(s: &str) -> bool {
     s.starts_with(['\\', '<', '!', '[', '`', '*', '~', '_'])
         || spaces_then_newline(s)
-        || ["http://", "https://", "ftp://", "www."].iter().any(|p| s.starts_with(p))
+        || ["http://", "https://", "ftp://", "www."]
+            .iter()
+            .any(|p| s.starts_with(p))
 }
 
 /// `min` of every inline extension's `start(src)` in one pass: `^`, `~`,
@@ -421,11 +566,17 @@ fn earliest_extension_start(src: &str) -> Option<usize> {
 /// Necessary condition for the GFM `url` rule: a `http(s)://`/`ftp://`/`www.`
 /// start, or an `@` in the leading run of email characters.
 fn may_be_url(src: &str) -> bool {
-    let head = src.as_bytes().get(..8).unwrap_or(src.as_bytes()).to_ascii_lowercase();
+    let head = src
+        .as_bytes()
+        .get(..8)
+        .unwrap_or(src.as_bytes())
+        .to_ascii_lowercase();
     if head.starts_with(b"http") || head.starts_with(b"ftp") || head.starts_with(b"www.") {
         return true;
     }
-    let run = src.bytes().take_while(|b| b.is_ascii_alphanumeric() || matches!(b, b'.' | b'_' | b'+' | b'-'));
+    let run = src
+        .bytes()
+        .take_while(|b| b.is_ascii_alphanumeric() || matches!(b, b'.' | b'_' | b'+' | b'-'));
     let len = run.count();
     len > 0 && src.as_bytes().get(len) == Some(&b'@')
 }
@@ -433,7 +584,11 @@ fn may_be_url(src: &str) -> bool {
 /// marked appends a text token to a preceding text token.
 fn push_merging(tokens: &mut Vec<InlineTok>, tok: InlineTok) {
     if let InlineTok::Text { raw, text, .. } = &tok
-        && let Some(InlineTok::Text { raw: last_raw, text: last_text, .. }) = tokens.last_mut()
+        && let Some(InlineTok::Text {
+            raw: last_raw,
+            text: last_text,
+            ..
+        }) = tokens.last_mut()
     {
         last_raw.push_str(raw);
         last_text.push_str(text);
@@ -447,7 +602,11 @@ fn link_token(href: String, text: String) -> InlineTok {
     InlineTok::Link {
         href,
         title: None,
-        children: vec![InlineTok::Text { raw: text.clone(), text, escaped: false }],
+        children: vec![InlineTok::Text {
+            raw: text.clone(),
+            text,
+            escaped: false,
+        }],
     }
 }
 
@@ -520,7 +679,9 @@ mod tests {
 
     #[test]
     fn earliest_start_is_the_min_of_the_starts() {
-        for s in ["abc", "a^b", "x ~y :z", "a=b==c", "[a [[b", r"\$x $y", "$a", "é:ph-x", "a[b=c"] {
+        for s in [
+            "abc", "a^b", "x ~y :z", "a=b==c", "[a [[b", r"\$x $y", "$a", "é:ph-x", "a[b=c",
+        ] {
             let want = Extension::ALL
                 .iter()
                 .filter(|e| e.level() == ext::Level::Inline)
@@ -533,9 +694,28 @@ mod tests {
     #[test]
     fn inline_text_matches_the_rule() {
         let samples = [
-            "plain words here", "a  \nb", "abc\nd", "word foo@bar.com x", "x www.a.b", "see http://x", "a_b_c",
-            "``code`` rest", "~~~x", "~a", "`", "tail ", "  \n", "café ü 日本 *x*", "a!b", "foo.bar@baz", "a\\*b",
-            "ends with space  ", "a b  \n", "x https://y ftp://z", "émail ä@b.c", "mixed <b> tag",
+            "plain words here",
+            "a  \nb",
+            "abc\nd",
+            "word foo@bar.com x",
+            "x www.a.b",
+            "see http://x",
+            "a_b_c",
+            "``code`` rest",
+            "~~~x",
+            "~a",
+            "`",
+            "tail ",
+            "  \n",
+            "café ü 日本 *x*",
+            "a!b",
+            "foo.bar@baz",
+            "a\\*b",
+            "ends with space  ",
+            "a b  \n",
+            "x https://y ftp://z",
+            "émail ä@b.c",
+            "mixed <b> tag",
         ];
         for s in samples {
             for start in s.char_indices().map(|(i, _)| i) {

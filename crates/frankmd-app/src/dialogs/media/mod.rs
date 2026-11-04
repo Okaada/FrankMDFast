@@ -133,10 +133,18 @@ impl MediaHub {
     pub fn new(ctx: &MediaContext, window: &mut Window, cx: &mut App) -> anyhow::Result<Self> {
         let services = MediaServices::new(ctx)?;
         let storage = cx.new(|cx| StorageModel::new(Arc::clone(&services), cx));
-        let picker = cx.new(|cx| ImagePickerDialog::new(Arc::clone(&services), storage.clone(), window, cx));
-        let video = cx.new(|cx| VideoDialogView::new(Arc::clone(&services), storage.clone(), window, cx));
+        let picker =
+            cx.new(|cx| ImagePickerDialog::new(Arc::clone(&services), storage.clone(), window, cx));
+        let video =
+            cx.new(|cx| VideoDialogView::new(Arc::clone(&services), storage.clone(), window, cx));
         let library = cx.new(|cx| MediaLibraryPane::new(Arc::clone(&services), window, cx));
-        Ok(Self { services, storage, picker, video, library })
+        Ok(Self {
+            services,
+            storage,
+            picker,
+            video,
+            library,
+        })
     }
 }
 
@@ -153,10 +161,15 @@ pub fn apply_insert(
 ) -> bool {
     let text = pane.read(cx).text(cx);
     let selection = pane.read(cx).selection(cx);
-    let Some(edit) = frankmd_media::vm::markup::insertion_edit(&text, selection, slash, insert) else {
+    let Some(edit) = frankmd_media::vm::markup::insertion_edit(&text, selection, slash, insert)
+    else {
         return false;
     };
-    let edit = crate::editor::Edit { range: edit.range, text: edit.text, selection: edit.caret..edit.caret };
+    let edit = crate::editor::Edit {
+        range: edit.range,
+        text: edit.text,
+        selection: edit.caret..edit.caret,
+    };
     pane.update(cx, |pane, cx| {
         pane.apply_edit(edit, window, cx);
         pane.focus(window, cx);
@@ -172,6 +185,11 @@ pub fn insertion_edit(
     slash: Option<Range<usize>>,
     insert: &MediaInsert,
 ) -> Option<crate::editor::Edit> {
-    frankmd_media::vm::markup::insertion_edit(text, selection, slash, insert)
-        .map(|e| crate::editor::Edit { range: e.range, text: e.text, selection: e.caret..e.caret })
+    frankmd_media::vm::markup::insertion_edit(text, selection, slash, insert).map(|e| {
+        crate::editor::Edit {
+            range: e.range,
+            text: e.text,
+            selection: e.caret..e.caret,
+        }
+    })
 }

@@ -48,8 +48,8 @@ pub mod images;
 pub mod import;
 pub mod library;
 pub mod param;
-pub mod pipeline;
 pub mod picker;
+pub mod pipeline;
 pub mod recovery;
 pub mod s3;
 mod s3_http;
@@ -90,4 +90,3 @@ pub enum MediaKind {
     Image,
     Video,
 }
-

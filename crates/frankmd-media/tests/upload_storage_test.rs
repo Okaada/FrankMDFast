@@ -4,12 +4,12 @@
 #[path = "common/uploads.rs"]
 mod uploads;
 
+use frankmd_media::StorageProvider;
 use frankmd_media::config::MediaConfig;
 use frankmd_media::error::MediaError;
 use frankmd_media::param::Param;
 use frankmd_media::s3::{S3Client, S3Error};
 use frankmd_media::upload_storage::{self as us, UploadKind};
-use frankmd_media::StorageProvider;
 use frankmd_net::TrustedClient;
 use uploads::*;
 
@@ -29,15 +29,24 @@ fn rejected(r: Result<impl std::fmt::Debug, MediaError>) -> String {
 }
 
 fn service_error(code: &str) -> S3Error {
-    S3Error::Service { code: code.into(), status: 400 }
+    S3Error::Service {
+        code: code.into(),
+        status: 400,
+    }
 }
 
 // port: test/services/upload_storage_test.rb:21 "provider uses the saved preference and rejects conflicting legacy requests"
 #[test]
 fn provider_uses_the_saved_preference_and_rejects_conflicting_legacy_requests() {
     let mut c = config();
-    assert_eq!(us::provider(&c, &Param::Nil).unwrap(), StorageProvider::Local);
-    assert_eq!(us::provider(&c, &Param::Bool(false)).unwrap(), StorageProvider::Local);
+    assert_eq!(
+        us::provider(&c, &Param::Nil).unwrap(),
+        StorageProvider::Local
+    );
+    assert_eq!(
+        us::provider(&c, &Param::Bool(false)).unwrap(),
+        StorageProvider::Local
+    );
     rejected(us::provider(&c, &Param::str("true")));
     c.media_storage_provider = Some("s3".into());
     rejected(us::provider(&c, &Param::Nil));
@@ -62,25 +71,45 @@ fn only_definitive_s3_configuration_errors_trigger_recovery() {
         "NoSuchBucket",
         "AuthorizationHeaderMalformed",
     ] {
-        assert!(us::invalid_s3_configuration_error(&service_error(code)), "{code}");
+        assert!(
+            us::invalid_s3_configuration_error(&service_error(code)),
+            "{code}"
+        );
     }
-    for code in ["SlowDown", "InternalError", "ServiceUnavailable", "PreconditionFailed"] {
-        assert!(!us::invalid_s3_configuration_error(&service_error(code)), "{code}");
+    for code in [
+        "SlowDown",
+        "InternalError",
+        "ServiceUnavailable",
+        "PreconditionFailed",
+    ] {
+        assert!(
+            !us::invalid_s3_configuration_error(&service_error(code)),
+            "{code}"
+        );
     }
     assert!(us::invalid_s3_configuration_error(&S3Error::InvalidRegion));
-    assert!(!us::invalid_s3_configuration_error(&S3Error::Network("timeout".into())));
+    assert!(!us::invalid_s3_configuration_error(&S3Error::Network(
+        "timeout".into()
+    )));
 }
 
 // port: test/services/upload_storage_test.rb:47 "validate_extension! returns the normalized extension for an allowed file"
 #[test]
 fn validate_extension_returns_the_normalized_extension_for_an_allowed_file() {
-    assert_eq!(us::validate_filename(&config(), "a.PNG", UploadKind::Image).unwrap(), ".png");
+    assert_eq!(
+        us::validate_filename(&config(), "a.PNG", UploadKind::Image).unwrap(),
+        ".png"
+    );
 }
 
 // port: test/services/upload_storage_test.rb:52 "validate_extension! raises RejectedError for a disallowed extension"
 #[test]
 fn validate_extension_raises_for_a_disallowed_extension() {
-    let msg = rejected(us::validate_filename(&config(), "evil.html", UploadKind::Image));
+    let msg = rejected(us::validate_filename(
+        &config(),
+        "evil.html",
+        UploadKind::Image,
+    ));
     assert!(msg.contains(".html"));
     assert!(msg.contains("not an accepted image type"));
 }
@@ -88,21 +117,32 @@ fn validate_extension_raises_for_a_disallowed_extension() {
 // port: test/services/upload_storage_test.rb:60 "validate_extension! raises for a file with no extension"
 #[test]
 fn validate_extension_raises_for_a_file_with_no_extension() {
-    let msg = rejected(us::validate_filename(&config(), "README", UploadKind::Image));
+    let msg = rejected(us::validate_filename(
+        &config(),
+        "README",
+        UploadKind::Image,
+    ));
     assert!(msg.contains("no extension"));
 }
 
 // port: test/services/upload_storage_test.rb:67 "validate_extension! is not fooled by a double extension"
 #[test]
 fn validate_extension_is_not_fooled_by_a_double_extension() {
-    let msg = rejected(us::validate_filename(&config(), "evil.png.html", UploadKind::Image));
+    let msg = rejected(us::validate_filename(
+        &config(),
+        "evil.png.html",
+        UploadKind::Image,
+    ));
     assert!(msg.contains(".html"));
 }
 
 // port: test/services/upload_storage_test.rb:76 "enforce_size! raises when the file exceeds the cap"
 #[test]
 fn enforce_size_raises_when_the_file_exceeds_the_cap() {
-    let msg = rejected(us::enforce_bytes(Some(us::MAX_UPLOAD_BYTES as i64 + 1), us::MAX_UPLOAD_BYTES));
+    let msg = rejected(us::enforce_bytes(
+        Some(us::MAX_UPLOAD_BYTES as i64 + 1),
+        us::MAX_UPLOAD_BYTES,
+    ));
     assert!(msg.contains("too large"));
 }
 
@@ -115,7 +155,10 @@ fn enforce_size_allows_a_file_at_the_cap() {
 // port: test/services/upload_storage_test.rb:89 "dest_filename strips path separators and traversal, keeping a timestamp prefix"
 #[test]
 fn dest_filename_strips_path_separators_and_traversal() {
-    let name = us::dest_filename(&frankmd_media::MediaCtx::system(), Some("../../etc/pa ss!.mp4"));
+    let name = us::dest_filename(
+        &frankmd_media::MediaCtx::system(),
+        Some("../../etc/pa ss!.mp4"),
+    );
     assert!(!name.contains('/'));
     assert!(!name.contains(' '));
     assert!(!name.contains('!'));
@@ -131,13 +174,19 @@ fn dest_filename_is_unique_for_uploads_with_the_same_name_in_the_same_second() {
         clock: pinned_ctx().clock,
         random: std::sync::Arc::new(frankmd_media::ctx::OsRandom),
     };
-    assert_ne!(us::dest_filename(&ctx, Some("video.mp4")), us::dest_filename(&ctx, Some("video.mp4")));
+    assert_ne!(
+        us::dest_filename(&ctx, Some("video.mp4")),
+        us::dest_filename(&ctx, Some("video.mp4"))
+    );
 }
 
 // port: test/services/upload_storage_test.rb:106 "sanitize_s3_key keeps nested prefixes"
 #[test]
 fn sanitize_s3_key_keeps_nested_prefixes() {
-    assert_eq!(us::sanitize_s3_key(Some("blog/2026/hero")), "blog/2026/hero");
+    assert_eq!(
+        us::sanitize_s3_key(Some("blog/2026/hero")),
+        "blog/2026/hero"
+    );
 }
 
 // port: test/services/upload_storage_test.rb:110 "sanitize_s3_key strips traversal, leading and doubled slashes"
@@ -168,7 +217,10 @@ fn sys() -> frankmd_media::MediaCtx {
 // port: test/services/upload_storage_test.rb:127 "s3_key builds the default frankmd/YYYY/MM/<filename> when no custom value"
 #[test]
 fn s3_key_builds_the_default_path_when_no_custom_value() {
-    assert_match(r"\Afrankmd/\d{4}/\d{2}/photo-[0-9a-f]{16}\.png\z", &us::s3_key(&sys(), Some("photo.png"), None, None));
+    assert_match(
+        r"\Afrankmd/\d{4}/\d{2}/photo-[0-9a-f]{16}\.png\z",
+        &us::s3_key(&sys(), Some("photo.png"), None, None),
+    );
 }
 
 // port: test/services/upload_storage_test.rb:131 "s3_key sanitizes the filename in the default path"
@@ -182,7 +234,12 @@ fn s3_key_sanitizes_the_filename_in_the_default_path() {
 // port: test/services/upload_storage_test.rb:137 "s3_key makes a custom key unique while preserving its prefix and extension"
 #[test]
 fn s3_key_makes_a_custom_key_unique() {
-    let key = us::s3_key(&sys(), Some("photo.png"), Some("blog/2026/hero.png"), Some("ignored"));
+    let key = us::s3_key(
+        &sys(),
+        Some("photo.png"),
+        Some("blog/2026/hero.png"),
+        Some("ignored"),
+    );
     assert_ne!(key, "blog/2026/hero.png");
     assert_match(r"\Ablog/2026/hero-[0-9a-f]{16}\.png\z", &key);
 }
@@ -209,8 +266,14 @@ fn s3_key_blocks_traversal_in_a_custom_key() {
 #[test]
 fn s3_key_falls_back_to_the_default_when_a_custom_value_sanitizes_to_empty() {
     let re = r"\Afrankmd/\d{4}/\d{2}/photo-[0-9a-f]{16}\.png\z";
-    assert_match(re, &us::s3_key(&sys(), Some("photo.png"), Some("../.."), None));
-    assert_match(re, &us::s3_key(&sys(), Some("photo.png"), None, Some("///")));
+    assert_match(
+        re,
+        &us::s3_key(&sys(), Some("photo.png"), Some("../.."), None),
+    );
+    assert_match(
+        re,
+        &us::s3_key(&sys(), Some("photo.png"), None, Some("///")),
+    );
 }
 
 // port: test/services/upload_storage_test.rb:159 "s3_client passes a custom endpoint and force_path_style when configured"
@@ -241,7 +304,12 @@ fn s3_client_omits_endpoint_and_force_path_style_for_plain_aws() {
 #[test]
 fn s3_url_builds_the_aws_virtual_host_url_by_default() {
     assert_eq!(
-        us::s3_url(&config(), "mybucket", "us-west-2", "frankmd/2026/09/a b.png"),
+        us::s3_url(
+            &config(),
+            "mybucket",
+            "us-west-2",
+            "frankmd/2026/09/a b.png"
+        ),
         "https://mybucket.s3.us-west-2.amazonaws.com/frankmd/2026/09/a%20b.png"
     );
 }
@@ -252,7 +320,10 @@ fn s3_url_uses_path_style_against_a_custom_endpoint() {
     let mut c = config();
     c.s3.endpoint = Some("http://localhost:9000/".into());
     c.s3.force_path_style = true;
-    assert_eq!(us::s3_url(&c, "mybucket", "us-east-1", "frankmd/x.png"), "http://localhost:9000/mybucket/frankmd/x.png");
+    assert_eq!(
+        us::s3_url(&c, "mybucket", "us-east-1", "frankmd/x.png"),
+        "http://localhost:9000/mybucket/frankmd/x.png"
+    );
 }
 
 // port: test/services/upload_storage_test.rb:202 "s3_url uses virtual-host style against a custom endpoint when path-style is off"
@@ -261,7 +332,10 @@ fn s3_url_uses_virtual_host_style_against_a_custom_endpoint() {
     let mut c = config();
     c.s3.endpoint = Some("https://s3.example.com".into());
     c.s3.force_path_style = false;
-    assert_eq!(us::s3_url(&c, "mybucket", "us-east-1", "k.png"), "https://mybucket.s3.example.com/k.png");
+    assert_eq!(
+        us::s3_url(&c, "mybucket", "us-east-1", "k.png"),
+        "https://mybucket.s3.example.com/k.png"
+    );
 }
 
 // port: test/services/upload_storage_test.rb:209 "s3_url keeps a non-default port for a custom endpoint"
@@ -270,7 +344,10 @@ fn s3_url_keeps_a_non_default_port_for_a_custom_endpoint() {
     let mut c = config();
     c.s3.endpoint = Some("http://minio.local:9000".into());
     c.s3.force_path_style = false;
-    assert_eq!(us::s3_url(&c, "b", "us-east-1", "k.png"), "http://b.minio.local:9000/k.png");
+    assert_eq!(
+        us::s3_url(&c, "b", "us-east-1", "k.png"),
+        "http://b.minio.local:9000/k.png"
+    );
 }
 
 // port: test/services/upload_storage_test.rb:218 "with_temp_copy writes to a random name (not the client filename) and cleans up"

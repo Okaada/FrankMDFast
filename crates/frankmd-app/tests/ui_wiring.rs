@@ -49,7 +49,9 @@ fn insert_image_opens_the_picker_overlay(cx: &mut TestAppContext) {
 #[gpui_kit::test]
 fn header_image_button_opens_the_picker(cx: &mut TestAppContext) {
     let shell = open_shell(cx, WIDE, VaultFixture::sample());
-    harness::in_window(cx, shell.window, |window, cx| window.click("pane-insert-image", cx));
+    harness::in_window(cx, shell.window, |window, cx| {
+        window.click("pane-insert-image", cx)
+    });
     assert!(shown(cx, &shell, "dialog-insert-image"));
 }
 
@@ -142,7 +144,9 @@ fn settings_storage_row_is_bound_to_the_media_layer(cx: &mut TestAppContext) {
     let shell = open_shell(cx, WIDE, VaultFixture::sample());
     let w = shell.window;
     harness::press(cx, w, "ctrl-2 ctrl-,");
-    harness::in_window(cx, w, |window, cx| window.click("settings-category-media", cx));
+    harness::in_window(cx, w, |window, cx| {
+        window.click("settings-category-media", cx)
+    });
     assert!(shown(cx, &shell, "setting-provider-local"));
     assert!(shown(cx, &shell, "setting-provider-s3"));
 }

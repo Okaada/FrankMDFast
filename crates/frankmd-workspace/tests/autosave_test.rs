@@ -25,12 +25,12 @@
 mod draft_common;
 
 use draft_common::{Fault, Method, Session, make_content, session};
+use frankmd_core::registry::DocRegistry;
+use frankmd_core::{DocId, RelPath};
 use frankmd_workspace::autosave::{
     AutosaveEffect, DeletionPrep, RecoveryRequest, RecoveryResolution, RecoverySource, SaveOutcome,
     SaveRequest, SaveStatus,
 };
-use frankmd_core::registry::DocRegistry;
-use frankmd_core::{DocId, RelPath};
 use frankmd_workspace::clock::{Clock, FakeClock};
 use frankmd_workspace::draft_storage::{DraftRecord, backup_key, draft_key};
 use frankmd_workspace::drafts::draft_subject;
@@ -55,7 +55,13 @@ fn rel(path: &str) -> RelPath {
 impl H {
     fn new() -> Self {
         let (s, clock) = session();
-        Self { s, clock, saves: vec![], effects: vec![], reg: RefCell::new(DocRegistry::default()) }
+        Self {
+            s,
+            clock,
+            saves: vec![],
+            effects: vec![],
+            reg: RefCell::new(DocRegistry::default()),
+        }
     }
     /// The stable id of the note currently at `path` (minted on first use).
     fn doc(&self, path: &str) -> DocId {
@@ -113,7 +119,9 @@ impl H {
         self.pump();
     }
     fn ok(rev: Option<&str>) -> SaveOutcome {
-        SaveOutcome::Saved { revision: rev.map(str::to_owned) }
+        SaveOutcome::Saved {
+            revision: rev.map(str::to_owned),
+        }
     }
     /// `await controller.saveNow()` with a fetch that resolves `{ok:true, json:{}}`.
     fn save_now_ok(&mut self) -> Option<SaveRequest> {
@@ -158,11 +166,20 @@ impl H {
     }
     fn write_draft(&mut self, path: &str, content: &str, rev: &str) -> DraftRecord {
         let subject = self.subject(path);
-        self.s.drafts_mut().write_draft(&subject, content, rev).unwrap().draft
+        self.s
+            .drafts_mut()
+            .write_draft(&subject, content, rev)
+            .unwrap()
+            .draft
     }
     fn backup(&mut self, path: &str) -> Option<String> {
         let subject = self.subject(path);
-        self.s.drafts_mut().read_backup(&subject).unwrap().backup.map(|b| b.content)
+        self.s
+            .drafts_mut()
+            .read_backup(&subject)
+            .unwrap()
+            .backup
+            .map(|b| b.content)
     }
     fn put_raw_backup(&mut self, path: &str, raw: &str) {
         let key = backup_key(&self.subject(path));
@@ -182,7 +199,10 @@ impl H {
         moved
     }
     /// A file or folder delete: the registry forgets every id under `path`.
-    fn delete(&mut self, path: &str) -> Result<usize, frankmd_workspace::draft_storage::RemoveDraftsError> {
+    fn delete(
+        &mut self,
+        path: &str,
+    ) -> Result<usize, frankmd_workspace::draft_storage::RemoveDraftsError> {
         let docs = self.reg.borrow_mut().remove(&rel(path));
         let result = self.s.docs_deleted(&docs);
         self.pump();
@@ -235,7 +255,10 @@ fn shows_warning_for_large_deletion() {
     assert!(h.banner_visible());
     assert!(h.s.content_loss_warning_active());
     let d = h.draft("test.md").unwrap();
-    assert_eq!((d.content.as_str(), d.base_revision.as_str()), ("", "revision-test"));
+    assert_eq!(
+        (d.content.as_str(), d.base_revision.as_str()),
+        ("", "revision-test")
+    );
 }
 
 // port: test/javascript/controllers/autosave_controller.test.js:174 "no warning when _contentLossOverride is true"
@@ -347,7 +370,10 @@ fn flushes_immediately_when_hidden_without_a_server_request() {
     h.pump();
 
     let d = h.draft("lifecycle.md").unwrap();
-    assert_eq!((d.content.as_str(), d.base_revision.as_str()), ("local content", "revision-lifecycle"));
+    assert_eq!(
+        (d.content.as_str(), d.base_revision.as_str()),
+        ("local content", "revision-lifecycle")
+    );
     assert!(h.saves.is_empty());
     assert_eq!(h.s.pending_draft_writes(), 0);
 }
@@ -360,7 +386,10 @@ fn flushes_immediately_on_pagehide_without_a_server_request() {
     h.pump();
 
     let d = h.draft("lifecycle.md").unwrap();
-    assert_eq!((d.content.as_str(), d.base_revision.as_str()), ("local content", "revision-lifecycle"));
+    assert_eq!(
+        (d.content.as_str(), d.base_revision.as_str()),
+        ("local content", "revision-lifecycle")
+    );
     assert!(h.saves.is_empty());
 }
 
@@ -383,13 +412,20 @@ fn does_not_rewrite_an_unchanged_draft_for_repeated_lifecycle_events() {
 
     h.s.flush_active_draft().unwrap();
     let first = h.draft("lifecycle.md").unwrap();
-    assert_eq!((first.content.as_str(), first.base_revision.as_str()), ("local content", "revision-lifecycle"));
+    assert_eq!(
+        (first.content.as_str(), first.base_revision.as_str()),
+        ("local content", "revision-lifecycle")
+    );
     let writes = h.s.drafts().backend().set_calls;
 
     h.s.flush_active_draft().unwrap();
 
     assert_eq!(h.draft("lifecycle.md"), Some(first));
-    assert_eq!(h.s.drafts().backend().set_calls, writes, "unchanged draft not rewritten");
+    assert_eq!(
+        h.s.drafts().backend().set_calls,
+        writes,
+        "unchanged draft not rewritten"
+    );
 }
 
 // port: test/javascript/controllers/autosave_controller.test.js:317 "shows a storage error and requests a best-effort unload warning when persistence fails"
@@ -397,7 +433,11 @@ fn does_not_rewrite_an_unchanged_draft_for_repeated_lifecycle_events() {
 fn shows_a_storage_error_and_requests_an_unload_warning_when_persistence_fails() {
     let mut h = lifecycle();
     let key = draft_key(&h.subject("lifecycle.md"));
-    h.fault(Fault::throw(Method::SetItem).on_key(&key).message("storage quota exceeded"));
+    h.fault(
+        Fault::throw(Method::SetItem)
+            .on_key(&key)
+            .message("storage quota exceeded"),
+    );
 
     let _ = h.s.flush_active_draft();
     let prevent_close = h.s.before_unload();
@@ -489,7 +529,10 @@ fn recomputes_a_divergent_recovered_draft_against_the_latest_server_baseline() {
 
     assert!(h.s.content_loss_warning_active());
     let d = h.draft("a.md").unwrap();
-    assert_eq!((d.content.as_str(), d.base_revision.as_str()), ("", "latest-revision"));
+    assert_eq!(
+        (d.content.as_str(), d.base_revision.as_str()),
+        ("", "latest-revision")
+    );
 }
 
 // port: test/javascript/controllers/autosave_controller.test.js:410 "undo clears the saved draft when it restores the server baseline"
@@ -526,7 +569,10 @@ fn undo_updates_the_protected_draft_when_the_deletion_remains_large() {
 
     assert!(h.s.content_loss_warning_active());
     let d = h.draft("a.md").unwrap();
-    assert_eq!((d.content, d.base_revision.as_str()), (make_content(100), "revision-a"));
+    assert_eq!(
+        (d.content, d.base_revision.as_str()),
+        (make_content(100), "revision-a")
+    );
 }
 
 // port: test/javascript/controllers/autosave_controller.test.js:446 "restores the server baseline when a recovered deletion has no editor history"
@@ -536,15 +582,25 @@ fn restores_the_server_baseline_when_a_recovered_deletion_has_no_editor_history(
     let baseline = make_content(300);
     h.set_file("a.md", &baseline, Some("revision-a"));
     h.edit(&make_content(100));
-    let saved = h.s.flush_draft_write(h.doc("a.md"), &make_content(100), Some("revision-a")).unwrap().unwrap();
+    let saved =
+        h.s.flush_draft_write(h.doc("a.md"), &make_content(100), Some("revision-a"))
+            .unwrap()
+            .unwrap();
     assert_eq!(h.s.draft_revision(), Some(saved.draft_revision.as_str()));
     h.s.show_content_loss_warning();
 
     h.s.undo_content_loss(false);
     h.pump();
 
-    assert!(h.has_effect(&AutosaveEffect::LoadEditorText { content: baseline.clone(), path: "a.md".into() }));
-    assert_eq!(h.s.editor_text(), baseline, "the session mirrors the reloaded text");
+    assert!(h.has_effect(&AutosaveEffect::LoadEditorText {
+        content: baseline.clone(),
+        path: "a.md".into()
+    }));
+    assert_eq!(
+        h.s.editor_text(),
+        baseline,
+        "the session mirrors the reloaded text"
+    );
     assert!(!h.s.content_loss_warning_active());
     assert_eq!(h.draft("a.md"), None);
 }
@@ -564,7 +620,11 @@ fn save_anyway_removes_the_matching_draft_only_after_success() {
     h.finish(&req, H::ok(None));
 
     let subject = h.subject("a.md");
-    assert_eq!(h.s.drafts_mut().remove_draft_if_revision(&subject, &revision), Ok(false));
+    assert_eq!(
+        h.s.drafts_mut()
+            .remove_draft_if_revision(&subject, &revision),
+        Ok(false)
+    );
     assert_eq!(h.draft("a.md"), None);
 }
 
@@ -582,7 +642,10 @@ fn failed_save_anyway_keeps_its_local_draft() {
     let req = h.saves.last().cloned().unwrap();
     h.finish(&req, SaveOutcome::Failed);
 
-    assert_eq!(h.draft("a.md").unwrap().draft_revision, saved.draft_revision);
+    assert_eq!(
+        h.draft("a.md").unwrap().draft_revision,
+        saved.draft_revision
+    );
 }
 
 // ===========================================================================
@@ -602,7 +665,10 @@ fn transition_flushes_the_outgoing_snapshot_before_cancelling_timers() {
 
     assert!(result.is_ok());
     let d = h.draft("a.md").unwrap();
-    assert_eq!((d.content.as_str(), d.base_revision.as_str()), ("local draft A", "revision-a"));
+    assert_eq!(
+        (d.content.as_str(), d.base_revision.as_str()),
+        ("local draft A", "revision-a")
+    );
     assert!(!h.s.save_timer_armed());
     assert!(!h.s.max_interval_timer_armed());
     assert!(h.saves.is_empty());
@@ -613,7 +679,11 @@ fn transition_flushes_the_outgoing_snapshot_before_cancelling_timers() {
 fn transition_keeps_the_file_active_and_timers_when_draft_storage_fails() {
     let mut h = H::new();
     let key = draft_key(&h.subject("a.md"));
-    h.fault(Fault::throw(Method::SetItem).on_key(&key).message("storage unavailable"));
+    h.fault(
+        Fault::throw(Method::SetItem)
+            .on_key(&key)
+            .message("storage unavailable"),
+    );
     h.set_file("a.md", "server A", Some("revision-a"));
     h.edit("local draft A");
     h.schedule();
@@ -707,7 +777,14 @@ fn debounces_an_online_empty_draft_by_path() {
     let d = h.draft("empty.md").unwrap();
     // changed: drafts keyed by DocId (the record is filed under the note's id, not its path).
     let subject = h.subject("empty.md");
-    assert_eq!((d.path.as_str(), d.content.as_str(), d.base_revision.as_str()), (subject.as_str(), "", "server-revision"));
+    assert_eq!(
+        (
+            d.path.as_str(),
+            d.content.as_str(),
+            d.base_revision.as_str()
+        ),
+        (subject.as_str(), "", "server-revision")
+    );
 }
 
 // port: test/javascript/controllers/autosave_controller.test.js:609 "keeps pending snapshots for different files independent"
@@ -725,8 +802,14 @@ fn keeps_pending_snapshots_for_different_files_independent() {
 
     let a = h.draft("first.md").unwrap();
     let b = h.draft("second.md").unwrap();
-    assert_eq!((a.content.as_str(), a.base_revision.as_str()), ("first draft", "first-revision"));
-    assert_eq!((b.content.as_str(), b.base_revision.as_str()), ("second draft", "second-revision"));
+    assert_eq!(
+        (a.content.as_str(), a.base_revision.as_str()),
+        ("first draft", "first-revision")
+    );
+    assert_eq!(
+        (b.content.as_str(), b.base_revision.as_str()),
+        ("second draft", "second-revision")
+    );
 }
 
 // port: test/javascript/controllers/autosave_controller.test.js:624 "automatically restores a draft when its server baseline still matches"
@@ -736,7 +819,10 @@ fn automatically_restores_a_draft_when_its_baseline_still_matches() {
     h.write_draft("test.md", "local draft", "same-baseline");
     h.set_file("test.md", "server version", Some("same-baseline"));
 
-    assert_eq!(h.s.recover_draft("server version", "same-baseline"), "local draft");
+    assert_eq!(
+        h.s.recover_draft("server version", "same-baseline"),
+        "local draft"
+    );
     assert!(h.s.has_unsaved_changes());
 }
 
@@ -747,9 +833,16 @@ fn clears_a_draft_when_the_server_already_contains_its_content() {
     let write = h.write_draft("test.md", "already saved", "old-baseline");
     h.set_file("test.md", "already saved", Some("current-baseline"));
 
-    assert_eq!(h.s.recover_draft("already saved", "current-baseline"), "already saved");
+    assert_eq!(
+        h.s.recover_draft("already saved", "current-baseline"),
+        "already saved"
+    );
     let subject = h.subject("test.md");
-    assert_eq!(h.s.drafts_mut().remove_draft_if_revision(&subject, &write.draft_revision), Ok(false));
+    assert_eq!(
+        h.s.drafts_mut()
+            .remove_draft_if_revision(&subject, &write.draft_revision),
+        Ok(false)
+    );
     assert_eq!(h.draft("test.md"), None);
 }
 
@@ -760,7 +853,10 @@ fn preserves_and_opens_a_diverged_draft_in_the_recovery_workflow() {
     let write = h.write_draft("test.md", "local draft", "old-baseline");
     h.set_file("test.md", "different server version", Some("new-baseline"));
 
-    assert_eq!(h.s.recover_draft("different server version", "new-baseline"), "different server version");
+    assert_eq!(
+        h.s.recover_draft("different server version", "new-baseline"),
+        "different server version"
+    );
     h.pump();
 
     assert_eq!(
@@ -775,7 +871,10 @@ fn preserves_and_opens_a_diverged_draft_in_the_recovery_workflow() {
             conflict_id: None,
         }]
     );
-    assert_eq!(h.draft("test.md").unwrap().draft_revision, write.draft_revision);
+    assert_eq!(
+        h.draft("test.md").unwrap().draft_revision,
+        write.draft_revision
+    );
 }
 
 // port: test/javascript/controllers/autosave_controller.test.js:659 "opens a collision recovery choice and promotes the selected moved draft safely"
@@ -797,15 +896,42 @@ fn renaming_onto_a_path_with_another_notes_draft_keeps_both_drafts() {
 
     assert!(h.rename("old.md", "new.md"));
 
-    assert_eq!(h.doc("new.md"), moved, "the path now belongs to the moved note");
-    assert_eq!(h.draft("new.md"), Some(source.clone()), "moved note keeps its own draft");
-    let other = h.s.drafts_mut().read_draft(&draft_subject(previous_note)).unwrap().draft;
-    assert_eq!(other, Some(destination), "the other note's draft is untouched");
-    assert!(h.recoveries().is_empty(), "no collision, no recovery dialog");
-    assert!(h.s.drafts_mut().list_draft_conflicts(&draft_subject(moved)).unwrap().is_empty());
+    assert_eq!(
+        h.doc("new.md"),
+        moved,
+        "the path now belongs to the moved note"
+    );
+    assert_eq!(
+        h.draft("new.md"),
+        Some(source.clone()),
+        "moved note keeps its own draft"
+    );
+    let other =
+        h.s.drafts_mut()
+            .read_draft(&draft_subject(previous_note))
+            .unwrap()
+            .draft;
+    assert_eq!(
+        other,
+        Some(destination),
+        "the other note's draft is untouched"
+    );
+    assert!(
+        h.recoveries().is_empty(),
+        "no collision, no recovery dialog"
+    );
+    assert!(
+        h.s.drafts_mut()
+            .list_draft_conflicts(&draft_subject(moved))
+            .unwrap()
+            .is_empty()
+    );
 
     h.set_file("new.md", "source server", Some("source-revision"));
-    assert_eq!(h.s.recover_draft("source server", "source-revision"), "source local draft");
+    assert_eq!(
+        h.s.recover_draft("source server", "source-revision"),
+        "source local draft"
+    );
     assert!(h.s.has_unsaved_changes());
 }
 
@@ -818,7 +944,10 @@ fn keeps_a_divergent_draft_recoverable_while_recovery_is_pending() {
     let original = h.write_draft("test.md", "original divergent draft", "old-baseline");
     h.set_file("test.md", "server version", Some("new-baseline"));
 
-    assert_eq!(h.s.recover_draft("server version", "new-baseline"), "server version");
+    assert_eq!(
+        h.s.recover_draft("server version", "new-baseline"),
+        "server version"
+    );
     h.pump();
     assert_eq!(h.recoveries().len(), 1);
     assert!(h.s.has_pending_recovery(h.doc("test.md")));
@@ -840,7 +969,10 @@ fn prefers_a_draft_over_a_stale_legacy_backup() {
     let mut h = H::new();
     let write = h.write_draft("test.md", "new draft", "baseline");
     let ts = write.updated_at as u64 - 1;
-    h.put_raw_backup("test.md", &format!(r#"{{"content":"old backup","timestamp":{ts}}}"#));
+    h.put_raw_backup(
+        "test.md",
+        &format!(r#"{{"content":"old backup","timestamp":{ts}}}"#),
+    );
     h.set_file("test.md", "server", Some("baseline"));
 
     assert_eq!(h.s.recover_draft("server", "baseline"), "new draft");
@@ -853,7 +985,10 @@ fn opens_a_newer_different_legacy_backup_for_an_explicit_choice() {
     let mut h = H::new();
     let write = h.write_draft("test.md", "draft", "baseline");
     let ts = write.updated_at as u64 + 1;
-    h.put_raw_backup("test.md", &format!(r#"{{"content":"newer backup","timestamp":{ts}}}"#));
+    h.put_raw_backup(
+        "test.md",
+        &format!(r#"{{"content":"newer backup","timestamp":{ts}}}"#),
+    );
     h.set_file("test.md", "server", Some("baseline"));
 
     h.s.recover_draft("server", "baseline");
@@ -871,7 +1006,10 @@ fn opens_a_newer_different_legacy_backup_for_an_explicit_choice() {
             conflict_id: None,
         }]
     );
-    assert_eq!(h.draft("test.md").unwrap().draft_revision, write.draft_revision);
+    assert_eq!(
+        h.draft("test.md").unwrap().draft_revision,
+        write.draft_revision
+    );
 }
 
 // port: test/javascript/controllers/autosave_controller.test.js:791 "reports draft storage failures through the save status"
@@ -879,7 +1017,11 @@ fn opens_a_newer_different_legacy_backup_for_an_explicit_choice() {
 fn reports_draft_storage_failures_through_the_save_status() {
     let mut h = H::new();
     let key = draft_key(&h.subject("test.md"));
-    h.fault(Fault::throw(Method::SetItem).on_key(&key).message("storage unavailable"));
+    h.fault(
+        Fault::throw(Method::SetItem)
+            .on_key(&key)
+            .message("storage unavailable"),
+    );
     h.set_file("test.md", "server", Some("baseline"));
     h.edit("local edit");
 
@@ -905,7 +1047,10 @@ fn restores_an_explicitly_selected_empty_draft() {
 
     assert!(h.editor_sets().contains(&String::new()));
     let d = h.draft("test.md").unwrap();
-    assert_eq!((d.content.as_str(), d.base_revision.as_str()), ("", "current-baseline"));
+    assert_eq!(
+        (d.content.as_str(), d.base_revision.as_str()),
+        ("", "current-baseline")
+    );
 }
 
 // port: test/javascript/controllers/autosave_controller.test.js:820 "keeps a newer draft when an earlier save completes"
@@ -926,7 +1071,10 @@ fn keeps_a_newer_draft_when_an_earlier_save_completes() {
     h.finish(&req, H::ok(Some("saved-revision")));
 
     let d = h.draft("test.md").unwrap();
-    assert_eq!((d.content.as_str(), d.base_revision.as_str()), ("newer edit", "saved-revision"));
+    assert_eq!(
+        (d.content.as_str(), d.base_revision.as_str()),
+        ("newer edit", "saved-revision")
+    );
 }
 
 // ===========================================================================
@@ -963,7 +1111,10 @@ fn save_anyway_sets_override_dismisses_banner_and_saves() {
     h.pump();
 
     assert!(!h.banner_visible());
-    assert!(h.s.content_loss_override(), "override held until the save succeeds");
+    assert!(
+        h.s.content_loss_override(),
+        "override held until the save succeeds"
+    );
     assert_eq!(h.saves.len(), 1, "saveNow ran and sent the save");
 }
 
@@ -1058,7 +1209,11 @@ fn does_not_reschedule_if_content_unchanged_after_save() {
     assert!(!h.s.save_timer_armed());
     assert_eq!(h.s.status(), SaveStatus::Saved);
     h.advance(2000);
-    assert_eq!(h.s.status(), SaveStatus::Hidden, "the Saved label clears after 2 s");
+    assert_eq!(
+        h.s.status(),
+        SaveStatus::Hidden,
+        "the Saved label clears after 2 s"
+    );
 }
 
 // ===========================================================================
@@ -1073,12 +1228,20 @@ fn deletion_waits_for_an_in_flight_autosave_and_returns_its_revision() {
     h.edit("edited");
     let req = h.save_now().unwrap();
 
-    assert_eq!(h.s.prepare_for_file_deletion(h.doc("created.md")), DeletionPrep::AwaitSave);
+    assert_eq!(
+        h.s.prepare_for_file_deletion(h.doc("created.md")),
+        DeletionPrep::AwaitSave
+    );
     assert!(h.s.is_saving());
 
     h.finish(&req, H::ok(Some("autosaved-revision")));
 
-    assert_eq!(h.s.resume_file_deletion(h.doc("created.md")), DeletionPrep::Ready { revision: "autosaved-revision".into() });
+    assert_eq!(
+        h.s.resume_file_deletion(h.doc("created.md")),
+        DeletionPrep::Ready {
+            revision: "autosaved-revision".into()
+        }
+    );
 }
 
 // port: test/javascript/controllers/autosave_controller.test.js:1028 "cancels a follow-up debounce scheduled by an in-flight autosave"
@@ -1089,14 +1252,25 @@ fn deletion_cancels_a_follow_up_debounce_scheduled_by_an_in_flight_autosave() {
     h.edit("first edit");
     let req = h.save_now().unwrap();
     h.edit("latest editor content");
-    assert_eq!(h.s.prepare_for_file_deletion(h.doc("created.md")), DeletionPrep::AwaitSave);
+    assert_eq!(
+        h.s.prepare_for_file_deletion(h.doc("created.md")),
+        DeletionPrep::AwaitSave
+    );
 
     h.finish(&req, H::ok(Some("autosaved-revision")));
 
-    assert_eq!(h.s.resume_file_deletion(h.doc("created.md")), DeletionPrep::Ready { revision: "autosaved-revision".into() });
+    assert_eq!(
+        h.s.resume_file_deletion(h.doc("created.md")),
+        DeletionPrep::Ready {
+            revision: "autosaved-revision".into()
+        }
+    );
     assert!(!h.s.save_timer_armed());
     assert!(!h.s.max_interval_timer_armed());
-    assert_eq!(h.s.known_base_revision(h.doc("created.md")), Some("autosaved-revision"));
+    assert_eq!(
+        h.s.known_base_revision(h.doc("created.md")),
+        Some("autosaved-revision")
+    );
 }
 
 // port: test/javascript/controllers/autosave_controller.test.js:1056 "abandons preparation if the active note changes while waiting for a save"
@@ -1106,12 +1280,18 @@ fn deletion_preparation_is_abandoned_if_the_active_note_changes() {
     h.set_file("created.md", "initial", Some("initial-revision"));
     h.edit("edited");
     let req = h.save_now().unwrap();
-    assert_eq!(h.s.prepare_for_file_deletion(h.doc("created.md")), DeletionPrep::AwaitSave);
+    assert_eq!(
+        h.s.prepare_for_file_deletion(h.doc("created.md")),
+        DeletionPrep::AwaitSave
+    );
     h.set_file("other.md", "other content", Some("other-revision"));
 
     h.finish(&req, H::ok(Some("autosaved-revision")));
 
-    assert_eq!(h.s.resume_file_deletion(h.doc("created.md")), DeletionPrep::Stale);
+    assert_eq!(
+        h.s.resume_file_deletion(h.doc("created.md")),
+        DeletionPrep::Stale
+    );
 }
 
 // contract: autosave_controller.js#prepareForFileDeletion `currentFile !== path → {ok:false, stale:true}`
@@ -1119,7 +1299,10 @@ fn deletion_preparation_is_abandoned_if_the_active_note_changes() {
 fn deletion_preparation_for_a_non_active_note_is_stale() {
     let mut h = H::new();
     h.set_file("a.md", "x", Some("r"));
-    assert_eq!(h.s.prepare_for_file_deletion(h.doc("b.md")), DeletionPrep::Stale);
+    assert_eq!(
+        h.s.prepare_for_file_deletion(h.doc("b.md")),
+        DeletionPrep::Stale
+    );
 }
 
 // ===========================================================================
@@ -1208,7 +1391,10 @@ fn save_success_clears_the_offline_backup() {
 #[test]
 fn check_offline_backup_with_a_differing_backup_opens_recovery() {
     let mut h = H::new();
-    h.put_raw_backup("test.md", r#"{"content":"backup content","timestamp":1700000000000}"#);
+    h.put_raw_backup(
+        "test.md",
+        r#"{"content":"backup content","timestamp":1700000000000}"#,
+    );
     h.set_file("test.md", "server content", None);
 
     h.s.check_offline_backup("server content");
@@ -1232,7 +1418,10 @@ fn check_offline_backup_with_a_differing_backup_opens_recovery() {
 #[test]
 fn check_offline_backup_with_a_matching_backup_does_not_open_recovery() {
     let mut h = H::new();
-    h.put_raw_backup("test.md", r#"{"content":"server content","timestamp":1700000000000}"#);
+    h.put_raw_backup(
+        "test.md",
+        r#"{"content":"server content","timestamp":1700000000000}"#,
+    );
     h.set_file("test.md", "server content", None);
 
     h.s.check_offline_backup("server content");
@@ -1248,7 +1437,10 @@ fn recovery_resolved_with_backup_sets_editor_content_and_marks_unsaved() {
     let mut h = H::new();
     h.set_file("test.md", "server content", Some("server-revision"));
     let ts = 1_700_000_000_000u64;
-    h.put_raw_backup("test.md", &format!(r#"{{"content":"backup content","timestamp":{ts}}}"#));
+    h.put_raw_backup(
+        "test.md",
+        &format!(r#"{{"content":"backup content","timestamp":{ts}}}"#),
+    );
 
     h.resolve(RecoveryResolution {
         content: Some("backup content".into()),
@@ -1261,7 +1453,10 @@ fn recovery_resolved_with_backup_sets_editor_content_and_marks_unsaved() {
     assert_eq!(h.s.last_saved_content(), Some("server content"));
     assert!(h.s.has_unsaved_changes());
     let d = h.draft("test.md").unwrap();
-    assert_eq!((d.content.as_str(), d.base_revision.as_str()), ("backup content", "server-revision"));
+    assert_eq!(
+        (d.content.as_str(), d.base_revision.as_str()),
+        ("backup content", "server-revision")
+    );
     assert_eq!(h.backup("test.md"), None);
 }
 
@@ -1270,9 +1465,15 @@ fn recovery_resolved_with_backup_sets_editor_content_and_marks_unsaved() {
 fn consumes_an_accepted_legacy_backup_and_does_not_offer_it_again() {
     let mut h = H::new();
     h.set_file("test.md", "server content", Some("server-revision"));
-    h.put_raw_backup("test.md", r#"{"content":"backup content","timestamp":1700000000000}"#);
+    h.put_raw_backup(
+        "test.md",
+        r#"{"content":"backup content","timestamp":1700000000000}"#,
+    );
 
-    assert_eq!(h.s.recover_draft("server content", "server-revision"), "server content");
+    assert_eq!(
+        h.s.recover_draft("server content", "server-revision"),
+        "server content"
+    );
     h.pump();
     let opened = h.recoveries();
     assert_eq!(opened.len(), 1);
@@ -1281,9 +1482,15 @@ fn consumes_an_accepted_legacy_backup_and_does_not_offer_it_again() {
 
     assert_eq!(h.backup("test.md"), None);
     let d = h.draft("test.md").unwrap();
-    assert_eq!((d.content.as_str(), d.base_revision.as_str()), ("backup content", "server-revision"));
+    assert_eq!(
+        (d.content.as_str(), d.base_revision.as_str()),
+        ("backup content", "server-revision")
+    );
 
-    assert_eq!(h.s.recover_draft("server content", "server-revision"), "backup content");
+    assert_eq!(
+        h.s.recover_draft("server content", "server-revision"),
+        "backup content"
+    );
     h.pump();
     assert_eq!(h.recoveries().len(), 1, "not offered again");
 }
@@ -1314,7 +1521,11 @@ fn saves_pending_changes_after_reconnection_even_if_in_flight_save_completed_off
     h.s.connection_restored();
     h.pump();
     assert!(!h.s.is_offline());
-    assert_eq!(h.saves.len(), before + 1, "reconnection saves the pending change");
+    assert_eq!(
+        h.saves.len(),
+        before + 1,
+        "reconnection saves the pending change"
+    );
     assert_eq!(h.saves.last().unwrap().content, "version2");
 }
 
@@ -1449,7 +1660,8 @@ fn moves_the_active_local_draft_before_scheduling_a_save_at_the_renamed_path() {
     let mut h = lifecycle_foo();
     h.set_file("foo.md", "saved content", Some("revision-foo"));
     h.schedule();
-    h.s.flush_draft_write(h.doc("foo.md"), "edited content", Some("revision-foo")).unwrap();
+    h.s.flush_draft_write(h.doc("foo.md"), "edited content", Some("revision-foo"))
+        .unwrap();
     let original = h.draft("foo.md").unwrap();
 
     assert!(h.rename("foo.md", "bar.md"));
@@ -1487,7 +1699,11 @@ fn a_failing_draft_store_cannot_strand_a_draft_during_rename() {
 
     assert!(h.rename("foo.md", "bar.md"));
 
-    assert_eq!(h.s.drafts().backend().set_calls, writes, "rename touched no draft record");
+    assert_eq!(
+        h.s.drafts().backend().set_calls,
+        writes,
+        "rename touched no draft record"
+    );
     assert_ne!(h.s.status(), SaveStatus::DraftStorageError);
     assert!(h.s.has_unsaved_changes());
     assert!(h.s.save_timer_armed());
@@ -1497,7 +1713,10 @@ fn a_failing_draft_store_cannot_strand_a_draft_during_rename() {
 
     h.advance(SAVE_DEBOUNCE_MS);
     assert_eq!(h.saves.len(), 1);
-    assert_eq!((h.saves[0].path.as_str(), h.saves[0].doc), ("bar.md", h.doc("bar.md")));
+    assert_eq!(
+        (h.saves[0].path.as_str(), h.saves[0].doc),
+        ("bar.md", h.doc("bar.md"))
+    );
 }
 
 // port: test/javascript/controllers/autosave_controller.test.js:1504 "does not let a late save response remove the source draft after remap failure"
@@ -1511,13 +1730,20 @@ fn a_save_response_arriving_after_a_rename_applies_to_the_moved_note() {
     h.edit("recoverable local draft");
     h.schedule();
     let req = h.save_now().unwrap();
-    assert_eq!(h.draft("foo.md").unwrap().content, "recoverable local draft");
+    assert_eq!(
+        h.draft("foo.md").unwrap().content,
+        "recoverable local draft"
+    );
 
     h.rename("foo.md", "bar.md");
     h.finish(&req, H::ok(Some("new-server-revision")));
 
     assert_eq!(h.s.current_file(), Some("bar.md"));
-    assert_eq!(h.draft("bar.md"), None, "the saved snapshot's draft is gone");
+    assert_eq!(
+        h.draft("bar.md"),
+        None,
+        "the saved snapshot's draft is gone"
+    );
     assert_eq!(h.s.base_revision(), Some("new-server-revision"));
     assert_eq!(h.s.status(), SaveStatus::Saved);
     assert!(!h.s.has_unsaved_changes());
@@ -1557,7 +1783,9 @@ fn removes_file_drafts_and_legacy_backups_after_a_successful_deletion() {
     h.set_file("foo.md", "saved content", Some("revision-foo"));
     h.write_draft("foo.md", "edited content", "revision-foo");
     let subject = h.subject("foo.md");
-    h.s.drafts_mut().write_backup(&subject, "offline content").unwrap();
+    h.s.drafts_mut()
+        .write_backup(&subject, "offline content")
+        .unwrap();
 
     assert_eq!(h.delete("foo.md"), Ok(2));
     assert_eq!(h.s.current_file(), None);
@@ -1615,7 +1843,10 @@ fn reschedules_the_renamed_note_when_the_old_in_flight_save_fails() {
     assert!(h.s.has_unsaved_changes());
     assert_eq!(h.s.status(), SaveStatus::ErrorSaving);
     let retry = h.save_now().expect("the pending change is saved again");
-    assert_eq!((retry.path.as_str(), retry.content.as_str()), ("bar.md", "edited content"));
+    assert_eq!(
+        (retry.path.as_str(), retry.content.as_str()),
+        ("bar.md", "edited content")
+    );
 }
 
 // port: test/javascript/controllers/autosave_controller.test.js:1650 "keeps the remapped newer draft when an old-path save response arrives"
@@ -1636,7 +1867,10 @@ fn keeps_the_remapped_newer_draft_when_an_old_path_save_response_arrives() {
     assert_eq!(h.s.current_file(), Some("bar.md"));
     assert_eq!(h.draft("foo.md"), None);
     let newer = h.draft("bar.md").unwrap();
-    assert_eq!((newer.content.as_str(), newer.base_revision.as_str()), ("newer edit", "new-server-revision"));
+    assert_eq!(
+        (newer.content.as_str(), newer.base_revision.as_str()),
+        ("newer edit", "new-server-revision")
+    );
     assert!(h.s.has_unsaved_changes());
     assert!(h.s.save_timer_armed());
 }
@@ -1800,5 +2034,8 @@ fn autosave_timer_debounce_and_max_wait() {
     }
     assert_eq!(t.next_deadline(&p), Some(start + p.max_wait));
     clock.advance_ms(1000);
-    assert!(t.due(clock.instant(), &p), "max-wait reached while typing continuously");
+    assert!(
+        t.due(clock.instant(), &p),
+        "max-wait reached while typing continuously"
+    );
 }

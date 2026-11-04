@@ -35,7 +35,11 @@ impl Fixture {
         let notes = TempTree::empty();
         let server_dir = notes.path().join("server");
         std::fs::create_dir_all(&server_dir).unwrap();
-        Self { notes, server_dir, mock: MockServer::start().await }
+        Self {
+            notes,
+            server_dir,
+            mock: MockServer::start().await,
+        }
     }
 
     fn config(&self) -> MediaConfig {
@@ -54,9 +58,19 @@ impl Fixture {
         c
     }
 
-    fn api_with(&self, c: MediaConfig, resolver: StaticResolver) -> (Arc<MemorySettings>, MediaApi) {
+    fn api_with(
+        &self,
+        c: MediaConfig,
+        resolver: StaticResolver,
+    ) -> (Arc<MemorySettings>, MediaApi) {
         let settings = MemorySettings::new(c);
-        let env = env_with(settings.clone(), pinned_ctx(), Some(&self.mock), resolver, Limits::EXTERNAL_IMAGE);
+        let env = env_with(
+            settings.clone(),
+            pinned_ctx(),
+            Some(&self.mock),
+            resolver,
+            Limits::EXTERNAL_IMAGE,
+        );
         (settings, MediaApi::new(env))
     }
 
@@ -75,11 +89,17 @@ impl Fixture {
 }
 
 fn url(u: &str) -> ImportRequest {
-    ImportRequest { url: Param::str(u), ..Default::default() }
+    ImportRequest {
+        url: Param::str(u),
+        ..Default::default()
+    }
 }
 
 fn server_path(p: &str) -> ImportRequest {
-    ImportRequest { path: Param::str(p), ..Default::default() }
+    ImportRequest {
+        path: Param::str(p),
+        ..Default::default()
+    }
 }
 
 // port: test/controllers/image_import_test.rb:32 "external URL is saved locally without requiring a server image folder"
@@ -89,7 +109,11 @@ async fn external_url_is_saved_locally_without_requiring_a_server_image_folder()
     f.external_image().await;
     let mut c = f.config();
     c.images_path = None;
-    let u = f.api(c).import(&url("http://example.com/image.png")).await.unwrap();
+    let u = f
+        .api(c)
+        .import(&url("http://example.com/image.png"))
+        .await
+        .unwrap();
     assert_match(r"\Aimages/", &u);
     assert_eq!(std::fs::read(f.notes.path().join(&u)).unwrap(), PNG_1X1);
 }
@@ -102,7 +126,10 @@ async fn external_and_server_images_are_saved_to_s3_without_local_media_copies()
     s3_put_ok(&f.mock, "bucket").await;
     write(&f.server_dir, "photo.png", &PNG_1X1); // security: real PNG bytes
     let api = f.api(f.s3());
-    for mut req in [url("http://example.com/image.png"), server_path("photo.png")] {
+    for mut req in [
+        url("http://example.com/image.png"),
+        server_path("photo.png"),
+    ] {
         req.s3_prefix = Some("chosen".into());
         let u = api.import(&req).await.unwrap();
         assert_match(r"\Ahttps://bucket", &u);
@@ -110,7 +137,11 @@ async fn external_and_server_images_are_saved_to_s3_without_local_media_copies()
     let puts = puts(&f.mock).await;
     assert_eq!(puts.len(), 2);
     for p in &puts {
-        assert!(p.url.path().starts_with("/bucket/chosen/"), "{}", p.url.path());
+        assert!(
+            p.url.path().starts_with("/bucket/chosen/"),
+            "{}",
+            p.url.path()
+        );
         assert_eq!(header(p, "if-none-match").as_deref(), Some("*"));
     }
     assert!(!f.local_images_exist());
@@ -122,7 +153,11 @@ async fn bmp_imports_locally(content_type: &str) {
     external(&f.mock, "/photo.bmp", &body, content_type).await;
     let mut c = f.config();
     c.image_upload_extensions = exts(&[".bmp"]);
-    let u = f.api(c).import(&url("http://example.com/photo.bmp")).await.unwrap();
+    let u = f
+        .api(c)
+        .import(&url("http://example.com/photo.bmp"))
+        .await
+        .unwrap();
     assert_eq!(std::path::Path::new(&u).extension().unwrap(), "bmp");
     assert_eq!(std::fs::read(f.notes.path().join(&u)).unwrap(), body);
 }
@@ -146,11 +181,18 @@ async fn bmp_imports_to_s3(content_type: &str) {
     s3_put_ok(&f.mock, "bucket").await;
     let mut c = f.s3();
     c.image_upload_extensions = exts(&[".bmp"]);
-    let u = f.api(c).import(&url("http://example.com/photo.bmp")).await.unwrap();
+    let u = f
+        .api(c)
+        .import(&url("http://example.com/photo.bmp"))
+        .await
+        .unwrap();
     assert_eq!(std::path::Path::new(&u).extension().unwrap(), "bmp");
     let puts = puts(&f.mock).await;
     assert_eq!(puts.len(), 1);
-    assert_eq!(header(&puts[0], "content-type").as_deref(), Some("image/bmp"));
+    assert_eq!(
+        header(&puts[0], "content-type").as_deref(),
+        Some("image/bmp")
+    );
     assert!(puts[0].url.path().ends_with(".bmp"));
     assert_eq!(puts[0].body, body);
     assert!(!f.local_images_exist());
@@ -173,9 +215,16 @@ async fn image_x_ms_bmp_imports_to_s3_with_bmp_extension_and_content_type() {
 async fn server_images_can_be_copied_locally_without_changing_the_original() {
     let f = Fixture::new().await;
     write(&f.server_dir, "photo.png", &PNG_1X1); // security: real PNG bytes
-    let u = f.api(f.config()).import(&server_path("photo.png")).await.unwrap();
+    let u = f
+        .api(f.config())
+        .import(&server_path("photo.png"))
+        .await
+        .unwrap();
     assert_eq!(std::fs::read(f.notes.path().join(&u)).unwrap(), PNG_1X1);
-    assert_eq!(std::fs::read(f.server_dir.join("photo.png")).unwrap(), PNG_1X1);
+    assert_eq!(
+        std::fs::read(f.server_dir.join("photo.png")).unwrap(),
+        PNG_1X1
+    );
 }
 
 // port: test/controllers/image_import_test.rb:96 "exactly one string source is required"
@@ -183,8 +232,15 @@ async fn server_images_can_be_copied_locally_without_changing_the_original() {
 async fn exactly_one_string_source_is_required() {
     let f = Fixture::new().await;
     let api = f.api(f.config());
-    let both = ImportRequest { url: Param::str("http://example.com/a.png"), path: Param::str("a.png"), ..Default::default() };
-    let array = ImportRequest { url: Param::List(vec![Param::str("http://example.com/a.png")]), ..Default::default() };
+    let both = ImportRequest {
+        url: Param::str("http://example.com/a.png"),
+        path: Param::str("a.png"),
+        ..Default::default()
+    };
+    let array = ImportRequest {
+        url: Param::List(vec![Param::str("http://example.com/a.png")]),
+        ..Default::default()
+    };
     for req in [ImportRequest::default(), both, array] {
         let err = api.import(&req).await.unwrap_err();
         assert_eq!(err.status, ApiStatus::Unprocessable, "{req:?}");
@@ -212,7 +268,11 @@ async fn external_import_rejects_html_and_svg_content() {
     for ct in ["text/html", "image/svg+xml"] {
         let f = Fixture::new().await;
         external(&f.mock, "/image.png", b"unsafe", ct).await;
-        let err = f.api(f.config()).import(&url("http://example.com/image.png")).await.unwrap_err();
+        let err = f
+            .api(f.config())
+            .import(&url("http://example.com/image.png"))
+            .await
+            .unwrap_err();
         assert_eq!(err.status, ApiStatus::Unprocessable, "{ct}");
         assert!(!f.local_images_exist());
     }
@@ -224,7 +284,11 @@ async fn external_import_rejects_oversized_responses() {
     let f = Fixture::new().await;
     let body = vec![b'x'; (frankmd_media::images::MAX_EXTERNAL_IMAGE_BYTES + 1) as usize];
     external(&f.mock, "/image.png", &body, "image/png").await;
-    let err = f.api(f.config()).import(&url("http://example.com/image.png")).await.unwrap_err();
+    let err = f
+        .api(f.config())
+        .import(&url("http://example.com/image.png"))
+        .await
+        .unwrap_err();
     assert_eq!(err.status, ApiStatus::Unprocessable);
     assert!(!f.local_images_exist());
 }
@@ -239,11 +303,22 @@ async fn external_import_follows_redirects_and_rejects_private_targets() {
         .mount(&f.mock)
         .await;
     f.external_image().await;
-    assert!(f.api(f.config()).import(&url("http://example.com/start")).await.is_ok());
+    assert!(
+        f.api(f.config())
+            .import(&url("http://example.com/start"))
+            .await
+            .is_ok()
+    );
 
     let loopback: IpAddr = "127.0.0.1".parse().unwrap();
-    let (_, api) = f.api_with(f.config(), StaticResolver::new().with("example.com", &[loopback]));
-    let err = api.import(&url("http://example.com/image.png")).await.unwrap_err();
+    let (_, api) = f.api_with(
+        f.config(),
+        StaticResolver::new().with("example.com", &[loopback]),
+    );
+    let err = api
+        .import(&url("http://example.com/image.png"))
+        .await
+        .unwrap_err();
     assert_eq!(err.status, ApiStatus::Unprocessable);
 }
 
@@ -254,11 +329,17 @@ async fn s3_failures_and_missing_credentials_never_create_local_media() {
     f.external_image().await;
     s3_put_error(&f.mock, "InternalError", 500).await;
     let (settings, api) = f.api_with(f.s3(), default_resolver());
-    let err = api.import(&url("http://example.com/image.png")).await.unwrap_err();
+    let err = api
+        .import(&url("http://example.com/image.png"))
+        .await
+        .unwrap_err();
     assert_eq!(err.status, ApiStatus::Unprocessable);
     assert!(!err.message.as_str().contains("private provider details"));
     settings.update(|c| c.s3.access_key_id = Some(String::new()));
-    let err = api.import(&url("http://example.com/image.png")).await.unwrap_err();
+    let err = api
+        .import(&url("http://example.com/image.png"))
+        .await
+        .unwrap_err();
     assert_eq!(err.status, ApiStatus::Unprocessable);
     assert!(!f.local_images_exist());
 }
@@ -272,9 +353,15 @@ async fn legacy_s3_endpoints_reject_an_active_local_provider() {
     c.s3.secret_access_key = Some("secret".into());
     c.s3.bucket = Some("bucket".into());
     let api = f.api(c);
-    let err = api.upload_to_s3("photo.png", &Param::Nil, None).await.unwrap_err();
+    let err = api
+        .upload_to_s3("photo.png", &Param::Nil, None)
+        .await
+        .unwrap_err();
     assert_eq!(err.status, ApiStatus::Unprocessable);
-    let err = api.upload_external_to_s3("http://example.com/image.png", &Param::Nil, None).await.unwrap_err();
+    let err = api
+        .upload_external_to_s3("http://example.com/image.png", &Param::Nil, None)
+        .await
+        .unwrap_err();
     assert_eq!(err.status, ApiStatus::Unprocessable);
     assert!(puts(&f.mock).await.is_empty());
 }

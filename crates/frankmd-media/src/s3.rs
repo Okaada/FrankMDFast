@@ -7,7 +7,8 @@
 use std::time::Duration;
 
 use aws_sdk_s3::config::{
-    BehaviorVersion, Credentials, Region, RequestChecksumCalculation, ResponseChecksumValidation, retry::RetryConfig,
+    BehaviorVersion, Credentials, Region, RequestChecksumCalculation, ResponseChecksumValidation,
+    retry::RetryConfig,
 };
 use aws_sdk_s3::error::{ProvideErrorMetadata, SdkError};
 use aws_sdk_s3::primitives::ByteStream;
@@ -82,7 +83,12 @@ impl S3Client {
         if !valid_region(&region) {
             return Err(S3Error::InvalidRegion);
         }
-        Ok(Self { settings: settings.clone(), http: http.clone(), transport: None, region })
+        Ok(Self {
+            settings: settings.clone(),
+            http: http.clone(),
+            transport: None,
+            region,
+        })
     }
 
     /// **Test seam**: send requests to `base` (path style: `<base>/<bucket>/<key>`)
@@ -100,7 +106,10 @@ impl S3Client {
 
     /// Custom endpoint, if any.
     pub fn endpoint(&self) -> Option<&str> {
-        self.settings.endpoint.as_deref().filter(|e| !e.trim().is_empty())
+        self.settings
+            .endpoint
+            .as_deref()
+            .filter(|e| !e.trim().is_empty())
     }
 
     /// Whether path-style addressing is used.
@@ -114,7 +123,12 @@ impl S3Client {
     }
 
     /// `PutObject` with `If-None-Match: *` (never overwrites) and `Content-Type`.
-    pub async fn put_object(&self, key: &str, bytes: Vec<u8>, content_type: &str) -> Result<(), S3Error> {
+    pub async fn put_object(
+        &self,
+        key: &str,
+        bytes: Vec<u8>,
+        content_type: &str,
+    ) -> Result<(), S3Error> {
         self.sdk()
             .put_object()
             .bucket(self.bucket())
@@ -129,7 +143,11 @@ impl S3Client {
     }
 
     /// `ListObjectsV2(prefix, continuation_token)`.
-    pub async fn list_objects_v2(&self, prefix: &str, continuation_token: Option<&str>) -> Result<ListPage, S3Error> {
+    pub async fn list_objects_v2(
+        &self,
+        prefix: &str,
+        continuation_token: Option<&str>,
+    ) -> Result<ListPage, S3Error> {
         let out = self
             .sdk()
             .list_objects_v2()
@@ -152,17 +170,34 @@ impl S3Client {
                 })
             })
             .collect();
-        let next = if out.is_truncated() == Some(true) { out.next_continuation_token().map(str::to_owned) } else { None };
-        Ok(ListPage { objects, next_continuation_token: next, truncated: out.is_truncated() == Some(true) })
+        let next = if out.is_truncated() == Some(true) {
+            out.next_continuation_token().map(str::to_owned)
+        } else {
+            None
+        };
+        Ok(ListPage {
+            objects,
+            next_continuation_token: next,
+            truncated: out.is_truncated() == Some(true),
+        })
     }
 
     /// `HeadObject`: `Ok(true)` exists, `Ok(false)` on NotFound.
     pub async fn head_object(&self, key: &str) -> Result<bool, S3Error> {
-        match self.sdk().head_object().bucket(self.bucket()).key(key).send().await {
+        match self
+            .sdk()
+            .head_object()
+            .bucket(self.bucket())
+            .key(key)
+            .send()
+            .await
+        {
             Ok(_) => Ok(true),
             Err(e) => match classify(e) {
                 S3Error::Service { status: 404, .. } => Ok(false),
-                S3Error::Service { code, .. } if code == "NotFound" || code == "NoSuchKey" => Ok(false),
+                S3Error::Service { code, .. } if code == "NotFound" || code == "NoSuchKey" => {
+                    Ok(false)
+                }
                 other => Err(other),
             },
         }
@@ -170,7 +205,11 @@ impl S3Client {
 
     /// `CopyObject(copy_source: "<bucket>/<url-encoded from>", key: to)`.
     pub async fn copy_object(&self, from: &str, to: &str) -> Result<(), S3Error> {
-        let encoded = from.split('/').map(crate::upload_storage::erb_url_encode).collect::<Vec<_>>().join("/");
+        let encoded = from
+            .split('/')
+            .map(crate::upload_storage::erb_url_encode)
+            .collect::<Vec<_>>()
+            .join("/");
         self.sdk()
             .copy_object()
             .bucket(self.bucket())
@@ -212,11 +251,19 @@ impl S3Client {
             .http_client(crate::s3_http::TrustedHttpClient::new(self.http.clone()))
             .request_checksum_calculation(RequestChecksumCalculation::WhenRequired)
             .response_checksum_validation(ResponseChecksumValidation::WhenRequired)
-            .retry_config(RetryConfig::standard().with_max_attempts(3).with_initial_backoff(Duration::from_millis(100)));
+            .retry_config(
+                RetryConfig::standard()
+                    .with_max_attempts(3)
+                    .with_initial_backoff(Duration::from_millis(100)),
+            );
         if let Some(base) = &self.transport {
-            builder = builder.endpoint_url(base.as_str().trim_end_matches('/')).force_path_style(true);
+            builder = builder
+                .endpoint_url(base.as_str().trim_end_matches('/'))
+                .force_path_style(true);
         } else if let Some(endpoint) = self.endpoint() {
-            builder = builder.endpoint_url(endpoint).force_path_style(self.settings.force_path_style);
+            builder = builder
+                .endpoint_url(endpoint)
+                .force_path_style(self.settings.force_path_style);
         }
         aws_sdk_s3::Client::from_conf(builder.build())
     }
@@ -226,7 +273,9 @@ impl S3Client {
 fn valid_region(region: &str) -> bool {
     !region.is_empty()
         && region.len() <= 63
-        && region.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'-')
+        && region
+            .bytes()
+            .all(|b| b.is_ascii_alphanumeric() || b == b'-')
         && !region.starts_with('-')
         && !region.ends_with('-')
 }
@@ -236,7 +285,10 @@ fn valid_region(region: &str) -> bool {
 fn classify<E: ProvideErrorMetadata, R: HttpStatus>(error: SdkError<E, R>) -> S3Error {
     match &error {
         SdkError::ServiceError(ctx) => S3Error::Service {
-            code: ctx.err().code().map_or_else(|| status_code_name(ctx.raw().status_u16()), str::to_owned),
+            code: ctx
+                .err()
+                .code()
+                .map_or_else(|| status_code_name(ctx.raw().status_u16()), str::to_owned),
             status: ctx.raw().status_u16(),
         },
         SdkError::ResponseError(ctx) => S3Error::Service {

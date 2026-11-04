@@ -55,7 +55,15 @@ fn style(class: TokenClass, definition: bool) -> TokenStyle {
 pub(super) fn highlight_syntect(id: &str, lines: &[&str]) -> Option<Vec<HighlightedLine>> {
     let set = &*SYNTAXES;
     let syntax: &SyntaxReference = set.find_syntax_by_name(syntax_name(id)?)?;
-    let plain = || lines.iter().map(|l| HighlightedLine { text: (*l).to_owned(), runs: Vec::new() }).collect();
+    let plain = || {
+        lines
+            .iter()
+            .map(|l| HighlightedLine {
+                text: (*l).to_owned(),
+                runs: Vec::new(),
+            })
+            .collect()
+    };
     let mut state = ParseState::new(syntax);
     let mut stack = ScopeStack::new();
     let mut prev_token = String::new();
@@ -63,15 +71,21 @@ pub(super) fn highlight_syntect(id: &str, lines: &[&str]) -> Option<Vec<Highligh
     for line in lines {
         // The grammars are the "newlines" variants: feed each line with its `\n`.
         let with_nl = format!("{line}\n");
-        let Ok(ops) = state.parse_line(&with_nl, set) else { return Some(plain()) };
+        let Ok(ops) = state.parse_line(&with_nl, set) else {
+            return Some(plain());
+        };
         let mut runs = Vec::new();
         let mut pos = 0;
-        let ends = ops.iter().map(|(i, op)| (*i, Some(op))).chain(std::iter::once((with_nl.len(), None)));
+        let ends = ops
+            .iter()
+            .map(|(i, op)| (*i, Some(op)))
+            .chain(std::iter::once((with_nl.len(), None)));
         for (at, op) in ends {
             let end = at.min(line.len());
             if end > pos {
                 let text = &line[pos..end];
-                let names: Vec<String> = stack.as_slice().iter().map(|s| s.build_string()).collect();
+                let names: Vec<String> =
+                    stack.as_slice().iter().map(|s| s.build_string()).collect();
                 let s = role(id, &names, text, &prev_token);
                 if s.class != TokenClass::Plain {
                     runs.push((pos..end, s));
@@ -89,7 +103,10 @@ pub(super) fn highlight_syntect(id: &str, lines: &[&str]) -> Option<Vec<Highligh
                 return Some(plain());
             }
         }
-        out.push(HighlightedLine { text: (*line).to_owned(), runs: tidy_runs(line, runs) });
+        out.push(HighlightedLine {
+            text: (*line).to_owned(),
+            runs: tidy_runs(line, runs),
+        });
     }
     Some(out)
 }
@@ -118,9 +135,15 @@ fn tidy_runs(line: &str, runs: Vec<(Range<usize>, TokenStyle)>) -> Vec<(Range<us
 /// Scopes that open code inside a string (`#{..}`, `${..}`, `$var` in shell):
 /// below them the enclosing string no longer colors the text.
 fn is_string_barrier(scope: &str) -> bool {
-    ["meta.interpolation", "meta.embedded", "meta.group.expansion", "meta.template.expression", "source."]
-        .iter()
-        .any(|p| scope.starts_with(p))
+    [
+        "meta.interpolation",
+        "meta.embedded",
+        "meta.group.expansion",
+        "meta.template.expression",
+        "source.",
+    ]
+    .iter()
+    .any(|p| scope.starts_with(p))
 }
 
 /// Punctuation that belongs to its parent construct (string quotes, comment
@@ -138,8 +161,8 @@ fn is_transparent_punctuation(scope: &str) -> bool {
 }
 
 const RUST_PRIMITIVES: &[&str] = &[
-    "i8", "i16", "i32", "i64", "i128", "isize", "u8", "u16", "u32", "u64", "u128", "usize", "f32", "f64", "bool",
-    "char", "str",
+    "i8", "i16", "i32", "i64", "i128", "isize", "u8", "u16", "u32", "u64", "u128", "usize", "f32",
+    "f64", "bool", "char", "str",
 ];
 
 /// Role of a token from its scope stack (outermost first).
@@ -158,19 +181,33 @@ fn role(lang: &str, names: &[String], text: &str, prev_token: &str) -> TokenStyl
             return style(TokenClass::String, false);
         }
     }
-    names.iter().rev().find_map(|n| scope_role(lang, n, names, text, prev_token)).unwrap_or(plain)
+    names
+        .iter()
+        .rev()
+        .find_map(|n| scope_role(lang, n, names, text, prev_token))
+        .unwrap_or(plain)
 }
 
 /// Lezer's CSS parser tags any selector identifier (`x`, `my-tag`) as a type
 /// name; the TextMate grammar leaves unknown elements unscoped. Returns the
 /// identifier runs of an unscoped top-level CSS segment starting at `base`.
-fn css_bare_selectors(names: &[String], text: &str, base: usize) -> Vec<(Range<usize>, TokenStyle)> {
-    if !names.iter().all(|n| n == "source.css" || n.starts_with("meta.selector")) {
+fn css_bare_selectors(
+    names: &[String],
+    text: &str,
+    base: usize,
+) -> Vec<(Range<usize>, TokenStyle)> {
+    if !names
+        .iter()
+        .all(|n| n == "source.css" || n.starts_with("meta.selector"))
+    {
         return Vec::new();
     }
     let mut runs = Vec::new();
     let mut start = None;
-    for (i, c) in text.char_indices().chain(std::iter::once((text.len(), ' '))) {
+    for (i, c) in text
+        .char_indices()
+        .chain(std::iter::once((text.len(), ' ')))
+    {
         let ident = c.is_ascii_alphanumeric() || c == '-' || c == '_';
         match (start, ident) {
             (None, true) if c.is_ascii_alphabetic() => start = Some(i),
@@ -185,7 +222,13 @@ fn css_bare_selectors(names: &[String], text: &str, base: usize) -> Vec<(Range<u
 }
 
 /// Role for one scope name, `None` to defer to the enclosing scope.
-fn scope_role(lang: &str, n: &str, names: &[String], text: &str, prev_token: &str) -> Option<TokenStyle> {
+fn scope_role(
+    lang: &str,
+    n: &str,
+    names: &[String],
+    text: &str,
+    prev_token: &str,
+) -> Option<TokenStyle> {
     use TokenClass::*;
     let has = |p: &str| names.iter().any(|x| x.starts_with(p));
     let s = |c| Some(style(c, false));
@@ -195,7 +238,9 @@ fn scope_role(lang: &str, n: &str, names: &[String], text: &str, prev_token: &st
     if is_transparent_punctuation(n) {
         return None;
     }
-    if lang == "toml" && (n.starts_with("punctuation.definition.table") || n.starts_with("entity.name.table")) {
+    if lang == "toml"
+        && (n.starts_with("punctuation.definition.table") || n.starts_with("entity.name.table"))
+    {
         return s(Constant);
     }
     if n.starts_with("punctuation") {
@@ -222,7 +267,11 @@ fn scope_role(lang: &str, n: &str, names: &[String], text: &str, prev_token: &st
         return s(Keyword);
     }
     if n.starts_with("entity.name.function") {
-        let class = if matches!(lang, "java" | "ruby") { Identifier } else { Function };
+        let class = if matches!(lang, "java" | "ruby") {
+            Identifier
+        } else {
+            Function
+        };
         return Some(style(class, !has("meta.function-call")));
     }
     if n.starts_with("entity.name.tag") {
@@ -232,10 +281,16 @@ fn scope_role(lang: &str, n: &str, names: &[String], text: &str, prev_token: &st
             _ => s(Type),
         };
     }
-    if ["entity.name.class", "entity.name.type", "entity.name.struct", "entity.name.enum", "entity.name.trait"]
-        .iter()
-        .chain(&["entity.name.interface", "entity.name.union"])
-        .any(|p| n.starts_with(p))
+    if [
+        "entity.name.class",
+        "entity.name.type",
+        "entity.name.struct",
+        "entity.name.enum",
+        "entity.name.trait",
+    ]
+    .iter()
+    .chain(&["entity.name.interface", "entity.name.union"])
+    .any(|p| n.starts_with(p))
     {
         return match lang {
             "java" | "kotlin" | "csharp" => Some(style(Identifier, true)),
@@ -265,7 +320,11 @@ fn scope_role(lang: &str, n: &str, names: &[String], text: &str, prev_token: &st
         return s(Type);
     }
     if n.starts_with("support.function") {
-        return s(if lang == "shell" { Identifier } else { Function });
+        return s(if lang == "shell" {
+            Identifier
+        } else {
+            Function
+        });
     }
     if n.starts_with("support.macro") {
         return s(Function);
@@ -287,7 +346,11 @@ fn scope_role(lang: &str, n: &str, names: &[String], text: &str, prev_token: &st
     }
     if n.starts_with("variable.function") {
         // Lezer Go styles `pkg.Func(` as a property access.
-        return s(if lang == "go" && prev_token == "." { Property } else { Function });
+        return s(if lang == "go" && prev_token == "." {
+            Property
+        } else {
+            Function
+        });
     }
     if n.starts_with("variable.parameter") {
         return Some(style(Identifier, true));
@@ -322,7 +385,14 @@ fn storage_type_role(lang: &str, n: &str, text: &str) -> TokenClass {
     if n.starts_with("storage.type.function.arrow") {
         return TokenClass::Operator;
     }
-    if ["storage.type.primitive", "storage.type.buildin", "storage.type.builtin"].iter().any(|p| n.starts_with(p)) {
+    if [
+        "storage.type.primitive",
+        "storage.type.buildin",
+        "storage.type.builtin",
+    ]
+    .iter()
+    .any(|p| n.starts_with(p))
+    {
         return TokenClass::Type;
     }
     // A bare `storage.type.<lang>` (three components) is ambiguous.
@@ -351,12 +421,21 @@ pub(super) fn highlight_hcl(lines: &[&str]) -> Vec<HighlightedLine> {
                 for (text, style) in hcl::tokenize_line(line, &mut state) {
                     let end = pos + text.len();
                     if let Some(st) = style {
-                        runs.push((pos..end, TokenStyle { class: hcl_class(st), definition: false }));
+                        runs.push((
+                            pos..end,
+                            TokenStyle {
+                                class: hcl_class(st),
+                                definition: false,
+                            },
+                        ));
                     }
                     pos = end;
                 }
             }
-            HighlightedLine { text: (*line).to_owned(), runs }
+            HighlightedLine {
+                text: (*line).to_owned(),
+                runs,
+            }
         })
         .collect()
 }

@@ -180,7 +180,10 @@ impl TableEditorModel {
             && range.end <= found.end_pos
             && text.get(range.clone()) == Some(query)
         {
-            existing = strip_slash_query(&existing, range.start - found.start_pos..range.end - found.start_pos);
+            existing = strip_slash_query(
+                &existing,
+                range.start - found.start_pos..range.end - found.start_pos,
+            );
         }
         Self::from_markdown(&existing, found.start_pos..found.end_pos, header_template)
     }
@@ -235,7 +238,11 @@ impl TableEditorModel {
 
     /// Text of cell `(row, col)` (`""` when out of range).
     pub fn cell(&self, row: usize, col: usize) -> &str {
-        self.table.rows.get(row).and_then(|r| r.get(col)).map_or("", String::as_str)
+        self.table
+            .rows
+            .get(row)
+            .and_then(|r| r.get(col))
+            .map_or("", String::as_str)
     }
 
     /// Set a cell's text verbatim.
@@ -287,7 +294,11 @@ impl TableEditorModel {
         for (r, row) in self.table.rows.iter_mut().enumerate() {
             while row.len() < cols {
                 let n = row.len() + 1;
-                row.push(if r == 0 { header_label(&self.header_template, n) } else { String::new() });
+                row.push(if r == 0 {
+                    header_label(&self.header_template, n)
+                } else {
+                    String::new()
+                });
             }
             row.truncate(cols);
         }
@@ -338,7 +349,10 @@ impl TableEditorModel {
     pub fn cell_menu(&self, row: usize, col: usize) -> Vec<CellMenuRow> {
         CellAction::ALL
             .iter()
-            .map(|&action| CellMenuRow { action, enabled: self.can(action, row, col) })
+            .map(|&action| CellMenuRow {
+                action,
+                enabled: self.can(action, row, col),
+            })
             .collect()
     }
 
@@ -423,7 +437,10 @@ impl TableEditorModel {
     /// Insert/Update: `None` when the table is empty (the dialog just closes).
     pub fn confirm(&self) -> Option<TableConfirm> {
         let markdown = self.to_markdown();
-        (!markdown.is_empty()).then(|| TableConfirm { markdown, mode: self.mode.clone() })
+        (!markdown.is_empty()).then(|| TableConfirm {
+            markdown,
+            mode: self.mode.clone(),
+        })
     }
 
     fn swap_columns(&mut self, a: usize, b: usize) {
@@ -455,7 +472,11 @@ mod tests {
 
     #[test]
     fn alignment_follows_its_column() {
-        let mut m = TableEditorModel::from_markdown("| a | b |\n| :-- | --: |\n| 1 | 2 |", 0..10, DEFAULT_HEADER_TEMPLATE);
+        let mut m = TableEditorModel::from_markdown(
+            "| a | b |\n| :-- | --: |\n| 1 | 2 |",
+            0..10,
+            DEFAULT_HEADER_TEMPLATE,
+        );
         assert!(m.move_column_right(0));
         assert_eq!(m.alignment(0), Alignment::Right);
         assert_eq!(m.alignment(1), Alignment::Left);

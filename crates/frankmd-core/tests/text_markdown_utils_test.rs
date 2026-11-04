@@ -22,7 +22,10 @@ fn finds_table_when_cursor_is_on_table_row() {
 // port: test/javascript/markdown_utils.test.js:26 "returns null when not in table"
 #[test]
 fn returns_none_when_not_in_table() {
-    assert_eq!(find_table_at_position(TABLE_DOC, idx(TABLE_DOC, "Some text")), None);
+    assert_eq!(
+        find_table_at_position(TABLE_DOC, idx(TABLE_DOC, "Some text")),
+        None
+    );
 }
 
 // port: test/javascript/markdown_utils.test.js:41 "returns null for single-line table"
@@ -97,7 +100,10 @@ fn finds_code_block_when_cursor_is_inside() {
 // port: test/javascript/markdown_utils.test.js:146 "returns null when not in code block"
 #[test]
 fn returns_none_when_not_in_code_block() {
-    assert_eq!(find_code_block_at_position(CODE_DOC, idx(CODE_DOC, "Some text")), None);
+    assert_eq!(
+        find_code_block_at_position(CODE_DOC, idx(CODE_DOC, "Some text")),
+        None
+    );
 }
 
 // port: test/javascript/markdown_utils.test.js:161 "handles code block without language"

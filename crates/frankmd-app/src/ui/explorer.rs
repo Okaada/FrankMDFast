@@ -149,8 +149,8 @@ impl Shell {
         let cursor = self.explorer.cursor().map(str::to_owned);
         let focused = self.sidebar_focus.clone();
         let dragging = self.explorer.is_dragging();
-        let root_target = dragging
-            && self.explorer.drop_target(&DropHover::Background) == Some(DropTarget::Root);
+        let root_target =
+            dragging && self.explorer.drop_target(&DropHover::Background) == Some(DropTarget::Root);
         let rename_row = self
             .files
             .rename
@@ -217,9 +217,8 @@ impl Shell {
             .on_drop({
                 let this = this.clone();
                 move |paths: &ExternalPaths, _, cx| {
-                    let _ = this.update(cx, |shell, cx| {
-                        shell.import_external(paths.paths(), "", cx)
-                    });
+                    let _ =
+                        this.update(cx, |shell, cx| shell.import_external(paths.paths(), "", cx));
                 }
             });
         match view {
@@ -305,8 +304,12 @@ impl Shell {
             .pr_2()
             .gap_1()
             .when(selected, |el| el.bg(theme.selection))
-            .when(row.selected, |el| el.border_l_2().border_color(theme.primary))
-            .when(is_cursor, |el| el.border_1().border_color(theme.primary.opacity(0.6)))
+            .when(row.selected, |el| {
+                el.border_l_2().border_color(theme.primary)
+            })
+            .when(is_cursor, |el| {
+                el.border_1().border_color(theme.primary.opacity(0.6))
+            })
             .when(valid_drop, |el| {
                 el.border_1()
                     .border_color(theme.primary)
@@ -315,7 +318,9 @@ impl Shell {
             .hover(|s| s.bg(theme.list_hover))
             .tooltip({
                 let path: SharedString = row.path.clone().into();
-                move |window, cx| gpui_kit::component::tooltip::Tooltip::new(path.clone()).build(window, cx)
+                move |window, cx| {
+                    gpui_kit::component::tooltip::Tooltip::new(path.clone()).build(window, cx)
+                }
             })
             .child(
                 div()
@@ -459,7 +464,12 @@ impl Shell {
     }
 
     /// A tree drag was dropped on `hover`.
-    pub(crate) fn drop_on(&mut self, hover: &DropHover, window: &mut Window, cx: &mut Context<Self>) {
+    pub(crate) fn drop_on(
+        &mut self,
+        hover: &DropHover,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
         self.tree_ui.drag_hover = None;
         let Some(plan) = self.explorer.drop(hover) else {
             cx.notify();
@@ -561,7 +571,10 @@ impl Shell {
             "right" if plain => {
                 if let Some(row) = current.filter(|r| r.kind == RowKind::Folder) {
                     if row.expanded {
-                        if let Some(child) = rows.get(at.unwrap_or(0) + 1).filter(|c| c.depth > row.depth) {
+                        if let Some(child) = rows
+                            .get(at.unwrap_or(0) + 1)
+                            .filter(|c| c.depth > row.depth)
+                        {
                             self.explorer.set_cursor(Some(child.path.clone()));
                         }
                     } else {
@@ -638,7 +651,9 @@ impl Shell {
             }
             _ => {
                 let typed = keystroke.key_char.as_deref().filter(|c| {
-                    plain && c.chars().count() == 1 && c.chars().all(|ch| !ch.is_control() && ch != ' ')
+                    plain
+                        && c.chars().count() == 1
+                        && c.chars().all(|ch| !ch.is_control() && ch != ' ')
                 });
                 let Some(ch) = typed else {
                     return false;

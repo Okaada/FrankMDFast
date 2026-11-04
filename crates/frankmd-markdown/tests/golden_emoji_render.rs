@@ -21,12 +21,19 @@ fn golden_every_shortcode_renders_in_preview() {
         let mut errs = Vec::new();
         for (code, emoji) in map.as_object().unwrap() {
             let doc = render_body(&format!(":{code}:"), 0, &RenderOptions::default());
-            let want = Inline::Emoji { shortcode: code.clone(), emoji: emoji.as_str().unwrap().to_owned() };
+            let want = Inline::Emoji {
+                shortcode: code.clone(),
+                emoji: emoji.as_str().unwrap().to_owned(),
+            };
             match doc.blocks.as_slice() {
                 [Block::Paragraph { inlines, .. }] if inlines.as_slice() == [want.clone()] => {}
                 other => errs.push(format!(":{code}: rendered {other:?}")),
             }
         }
-        if errs.is_empty() { Ok(()) } else { Err(errs.join("; ")) }
+        if errs.is_empty() {
+            Ok(())
+        } else {
+            Err(errs.join("; "))
+        }
     });
 }

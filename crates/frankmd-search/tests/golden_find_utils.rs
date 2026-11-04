@@ -15,8 +15,8 @@
 #![allow(clippy::unwrap_used)]
 
 use frankmd_search::find::{
-    Direction, FindOptions, Match, escape_regex_chars, find_all_matches, find_closest_match_index, replace_matches,
-    validate_regex,
+    Direction, FindOptions, Match, escape_regex_chars, find_all_matches, find_closest_match_index,
+    replace_matches, validate_regex,
 };
 use frankmd_testkit::serde_json::{Value, json};
 use frankmd_testkit::{Case, assert_cases, decode_js, golden};
@@ -33,7 +33,11 @@ fn match_from_json(v: &Value) -> Match {
     Match {
         start: v["start"].as_u64().unwrap() as usize,
         end: v["end"].as_u64().unwrap() as usize,
-        text: v.get("text").and_then(Value::as_str).unwrap_or_default().to_owned(),
+        text: v
+            .get("text")
+            .and_then(Value::as_str)
+            .unwrap_or_default()
+            .to_owned(),
         groups: v
             .get("groups")
             .and_then(Value::as_array)
@@ -47,7 +51,9 @@ fn match_to_json(m: &Match) -> Value {
 }
 
 fn matches_arg(v: &Value) -> Vec<Match> {
-    v.as_array().map(|a| a.iter().map(match_from_json).collect()).unwrap_or_default()
+    v.as_array()
+        .map(|a| a.iter().map(match_from_json).collect())
+        .unwrap_or_default()
 }
 
 /// UTF-16 offsets that fall between the two halves of a surrogate pair.
@@ -67,20 +73,34 @@ fn check_find_all(case: &Case, input: &[Value]) -> Result<(), String> {
     let text = arg(input, 0).as_str().unwrap_or_default();
     let query = arg(input, 1).as_str().unwrap_or_default();
     let o = arg(input, 2);
-    let opts = FindOptions { case_sensitive: opt_bool(o, "caseSensitive"), use_regex: opt_bool(o, "useRegex"), whole_word: false };
-    let actual: Vec<Value> = find_all_matches(text, query, opts).iter().map(match_to_json).collect();
+    let opts = FindOptions {
+        case_sensitive: opt_bool(o, "caseSensitive"),
+        use_regex: opt_bool(o, "useRegex"),
+        whole_word: false,
+    };
+    let actual: Vec<Value> = find_all_matches(text, query, opts)
+        .iter()
+        .map(match_to_json)
+        .collect();
     let expected: Vec<Value> = decode_js(&case.expected).as_array().unwrap().clone();
 
     let mid = mid_pair_offsets(text);
     let splits = |m: &Value| {
-        let (s, e) = (m["start"].as_u64().unwrap() as usize, m["end"].as_u64().unwrap() as usize);
+        let (s, e) = (
+            m["start"].as_u64().unwrap() as usize,
+            m["end"].as_u64().unwrap() as usize,
+        );
         mid.contains(&s) || mid.contains(&e)
     };
     if !expected.iter().any(splits) {
         return if actual == expected {
             Ok(())
         } else {
-            Err(format!("\n  expected: {}\n  actual:   {}", Value::Array(expected), Value::Array(actual)))
+            Err(format!(
+                "\n  expected: {}\n  actual:   {}",
+                Value::Array(expected),
+                Value::Array(actual)
+            ))
         };
     }
     // Deviation mode (JS split a surrogate pair).
@@ -90,7 +110,9 @@ fn check_find_all(case: &Case, input: &[Value]) -> Result<(), String> {
     let mut it = actual.iter();
     for want in expected.iter().filter(|m| !splits(m)) {
         if !it.any(|got| got == want) {
-            return Err(format!("missing (or out of order) scalar-aligned match {want}"));
+            return Err(format!(
+                "missing (or out of order) scalar-aligned match {want}"
+            ));
         }
     }
     Ok(())
@@ -102,7 +124,9 @@ fn check(case: &Case) -> Result<(), String> {
     let func = case.func.as_deref().unwrap();
     let expected = decode_js(&case.expected);
     let actual = match func {
-        "escapeRegexChars" => json!(escape_regex_chars(arg(input, 0).as_str().unwrap_or_default())),
+        "escapeRegexChars" => json!(escape_regex_chars(
+            arg(input, 0).as_str().unwrap_or_default()
+        )),
         "findAllMatches" => return check_find_all(case, input),
         "findClosestMatchIndex" => {
             let dir = match arg(input, 2) {
@@ -124,7 +148,12 @@ fn check(case: &Case) -> Result<(), String> {
                 _ if use_regex => String::new(),
                 _ => "null".to_owned(),
             };
-            json!(replace_matches(text, &matches_arg(arg(input, 1)), &repl, use_regex))
+            json!(replace_matches(
+                text,
+                &matches_arg(arg(input, 1)),
+                &repl,
+                use_regex
+            ))
         }
         "validateRegex" => {
             let pattern = arg(input, 0).as_str().unwrap_or_default();
@@ -137,7 +166,10 @@ fn check(case: &Case) -> Result<(), String> {
                     if e.starts_with(&prefix) && e.len() > prefix.len() {
                         Ok(())
                     } else {
-                        Err(format!("error {e:?} lacks prefix {prefix:?} (V8 said {})", expected["error"]))
+                        Err(format!(
+                            "error {e:?} lacks prefix {prefix:?} (V8 said {})",
+                            expected["error"]
+                        ))
                     }
                 }
                 (got, _) => Err(format!("expected {expected}, got {got:?}")),
@@ -145,7 +177,11 @@ fn check(case: &Case) -> Result<(), String> {
         }
         other => return Err(format!("unknown fn {other}")),
     };
-    if actual == expected { Ok(()) } else { Err(format!("expected {expected}, got {actual}")) }
+    if actual == expected {
+        Ok(())
+    } else {
+        Err(format!("expected {expected}, got {actual}"))
+    }
 }
 
 macro_rules! golden_fn {
@@ -153,7 +189,11 @@ macro_rules! golden_fn {
         #[test]
         fn $test() {
             let g = golden("js_find_utils");
-            assert_cases(concat!("js_find_utils.json#", $func), g.cases_for($func), check);
+            assert_cases(
+                concat!("js_find_utils.json#", $func),
+                g.cases_for($func),
+                check,
+            );
         }
     };
 }

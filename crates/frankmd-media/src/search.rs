@@ -10,12 +10,15 @@
 use crate::config::MediaConfig;
 
 /// DuckDuckGo browser `User-Agent` the original sent on both requests.
-pub const DDG_USER_AGENT: &str =
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
+pub const DDG_USER_AGENT: &str = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
 /// Max DuckDuckGo results returned (`first(20)`).
 pub const DDG_MAX_RESULTS: usize = 20;
 /// vqd token patterns, tried in order.
-pub const VQD_PATTERNS: [&str; 3] = [r#"vqd=["']?([\d-]+)["']?"#, r"vqd=([\d-]+)", r#""vqd":"([\d-]+)""#];
+pub const VQD_PATTERNS: [&str; 3] = [
+    r#"vqd=["']?([\d-]+)["']?"#,
+    r"vqd=([\d-]+)",
+    r#""vqd":"([\d-]+)""#,
+];
 
 /// Base URLs (tests point them at wiremock).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -28,7 +31,10 @@ pub struct SearchEndpoints {
 
 impl Default for SearchEndpoints {
     fn default() -> Self {
-        Self { duckduckgo: "https://duckduckgo.com".into(), google: "https://www.googleapis.com".into() }
+        Self {
+            duckduckgo: "https://duckduckgo.com".into(),
+            google: "https://www.googleapis.com".into(),
+        }
     }
 }
 
@@ -109,7 +115,11 @@ pub fn google_configured(config: &MediaConfig) -> bool {
 
 /// Flags for the config endpoint.
 pub fn search_flags(config: &MediaConfig) -> SearchFlags {
-    SearchFlags { web_search_enabled: true, google_enabled: google_configured(config), pinterest_enabled: true }
+    SearchFlags {
+        web_search_enabled: true,
+        google_enabled: google_configured(config),
+        pinterest_enabled: true,
+    }
 }
 
 /// Rails `present?` on an optional string.
@@ -129,7 +139,11 @@ pub(crate) fn form_component(s: &str) -> String {
 
 /// Ruby `URI.encode_www_form` over `(key, value)` pairs.
 pub(crate) fn form_query(pairs: &[(&str, &str)]) -> String {
-    pairs.iter().map(|(k, v)| format!("{}={}", form_component(k), form_component(v))).collect::<Vec<_>>().join("&")
+    pairs
+        .iter()
+        .map(|(k, v)| format!("{}={}", form_component(k), form_component(v)))
+        .collect::<Vec<_>>()
+        .join("&")
 }
 
 /// Ruby `String#to_i` on a JSON value (numbers kept, strings parsed by
@@ -138,7 +152,11 @@ fn json_to_i(value: Option<&serde_json::Value>) -> u64 {
     match value {
         Some(serde_json::Value::Number(n)) => n.as_u64().unwrap_or(0),
         Some(serde_json::Value::String(s)) => {
-            let digits: String = s.trim_start().chars().take_while(char::is_ascii_digit).collect();
+            let digits: String = s
+                .trim_start()
+                .chars()
+                .take_while(char::is_ascii_digit)
+                .collect();
             digits.parse().unwrap_or(0)
         }
         _ => 0,
@@ -147,7 +165,9 @@ fn json_to_i(value: Option<&serde_json::Value>) -> u64 {
 
 /// A JSON string field.
 fn str_field(item: &serde_json::Value, key: &str) -> Option<String> {
-    item.get(key).and_then(serde_json::Value::as_str).map(str::to_owned)
+    item.get(key)
+        .and_then(serde_json::Value::as_str)
+        .map(str::to_owned)
 }
 
 /// Why a DuckDuckGo search failed (mapped to the original's messages).
@@ -192,7 +212,12 @@ impl ImageSearch {
 
     /// `GET /images/search_google?q=&start=`: blank → 400, unconfigured → 503;
     /// `key cx q searchType=image num=10 start=max(start,1) safe=active`.
-    pub async fn search_google(&self, config: &MediaConfig, q: &str, start: i64) -> Result<SearchResults, SearchError> {
+    pub async fn search_google(
+        &self,
+        config: &MediaConfig,
+        q: &str,
+        start: i64,
+    ) -> Result<SearchResults, SearchError> {
         let query = ruby_strip(q);
         if query.is_empty() {
             return Err(SearchError::QueryRequired);
@@ -210,19 +235,36 @@ impl ImageSearch {
             ("start", &page),
             ("safe", "active"),
         ]);
-        let url = format!("{}/customsearch/v1?{query_string}", self.endpoints.google.trim_end_matches('/'));
-        let response = self.http.reqwest().get(url).send().await.map_err(|_| SearchError::Failed)?;
+        let url = format!(
+            "{}/customsearch/v1?{query_string}",
+            self.endpoints.google.trim_end_matches('/')
+        );
+        let response = self
+            .http
+            .reqwest()
+            .get(url)
+            .send()
+            .await
+            .map_err(|_| SearchError::Failed)?;
         let status = response.status();
         let body = response.text().await.map_err(|_| SearchError::Failed)?;
         if !status.is_success() {
             let fallback = format!("Google API error ({})", status.as_u16());
             let message = serde_json::from_str::<serde_json::Value>(&body)
                 .ok()
-                .and_then(|data| data.pointer("/error/message").and_then(serde_json::Value::as_str).map(str::to_owned))
+                .and_then(|data| {
+                    data.pointer("/error/message")
+                        .and_then(serde_json::Value::as_str)
+                        .map(str::to_owned)
+                })
                 .unwrap_or(fallback);
-            return Ok(SearchResults { error: Some(message), ..SearchResults::default() });
+            return Ok(SearchResults {
+                error: Some(message),
+                ..SearchResults::default()
+            });
         }
-        let data: serde_json::Value = serde_json::from_str(&body).map_err(|_| SearchError::Failed)?;
+        let data: serde_json::Value =
+            serde_json::from_str(&body).map_err(|_| SearchError::Failed)?;
         let images = data
             .get("items")
             .and_then(serde_json::Value::as_array)
@@ -261,23 +303,33 @@ impl ImageSearch {
         };
         match self.duckduckgo_images(&search_query).await {
             Ok(results) => results,
-            Err(DdgFailure::Parse) => {
-                SearchResults { error: Some("Failed to parse results".into()), ..SearchResults::default() }
-            }
-            Err(DdgFailure::Other) => SearchResults { error: Some("Search failed".into()), ..SearchResults::default() },
+            Err(DdgFailure::Parse) => SearchResults {
+                error: Some("Failed to parse results".into()),
+                ..SearchResults::default()
+            },
+            Err(DdgFailure::Other) => SearchResults {
+                error: Some("Search failed".into()),
+                ..SearchResults::default()
+            },
         }
     }
 
     /// The two DuckDuckGo requests (vqd page, then `i.js`).
     async fn duckduckgo_images(&self, search_query: &str) -> Result<SearchResults, DdgFailure> {
         let base = self.endpoints.duckduckgo.trim_end_matches('/');
-        let page_url = format!("{base}/?q={}&iax=images&ia=images", form_component(search_query));
+        let page_url = format!(
+            "{base}/?q={}&iax=images&ia=images",
+            form_component(search_query)
+        );
         let page = self
             .http
             .reqwest()
             .get(page_url)
             .header("User-Agent", DDG_USER_AGENT)
-            .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+            .header(
+                "Accept",
+                "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            )
             .timeout(std::time::Duration::from_secs(15))
             .send()
             .await
@@ -311,7 +363,10 @@ impl ImageSearch {
             .await
             .map_err(|_| DdgFailure::Other)?;
         if !response.status().is_success() {
-            return Ok(SearchResults { error: Some("Failed to fetch images".into()), ..SearchResults::default() });
+            return Ok(SearchResults {
+                error: Some("Failed to fetch images".into()),
+                ..SearchResults::default()
+            });
         }
         let body = response.text().await.map_err(|_| DdgFailure::Other)?;
         let data: serde_json::Value = serde_json::from_str(&body).map_err(|_| DdgFailure::Parse)?;
@@ -333,7 +388,10 @@ impl ImageSearch {
                     .collect()
             })
             .unwrap_or_default();
-        Ok(SearchResults { images, ..SearchResults::default() })
+        Ok(SearchResults {
+            images,
+            ..SearchResults::default()
+        })
     }
 }
 
@@ -341,6 +399,8 @@ impl ImageSearch {
 fn extract_vqd(page: &str) -> Option<String> {
     VQD_PATTERNS.iter().find_map(|pattern| {
         let re = regex::Regex::new(pattern).ok()?;
-        re.captures(page).and_then(|c| c.get(1)).map(|m| m.as_str().to_owned())
+        re.captures(page)
+            .and_then(|c| c.get(1))
+            .map(|m| m.as_str().to_owned())
     })
 }

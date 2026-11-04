@@ -5,7 +5,10 @@ use frankmd_core::text::stats::{calculate_stats, format_file_size, format_read_t
 // port: test/javascript/stats_utils.test.js:9 "counts words correctly"
 #[test]
 fn counts_words_correctly() {
-    assert_eq!(calculate_stats(Some("Hello world this is a test")).word_count, 6);
+    assert_eq!(
+        calculate_stats(Some("Hello world this is a test")).word_count,
+        6
+    );
 }
 
 // port: test/javascript/stats_utils.test.js:14 "counts characters correctly"

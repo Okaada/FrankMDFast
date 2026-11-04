@@ -83,7 +83,10 @@ fn adds_indent_to_single_line() {
 // port: test/javascript/indent_utils.test.js:61 "adds indent to multiple lines"
 #[test]
 fn adds_indent_to_multiple_lines() {
-    assert_eq!(indent_lines("line1\nline2\nline3", "  "), "  line1\n  line2\n  line3");
+    assert_eq!(
+        indent_lines("line1\nline2\nline3", "  "),
+        "  line1\n  line2\n  line3"
+    );
 }
 
 // port: test/javascript/indent_utils.test.js:65 "adds tab indent"
@@ -113,7 +116,10 @@ fn removes_exact_indent_from_single_line() {
 // port: test/javascript/indent_utils.test.js:83 "removes exact indent from multiple lines"
 #[test]
 fn removes_exact_indent_from_multiple_lines() {
-    assert_eq!(unindent_lines("  line1\n  line2\n  line3", "  "), "line1\nline2\nline3");
+    assert_eq!(
+        unindent_lines("  line1\n  line2\n  line3", "  "),
+        "line1\nline2\nline3"
+    );
 }
 
 // port: test/javascript/indent_utils.test.js:87 "removes tab indent"
@@ -146,7 +152,10 @@ fn removes_tab_when_spaces_expected() {
 // port: test/javascript/indent_utils.test.js:107 "handles mixed indentation"
 #[test]
 fn handles_mixed_indentation() {
-    assert_eq!(unindent_lines("  line1\n    line2\nline3", "  "), "line1\n  line2\nline3");
+    assert_eq!(
+        unindent_lines("  line1\n    line2\nline3", "  "),
+        "line1\n  line2\nline3"
+    );
 }
 
 // port: test/javascript/indent_utils.test.js:112 "handles empty lines"
@@ -159,14 +168,20 @@ fn unindent_handles_empty_lines() {
 #[test]
 fn roundtrip_indent_then_unindent() {
     let original = "line1\nline2\nline3";
-    assert_eq!(unindent_lines(&indent_lines(original, "  "), "  "), original);
+    assert_eq!(
+        unindent_lines(&indent_lines(original, "  "), "  "),
+        original
+    );
 }
 
 // port: test/javascript/indent_utils.test.js:126 "works with tabs"
 #[test]
 fn roundtrip_works_with_tabs() {
     let original = "code\nmore code";
-    assert_eq!(unindent_lines(&indent_lines(original, "\t"), "\t"), original);
+    assert_eq!(
+        unindent_lines(&indent_lines(original, "\t"), "\t"),
+        original
+    );
 }
 
 // port: test/javascript/indent_utils.test.js:134 "preserves existing indentation"

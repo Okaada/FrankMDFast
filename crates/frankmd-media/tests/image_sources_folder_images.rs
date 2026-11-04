@@ -7,8 +7,8 @@ mod client_picker;
 
 use client_picker::{FakeTransport, file};
 use frankmd_media::picker::{
-    DirEntry, DirectoryPicker, FolderImageSource, FormField, JsArg, PickError, PickedFile, PickerCx, PickerResponse,
-    RequestBody,
+    DirEntry, DirectoryPicker, FolderImageSource, FormField, JsArg, PickError, PickedFile,
+    PickerCx, PickerResponse, RequestBody,
 };
 use serde_json::json;
 
@@ -20,19 +20,31 @@ impl DirectoryPicker for Picker {
 }
 
 fn with_all(files: Vec<PickedFile>) -> FolderImageSource {
-    FolderImageSource { all_images: files, ..FolderImageSource::default() }
+    FolderImageSource {
+        all_images: files,
+        ..FolderImageSource::default()
+    }
 }
 
 fn numbered(n: usize) -> Vec<PickedFile> {
-    (0..n).map(|i| file(&format!("image{i}.jpg"), i as i64, 1024)).collect()
+    (0..n)
+        .map(|i| file(&format!("image{i}.jpg"), i as i64, 1024))
+        .collect()
 }
 
 fn three() -> FolderImageSource {
-    with_all(vec![file("cat.jpg", 1000, 1024), file("dog.png", 2000, 2048), file("bird.jpg", 3000, 512)])
+    with_all(vec![
+        file("cat.jpg", 1000, 1024),
+        file("dog.png", 2000, 2048),
+        file("bird.jpg", 3000, 512),
+    ])
 }
 
 fn shown(src: &FolderImageSource) -> Vec<String> {
-    src.displayed_images.iter().map(|d| d.file.name.clone()).collect()
+    src.displayed_images
+        .iter()
+        .map(|d| d.file.name.clone())
+        .collect()
 }
 
 // port: test/javascript/image_sources/folder_images.test.js:40 "initializes with empty arrays"
@@ -46,14 +58,18 @@ fn initializes_empty() {
 #[test]
 fn supported_when_picker_available() {
     let mut p = Picker(Ok(vec![]));
-    let r = FolderImageSource::default().browse(None, Some(&mut p), None).expect("ok");
+    let r = FolderImageSource::default()
+        .browse(None, Some(&mut p), None)
+        .expect("ok");
     assert_eq!(r, json!({"count": 0}));
 }
 
 // port: test/javascript/image_sources/folder_images.test.js:52 "returns false when showDirectoryPicker is not available"
 #[test]
 fn unsupported_without_picker() {
-    let r = FolderImageSource::default().browse(None, None, None).expect("ok");
+    let r = FolderImageSource::default()
+        .browse(None, None, None)
+        .expect("ok");
     assert_eq!(r["error"], "File System Access API not supported");
 }
 
@@ -80,21 +96,36 @@ fn cleanup_clears_arrays() {
 // port: test/javascript/image_sources/folder_images.test.js:93 "returns error when API not supported"
 #[test]
 fn browse_unsupported() {
-    assert_eq!(FolderImageSource::default().browse(None, None, None).expect("ok")["error"], "File System Access API not supported");
+    assert_eq!(
+        FolderImageSource::default()
+            .browse(None, None, None)
+            .expect("ok")["error"],
+        "File System Access API not supported"
+    );
 }
 
 // port: test/javascript/image_sources/folder_images.test.js:101 "returns cancelled when user cancels picker"
 #[test]
 fn browse_cancelled() {
     let mut p = Picker(Err(PickError::Aborted));
-    assert_eq!(FolderImageSource::default().browse(None, Some(&mut p), None).expect("ok")["cancelled"], true);
+    assert_eq!(
+        FolderImageSource::default()
+            .browse(None, Some(&mut p), None)
+            .expect("ok")["cancelled"],
+        true
+    );
 }
 
 // port: test/javascript/image_sources/folder_images.test.js:114 "returns error on other errors"
 #[test]
 fn browse_error() {
     let mut p = Picker(Err(PickError::Failed("Permission denied".into())));
-    assert_eq!(FolderImageSource::default().browse(None, Some(&mut p), None).expect("ok")["error"], "Error accessing folder");
+    assert_eq!(
+        FolderImageSource::default()
+            .browse(None, Some(&mut p), None)
+            .expect("ok")["error"],
+        "Error accessing folder"
+    );
 }
 
 // port: test/javascript/image_sources/folder_images.test.js:134 "returns all images when no search term"
@@ -122,11 +153,25 @@ fn filter_default_limit() {
 fn filter_pages() {
     let mut s = with_all(numbered(15));
     let first = s.filter("", 0, 10).expect("ok");
-    assert_eq!((first["displayed"].clone(), first["total"].clone()), (json!(10), json!(15)));
-    assert_eq!(shown(&s), (0..10).map(|i| format!("image{i}.jpg")).collect::<Vec<_>>());
+    assert_eq!(
+        (first["displayed"].clone(), first["total"].clone()),
+        (json!(10), json!(15))
+    );
+    assert_eq!(
+        shown(&s),
+        (0..10).map(|i| format!("image{i}.jpg")).collect::<Vec<_>>()
+    );
     let second = s.filter("", 10, 10).expect("ok");
-    assert_eq!((second["displayed"].clone(), second["total"].clone()), (json!(5), json!(15)));
-    assert_eq!(shown(&s), (10..15).map(|i| format!("image{i}.jpg")).collect::<Vec<_>>());
+    assert_eq!(
+        (second["displayed"].clone(), second["total"].clone()),
+        (json!(5), json!(15))
+    );
+    assert_eq!(
+        shown(&s),
+        (10..15)
+            .map(|i| format!("image{i}.jpg"))
+            .collect::<Vec<_>>()
+    );
 }
 
 // port: test/javascript/image_sources/folder_images.test.js:183 "returns an empty page when offset is past the end"
@@ -140,7 +185,13 @@ fn filter_offset_past_end() {
 // port: test/javascript/image_sources/folder_images.test.js:197 "resets to the requested page when combined with a search term"
 #[test]
 fn filter_search_with_page() {
-    let r = with_all(vec![file("cat1.jpg", 1, 1024), file("cat2.jpg", 2, 1024), file("dog.png", 3, 1024)]).filter("cat", 0, 10).expect("ok");
+    let r = with_all(vec![
+        file("cat1.jpg", 1, 1024),
+        file("cat2.jpg", 2, 1024),
+        file("dog.png", 3, 1024),
+    ])
+    .filter("cat", 0, 10)
+    .expect("ok");
     assert_eq!(r["total"], 2);
     assert_eq!(r["displayed"], 2);
 }
@@ -155,7 +206,10 @@ fn dimensions_on_load() {
     f.dimensions = Some((800, 600));
     let mut s = with_all(vec![f]);
     s.filter("", 0, 10).expect("ok");
-    assert_eq!((s.displayed_images[0].width, s.displayed_images[0].height), (Some(800), Some(600)));
+    assert_eq!(
+        (s.displayed_images[0].width, s.displayed_images[0].height),
+        (Some(800), Some(600))
+    );
 }
 
 // port: test/javascript/image_sources/folder_images.test.js:237 "resolves with null dimensions on error"
@@ -163,7 +217,10 @@ fn dimensions_on_load() {
 fn dimensions_null_on_error() {
     let mut s = with_all(vec![file("broken.png", 0, 1)]);
     s.filter("", 0, 10).expect("ok");
-    assert_eq!((s.displayed_images[0].width, s.displayed_images[0].height), (None, None));
+    assert_eq!(
+        (s.displayed_images[0].width, s.displayed_images[0].height),
+        (None, None)
+    );
 }
 
 // port: test/javascript/image_sources/folder_images.test.js:254 "renders empty state when no images"
@@ -200,7 +257,10 @@ fn status_counts() {
 fn status_partial() {
     let mut s = with_all(vec![file("a.jpg", 0, 1024)]);
     s.filter("", 0, 10).expect("ok");
-    assert_eq!(s.status_text(None, Some(50)), "Showing 1 most recent of 50 images");
+    assert_eq!(
+        s.status_text(None, Some(50)),
+        "Showing 1 most recent of 50 images"
+    );
 }
 
 // skipped (C, HTML escaping): folder_images.test.js:309 "escapes HTML in names"
@@ -223,9 +283,21 @@ fn get_image_out_of_range() {
 // skipped (C, DOM selection classes): folder_images.test.js:348 "removes selected class from all items"
 // skipped (C, DOM): folder_images.test.js:362 "handles null container"
 
-fn upload(tr: &mut FakeTransport, resize: &str) -> Result<serde_json::Value, frankmd_media::picker::Thrown> {
-    let mut cx = PickerCx { transport: tr, t: None };
-    let f = PickedFile { name: "blob.jpg".into(), last_modified: 0, size: 4, mime: "image/jpeg".into(), dimensions: None };
+fn upload(
+    tr: &mut FakeTransport,
+    resize: &str,
+) -> Result<serde_json::Value, frankmd_media::picker::Thrown> {
+    let mut cx = PickerCx {
+        transport: tr,
+        t: None,
+    };
+    let f = PickedFile {
+        name: "blob.jpg".into(),
+        last_modified: 0,
+        size: 4,
+        mime: "image/jpeg".into(),
+        dimensions: None,
+    };
     FolderImageSource::default().upload(&mut cx, &f, &JsArg::Str(resize.into()), None)
 }
 
@@ -240,7 +312,14 @@ fn upload_posts_form_data() {
     assert_eq!(
         tr.requests[0].body,
         RequestBody::Form(vec![
-            ("file".into(), FormField::File { name: "blob.jpg".into(), size: 4, mime: "image/jpeg".into() }),
+            (
+                "file".into(),
+                FormField::File {
+                    name: "blob.jpg".into(),
+                    size: 4,
+                    mime: "image/jpeg".into()
+                }
+            ),
             ("resize".into(), FormField::Text("0.5".into())),
         ])
     );
@@ -251,14 +330,28 @@ fn upload_posts_form_data() {
 #[test]
 fn upload_error() {
     let mut tr = FakeTransport::default();
-    tr.replies.push_back(PickerResponse::Reply { ok: false, status: 422, json: json!({"error": "File too large"}) });
-    assert_eq!(upload(&mut tr, "").expect_err("throws").message, "File too large");
+    tr.replies.push_back(PickerResponse::Reply {
+        ok: false,
+        status: 422,
+        json: json!({"error": "File too large"}),
+    });
+    assert_eq!(
+        upload(&mut tr, "").expect_err("throws").message,
+        "File too large"
+    );
 }
 
 // port: test/javascript/image_sources/folder_images.test.js:400 "handles generic error"
 #[test]
 fn upload_generic_error() {
     let mut tr = FakeTransport::default();
-    tr.replies.push_back(PickerResponse::Reply { ok: false, status: 500, json: json!({}) });
-    assert_eq!(upload(&mut tr, "").expect_err("throws").message, "Upload failed");
+    tr.replies.push_back(PickerResponse::Reply {
+        ok: false,
+        status: 500,
+        json: json!({}),
+    });
+    assert_eq!(
+        upload(&mut tr, "").expect_err("throws").message,
+        "Upload failed"
+    );
 }

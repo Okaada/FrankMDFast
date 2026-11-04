@@ -131,18 +131,28 @@ pub struct MediaApi {
 impl MediaApi {
     /// Build.
     pub fn new(env: MediaEnv) -> Self {
-        Self { env, recovery: StorageRecovery::new() }
+        Self {
+            env,
+            recovery: StorageRecovery::new(),
+        }
     }
 
     /// `GET /config` / page load: run recovery and **consume** the warning.
     pub fn storage_status(&self) -> StorageStatus {
-        let media_storage_fallback = self.recovery.recover_media_storage(self.env.settings.as_ref(), true);
-        StorageStatus { media_storage_provider: self.config().media_storage_provider, media_storage_fallback }
+        let media_storage_fallback = self
+            .recovery
+            .recover_media_storage(self.env.settings.as_ref(), true);
+        StorageStatus {
+            media_storage_provider: self.config().media_storage_provider,
+            media_storage_fallback,
+        }
     }
 
     /// `GET /images/config` (recovery runs, warning preserved).
     pub fn images_config(&self) -> ImagesConfigInfo {
-        let media_storage_fallback = self.recovery.recover_media_storage(self.env.settings.as_ref(), false);
+        let media_storage_fallback = self
+            .recovery
+            .recover_media_storage(self.env.settings.as_ref(), false);
         let config = self.config();
         let flags = search_flags(&config);
         ImagesConfigInfo {
@@ -159,19 +169,42 @@ impl MediaApi {
     }
 
     /// `GET /images` (404 `errors.images_not_configured` when disabled).
-    pub fn index(&self, search: Option<&str>, limit: &Param, offset: &Param) -> Result<ImageIndex, ApiError> {
+    pub fn index(
+        &self,
+        search: Option<&str>,
+        limit: &Param,
+        offset: &Param,
+    ) -> Result<ImageIndex, ApiError> {
         let config = self.images_enabled()?;
-        let limit = if limit.is_present() { ruby_to_i(limit).clamp(1, 100) } else { 10 };
-        let offset = if offset.is_present() { ruby_to_i(offset).max(0) } else { 0 };
+        let limit = if limit.is_present() {
+            ruby_to_i(limit).clamp(1, 100)
+        } else {
+            10
+        };
+        let offset = if offset.is_present() {
+            ruby_to_i(offset).max(0)
+        } else {
+            0
+        };
         let images = images::list(&config, search, &Param::Int(limit), &Param::Int(offset));
         let total = images::count(&config, search);
-        Ok(ImageIndex { images, total, limit: limit as usize, offset: offset as usize })
+        Ok(ImageIndex {
+            images,
+            total,
+            limit: limit as usize,
+            offset: offset as usize,
+        })
     }
 
     /// `GET /images/preview/*path` → file to send inline (404 when disabled or not found).
     pub fn preview(&self, rel: &str) -> Result<PathBuf, ApiError> {
         let config = self.images_enabled()?;
-        images::find_image(&config, rel).ok_or_else(|| ApiError::new(ApiStatus::NotFound, ApiMessage::Text("Not Found".to_owned())))
+        images::find_image(&config, rel).ok_or_else(|| {
+            ApiError::new(
+                ApiStatus::NotFound,
+                ApiMessage::Text("Not Found".to_owned()),
+            )
+        })
     }
 
     /// `DELETE /images/file/*path` (422 "Image not found or could not be deleted").
@@ -180,7 +213,10 @@ impl MediaApi {
         if images::delete(&config, rel) {
             Ok(())
         } else {
-            Err(ApiError::text(ApiStatus::Unprocessable, "Image not found or could not be deleted"))
+            Err(ApiError::text(
+                ApiStatus::Unprocessable,
+                "Image not found or could not be deleted",
+            ))
         }
     }
 
@@ -193,8 +229,16 @@ impl MediaApi {
         s3_key: Option<&str>,
     ) -> Result<String, ApiError> {
         self.before_upload()?;
-        let file = file.ok_or_else(|| ApiError::key(ApiStatus::Unprocessable, "errors.no_file_upload"))?;
-        let result = images::upload_file(&self.env, Some(file), images::parse_resize_ratio(resize), upload_to_s3, s3_key).await;
+        let file =
+            file.ok_or_else(|| ApiError::key(ApiStatus::Unprocessable, "errors.no_file_upload"))?;
+        let result = images::upload_file(
+            &self.env,
+            Some(file),
+            images::parse_resize_ratio(resize),
+            upload_to_s3,
+            s3_key,
+        )
+        .await;
         result.map_err(|e| self.upload_error(e, "errors.upload_failed"))
     }
 
@@ -229,13 +273,22 @@ impl MediaApi {
 
     /// `POST /images/upload_to_s3` (S3 not configured → 422 `errors.s3_not_configured`;
     /// images_path required → 404).
-    pub async fn upload_to_s3(&self, rel: &str, resize: &Param, s3_key: Option<&str>) -> Result<String, ApiError> {
+    pub async fn upload_to_s3(
+        &self,
+        rel: &str,
+        resize: &Param,
+        s3_key: Option<&str>,
+    ) -> Result<String, ApiError> {
         self.before_upload()?;
         let config = self.images_enabled()?;
         if !images::s3_enabled(&config) {
-            return Err(ApiError::key(ApiStatus::Unprocessable, "errors.s3_not_configured"));
+            return Err(ApiError::key(
+                ApiStatus::Unprocessable,
+                "errors.s3_not_configured",
+            ));
         }
-        let result = images::upload_to_s3(&self.env, rel, images::parse_resize_ratio(resize), s3_key).await;
+        let result =
+            images::upload_to_s3(&self.env, rel, images::parse_resize_ratio(resize), s3_key).await;
         result.map_err(|e| self.legacy_s3_error(e))
     }
 
@@ -249,13 +302,22 @@ impl MediaApi {
         self.before_upload()?;
         let config = self.images_enabled()?;
         if !images::s3_enabled(&config) {
-            return Err(ApiError::key(ApiStatus::Unprocessable, "errors.s3_not_configured"));
+            return Err(ApiError::key(
+                ApiStatus::Unprocessable,
+                "errors.s3_not_configured",
+            ));
         }
         let url = url.trim();
         if url.is_empty() {
             return Err(ApiError::key(ApiStatus::BadRequest, "errors.url_required"));
         }
-        let result = images::download_and_upload_to_s3(&self.env, url, images::parse_resize_ratio(resize), s3_prefix).await;
+        let result = images::download_and_upload_to_s3(
+            &self.env,
+            url,
+            images::parse_resize_ratio(resize),
+            s3_prefix,
+        )
+        .await;
         result.map_err(|e| self.legacy_s3_error(e))
     }
 
@@ -267,8 +329,10 @@ impl MediaApi {
         s3_prefix: Option<&str>,
     ) -> Result<String, ApiError> {
         self.before_upload()?;
-        let file = file.ok_or_else(|| ApiError::key(ApiStatus::Unprocessable, "errors.no_file_upload"))?;
-        let result = crate::video::save_upload(&self.env, Some(file), upload_to_s3, s3_prefix).await;
+        let file =
+            file.ok_or_else(|| ApiError::key(ApiStatus::Unprocessable, "errors.no_file_upload"))?;
+        let result =
+            crate::video::save_upload(&self.env, Some(file), upload_to_s3, s3_prefix).await;
         result.map_err(|e| self.upload_error(e, "errors.upload_failed"))
     }
 
@@ -283,7 +347,10 @@ impl MediaApi {
         if images::enabled(&config) {
             Ok(config)
         } else {
-            Err(ApiError::key(ApiStatus::NotFound, "errors.images_not_configured"))
+            Err(ApiError::key(
+                ApiStatus::NotFound,
+                "errors.images_not_configured",
+            ))
         }
     }
 
@@ -299,9 +366,17 @@ impl MediaApi {
     /// (provider details are never shown).
     fn upload_error(&self, error: MediaError, generic: &'static str) -> ApiError {
         match error {
-            MediaError::Rejected(m) | MediaError::Invalid(m) => ApiError::text(ApiStatus::Unprocessable, m),
+            MediaError::Rejected(m) | MediaError::Invalid(m) => {
+                ApiError::text(ApiStatus::Unprocessable, m)
+            }
             MediaError::StorageFallback => ApiError::fallback(),
-            other if self.recovery.recover_s3_upload(self.env.settings.as_ref(), &other) => ApiError::fallback(),
+            other
+                if self
+                    .recovery
+                    .recover_s3_upload(self.env.settings.as_ref(), &other) =>
+            {
+                ApiError::fallback()
+            }
             _ => ApiError::key(ApiStatus::Unprocessable, generic),
         }
     }
@@ -310,11 +385,18 @@ impl MediaApi {
     /// rejections were rendered as `"<class>: <message>"`.
     fn legacy_s3_error(&self, error: MediaError) -> ApiError {
         match error {
-            MediaError::Rejected(m) => {
-                ApiError::text(ApiStatus::Unprocessable, format!("UploadStorage::RejectedError: {m}"))
-            }
+            MediaError::Rejected(m) => ApiError::text(
+                ApiStatus::Unprocessable,
+                format!("UploadStorage::RejectedError: {m}"),
+            ),
             MediaError::StorageFallback => ApiError::fallback(),
-            other if self.recovery.recover_s3_upload(self.env.settings.as_ref(), &other) => ApiError::fallback(),
+            other
+                if self
+                    .recovery
+                    .recover_s3_upload(self.env.settings.as_ref(), &other) =>
+            {
+                ApiError::fallback()
+            }
             _ => ApiError::key(ApiStatus::Unprocessable, "errors.failed_to_upload"),
         }
     }
@@ -322,7 +404,11 @@ impl MediaApi {
 
 impl ApiError {
     fn new(status: ApiStatus, message: ApiMessage) -> Self {
-        Self { status, message, media_storage_fallback: false }
+        Self {
+            status,
+            message,
+            media_storage_fallback: false,
+        }
     }
 
     fn key(status: ApiStatus, key: &'static str) -> Self {
@@ -335,7 +421,10 @@ impl ApiError {
 
     /// `render_storage_recovery`: 422 + `media_storage_fallback: true`.
     fn fallback() -> Self {
-        Self { media_storage_fallback: true, ..Self::key(ApiStatus::Unprocessable, "media_storage.retry_local") }
+        Self {
+            media_storage_fallback: true,
+            ..Self::key(ApiStatus::Unprocessable, "media_storage.retry_local")
+        }
     }
 }
 

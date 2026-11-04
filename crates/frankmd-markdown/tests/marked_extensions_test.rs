@@ -8,7 +8,10 @@ use frankmd_markdown::ir::Inline;
 use frankmd_markdown::parse::ext::{self, Extension};
 
 fn wikilink(target: &str, label: Option<&str>) -> String {
-    render_inline(&Inline::WikiLink { target: target.into(), label: label.map(Into::into) })
+    render_inline(&Inline::WikiLink {
+        target: target.into(),
+        label: label.map(Into::into),
+    })
 }
 
 // ---- wikilinkExtension ----------------------------------------------------
@@ -76,7 +79,10 @@ fn wikilink_renderer_simple() {
     let html = wikilink("My Note", None);
     assert!(html.contains(r#"class="wikilink""#), "{html}");
     assert!(html.contains(r#"data-wikilink-path="My Note""#), "{html}");
-    assert!(html.contains(r#"data-action="click->app#openWikilink""#), "{html}");
+    assert!(
+        html.contains(r#"data-action="click->app#openWikilink""#),
+        "{html}"
+    );
     assert!(html.contains(">My Note</a>"), "{html}");
 }
 
@@ -92,7 +98,10 @@ fn wikilink_renderer_display_text() {
 #[test]
 fn wikilink_renderer_basename() {
     let html = wikilink("projects/My Note", None);
-    assert!(html.contains(r#"data-wikilink-path="projects/My Note""#), "{html}");
+    assert!(
+        html.contains(r#"data-wikilink-path="projects/My Note""#),
+        "{html}"
+    );
     assert!(html.contains(">My Note</a>"), "{html}");
 }
 
@@ -108,7 +117,10 @@ fn wikilink_renderer_escapes_display() {
 #[test]
 fn wikilink_renderer_escapes_ampersands() {
     let html = wikilink("Notes & Ideas", Some("R&D Notes"));
-    assert!(html.contains(r#"data-wikilink-path="Notes &amp; Ideas""#), "{html}");
+    assert!(
+        html.contains(r#"data-wikilink-path="Notes &amp; Ideas""#),
+        "{html}"
+    );
     assert!(html.contains(">R&amp;D Notes</a>"), "{html}");
 }
 
@@ -125,13 +137,19 @@ fn wikilink_renderer_escapes_quotes() {
 // port: test/javascript/lib/marked_extensions.test.js:100 "returns index of :ph- in source"
 #[test]
 fn icon_start_returns_index() {
-    assert_eq!(ext::start(Extension::Icon, "hello :ph-heart: world"), Some(6));
+    assert_eq!(
+        ext::start(Extension::Icon, "hello :ph-heart: world"),
+        Some(6)
+    );
 }
 
 // port: test/javascript/lib/marked_extensions.test.js:104 "returns -1 when no :ph- prefix found"
 #[test]
 fn icon_start_none_without_prefix() {
-    assert_eq!(ext::start(Extension::Icon, "no icons here, just :smile:"), None);
+    assert_eq!(
+        ext::start(Extension::Icon, "no icons here, just :smile:"),
+        None
+    );
 }
 
 // port: test/javascript/lib/marked_extensions.test.js:110 "matches a known icon shortcode"
@@ -164,8 +182,11 @@ fn icon_tokenizer_non_matching() {
 // port: test/javascript/lib/marked_extensions.test.js:134 "renders an inline SVG using the token's path and viewBox"
 #[test]
 fn icon_renderer_inline_svg() {
-    let html =
-        render_inline(&Inline::Icon { name: "x".into(), path: "M1 2 3".into(), view_box: "0 0 256 256".into() });
+    let html = render_inline(&Inline::Icon {
+        name: "x".into(),
+        path: "M1 2 3".into(),
+        view_box: "0 0 256 256".into(),
+    });
     for needle in [
         "<svg",
         r#"viewBox="0 0 256 256""#,
@@ -185,7 +206,10 @@ fn icon_renderer_inline_svg() {
 // port: test/javascript/lib/marked_extensions.test.js:151 "returns the index of the first unescaped $"
 #[test]
 fn math_inline_start_first_unescaped_dollar() {
-    assert_eq!(ext::start(Extension::MathInline, "The equation is $E=mc^2$"), Some(16));
+    assert_eq!(
+        ext::start(Extension::MathInline, "The equation is $E=mc^2$"),
+        Some(16)
+    );
 }
 
 // port: test/javascript/lib/marked_extensions.test.js:155 "ignores an escaped \\$ (currency stays literal)"
@@ -286,7 +310,10 @@ fn math_inline_renderer_escapes() {
 // port: test/javascript/lib/marked_extensions.test.js:231 "returns the index of $$"
 #[test]
 fn math_block_start_index() {
-    assert_eq!(ext::start(Extension::MathBlock, "text\n$$\nx=y\n$$"), Some(5));
+    assert_eq!(
+        ext::start(Extension::MathBlock, "text\n$$\nx=y\n$$"),
+        Some(5)
+    );
 }
 
 // port: test/javascript/lib/marked_extensions.test.js:235 "returns undefined without $$"
@@ -305,7 +332,10 @@ fn math_block_tokenizer_multiline() {
 // port: test/javascript/lib/marked_extensions.test.js:248 "matches a single-line $$...$$"
 #[test]
 fn math_block_tokenizer_single_line() {
-    assert_eq!(ext::scan_math_block("$$E=mc^2$$").expect("token").value, "E=mc^2");
+    assert_eq!(
+        ext::scan_math_block("$$E=mc^2$$").expect("token").value,
+        "E=mc^2"
+    );
 }
 
 // port: test/javascript/lib/marked_extensions.test.js:252 "does NOT match an empty/whitespace block (malformed)"

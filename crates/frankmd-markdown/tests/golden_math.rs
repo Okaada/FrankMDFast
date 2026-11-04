@@ -34,15 +34,24 @@ fn golden_render_math_in() {
             if b.value().attr("data-math-rendered").is_some() {
                 continue;
             }
-            let style =
-                if b.value().classes().any(|c| c == "math-block") { MathStyle::Display } else { MathStyle::Inline };
+            let style = if b.value().classes().any(|c| c == "math-block") {
+                MathStyle::Display
+            } else {
+                MathStyle::Inline
+            };
             let tex: String = b.text().collect();
             let verdict = katex_verdict(a);
             let got = validate(&tex, style);
             if !verdict.matches(&got) {
-                errs.push(format!("{style:?} {tex:?}: validate {got:?}, KaTeX {verdict:?}"));
+                errs.push(format!(
+                    "{style:?} {tex:?}: validate {got:?}, KaTeX {verdict:?}"
+                ));
             }
         }
-        if errs.is_empty() { Ok(()) } else { Err(errs.join("; ")) }
+        if errs.is_empty() {
+            Ok(())
+        } else {
+            Err(errs.join("; "))
+        }
     });
 }

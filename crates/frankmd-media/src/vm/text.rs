@@ -20,7 +20,12 @@ impl Text {
 
     /// A key with arguments.
     pub fn with(key: &'static str, args: &[(&'static str, &str)]) -> Self {
-        Self::Key(key, args.iter().map(|(k, v)| (*k, Self::Raw((*v).to_owned()))).collect())
+        Self::Key(
+            key,
+            args.iter()
+                .map(|(k, v)| (*k, Self::Raw((*v).to_owned())))
+                .collect(),
+        )
     }
 
     /// The key, when this is one.

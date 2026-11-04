@@ -49,7 +49,10 @@ impl LineMap {
         for (ix, block) in doc.blocks.iter().enumerate() {
             let line = block.span().start_line;
             starts.push(line);
-            anchors.push(Anchor { line, target: AnchorTarget::Block(ix) });
+            anchors.push(Anchor {
+                line,
+                target: AnchorTarget::Block(ix),
+            });
             if let Block::List { items, .. } = block {
                 push_items(ix, items, &mut Vec::new(), &mut anchors);
             }
@@ -62,9 +65,15 @@ impl LineMap {
         let anchors = lines
             .iter()
             .enumerate()
-            .map(|(ix, &line)| Anchor { line, target: AnchorTarget::Block(ix) })
+            .map(|(ix, &line)| Anchor {
+                line,
+                target: AnchorTarget::Block(ix),
+            })
             .collect();
-        Self { starts: lines.to_vec(), anchors }
+        Self {
+            starts: lines.to_vec(),
+            anchors,
+        }
     }
 
     /// All anchors in document order.
@@ -114,7 +123,10 @@ fn push_items(block: usize, items: &[ListItem], path: &mut Vec<usize>, anchors: 
         path.push(ix);
         anchors.push(Anchor {
             line: item.span.start_line,
-            target: AnchorTarget::ListItem { block, path: path.clone() },
+            target: AnchorTarget::ListItem {
+                block,
+                path: path.clone(),
+            },
         });
         for child in &item.children {
             if let Block::List { items: nested, .. } = child {
@@ -148,8 +160,16 @@ pub mod scroll {
 
     /// `max(0, (line - 1) * line_height - viewport_height * offset_ratio)`.
     /// FrankMD's default `offset_ratio` is [`DEFAULT_LINE_OFFSET_RATIO`].
-    pub fn scroll_for_line(line: f64, line_height: f64, viewport_height: f64, offset_ratio: f64) -> f64 {
-        js_max(0.0, (line - 1.0) * line_height - viewport_height * offset_ratio)
+    pub fn scroll_for_line(
+        line: f64,
+        line_height: f64,
+        viewport_height: f64,
+        offset_ratio: f64,
+    ) -> f64 {
+        js_max(
+            0.0,
+            (line - 1.0) * line_height - viewport_height * offset_ratio,
+        )
     }
 
     /// Default `offsetRatio` of `calculateScrollForLine` (35% from the top).
@@ -158,7 +178,12 @@ pub mod scroll {
     /// `round((scrollTop + clientHeight/2) / (scrollHeight/totalLines))`
     /// clamped to `[1, totalLines]`; 1 when `total_lines <= 0`. JS `Math.round`
     /// (half rounds up).
-    pub fn line_from_scroll(scroll_top: f64, client_height: f64, scroll_height: f64, total_lines: f64) -> f64 {
+    pub fn line_from_scroll(
+        scroll_top: f64,
+        client_height: f64,
+        scroll_height: f64,
+        total_lines: f64,
+    ) -> f64 {
         if total_lines <= 0.0 {
             return 1.0;
         }
@@ -179,7 +204,12 @@ pub mod scroll {
 
     /// `(line-1)/max(1,total-1) * (scrollHeight-clientHeight)`, ≥ 0; 0 for
     /// `total <= 0` or when content fits.
-    pub fn scroll_to_center_line(line: f64, total_lines: f64, scroll_height: f64, client_height: f64) -> f64 {
+    pub fn scroll_to_center_line(
+        line: f64,
+        total_lines: f64,
+        scroll_height: f64,
+        client_height: f64,
+    ) -> f64 {
         if total_lines <= 0.0 {
             return 0.0;
         }
@@ -193,7 +223,11 @@ pub mod scroll {
 
     /// `el_top - container_top + container_scroll_top` (page-offset invariant).
     /// Not clamped (JS returns e.g. `-50 - 50 + 100 = 0` naturally).
-    pub fn scroll_top_for_element(el_top: f64, container_top: f64, container_scroll_top: f64) -> f64 {
+    pub fn scroll_top_for_element(
+        el_top: f64,
+        container_top: f64,
+        container_scroll_top: f64,
+    ) -> f64 {
         el_top - container_top + container_scroll_top
     }
 
@@ -215,12 +249,20 @@ pub mod scroll {
 
     /// JS `Math.max(a, b)`: NaN if either is NaN.
     fn js_max(a: f64, b: f64) -> f64 {
-        if a.is_nan() || b.is_nan() { f64::NAN } else { a.max(b) }
+        if a.is_nan() || b.is_nan() {
+            f64::NAN
+        } else {
+            a.max(b)
+        }
     }
 
     /// JS `Math.min(a, b)`: NaN if either is NaN.
     fn js_min(a: f64, b: f64) -> f64 {
-        if a.is_nan() || b.is_nan() { f64::NAN } else { a.min(b) }
+        if a.is_nan() || b.is_nan() {
+            f64::NAN
+        } else {
+            a.min(b)
+        }
     }
 
     /// JS `Math.round`: halves round towards +infinity.

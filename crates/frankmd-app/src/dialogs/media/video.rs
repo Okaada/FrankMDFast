@@ -8,21 +8,25 @@ use frankmd_media::upload_storage::Upload;
 use frankmd_media::vm::Text;
 use frankmd_media::vm::picker::{LocalFile, StoreError, Thumb};
 use frankmd_media::vm::storage::{Provider, Ready};
-use frankmd_media::vm::video::{Detected, GridKey, UploadState, VideoDialog, VideoEffect, VideoTab};
+use frankmd_media::vm::video::{
+    Detected, GridKey, UploadState, VideoDialog, VideoEffect, VideoTab,
+};
 use gpui_kit::component::button::{Button, ButtonVariants as _};
 use gpui_kit::component::checkbox::Checkbox;
 use gpui_kit::component::input::{Input, InputEvent, InputState};
 use gpui_kit::component::progress::Progress;
 use gpui_kit::component::theme::Theme;
-use gpui_kit::component::{ActiveTheme as _, Disableable as _, Selectable as _, Sizable as _, h_flex, v_flex};
+use gpui_kit::component::{
+    ActiveTheme as _, Disableable as _, Selectable as _, Sizable as _, h_flex, v_flex,
+};
 use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::*;
 
+use super::MediaEvent;
 use super::services::MediaServices;
 use super::storage::{StorageEvent, StorageModel};
 use super::task::{Abort, spawn_net};
 use super::widgets::{self, RemoteThumbs, t, tr};
-use super::MediaEvent;
 use crate::preview::remote::RemoteImages;
 
 actions!(
@@ -96,7 +100,12 @@ pub(crate) fn bind_keys(cx: &mut App) {
 
 impl VideoDialogView {
     /// Build (closed).
-    pub fn new(services: Arc<MediaServices>, storage: Entity<StorageModel>, window: &mut Window, cx: &mut Context<Self>) -> Self {
+    pub fn new(
+        services: Arc<MediaServices>,
+        storage: Entity<StorageModel>,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) -> Self {
         let url_placeholder = t(cx, "dialogs.video.url_placeholder");
         let query_placeholder = t(cx, "dialogs.video.search_placeholder");
         let key_placeholder = t(cx, "dialogs.s3_option.custom_prefix");
@@ -105,26 +114,36 @@ impl VideoDialogView {
         let key = cx.new(|cx| InputState::new(window, cx).placeholder(key_placeholder));
         let subs = vec![
             cx.subscribe_in(&storage, window, Self::on_storage),
-            cx.subscribe_in(&url, window, |this, input, ev: &InputEvent, window, cx| match ev {
-                InputEvent::Change if !this.syncing => {
-                    this.vm.set_url(&input.read(cx).value());
-                    cx.notify();
-                }
-                InputEvent::PressEnter { .. } => {
-                    let effects = this.vm.url_enter();
-                    this.run(effects, window, cx);
-                }
-                _ => {}
-            }),
-            cx.subscribe_in(&query, window, |this, input, ev: &InputEvent, window, cx| match ev {
-                InputEvent::Change if !this.syncing => this.vm.set_query(&input.read(cx).value()),
-                InputEvent::PressEnter { .. } => {
-                    this.vm.set_query(&input.read(cx).value());
-                    let effects = this.vm.search();
-                    this.run(effects, window, cx);
-                }
-                _ => {}
-            }),
+            cx.subscribe_in(
+                &url,
+                window,
+                |this, input, ev: &InputEvent, window, cx| match ev {
+                    InputEvent::Change if !this.syncing => {
+                        this.vm.set_url(&input.read(cx).value());
+                        cx.notify();
+                    }
+                    InputEvent::PressEnter { .. } => {
+                        let effects = this.vm.url_enter();
+                        this.run(effects, window, cx);
+                    }
+                    _ => {}
+                },
+            ),
+            cx.subscribe_in(
+                &query,
+                window,
+                |this, input, ev: &InputEvent, window, cx| match ev {
+                    InputEvent::Change if !this.syncing => {
+                        this.vm.set_query(&input.read(cx).value())
+                    }
+                    InputEvent::PressEnter { .. } => {
+                        this.vm.set_query(&input.read(cx).value());
+                        let effects = this.vm.search();
+                        this.run(effects, window, cx);
+                    }
+                    _ => {}
+                },
+            ),
             cx.subscribe_in(&key, window, |this, input, ev: &InputEvent, _, cx| {
                 if matches!(ev, InputEvent::Change) && !this.syncing {
                     this.vm.row_mut().on_key_edited(&input.read(cx).value());
@@ -172,7 +191,8 @@ impl VideoDialogView {
         self.upload = None;
         self.search = None;
         self.pending_upload = None;
-        self.vm.open(provider, s3, false, Vec::new(), jiff::Zoned::now().date());
+        self.vm
+            .open(provider, s3, false, Vec::new(), jiff::Zoned::now().date());
         self.open = true;
         self.sync_inputs(window, cx);
         self.dropzone_focus.focus(window, cx);
@@ -180,7 +200,10 @@ impl VideoDialogView {
         let services = Arc::clone(&self.services);
         let work = cx.background_executor().spawn(async move {
             let config = services.media_config();
-            (frankmd_media::youtube::enabled(&config), config.video_upload_extensions.clone())
+            (
+                frankmd_media::youtube::enabled(&config),
+                config.video_upload_extensions.clone(),
+            )
         });
         self.storage.update(cx, |s, cx| s.refresh(cx));
         self.jobs.push(cx.spawn(async move |this, cx| {
@@ -207,7 +230,13 @@ impl VideoDialogView {
         cx.notify();
     }
 
-    fn on_storage(&mut self, storage: &Entity<StorageModel>, ev: &StorageEvent, window: &mut Window, cx: &mut Context<Self>) {
+    fn on_storage(
+        &mut self,
+        storage: &Entity<StorageModel>,
+        ev: &StorageEvent,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
         let (provider, s3) = {
             let state = storage.read(cx).state();
             (state.provider(), state.s3_available())
@@ -220,7 +249,10 @@ impl VideoDialogView {
                         let effects = self.vm.drop_files(files);
                         self.run(effects, window, cx);
                     } else {
-                        cx.emit(MediaEvent::Status { text: t(cx, "media_storage.save_failed"), error: true });
+                        cx.emit(MediaEvent::Status {
+                            text: t(cx, "media_storage.save_failed"),
+                            error: true,
+                        });
                     }
                 }
             }
@@ -235,7 +267,11 @@ impl VideoDialogView {
         let url = self.vm.url().to_owned();
         let query = self.vm.query().to_owned();
         let key = self.vm.row().key_text().to_owned();
-        for (state, value) in [(self.url.clone(), url), (self.query.clone(), query), (self.key.clone(), key)] {
+        for (state, value) in [
+            (self.url.clone(), url),
+            (self.query.clone(), query),
+            (self.key.clone(), key),
+        ] {
             if state.read(cx).value() != value.as_str() {
                 state.update(cx, |s, cx| s.set_value(value, window, cx));
             }
@@ -244,7 +280,12 @@ impl VideoDialogView {
     }
 
     /// Files dropped on the dialog (or handed over by the shell): upload the first.
-    pub fn drop_local_files(&mut self, files: Vec<LocalFile>, window: &mut Window, cx: &mut Context<Self>) {
+    pub fn drop_local_files(
+        &mut self,
+        files: Vec<LocalFile>,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
         self.drop_files(files, window, cx);
     }
 
@@ -257,11 +298,19 @@ impl VideoDialogView {
         self.run(effects, window, cx);
     }
 
-    fn drop_paths(&mut self, paths: Vec<std::path::PathBuf>, window: &mut Window, cx: &mut Context<Self>) {
-        let work = cx.background_executor().spawn(async move { super::files::describe_all(&paths) });
+    fn drop_paths(
+        &mut self,
+        paths: Vec<std::path::PathBuf>,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        let work = cx
+            .background_executor()
+            .spawn(async move { super::files::describe_all(&paths) });
         self.jobs.push(cx.spawn_in(window, async move |this, cx| {
             let files = work.await;
-            this.update_in(cx, |this, window, cx| this.drop_files(files, window, cx)).ok();
+            this.update_in(cx, |this, window, cx| this.drop_files(files, window, cx))
+                .ok();
         }));
     }
 
@@ -276,8 +325,11 @@ impl VideoDialogView {
                         prompt: Some(t(cx, "dialogs.video.insert_video")),
                     });
                     self.jobs.push(cx.spawn_in(window, async move |this, cx| {
-                        let Ok(Ok(Some(paths))) = rx.await else { return };
-                        this.update_in(cx, |this, window, cx| this.drop_paths(paths, window, cx)).ok();
+                        let Ok(Ok(Some(paths))) = rx.await else {
+                            return;
+                        };
+                        this.update_in(cx, |this, window, cx| this.drop_paths(paths, window, cx))
+                            .ok();
                     }));
                 }
                 VideoEffect::Upload { file, s3_prefix } => self.upload(file, s3_prefix, window, cx),
@@ -285,10 +337,16 @@ impl VideoDialogView {
                     let services = Arc::clone(&self.services);
                     let (abort, work) = spawn_net(cx, async move {
                         let config = services.media_config();
-                        services.youtube.search(&config, &query).await.map_err(|e| Text::key(e.i18n_key()))
+                        services
+                            .youtube
+                            .search(&config, &query)
+                            .await
+                            .map_err(|e| Text::key(e.i18n_key()))
                     });
                     let task = cx.spawn(async move |this, cx| {
-                        let result = work.await.unwrap_or_else(|| Err(Text::key("status.search_failed_retry")));
+                        let result = work
+                            .await
+                            .unwrap_or_else(|| Err(Text::key("status.search_failed_retry")));
                         this.update(cx, |this, cx| {
                             this.vm.search_result(generation, result);
                             cx.notify();
@@ -310,21 +368,39 @@ impl VideoDialogView {
         cx.notify();
     }
 
-    fn upload(&mut self, file: LocalFile, s3_prefix: Option<String>, window: &mut Window, cx: &mut Context<Self>) {
+    fn upload(
+        &mut self,
+        file: LocalFile,
+        s3_prefix: Option<String>,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
         let services = Arc::clone(&self.services);
         cx.emit(MediaEvent::Status {
             text: crate::ui::i18n::t_args(cx, "media_dialogs.uploading", &[("name", &file.name)]),
             error: false,
         });
-        let read = cx.background_executor().spawn(async move { super::files::read_bytes(&file).map(|b| (file.name, b)) });
+        let read = cx
+            .background_executor()
+            .spawn(async move { super::files::read_bytes(&file).map(|b| (file.name, b)) });
         let task = cx.spawn_in(window, async move |this, cx| {
             let bytes = read.await;
             let result = match bytes {
-                Err(message) => Some(Err(StoreError { message, fallback: false })),
+                Err(message) => Some(Err(StoreError {
+                    message,
+                    fallback: false,
+                })),
                 Ok((name, bytes)) => {
                     let Ok((abort, work)) = cx.update(|_, cx| {
                         spawn_net(cx, async move {
-                            services.api.media_upload(Some(Upload::new(name, bytes)), &Param::Nil, s3_prefix.as_deref()).await
+                            services
+                                .api
+                                .media_upload(
+                                    Some(Upload::new(name, bytes)),
+                                    &Param::Nil,
+                                    s3_prefix.as_deref(),
+                                )
+                                .await
                         })
                     }) else {
                         return;
@@ -337,7 +413,10 @@ impl VideoDialogView {
                             message: tr(cx, &Text::from_api(&e.message)).to_string(),
                             fallback: e.media_storage_fallback,
                         }),
-                        None => Err(StoreError { message: String::new(), fallback: false }),
+                        None => Err(StoreError {
+                            message: String::new(),
+                            fallback: false,
+                        }),
                     }) else {
                         return;
                     };
@@ -347,7 +426,10 @@ impl VideoDialogView {
             this.update_in(cx, |this, window, cx| {
                 if let Some(result) = result {
                     if result.is_err() {
-                        cx.emit(MediaEvent::Status { text: t(cx, "status.upload_failed"), error: true });
+                        cx.emit(MediaEvent::Status {
+                            text: t(cx, "status.upload_failed"),
+                            error: true,
+                        });
                     }
                     let effects = this.vm.upload_result(result);
                     this.run(effects, window, cx);
@@ -384,7 +466,11 @@ impl Render for VideoDialogView {
             return div().id("dialog-insert-video-closed").into_any_element();
         }
         let theme = cx.theme().clone();
-        if let Some(url) = self.vm.url_thumbnail().filter(|_| self.vm.tab() == VideoTab::Url) {
+        if let Some(url) = self
+            .vm
+            .url_thumbnail()
+            .filter(|_| self.vm.tab() == VideoTab::Url)
+        {
             widgets::fetch_remote(self, &url, cx);
         }
         if self.vm.tab() == VideoTab::YouTube {
@@ -423,30 +509,45 @@ impl Render for VideoDialogView {
             .border_color(theme.border)
             .rounded(theme.radius_lg)
             .overflow_hidden()
-            .child(widgets::header(t(cx, "dialogs.video.title"), "video-close", &theme, move |_, cx| {
-                let _ = this.update(cx, |this, cx| this.close(cx));
-            }))
+            .child(widgets::header(
+                t(cx, "dialogs.video.title"),
+                "video-close",
+                &theme,
+                move |_, cx| {
+                    let _ = this.update(cx, |this, cx| this.close(cx));
+                },
+            ))
             .child(
-                h_flex().gap_1().px_3().pt_2().children(VideoTab::ALL.iter().map(|candidate| {
-                    let candidate = *candidate;
-                    Button::new(SharedString::from(format!("video-tab-{}", candidate.id())))
-                        .ghost()
-                        .small()
-                        .selected(candidate == tab)
-                        .label(t(cx, candidate.label_key()))
-                        .on_click(cx.listener(move |this, _, window, cx| {
-                            this.vm.set_tab(candidate);
-                            this.focus.focus(window, cx);
-                            cx.notify();
-                        }))
-                })),
+                h_flex()
+                    .gap_1()
+                    .px_3()
+                    .pt_2()
+                    .children(VideoTab::ALL.iter().map(|candidate| {
+                        let candidate = *candidate;
+                        Button::new(SharedString::from(format!("video-tab-{}", candidate.id())))
+                            .ghost()
+                            .small()
+                            .selected(candidate == tab)
+                            .label(t(cx, candidate.label_key()))
+                            .on_click(cx.listener(move |this, _, window, cx| {
+                                this.vm.set_tab(candidate);
+                                this.focus.focus(window, cx);
+                                cx.notify();
+                            }))
+                    })),
             )
             .child(
-                div().id("video-panel").flex_1().min_h_0().p_3().overflow_y_scroll().child(match tab {
-                    VideoTab::Upload => self.render_upload(&theme, cx).into_any_element(),
-                    VideoTab::Url => self.render_url(&theme, cx).into_any_element(),
-                    VideoTab::YouTube => self.render_youtube(&theme, cx),
-                }),
+                div()
+                    .id("video-panel")
+                    .flex_1()
+                    .min_h_0()
+                    .p_3()
+                    .overflow_y_scroll()
+                    .child(match tab {
+                        VideoTab::Upload => self.render_upload(&theme, cx).into_any_element(),
+                        VideoTab::Url => self.render_url(&theme, cx).into_any_element(),
+                        VideoTab::YouTube => self.render_youtube(&theme, cx),
+                    }),
             )
             .child(self.render_footer(&theme, cx))
             .into_any_element()
@@ -486,7 +587,9 @@ impl VideoDialogView {
                     }))
                     .child(t(cx, "dialogs.video.drop_hint")),
             )
-            .when_some(self.vm.upload_feedback().cloned(), |el, text| el.child(widgets::error_line(tr(cx, &text), theme)))
+            .when_some(self.vm.upload_feedback().cloned(), |el, text| {
+                el.child(widgets::error_line(tr(cx, &text), theme))
+            })
             .child(match state {
                 UploadState::Idle => div().into_any_element(),
                 UploadState::Uploading { name } => v_flex()
@@ -494,9 +597,16 @@ impl VideoDialogView {
                     .test_support()
                     .gap_1()
                     .child(Progress::new("video-upload-progress").loading(true))
-                    .child(div().text_sm().child(format!("{} {name}", t(cx, "dialogs.video.uploading"))))
+                    .child(
+                        div()
+                            .text_sm()
+                            .child(format!("{} {name}", t(cx, "dialogs.video.uploading"))),
+                    )
                     .into_any_element(),
-                UploadState::Done { name } => div().text_sm().child(format!("▶ {name}")).into_any_element(),
+                UploadState::Done { name } => div()
+                    .text_sm()
+                    .child(format!("▶ {name}"))
+                    .into_any_element(),
             })
     }
 
@@ -506,33 +616,83 @@ impl VideoDialogView {
                 let thumb = self.vm.url_thumbnail().map(Thumb::Url);
                 h_flex()
                     .gap_3()
-                    .child(div().w(px(128.)).h(px(72.)).rounded(theme.radius).overflow_hidden().child(
-                        widgets::thumb_element(thumb.as_ref(), &self.remote, theme),
-                    ))
-                    .child(v_flex().child(div().font_weight(FontWeight::SEMIBOLD).child("YouTube Video")).child(
-                        div().text_xs().text_color(theme.muted_foreground).child(format!("ID: {id}")),
-                    ))
+                    .child(
+                        div()
+                            .w(px(128.))
+                            .h(px(72.))
+                            .rounded(theme.radius)
+                            .overflow_hidden()
+                            .child(widgets::thumb_element(thumb.as_ref(), &self.remote, theme)),
+                    )
+                    .child(
+                        v_flex()
+                            .child(
+                                div()
+                                    .font_weight(FontWeight::SEMIBOLD)
+                                    .child("YouTube Video"),
+                            )
+                            .child(
+                                div()
+                                    .text_xs()
+                                    .text_color(theme.muted_foreground)
+                                    .child(format!("ID: {id}")),
+                            ),
+                    )
                     .into_any_element()
             }
             Some(Detected::File { filename, .. }) => h_flex()
                 .gap_3()
                 .child("▶")
-                .child(v_flex().child(div().font_weight(FontWeight::SEMIBOLD).child("Video File")).child(
-                    div().text_xs().text_color(theme.muted_foreground).child(filename),
-                ))
+                .child(
+                    v_flex()
+                        .child(div().font_weight(FontWeight::SEMIBOLD).child("Video File"))
+                        .child(
+                            div()
+                                .text_xs()
+                                .text_color(theme.muted_foreground)
+                                .child(filename),
+                        ),
+                )
                 .into_any_element(),
             None => {
                 let hint = self.vm.url_hint().map(|h| tr(cx, &h)).unwrap_or_default();
-                div().text_sm().text_color(theme.muted_foreground).child(hint).into_any_element()
+                div()
+                    .text_sm()
+                    .text_color(theme.muted_foreground)
+                    .child(hint)
+                    .into_any_element()
             }
         };
         v_flex()
             .gap_2()
             .child(div().text_sm().child(t(cx, "dialogs.video.url_label")))
-            .child(div().id("video-url").test_support().child(Input::new(&self.url)))
-            .child(div().text_xs().text_color(theme.muted_foreground).child(t(cx, "dialogs.video.url_hint_youtube")))
-            .child(div().text_xs().text_color(theme.muted_foreground).child(t(cx, "dialogs.video.url_hint_file")))
-            .child(div().id("video-url-preview").test_support().p_2().rounded(theme.radius).bg(theme.secondary).child(preview))
+            .child(
+                div()
+                    .id("video-url")
+                    .test_support()
+                    .child(Input::new(&self.url)),
+            )
+            .child(
+                div()
+                    .text_xs()
+                    .text_color(theme.muted_foreground)
+                    .child(t(cx, "dialogs.video.url_hint_youtube")),
+            )
+            .child(
+                div()
+                    .text_xs()
+                    .text_color(theme.muted_foreground)
+                    .child(t(cx, "dialogs.video.url_hint_file")),
+            )
+            .child(
+                div()
+                    .id("video-url-preview")
+                    .test_support()
+                    .p_2()
+                    .rounded(theme.radius)
+                    .bg(theme.secondary)
+                    .child(preview),
+            )
     }
 
     fn render_youtube(&mut self, theme: &Theme, cx: &mut Context<Self>) -> AnyElement {
@@ -568,28 +728,53 @@ impl VideoDialogView {
                             .flex_1()
                             .key_context("MediaVideoQuery")
                             .track_focus(&self.query_focus)
-                            .on_action(cx.listener(|this, _: &GridDown, window, cx| this.grid_key(GridKey::Down, window, cx)))
+                            .on_action(cx.listener(|this, _: &GridDown, window, cx| {
+                                this.grid_key(GridKey::Down, window, cx)
+                            }))
                             .child(Input::new(&self.query).small()),
                     )
-                    .child(Button::new("youtube-search").small().danger().label(t(cx, "common.search")).on_click(
-                        cx.listener(|this, _, window, cx| {
-                            let effects = this.vm.search();
-                            this.run(effects, window, cx);
-                        }),
-                    )),
+                    .child(
+                        Button::new("youtube-search")
+                            .small()
+                            .danger()
+                            .label(t(cx, "common.search"))
+                            .on_click(cx.listener(|this, _, window, cx| {
+                                let effects = this.vm.search();
+                                this.run(effects, window, cx);
+                            })),
+                    ),
             )
-            .child(div().text_sm().text_color(if error { theme.danger } else { theme.muted_foreground }).child(status))
-            .when(self.vm.searching(), |el| el.child(Progress::new("youtube-progress").loading(true)))
+            .child(
+                div()
+                    .text_sm()
+                    .text_color(if error {
+                        theme.danger
+                    } else {
+                        theme.muted_foreground
+                    })
+                    .child(status),
+            )
+            .when(self.vm.searching(), |el| {
+                el.child(Progress::new("youtube-progress").loading(true))
+            })
             .child(
                 div()
                     .id("youtube-results")
                     .test_support()
                     .key_context("MediaVideoGrid")
                     .track_focus(&self.results_focus)
-                    .on_action(cx.listener(|this, _: &GridLeft, window, cx| this.grid_key(GridKey::Left, window, cx)))
-                    .on_action(cx.listener(|this, _: &GridRight, window, cx| this.grid_key(GridKey::Right, window, cx)))
-                    .on_action(cx.listener(|this, _: &GridUp, window, cx| this.grid_key(GridKey::Up, window, cx)))
-                    .on_action(cx.listener(|this, _: &GridDown, window, cx| this.grid_key(GridKey::Down, window, cx)))
+                    .on_action(cx.listener(|this, _: &GridLeft, window, cx| {
+                        this.grid_key(GridKey::Left, window, cx)
+                    }))
+                    .on_action(cx.listener(|this, _: &GridRight, window, cx| {
+                        this.grid_key(GridKey::Right, window, cx)
+                    }))
+                    .on_action(cx.listener(|this, _: &GridUp, window, cx| {
+                        this.grid_key(GridKey::Up, window, cx)
+                    }))
+                    .on_action(cx.listener(|this, _: &GridDown, window, cx| {
+                        this.grid_key(GridKey::Down, window, cx)
+                    }))
                     .on_action(cx.listener(|this, _: &super::Activate, window, cx| {
                         if let Some(i) = this.vm.selected() {
                             let effects = this.vm.choose_result(i);
@@ -608,19 +793,33 @@ impl VideoDialogView {
                             .gap_1()
                             .rounded(theme.radius)
                             .border_2()
-                            .border_color(if selected == Some(i) { theme.accent } else { theme.border })
+                            .border_color(if selected == Some(i) {
+                                theme.accent
+                            } else {
+                                theme.border
+                            })
                             .cursor_pointer()
                             .on_click(cx.listener(move |this, _, window, cx| {
                                 let effects = this.vm.choose_result(i);
                                 this.run(effects, window, cx);
                             }))
-                            .child(div().w_full().h(px(120.)).overflow_hidden().child(widgets::thumb_element(
-                                thumb.as_ref(),
-                                &self.remote,
-                                theme,
-                            )))
-                            .child(div().text_sm().line_clamp(2).child(video.title.clone().unwrap_or_default()))
-                            .child(div().text_xs().text_color(theme.muted_foreground).child(video.channel.clone().unwrap_or_default()))
+                            .child(
+                                div().w_full().h(px(120.)).overflow_hidden().child(
+                                    widgets::thumb_element(thumb.as_ref(), &self.remote, theme),
+                                ),
+                            )
+                            .child(
+                                div()
+                                    .text_sm()
+                                    .line_clamp(2)
+                                    .child(video.title.clone().unwrap_or_default()),
+                            )
+                            .child(
+                                div()
+                                    .text_xs()
+                                    .text_color(theme.muted_foreground)
+                                    .child(video.channel.clone().unwrap_or_default()),
+                            )
                     })),
             )
             .into_any_element()
@@ -650,7 +849,8 @@ impl VideoDialogView {
                                 .disabled(storage.controls_disabled())
                                 .label(t(cx, "media_storage.local"))
                                 .on_click(cx.listener(|this, _, _, cx| {
-                                    this.storage.update(cx, |s, cx| s.request(Provider::Local, cx));
+                                    this.storage
+                                        .update(cx, |s, cx| s.request(Provider::Local, cx));
                                 })),
                         )
                         .child(
@@ -658,19 +858,27 @@ impl VideoDialogView {
                                 .xsmall()
                                 .selected(storage.provider() == Provider::S3)
                                 .disabled(storage.controls_disabled() || s3_reason.is_some())
-                                .when_some(s3_reason.as_ref(), |b, reason| b.tooltip(tr(cx, reason)))
+                                .when_some(s3_reason.as_ref(), |b, reason| {
+                                    b.tooltip(tr(cx, reason))
+                                })
                                 .label(t(cx, "media_storage.s3"))
                                 .on_click(cx.listener(|this, _, _, cx| {
                                     this.storage.update(cx, |s, cx| s.request(Provider::S3, cx));
                                 })),
                         )
                         .when(row.key_visible(), |el| {
-                            el.child(div().text_sm().child(t(cx, "dialogs.s3_option.custom_prefix")))
-                                .child(div().w(px(240.)).child(Input::new(&self.key).small()))
+                            el.child(
+                                div()
+                                    .text_sm()
+                                    .child(t(cx, "dialogs.s3_option.custom_prefix")),
+                            )
+                            .child(div().w(px(240.)).child(Input::new(&self.key).small()))
                         }),
                 )
             })
-            .when_some(storage.error().cloned(), |el, e| el.child(widgets::error_line(tr(cx, &e), theme)))
+            .when_some(storage.error().cloned(), |el, e| {
+                el.child(widgets::error_line(tr(cx, &e), theme))
+            })
             .child(
                 h_flex()
                     .gap_2()
@@ -685,7 +893,11 @@ impl VideoDialogView {
                             })),
                     )
                     .child(div().flex_1())
-                    .child(Button::new("video-cancel").label(t(cx, "common.cancel")).on_click(cx.listener(|this, _, _, cx| this.close(cx))))
+                    .child(
+                        Button::new("video-cancel")
+                            .label(t(cx, "common.cancel"))
+                            .on_click(cx.listener(|this, _, _, cx| this.close(cx))),
+                    )
                     .child(
                         Button::new("video-insert")
                             .primary()

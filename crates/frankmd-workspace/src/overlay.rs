@@ -75,7 +75,15 @@ impl OverlayStack {
     /// Esc: closes the overlay unless it refuses ([`OverlayKind::closes_on_escape`]).
     /// `None` when nothing closed (the Esc goes further down the chain).
     pub fn escape(&mut self) -> Option<FocusRegion> {
-        if self.open.as_ref().is_some_and(|(kind, _)| kind.closes_on_escape()) { self.close() } else { None }
+        if self
+            .open
+            .as_ref()
+            .is_some_and(|(kind, _)| kind.closes_on_escape())
+        {
+            self.close()
+        } else {
+            None
+        }
     }
 
     /// The open overlay.

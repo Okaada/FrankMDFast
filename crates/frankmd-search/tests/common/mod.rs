@@ -2,7 +2,12 @@
 //!
 //! The golden search trees need features `TempTree` does not have (pinned
 //! mtimes, base64 bytes, `<OUTSIDE>` symlink targets), so they are built here.
-#![allow(dead_code, unreachable_pub, clippy::disallowed_methods, clippy::unwrap_used)]
+#![allow(
+    dead_code,
+    unreachable_pub,
+    clippy::disallowed_methods,
+    clippy::unwrap_used
+)]
 
 use std::path::{Path, PathBuf};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
@@ -28,7 +33,11 @@ impl Sandbox {
         let outside = base.join("outside");
         std::fs::create_dir_all(&root).unwrap();
         std::fs::create_dir_all(&outside).unwrap();
-        Self { _tmp: tmp, root, outside }
+        Self {
+            _tmp: tmp,
+            root,
+            outside,
+        }
     }
 
     /// Build a fixture tree spec under the vault. Values: `"content"`,
@@ -91,12 +100,18 @@ pub fn system_time(secs: f64) -> SystemTime {
 pub fn set_mtime(path: &Path, secs: f64) {
     let f = std::fs::File::options().write(true).open(path).unwrap();
     let t = system_time(secs);
-    f.set_times(std::fs::FileTimes::new().set_accessed(t).set_modified(t)).unwrap();
+    f.set_times(std::fs::FileTimes::new().set_accessed(t).set_modified(t))
+        .unwrap();
 }
 
 /// Truncate/extend a file (NUL padded), like `File.truncate`.
 pub fn set_len(path: &Path, len: u64) {
-    std::fs::OpenOptions::new().write(true).open(path).unwrap().set_len(len).unwrap();
+    std::fs::OpenOptions::new()
+        .write(true)
+        .open(path)
+        .unwrap()
+        .set_len(len)
+        .unwrap();
 }
 
 /// Milliseconds since the epoch, floored (Ruby `Time#xmlschema(3)` truncates).
@@ -106,7 +121,11 @@ fn millis(t: SystemTime) -> i64 {
         Err(e) => {
             let d = e.duration();
             let ms = d.as_millis() as i64;
-            if d.as_nanos() % 1_000_000 == 0 { -ms } else { -ms - 1 }
+            if d.as_nanos() % 1_000_000 == 0 {
+                -ms
+            } else {
+                -ms - 1
+            }
         }
     }
 }
@@ -164,7 +183,9 @@ pub fn hit_json(h: &Hit) -> Value {
     let context: Vec<Value> = h
         .context
         .iter()
-        .map(|c| json!({"line_number": c.line_number, "content": c.content, "is_match": c.is_match}))
+        .map(
+            |c| json!({"line_number": c.line_number, "content": c.content, "is_match": c.is_match}),
+        )
         .collect();
     let mut m = Map::new();
     m.insert("line_number".into(), json!(h.line_number));

@@ -42,7 +42,10 @@ pub(crate) struct Lexer {
 
 impl Lexer {
     fn new() -> Self {
-        Self { top: true, ..Self::default() }
+        Self {
+            top: true,
+            ..Self::default()
+        }
     }
 }
 
@@ -90,8 +93,14 @@ pub(crate) fn newlines(s: &str) -> u32 {
 pub(crate) fn is_js_space(c: char) -> bool {
     matches!(
         c,
-        '\t' | '\n' | '\x0B' | '\x0C' | '\r' | ' ' | '\u{A0}' | '\u{1680}' | '\u{2000}'..='\u{200A}'
-            | '\u{2028}' | '\u{2029}' | '\u{202F}' | '\u{205F}' | '\u{3000}' | '\u{FEFF}'
+        '\t' | '\n' | '\x0B' | '\x0C' | '\r' | ' ' | '\u{A0}' | '\u{1680}' | '\u{2000}'
+            ..='\u{200A}'
+                | '\u{2028}'
+                | '\u{2029}'
+                | '\u{202F}'
+                | '\u{205F}'
+                | '\u{3000}'
+                | '\u{FEFF}'
     )
 }
 

@@ -4,7 +4,9 @@
 //! All positions are **UTF-8 byte offsets** into `text` (the JS used UTF-16
 //! code units; the tests convert).
 
-use super::{first_newline_from, is_js_whitespace, js_substring, js_trim, last_newline_at_or_before};
+use super::{
+    first_newline_from, is_js_whitespace, js_substring, js_trim, last_newline_at_or_before,
+};
 
 /// A pipe table found around a position.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -45,7 +47,10 @@ pub struct CodeBlockAtPosition {
 /// - `pos` past the end of `text`: the fast path looks at the last line, but
 ///   the line search then falls back to line 0.
 pub fn find_table_at_position(text: &str, pos: usize) -> Option<TableAtPosition> {
-    if !current_line(text, pos).trim_start_matches(is_js_whitespace).starts_with('|') {
+    if !current_line(text, pos)
+        .trim_start_matches(is_js_whitespace)
+        .starts_with('|')
+    {
         return None;
     }
 
@@ -66,7 +71,10 @@ pub fn find_table_at_position(text: &str, pos: usize) -> Option<TableAtPosition>
     }
 
     let table_lines = &lines[start_line..=end_line];
-    if !table_lines.iter().any(|line| is_separator_row(js_trim(line))) {
+    if !table_lines
+        .iter()
+        .any(|line| is_separator_row(js_trim(line)))
+    {
         return None;
     }
 

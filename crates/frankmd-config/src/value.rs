@@ -106,7 +106,11 @@ pub(crate) fn ruby_to_i(s: &str) -> i128 {
             } else {
                 value.saturating_mul(10).saturating_add(d)
             };
-        } else if b == b'_' && i > 0 && bytes[i - 1].is_ascii_digit() && bytes.get(i + 1).is_some_and(u8::is_ascii_digit) {
+        } else if b == b'_'
+            && i > 0
+            && bytes[i - 1].is_ascii_digit()
+            && bytes.get(i + 1).is_some_and(u8::is_ascii_digit)
+        {
             // A single underscore between digits is a separator.
         } else {
             break;
@@ -154,7 +158,10 @@ fn json_value(v: serde_json::Value) -> Option<Value> {
 /// - custom themes accept an object or a JSON string and are validated.
 pub fn coerce(key: Key, input: &serde_json::Value) -> Result<Option<Value>, ConfigError> {
     use serde_json::Value as J;
-    let invalid = |reason: &str| ConfigError::InvalidValue { key, reason: reason.to_owned() };
+    let invalid = |reason: &str| ConfigError::InvalidValue {
+        key,
+        reason: reason.to_owned(),
+    };
     match input {
         J::Null => return Ok(None),
         J::String(s) if ruby_strip(s).is_empty() => return Ok(None),
@@ -162,17 +169,26 @@ pub fn coerce(key: Key, input: &serde_json::Value) -> Result<Option<Value>, Conf
     }
     let ty = key.spec().ty;
     Ok(match ty {
-        KeyType::String => Some(Value::Str(scalar_to_s(input).ok_or_else(|| invalid("not a scalar"))?)),
+        KeyType::String => Some(Value::Str(
+            scalar_to_s(input).ok_or_else(|| invalid("not a scalar"))?,
+        )),
         KeyType::Integer => Some(Value::Int(match input {
             J::String(s) => ruby_to_i(s),
             J::Number(n) => number_to_i(n),
             _ => return Err(invalid("not an integer")),
         })),
-        KeyType::Boolean => Some(Value::Bool(ruby_bool(&scalar_to_s(input).ok_or_else(|| invalid("not a boolean"))?))),
+        KeyType::Boolean => Some(Value::Bool(ruby_bool(
+            &scalar_to_s(input).ok_or_else(|| invalid("not a boolean"))?,
+        ))),
         KeyType::Json => match input {
-            J::String(s) => json_value(
-                serde_json::from_str(s).map_err(|e| ConfigError::InvalidJson { key, reason: e.to_string() })?,
-            ),
+            J::String(s) => {
+                json_value(
+                    serde_json::from_str(s).map_err(|e| ConfigError::InvalidJson {
+                        key,
+                        reason: e.to_string(),
+                    })?,
+                )
+            }
             other => json_value(other.clone()),
         },
         KeyType::CustomTheme => match input {

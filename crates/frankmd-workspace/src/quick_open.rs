@@ -44,7 +44,11 @@ impl QuickOpenModel {
     pub fn new(mut notes: Vec<NoteEntry>, recents: Vec<String>) -> Self {
         notes.sort_by_key(|n| std::cmp::Reverse(n.mtime));
         let by_mtime = notes.into_iter().map(|n| n.path).collect();
-        let mut model = Self { by_mtime, recents, ..Self::default() };
+        let mut model = Self {
+            by_mtime,
+            recents,
+            ..Self::default()
+        };
         model.refresh();
         model
     }
@@ -60,7 +64,11 @@ impl QuickOpenModel {
         let compact: String = self.query.split_whitespace().collect();
         self.rows = finder::rank(&compact, &self.by_mtime, &self.recents, MAX_ROWS)
             .into_iter()
-            .map(|r| QuickOpenRow { recent: self.recents.contains(&r.path), path: r.path, matches: r.indices })
+            .map(|r| QuickOpenRow {
+                recent: self.recents.contains(&r.path),
+                path: r.path,
+                matches: r.indices,
+            })
             .collect();
         self.selected = (!self.rows.is_empty()).then_some(0);
     }
@@ -89,7 +97,9 @@ impl QuickOpenModel {
     /// ↑ with wrap.
     pub fn select_prev(&mut self) {
         let len = self.rows.len();
-        self.selected = self.selected.map(|i| if i == 0 { len.saturating_sub(1) } else { i - 1 });
+        self.selected = self
+            .selected
+            .map(|i| if i == 0 { len.saturating_sub(1) } else { i - 1 });
     }
 
     /// Selected row index.
@@ -99,7 +109,9 @@ impl QuickOpenModel {
 
     /// Path of the selected row (what Enter opens).
     pub fn selected_path(&self) -> Option<&str> {
-        self.selected.and_then(|i| self.rows.get(i)).map(|r| r.path.as_str())
+        self.selected
+            .and_then(|i| self.rows.get(i))
+            .map(|r| r.path.as_str())
     }
 
     /// Empty result offers "Ctrl+N creates `<query>.md`".

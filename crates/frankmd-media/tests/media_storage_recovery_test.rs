@@ -55,7 +55,13 @@ impl Fixture {
         c.images_path = Some(server_dir.clone());
         select_s3(&mut c);
         let (settings, env) = env_for(c, Some(&mock));
-        Self { notes, _server_dir: server_dir, mock, settings, api: MediaApi::new(env) }
+        Self {
+            notes,
+            _server_dir: server_dir,
+            mock,
+            settings,
+            api: MediaApi::new(env),
+        }
     }
 
     fn set(&self, f: impl FnOnce(&mut MediaConfig)) {
@@ -78,7 +84,11 @@ impl Fixture {
     async fn post(&self, ep: Endpoint) -> Result<String, ApiError> {
         let nil = Param::Nil;
         match ep {
-            Endpoint::ImagesUpload => self.api.upload(Some(Upload::new("photo.png", PNG_1X1)), &nil, &nil, None).await,
+            Endpoint::ImagesUpload => {
+                self.api
+                    .upload(Some(Upload::new("photo.png", PNG_1X1)), &nil, &nil, None)
+                    .await
+            }
             Endpoint::ImagesUploadBase64 => {
                 let req = Base64Upload {
                     data: b64(&PNG_1X1),
@@ -89,9 +99,22 @@ impl Fixture {
                 self.api.upload_base64(&req).await
             }
             Endpoint::ImagesImport => {
-                self.api.import(&ImportRequest { path: Param::str("photo.png"), ..Default::default() }).await
+                self.api
+                    .import(&ImportRequest {
+                        path: Param::str("photo.png"),
+                        ..Default::default()
+                    })
+                    .await
             }
-            Endpoint::MediaUpload => self.api.media_upload(Some(Upload::new("clip.mp4", sample_media(".mp4"))), &nil, None).await,
+            Endpoint::MediaUpload => {
+                self.api
+                    .media_upload(
+                        Some(Upload::new("clip.mp4", sample_media(".mp4"))),
+                        &nil,
+                        None,
+                    )
+                    .await
+            }
         }
     }
 }
@@ -108,7 +131,10 @@ fn select_s3(c: &mut MediaConfig) {
 fn unprocessable_with_fallback(r: Result<String, ApiError>) {
     let err = r.unwrap_err();
     assert_eq!(err.status, ApiStatus::Unprocessable);
-    assert!(err.media_storage_fallback, "expected media_storage_fallback: true, got {err:?}");
+    assert!(
+        err.media_storage_fallback,
+        "expected media_storage_fallback: true, got {err:?}"
+    );
 }
 
 async fn configuration_refresh_persists_local_after_removal(key: &str) {
@@ -151,7 +177,11 @@ async fn invalid_endpoints_recover_but_s3_compatible_endpoints_remain_valid() {
         f.select_s3();
         f.set(|c| c.s3.endpoint = Some(endpoint.into()));
         let s = f.api.storage_status();
-        assert_eq!(s.media_storage_provider.as_deref(), Some("local"), "{endpoint}");
+        assert_eq!(
+            s.media_storage_provider.as_deref(),
+            Some("local"),
+            "{endpoint}"
+        );
         assert!(s.media_storage_fallback, "{endpoint}");
     }
     f.select_s3();
@@ -186,7 +216,10 @@ async fn recovers_missing_settings_before_writing(ep: Endpoint) {
     assert_eq!(f.provider().as_deref(), Some("local"));
     f.no_local_media();
     let url = f.post(ep).await.unwrap();
-    assert!(f.notes.path().join(&url).is_file(), "{ep:?} retry must store locally");
+    assert!(
+        f.notes.path().join(&url).is_file(),
+        "{ep:?} retry must store locally"
+    );
     assert!(puts(&f.mock).await.is_empty());
 }
 
@@ -220,8 +253,14 @@ async fn recovers_an_invalid_sdk_region(ep: Endpoint) {
     unprocessable_with_fallback(f.post(ep).await);
     assert_eq!(f.provider().as_deref(), Some("local"));
     f.no_local_media();
-    assert!(puts(&f.mock).await.is_empty(), "the upload is not retried / never sent");
-    assert!(f.api.storage_status().media_storage_fallback, "warning still pending");
+    assert!(
+        puts(&f.mock).await.is_empty(),
+        "the upload is not retried / never sent"
+    );
+    assert!(
+        f.api.storage_status().media_storage_fallback,
+        "warning still pending"
+    );
     let url = f.post(ep).await.unwrap();
     assert!(f.notes.path().join(&url).is_file());
 }
@@ -253,7 +292,10 @@ async fn media_upload_recovers_an_invalid_sdk_region() {
 async fn recovers_rejected_s3_credentials(ep: Endpoint) {
     let f = Fixture::new().await;
     Mock::given(method("PUT"))
-        .respond_with(ResponseTemplate::new(403).set_body_raw(s3_error_body("InvalidAccessKeyId"), "application/xml"))
+        .respond_with(
+            ResponseTemplate::new(403)
+                .set_body_raw(s3_error_body("InvalidAccessKeyId"), "application/xml"),
+        )
         .expect(1)
         .mount(&f.mock)
         .await;
@@ -299,13 +341,18 @@ async fn legacy_s3_endpoints_also_recover_missing_settings_without_importing() {
         let r = if legacy == "upload_to_s3" {
             f.api.upload_to_s3("photo.png", &Param::Nil, None).await
         } else {
-            f.api.upload_external_to_s3("http://example.com/photo.png", &Param::Nil, None).await
+            f.api
+                .upload_external_to_s3("http://example.com/photo.png", &Param::Nil, None)
+                .await
         };
         unprocessable_with_fallback(r);
         assert_eq!(f.provider().as_deref(), Some("local"), "{legacy}");
         assert!(!f.notes.path().join("images").exists());
     }
-    assert!(requests(&f.mock).await.is_empty(), "nothing fetched or uploaded");
+    assert!(
+        requests(&f.mock).await.is_empty(),
+        "nothing fetched or uploaded"
+    );
 }
 
 // port: test/controllers/media_storage_recovery_test.rb:138 "temporary failures do not change the provider or claim recovery"
@@ -313,7 +360,11 @@ async fn legacy_s3_endpoints_also_recover_missing_settings_without_importing() {
 async fn temporary_failures_do_not_change_the_provider_or_claim_recovery() {
     // SlowDown, InternalError, and Seahorse::Client::NetworkingError (here: the
     // S3 transport points at a closed port → connection refused).
-    for (code, status) in [("SlowDown", 503), ("InternalError", 500), ("NetworkingError", 0)] {
+    for (code, status) in [
+        ("SlowDown", 503),
+        ("InternalError", 500),
+        ("NetworkingError", 0),
+    ] {
         let mut f = Fixture::new().await;
         if status == 0 {
             f.api.env.s3_transport = Some(url::Url::parse("http://127.0.0.1:1/").unwrap());

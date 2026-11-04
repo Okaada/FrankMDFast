@@ -30,7 +30,10 @@ use frankmd_testkit::{assert_cases, golden};
 const FIXTURE: &str = "js_preview_pipeline";
 
 fn opts() -> RenderOptions {
-    RenderOptions { highlighter: Some(Arc::new(BuiltinHighlighter)), ..RenderOptions::default() }
+    RenderOptions {
+        highlighter: Some(Arc::new(BuiltinHighlighter)),
+        ..RenderOptions::default()
+    }
 }
 
 #[test]
@@ -45,7 +48,10 @@ fn golden_strip_frontmatter() {
         if got.content == want_content && u64::from(got.frontmatter_lines) == want_lines {
             Ok(())
         } else {
-            Err(format!("got ({:?}, {}), expected ({want_content:?}, {want_lines})", got.content, got.frontmatter_lines))
+            Err(format!(
+                "got ({:?}, {}), expected ({want_content:?}, {want_lines})",
+                got.content, got.frontmatter_lines
+            ))
         }
     });
 }
@@ -53,7 +59,9 @@ fn golden_strip_frontmatter() {
 #[test]
 fn golden_preview_render() {
     let g = golden(FIXTURE);
-    let cases = g.cases_for("previewRender").filter(|c| !is_known_divergence(FIXTURE, &c.name));
+    let cases = g
+        .cases_for("previewRender")
+        .filter(|c| !is_known_divergence(FIXTURE, &c.name));
     assert_cases(FIXTURE, cases, |case| {
         let src = arg_str(case, 0);
         let exp = expected(case);
@@ -87,18 +95,34 @@ fn golden_preview_render() {
         let got_code = collect_code(&doc);
         let got_classed: Vec<_> = got_code.iter().filter(|(l, _)| l.is_some()).collect();
         if want_code.len() != got_classed.len() {
-            errs.push(format!("{} classed code blocks, expected {}", got_classed.len(), want_code.len()));
+            errs.push(format!(
+                "{} classed code blocks, expected {}",
+                got_classed.len(),
+                want_code.len()
+            ));
         } else {
             for (i, (want, (lang, lines))) in want_code.iter().zip(&got_classed).enumerate() {
-                let label = lang.as_deref().and_then(language_for_fence).map(|l| l.label.to_owned());
+                let label = lang
+                    .as_deref()
+                    .and_then(language_for_fence)
+                    .map(|l| l.label.to_owned());
                 if label != want.label {
-                    errs.push(format!("code #{i}: label {label:?}, expected {:?}", want.label));
+                    errs.push(format!(
+                        "code #{i}: label {label:?}, expected {:?}",
+                        want.label
+                    ));
                 }
                 if want.highlighted() && !is_highlighted(lines) {
-                    errs.push(format!("code #{i} ({:?}): expected token highlighting", want.lang));
+                    errs.push(format!(
+                        "code #{i} ({:?}): expected token highlighting",
+                        want.lang
+                    ));
                 }
                 if want.label.is_none() && is_highlighted(lines) {
-                    errs.push(format!("code #{i} ({:?}): highlighted an unsupported language", want.lang));
+                    errs.push(format!(
+                        "code #{i} ({:?}): highlighted an unsupported language",
+                        want.lang
+                    ));
                 }
             }
         }
@@ -106,17 +130,28 @@ fn golden_preview_render() {
         let want_math = katex_verdicts(sanitized, final_html);
         let got_math = collect_math(&doc);
         if want_math.len() != got_math.len() {
-            errs.push(format!("{} math nodes, expected {}", got_math.len(), want_math.len()));
+            errs.push(format!(
+                "{} math nodes, expected {}",
+                got_math.len(),
+                want_math.len()
+            ));
         } else {
             for ((ws, wt, wv), (gs, gt)) in want_math.iter().zip(&got_math) {
                 if ws != gs || wt != gt {
                     errs.push(format!("math {gs:?} {gt:?}, expected {ws:?} {wt:?}"));
                 } else if !wv.matches(&validate(gt, *gs)) {
-                    errs.push(format!("math {gt:?}: validate {:?}, KaTeX {wv:?}", validate(gt, *gs)));
+                    errs.push(format!(
+                        "math {gt:?}: validate {:?}, KaTeX {wv:?}",
+                        validate(gt, *gs)
+                    ));
                 }
             }
         }
 
-        if errs.is_empty() { Ok(()) } else { Err(errs.join("\n    ")) }
+        if errs.is_empty() {
+            Ok(())
+        } else {
+            Err(errs.join("\n    "))
+        }
     });
 }

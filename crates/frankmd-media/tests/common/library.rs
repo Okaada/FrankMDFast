@@ -1,5 +1,10 @@
 //! Helpers for the library / usage / S3-library ports (media-library port).
-#![allow(dead_code, unreachable_pub, clippy::disallowed_methods, clippy::unwrap_used)]
+#![allow(
+    dead_code,
+    unreachable_pub,
+    clippy::disallowed_methods,
+    clippy::unwrap_used
+)]
 
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -21,7 +26,11 @@ pub struct Notes {
 
 impl Notes {
     pub fn new() -> Self {
-        Self { tree: TempTree::empty(), outside: TempTree::empty(), state: TempTree::empty() }
+        Self {
+            tree: TempTree::empty(),
+            outside: TempTree::empty(),
+            state: TempTree::empty(),
+        }
     }
 
     pub fn root(&self) -> &Path {
@@ -84,7 +93,8 @@ pub fn write_file(root: &Path, rel: &str, bytes: &[u8]) -> PathBuf {
 
 pub fn set_mtime(path: &Path, unix_secs: u64) {
     let f = std::fs::File::options().write(true).open(path).unwrap();
-    f.set_modified(SystemTime::UNIX_EPOCH + Duration::from_secs(unix_secs)).unwrap();
+    f.set_modified(SystemTime::UNIX_EPOCH + Duration::from_secs(unix_secs))
+        .unwrap();
 }
 
 fn materialize(root: &Path, rel: &str, v: &Value, outside: &Path) {
@@ -103,13 +113,20 @@ fn materialize(root: &Path, rel: &str, v: &Value, outside: &Path) {
             write_file(root, rel, &unbase64(o["base64"].as_str().unwrap()));
         }
         Value::Object(o) if o.contains_key("symlink") => {
-            let target = o["symlink"].as_str().unwrap().replace("<OUTSIDE>", &outside.display().to_string());
+            let target = o["symlink"]
+                .as_str()
+                .unwrap()
+                .replace("<OUTSIDE>", &outside.display().to_string());
             let link = root.join(rel);
             std::fs::create_dir_all(link.parent().unwrap()).unwrap();
             std::os::unix::fs::symlink(target, link).unwrap();
         }
         Value::Object(o) => {
-            let p = write_file(root, rel, o["content"].as_str().unwrap_or_default().as_bytes());
+            let p = write_file(
+                root,
+                rel,
+                o["content"].as_str().unwrap_or_default().as_bytes(),
+            );
             if let Some(m) = o.get("mtime").and_then(Value::as_u64) {
                 set_mtime(&p, m);
             }
@@ -174,7 +191,8 @@ pub fn env(config: MediaConfig, s3_mock: Option<&str>) -> MediaEnv {
         MemorySettings::new(config),
         MediaCtx::pinned("2026-01-01T12:00:00+00:00[UTC]".parse().unwrap()),
         TrustedClient::new().expect("client"),
-        EgressClient::with_resolver(Limits::EXTERNAL_IMAGE, Arc::new(StaticResolver::new())).expect("egress"),
+        EgressClient::with_resolver(Limits::EXTERNAL_IMAGE, Arc::new(StaticResolver::new()))
+            .expect("egress"),
     );
     env.s3_transport = s3_mock.map(|u| u.parse().unwrap());
     env
@@ -188,7 +206,11 @@ pub fn list_objects_xml(bucket: &str, objects: &[(&str, u64)], next_token: Optio
         .collect();
     let trunc = next_token.map_or_else(
         || "<IsTruncated>false</IsTruncated>".to_owned(),
-        |t| format!("<IsTruncated>true</IsTruncated><NextContinuationToken>{t}</NextContinuationToken>"),
+        |t| {
+            format!(
+                "<IsTruncated>true</IsTruncated><NextContinuationToken>{t}</NextContinuationToken>"
+            )
+        },
     );
     format!(
         r#"<?xml version="1.0" encoding="UTF-8"?><ListBucketResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/"><Name>{bucket}</Name><Prefix>frankmd/</Prefix>{trunc}{contents}</ListBucketResult>"#
@@ -211,9 +233,14 @@ pub fn unbase64(s: &str) -> Vec<u8> {
     let mut out = Vec::new();
     for chunk in clean.chunks(4) {
         let pad = chunk.iter().filter(|&&c| c == b'=').count();
-        let n = chunk.iter().fold(0u32, |acc, &c| (acc << 6) | val(c)) << (6 * (4 - chunk.len() as u32));
+        let n = chunk.iter().fold(0u32, |acc, &c| (acc << 6) | val(c))
+            << (6 * (4 - chunk.len() as u32));
         let bytes = [(n >> 16) as u8, (n >> 8) as u8, n as u8];
-        out.extend_from_slice(&bytes[..3usize.saturating_sub(pad).min(chunk.len().saturating_sub(1))]);
+        out.extend_from_slice(
+            &bytes[..3usize
+                .saturating_sub(pad)
+                .min(chunk.len().saturating_sub(1))],
+        );
     }
     out
 }

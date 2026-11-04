@@ -8,7 +8,10 @@ use frankmd_i18n::{Locale, key_present, locale_tree};
 fn assert_defines(code: &str, key: &str) {
     let locale = Locale::from_code(code).expect("shipped locale");
     let tree = locale_tree(locale).expect("locale yaml parses");
-    assert!(key_present(&tree, key), "config/locales/{code}.yml is missing {key}");
+    assert!(
+        key_present(&tree, key),
+        "config/locales/{code}.yml is missing {key}"
+    );
 }
 
 macro_rules! defines {
@@ -22,261 +25,1173 @@ macro_rules! defines {
 }
 
 defines!(en_defines_media_storage_label, "en", "media_storage.label");
-defines!(en_defines_media_storage_not_configured, "en", "media_storage.not_configured");
-defines!(en_defines_media_storage_recovery_title, "en", "media_storage.recovery_title");
-defines!(en_defines_media_storage_recovered, "en", "media_storage.recovered");
-defines!(en_defines_media_storage_retry_local, "en", "media_storage.retry_local");
+defines!(
+    en_defines_media_storage_not_configured,
+    "en",
+    "media_storage.not_configured"
+);
+defines!(
+    en_defines_media_storage_recovery_title,
+    "en",
+    "media_storage.recovery_title"
+);
+defines!(
+    en_defines_media_storage_recovered,
+    "en",
+    "media_storage.recovered"
+);
+defines!(
+    en_defines_media_storage_retry_local,
+    "en",
+    "media_storage.retry_local"
+);
 defines!(en_defines_media_storage_local, "en", "media_storage.local");
 defines!(en_defines_media_storage_s3, "en", "media_storage.s3");
-defines!(en_defines_media_storage_save_failed, "en", "media_storage.save_failed");
-defines!(en_defines_media_storage_load_failed, "en", "media_storage.load_failed");
-defines!(en_defines_media_storage_save_copy, "en", "media_storage.save_copy");
-defines!(en_defines_media_storage_collection, "en", "media_storage.collection");
-defines!(en_defines_media_storage_managed_images, "en", "media_storage.managed_images");
-defines!(en_defines_media_storage_server_images, "en", "media_storage.server_images");
+defines!(
+    en_defines_media_storage_save_failed,
+    "en",
+    "media_storage.save_failed"
+);
+defines!(
+    en_defines_media_storage_load_failed,
+    "en",
+    "media_storage.load_failed"
+);
+defines!(
+    en_defines_media_storage_save_copy,
+    "en",
+    "media_storage.save_copy"
+);
+defines!(
+    en_defines_media_storage_collection,
+    "en",
+    "media_storage.collection"
+);
+defines!(
+    en_defines_media_storage_managed_images,
+    "en",
+    "media_storage.managed_images"
+);
+defines!(
+    en_defines_media_storage_server_images,
+    "en",
+    "media_storage.server_images"
+);
 defines!(en_defines_library_rename, "en", "library.rename");
-defines!(en_defines_library_rename_prompt, "en", "library.rename_prompt");
-defines!(en_defines_library_rename_failed, "en", "library.rename_failed");
+defines!(
+    en_defines_library_rename_prompt,
+    "en",
+    "library.rename_prompt"
+);
+defines!(
+    en_defines_library_rename_failed,
+    "en",
+    "library.rename_failed"
+);
 defines!(en_defines_library_renamed, "en", "library.renamed");
-defines!(en_defines_dialogs_image_picker_tab_drop, "en", "dialogs.image_picker.tab_drop");
-defines!(en_defines_dialogs_image_picker_drop_hint, "en", "dialogs.image_picker.drop_hint");
-defines!(en_defines_dialogs_image_picker_drop_rejected, "en", "dialogs.image_picker.drop_rejected");
-defines!(en_defines_dialogs_image_picker_processing_image_paste, "en", "dialogs.image_picker.processing_image_paste");
-defines!(en_defines_dialogs_image_picker_per_page, "en", "dialogs.image_picker.per_page");
-defines!(en_defines_dialogs_image_picker_prev_page, "en", "dialogs.image_picker.prev_page");
-defines!(en_defines_dialogs_image_picker_next_page, "en", "dialogs.image_picker.next_page");
-defines!(en_defines_dialogs_image_picker_page_status, "en", "dialogs.image_picker.page_status");
-defines!(en_defines_dialogs_image_picker_delete_image, "en", "dialogs.image_picker.delete_image");
-defines!(en_defines_dialogs_image_picker_delete_confirm, "en", "dialogs.image_picker.delete_confirm");
-defines!(en_defines_dialogs_image_picker_delete_failed, "en", "dialogs.image_picker.delete_failed");
-defines!(en_defines_dialogs_s3_option_custom_key, "en", "dialogs.s3_option.custom_key");
-defines!(en_defines_dialogs_s3_option_custom_key_hint, "en", "dialogs.s3_option.custom_key_hint");
-defines!(en_defines_dialogs_s3_option_custom_prefix, "en", "dialogs.s3_option.custom_prefix");
-defines!(en_defines_dialogs_s3_option_custom_prefix_hint, "en", "dialogs.s3_option.custom_prefix_hint");
-defines!(en_defines_dialogs_video_tab_drop, "en", "dialogs.video.tab_drop");
-defines!(en_defines_dialogs_video_drop_hint, "en", "dialogs.video.drop_hint");
-defines!(en_defines_dialogs_video_drop_rejected, "en", "dialogs.video.drop_rejected");
-defines!(en_defines_dialogs_video_uploading, "en", "dialogs.video.uploading");
-defines!(en_defines_status_upload_failed, "en", "status.upload_failed");
+defines!(
+    en_defines_dialogs_image_picker_tab_drop,
+    "en",
+    "dialogs.image_picker.tab_drop"
+);
+defines!(
+    en_defines_dialogs_image_picker_drop_hint,
+    "en",
+    "dialogs.image_picker.drop_hint"
+);
+defines!(
+    en_defines_dialogs_image_picker_drop_rejected,
+    "en",
+    "dialogs.image_picker.drop_rejected"
+);
+defines!(
+    en_defines_dialogs_image_picker_processing_image_paste,
+    "en",
+    "dialogs.image_picker.processing_image_paste"
+);
+defines!(
+    en_defines_dialogs_image_picker_per_page,
+    "en",
+    "dialogs.image_picker.per_page"
+);
+defines!(
+    en_defines_dialogs_image_picker_prev_page,
+    "en",
+    "dialogs.image_picker.prev_page"
+);
+defines!(
+    en_defines_dialogs_image_picker_next_page,
+    "en",
+    "dialogs.image_picker.next_page"
+);
+defines!(
+    en_defines_dialogs_image_picker_page_status,
+    "en",
+    "dialogs.image_picker.page_status"
+);
+defines!(
+    en_defines_dialogs_image_picker_delete_image,
+    "en",
+    "dialogs.image_picker.delete_image"
+);
+defines!(
+    en_defines_dialogs_image_picker_delete_confirm,
+    "en",
+    "dialogs.image_picker.delete_confirm"
+);
+defines!(
+    en_defines_dialogs_image_picker_delete_failed,
+    "en",
+    "dialogs.image_picker.delete_failed"
+);
+defines!(
+    en_defines_dialogs_s3_option_custom_key,
+    "en",
+    "dialogs.s3_option.custom_key"
+);
+defines!(
+    en_defines_dialogs_s3_option_custom_key_hint,
+    "en",
+    "dialogs.s3_option.custom_key_hint"
+);
+defines!(
+    en_defines_dialogs_s3_option_custom_prefix,
+    "en",
+    "dialogs.s3_option.custom_prefix"
+);
+defines!(
+    en_defines_dialogs_s3_option_custom_prefix_hint,
+    "en",
+    "dialogs.s3_option.custom_prefix_hint"
+);
+defines!(
+    en_defines_dialogs_video_tab_drop,
+    "en",
+    "dialogs.video.tab_drop"
+);
+defines!(
+    en_defines_dialogs_video_drop_hint,
+    "en",
+    "dialogs.video.drop_hint"
+);
+defines!(
+    en_defines_dialogs_video_drop_rejected,
+    "en",
+    "dialogs.video.drop_rejected"
+);
+defines!(
+    en_defines_dialogs_video_uploading,
+    "en",
+    "dialogs.video.uploading"
+);
+defines!(
+    en_defines_status_upload_failed,
+    "en",
+    "status.upload_failed"
+);
 defines!(es_defines_media_storage_label, "es", "media_storage.label");
-defines!(es_defines_media_storage_not_configured, "es", "media_storage.not_configured");
-defines!(es_defines_media_storage_recovery_title, "es", "media_storage.recovery_title");
-defines!(es_defines_media_storage_recovered, "es", "media_storage.recovered");
-defines!(es_defines_media_storage_retry_local, "es", "media_storage.retry_local");
+defines!(
+    es_defines_media_storage_not_configured,
+    "es",
+    "media_storage.not_configured"
+);
+defines!(
+    es_defines_media_storage_recovery_title,
+    "es",
+    "media_storage.recovery_title"
+);
+defines!(
+    es_defines_media_storage_recovered,
+    "es",
+    "media_storage.recovered"
+);
+defines!(
+    es_defines_media_storage_retry_local,
+    "es",
+    "media_storage.retry_local"
+);
 defines!(es_defines_media_storage_local, "es", "media_storage.local");
 defines!(es_defines_media_storage_s3, "es", "media_storage.s3");
-defines!(es_defines_media_storage_save_failed, "es", "media_storage.save_failed");
-defines!(es_defines_media_storage_load_failed, "es", "media_storage.load_failed");
-defines!(es_defines_media_storage_save_copy, "es", "media_storage.save_copy");
-defines!(es_defines_media_storage_collection, "es", "media_storage.collection");
-defines!(es_defines_media_storage_managed_images, "es", "media_storage.managed_images");
-defines!(es_defines_media_storage_server_images, "es", "media_storage.server_images");
+defines!(
+    es_defines_media_storage_save_failed,
+    "es",
+    "media_storage.save_failed"
+);
+defines!(
+    es_defines_media_storage_load_failed,
+    "es",
+    "media_storage.load_failed"
+);
+defines!(
+    es_defines_media_storage_save_copy,
+    "es",
+    "media_storage.save_copy"
+);
+defines!(
+    es_defines_media_storage_collection,
+    "es",
+    "media_storage.collection"
+);
+defines!(
+    es_defines_media_storage_managed_images,
+    "es",
+    "media_storage.managed_images"
+);
+defines!(
+    es_defines_media_storage_server_images,
+    "es",
+    "media_storage.server_images"
+);
 defines!(es_defines_library_rename, "es", "library.rename");
-defines!(es_defines_library_rename_prompt, "es", "library.rename_prompt");
-defines!(es_defines_library_rename_failed, "es", "library.rename_failed");
+defines!(
+    es_defines_library_rename_prompt,
+    "es",
+    "library.rename_prompt"
+);
+defines!(
+    es_defines_library_rename_failed,
+    "es",
+    "library.rename_failed"
+);
 defines!(es_defines_library_renamed, "es", "library.renamed");
-defines!(es_defines_dialogs_image_picker_tab_drop, "es", "dialogs.image_picker.tab_drop");
-defines!(es_defines_dialogs_image_picker_drop_hint, "es", "dialogs.image_picker.drop_hint");
-defines!(es_defines_dialogs_image_picker_drop_rejected, "es", "dialogs.image_picker.drop_rejected");
-defines!(es_defines_dialogs_image_picker_processing_image_paste, "es", "dialogs.image_picker.processing_image_paste");
-defines!(es_defines_dialogs_image_picker_per_page, "es", "dialogs.image_picker.per_page");
-defines!(es_defines_dialogs_image_picker_prev_page, "es", "dialogs.image_picker.prev_page");
-defines!(es_defines_dialogs_image_picker_next_page, "es", "dialogs.image_picker.next_page");
-defines!(es_defines_dialogs_image_picker_page_status, "es", "dialogs.image_picker.page_status");
-defines!(es_defines_dialogs_image_picker_delete_image, "es", "dialogs.image_picker.delete_image");
-defines!(es_defines_dialogs_image_picker_delete_confirm, "es", "dialogs.image_picker.delete_confirm");
-defines!(es_defines_dialogs_image_picker_delete_failed, "es", "dialogs.image_picker.delete_failed");
-defines!(es_defines_dialogs_s3_option_custom_key, "es", "dialogs.s3_option.custom_key");
-defines!(es_defines_dialogs_s3_option_custom_key_hint, "es", "dialogs.s3_option.custom_key_hint");
-defines!(es_defines_dialogs_s3_option_custom_prefix, "es", "dialogs.s3_option.custom_prefix");
-defines!(es_defines_dialogs_s3_option_custom_prefix_hint, "es", "dialogs.s3_option.custom_prefix_hint");
-defines!(es_defines_dialogs_video_tab_drop, "es", "dialogs.video.tab_drop");
-defines!(es_defines_dialogs_video_drop_hint, "es", "dialogs.video.drop_hint");
-defines!(es_defines_dialogs_video_drop_rejected, "es", "dialogs.video.drop_rejected");
-defines!(es_defines_dialogs_video_uploading, "es", "dialogs.video.uploading");
-defines!(es_defines_status_upload_failed, "es", "status.upload_failed");
+defines!(
+    es_defines_dialogs_image_picker_tab_drop,
+    "es",
+    "dialogs.image_picker.tab_drop"
+);
+defines!(
+    es_defines_dialogs_image_picker_drop_hint,
+    "es",
+    "dialogs.image_picker.drop_hint"
+);
+defines!(
+    es_defines_dialogs_image_picker_drop_rejected,
+    "es",
+    "dialogs.image_picker.drop_rejected"
+);
+defines!(
+    es_defines_dialogs_image_picker_processing_image_paste,
+    "es",
+    "dialogs.image_picker.processing_image_paste"
+);
+defines!(
+    es_defines_dialogs_image_picker_per_page,
+    "es",
+    "dialogs.image_picker.per_page"
+);
+defines!(
+    es_defines_dialogs_image_picker_prev_page,
+    "es",
+    "dialogs.image_picker.prev_page"
+);
+defines!(
+    es_defines_dialogs_image_picker_next_page,
+    "es",
+    "dialogs.image_picker.next_page"
+);
+defines!(
+    es_defines_dialogs_image_picker_page_status,
+    "es",
+    "dialogs.image_picker.page_status"
+);
+defines!(
+    es_defines_dialogs_image_picker_delete_image,
+    "es",
+    "dialogs.image_picker.delete_image"
+);
+defines!(
+    es_defines_dialogs_image_picker_delete_confirm,
+    "es",
+    "dialogs.image_picker.delete_confirm"
+);
+defines!(
+    es_defines_dialogs_image_picker_delete_failed,
+    "es",
+    "dialogs.image_picker.delete_failed"
+);
+defines!(
+    es_defines_dialogs_s3_option_custom_key,
+    "es",
+    "dialogs.s3_option.custom_key"
+);
+defines!(
+    es_defines_dialogs_s3_option_custom_key_hint,
+    "es",
+    "dialogs.s3_option.custom_key_hint"
+);
+defines!(
+    es_defines_dialogs_s3_option_custom_prefix,
+    "es",
+    "dialogs.s3_option.custom_prefix"
+);
+defines!(
+    es_defines_dialogs_s3_option_custom_prefix_hint,
+    "es",
+    "dialogs.s3_option.custom_prefix_hint"
+);
+defines!(
+    es_defines_dialogs_video_tab_drop,
+    "es",
+    "dialogs.video.tab_drop"
+);
+defines!(
+    es_defines_dialogs_video_drop_hint,
+    "es",
+    "dialogs.video.drop_hint"
+);
+defines!(
+    es_defines_dialogs_video_drop_rejected,
+    "es",
+    "dialogs.video.drop_rejected"
+);
+defines!(
+    es_defines_dialogs_video_uploading,
+    "es",
+    "dialogs.video.uploading"
+);
+defines!(
+    es_defines_status_upload_failed,
+    "es",
+    "status.upload_failed"
+);
 defines!(he_defines_media_storage_label, "he", "media_storage.label");
-defines!(he_defines_media_storage_not_configured, "he", "media_storage.not_configured");
-defines!(he_defines_media_storage_recovery_title, "he", "media_storage.recovery_title");
-defines!(he_defines_media_storage_recovered, "he", "media_storage.recovered");
-defines!(he_defines_media_storage_retry_local, "he", "media_storage.retry_local");
+defines!(
+    he_defines_media_storage_not_configured,
+    "he",
+    "media_storage.not_configured"
+);
+defines!(
+    he_defines_media_storage_recovery_title,
+    "he",
+    "media_storage.recovery_title"
+);
+defines!(
+    he_defines_media_storage_recovered,
+    "he",
+    "media_storage.recovered"
+);
+defines!(
+    he_defines_media_storage_retry_local,
+    "he",
+    "media_storage.retry_local"
+);
 defines!(he_defines_media_storage_local, "he", "media_storage.local");
 defines!(he_defines_media_storage_s3, "he", "media_storage.s3");
-defines!(he_defines_media_storage_save_failed, "he", "media_storage.save_failed");
-defines!(he_defines_media_storage_load_failed, "he", "media_storage.load_failed");
-defines!(he_defines_media_storage_save_copy, "he", "media_storage.save_copy");
-defines!(he_defines_media_storage_collection, "he", "media_storage.collection");
-defines!(he_defines_media_storage_managed_images, "he", "media_storage.managed_images");
-defines!(he_defines_media_storage_server_images, "he", "media_storage.server_images");
+defines!(
+    he_defines_media_storage_save_failed,
+    "he",
+    "media_storage.save_failed"
+);
+defines!(
+    he_defines_media_storage_load_failed,
+    "he",
+    "media_storage.load_failed"
+);
+defines!(
+    he_defines_media_storage_save_copy,
+    "he",
+    "media_storage.save_copy"
+);
+defines!(
+    he_defines_media_storage_collection,
+    "he",
+    "media_storage.collection"
+);
+defines!(
+    he_defines_media_storage_managed_images,
+    "he",
+    "media_storage.managed_images"
+);
+defines!(
+    he_defines_media_storage_server_images,
+    "he",
+    "media_storage.server_images"
+);
 defines!(he_defines_library_rename, "he", "library.rename");
-defines!(he_defines_library_rename_prompt, "he", "library.rename_prompt");
-defines!(he_defines_library_rename_failed, "he", "library.rename_failed");
+defines!(
+    he_defines_library_rename_prompt,
+    "he",
+    "library.rename_prompt"
+);
+defines!(
+    he_defines_library_rename_failed,
+    "he",
+    "library.rename_failed"
+);
 defines!(he_defines_library_renamed, "he", "library.renamed");
-defines!(he_defines_dialogs_image_picker_tab_drop, "he", "dialogs.image_picker.tab_drop");
-defines!(he_defines_dialogs_image_picker_drop_hint, "he", "dialogs.image_picker.drop_hint");
-defines!(he_defines_dialogs_image_picker_drop_rejected, "he", "dialogs.image_picker.drop_rejected");
-defines!(he_defines_dialogs_image_picker_processing_image_paste, "he", "dialogs.image_picker.processing_image_paste");
-defines!(he_defines_dialogs_image_picker_per_page, "he", "dialogs.image_picker.per_page");
-defines!(he_defines_dialogs_image_picker_prev_page, "he", "dialogs.image_picker.prev_page");
-defines!(he_defines_dialogs_image_picker_next_page, "he", "dialogs.image_picker.next_page");
-defines!(he_defines_dialogs_image_picker_page_status, "he", "dialogs.image_picker.page_status");
-defines!(he_defines_dialogs_image_picker_delete_image, "he", "dialogs.image_picker.delete_image");
-defines!(he_defines_dialogs_image_picker_delete_confirm, "he", "dialogs.image_picker.delete_confirm");
-defines!(he_defines_dialogs_image_picker_delete_failed, "he", "dialogs.image_picker.delete_failed");
-defines!(he_defines_dialogs_s3_option_custom_key, "he", "dialogs.s3_option.custom_key");
-defines!(he_defines_dialogs_s3_option_custom_key_hint, "he", "dialogs.s3_option.custom_key_hint");
-defines!(he_defines_dialogs_s3_option_custom_prefix, "he", "dialogs.s3_option.custom_prefix");
-defines!(he_defines_dialogs_s3_option_custom_prefix_hint, "he", "dialogs.s3_option.custom_prefix_hint");
-defines!(he_defines_dialogs_video_tab_drop, "he", "dialogs.video.tab_drop");
-defines!(he_defines_dialogs_video_drop_hint, "he", "dialogs.video.drop_hint");
-defines!(he_defines_dialogs_video_drop_rejected, "he", "dialogs.video.drop_rejected");
-defines!(he_defines_dialogs_video_uploading, "he", "dialogs.video.uploading");
-defines!(he_defines_status_upload_failed, "he", "status.upload_failed");
+defines!(
+    he_defines_dialogs_image_picker_tab_drop,
+    "he",
+    "dialogs.image_picker.tab_drop"
+);
+defines!(
+    he_defines_dialogs_image_picker_drop_hint,
+    "he",
+    "dialogs.image_picker.drop_hint"
+);
+defines!(
+    he_defines_dialogs_image_picker_drop_rejected,
+    "he",
+    "dialogs.image_picker.drop_rejected"
+);
+defines!(
+    he_defines_dialogs_image_picker_processing_image_paste,
+    "he",
+    "dialogs.image_picker.processing_image_paste"
+);
+defines!(
+    he_defines_dialogs_image_picker_per_page,
+    "he",
+    "dialogs.image_picker.per_page"
+);
+defines!(
+    he_defines_dialogs_image_picker_prev_page,
+    "he",
+    "dialogs.image_picker.prev_page"
+);
+defines!(
+    he_defines_dialogs_image_picker_next_page,
+    "he",
+    "dialogs.image_picker.next_page"
+);
+defines!(
+    he_defines_dialogs_image_picker_page_status,
+    "he",
+    "dialogs.image_picker.page_status"
+);
+defines!(
+    he_defines_dialogs_image_picker_delete_image,
+    "he",
+    "dialogs.image_picker.delete_image"
+);
+defines!(
+    he_defines_dialogs_image_picker_delete_confirm,
+    "he",
+    "dialogs.image_picker.delete_confirm"
+);
+defines!(
+    he_defines_dialogs_image_picker_delete_failed,
+    "he",
+    "dialogs.image_picker.delete_failed"
+);
+defines!(
+    he_defines_dialogs_s3_option_custom_key,
+    "he",
+    "dialogs.s3_option.custom_key"
+);
+defines!(
+    he_defines_dialogs_s3_option_custom_key_hint,
+    "he",
+    "dialogs.s3_option.custom_key_hint"
+);
+defines!(
+    he_defines_dialogs_s3_option_custom_prefix,
+    "he",
+    "dialogs.s3_option.custom_prefix"
+);
+defines!(
+    he_defines_dialogs_s3_option_custom_prefix_hint,
+    "he",
+    "dialogs.s3_option.custom_prefix_hint"
+);
+defines!(
+    he_defines_dialogs_video_tab_drop,
+    "he",
+    "dialogs.video.tab_drop"
+);
+defines!(
+    he_defines_dialogs_video_drop_hint,
+    "he",
+    "dialogs.video.drop_hint"
+);
+defines!(
+    he_defines_dialogs_video_drop_rejected,
+    "he",
+    "dialogs.video.drop_rejected"
+);
+defines!(
+    he_defines_dialogs_video_uploading,
+    "he",
+    "dialogs.video.uploading"
+);
+defines!(
+    he_defines_status_upload_failed,
+    "he",
+    "status.upload_failed"
+);
 defines!(ja_defines_media_storage_label, "ja", "media_storage.label");
-defines!(ja_defines_media_storage_not_configured, "ja", "media_storage.not_configured");
-defines!(ja_defines_media_storage_recovery_title, "ja", "media_storage.recovery_title");
-defines!(ja_defines_media_storage_recovered, "ja", "media_storage.recovered");
-defines!(ja_defines_media_storage_retry_local, "ja", "media_storage.retry_local");
+defines!(
+    ja_defines_media_storage_not_configured,
+    "ja",
+    "media_storage.not_configured"
+);
+defines!(
+    ja_defines_media_storage_recovery_title,
+    "ja",
+    "media_storage.recovery_title"
+);
+defines!(
+    ja_defines_media_storage_recovered,
+    "ja",
+    "media_storage.recovered"
+);
+defines!(
+    ja_defines_media_storage_retry_local,
+    "ja",
+    "media_storage.retry_local"
+);
 defines!(ja_defines_media_storage_local, "ja", "media_storage.local");
 defines!(ja_defines_media_storage_s3, "ja", "media_storage.s3");
-defines!(ja_defines_media_storage_save_failed, "ja", "media_storage.save_failed");
-defines!(ja_defines_media_storage_load_failed, "ja", "media_storage.load_failed");
-defines!(ja_defines_media_storage_save_copy, "ja", "media_storage.save_copy");
-defines!(ja_defines_media_storage_collection, "ja", "media_storage.collection");
-defines!(ja_defines_media_storage_managed_images, "ja", "media_storage.managed_images");
-defines!(ja_defines_media_storage_server_images, "ja", "media_storage.server_images");
+defines!(
+    ja_defines_media_storage_save_failed,
+    "ja",
+    "media_storage.save_failed"
+);
+defines!(
+    ja_defines_media_storage_load_failed,
+    "ja",
+    "media_storage.load_failed"
+);
+defines!(
+    ja_defines_media_storage_save_copy,
+    "ja",
+    "media_storage.save_copy"
+);
+defines!(
+    ja_defines_media_storage_collection,
+    "ja",
+    "media_storage.collection"
+);
+defines!(
+    ja_defines_media_storage_managed_images,
+    "ja",
+    "media_storage.managed_images"
+);
+defines!(
+    ja_defines_media_storage_server_images,
+    "ja",
+    "media_storage.server_images"
+);
 defines!(ja_defines_library_rename, "ja", "library.rename");
-defines!(ja_defines_library_rename_prompt, "ja", "library.rename_prompt");
-defines!(ja_defines_library_rename_failed, "ja", "library.rename_failed");
+defines!(
+    ja_defines_library_rename_prompt,
+    "ja",
+    "library.rename_prompt"
+);
+defines!(
+    ja_defines_library_rename_failed,
+    "ja",
+    "library.rename_failed"
+);
 defines!(ja_defines_library_renamed, "ja", "library.renamed");
-defines!(ja_defines_dialogs_image_picker_tab_drop, "ja", "dialogs.image_picker.tab_drop");
-defines!(ja_defines_dialogs_image_picker_drop_hint, "ja", "dialogs.image_picker.drop_hint");
-defines!(ja_defines_dialogs_image_picker_drop_rejected, "ja", "dialogs.image_picker.drop_rejected");
-defines!(ja_defines_dialogs_image_picker_processing_image_paste, "ja", "dialogs.image_picker.processing_image_paste");
-defines!(ja_defines_dialogs_image_picker_per_page, "ja", "dialogs.image_picker.per_page");
-defines!(ja_defines_dialogs_image_picker_prev_page, "ja", "dialogs.image_picker.prev_page");
-defines!(ja_defines_dialogs_image_picker_next_page, "ja", "dialogs.image_picker.next_page");
-defines!(ja_defines_dialogs_image_picker_page_status, "ja", "dialogs.image_picker.page_status");
-defines!(ja_defines_dialogs_image_picker_delete_image, "ja", "dialogs.image_picker.delete_image");
-defines!(ja_defines_dialogs_image_picker_delete_confirm, "ja", "dialogs.image_picker.delete_confirm");
-defines!(ja_defines_dialogs_image_picker_delete_failed, "ja", "dialogs.image_picker.delete_failed");
-defines!(ja_defines_dialogs_s3_option_custom_key, "ja", "dialogs.s3_option.custom_key");
-defines!(ja_defines_dialogs_s3_option_custom_key_hint, "ja", "dialogs.s3_option.custom_key_hint");
-defines!(ja_defines_dialogs_s3_option_custom_prefix, "ja", "dialogs.s3_option.custom_prefix");
-defines!(ja_defines_dialogs_s3_option_custom_prefix_hint, "ja", "dialogs.s3_option.custom_prefix_hint");
-defines!(ja_defines_dialogs_video_tab_drop, "ja", "dialogs.video.tab_drop");
-defines!(ja_defines_dialogs_video_drop_hint, "ja", "dialogs.video.drop_hint");
-defines!(ja_defines_dialogs_video_drop_rejected, "ja", "dialogs.video.drop_rejected");
-defines!(ja_defines_dialogs_video_uploading, "ja", "dialogs.video.uploading");
-defines!(ja_defines_status_upload_failed, "ja", "status.upload_failed");
+defines!(
+    ja_defines_dialogs_image_picker_tab_drop,
+    "ja",
+    "dialogs.image_picker.tab_drop"
+);
+defines!(
+    ja_defines_dialogs_image_picker_drop_hint,
+    "ja",
+    "dialogs.image_picker.drop_hint"
+);
+defines!(
+    ja_defines_dialogs_image_picker_drop_rejected,
+    "ja",
+    "dialogs.image_picker.drop_rejected"
+);
+defines!(
+    ja_defines_dialogs_image_picker_processing_image_paste,
+    "ja",
+    "dialogs.image_picker.processing_image_paste"
+);
+defines!(
+    ja_defines_dialogs_image_picker_per_page,
+    "ja",
+    "dialogs.image_picker.per_page"
+);
+defines!(
+    ja_defines_dialogs_image_picker_prev_page,
+    "ja",
+    "dialogs.image_picker.prev_page"
+);
+defines!(
+    ja_defines_dialogs_image_picker_next_page,
+    "ja",
+    "dialogs.image_picker.next_page"
+);
+defines!(
+    ja_defines_dialogs_image_picker_page_status,
+    "ja",
+    "dialogs.image_picker.page_status"
+);
+defines!(
+    ja_defines_dialogs_image_picker_delete_image,
+    "ja",
+    "dialogs.image_picker.delete_image"
+);
+defines!(
+    ja_defines_dialogs_image_picker_delete_confirm,
+    "ja",
+    "dialogs.image_picker.delete_confirm"
+);
+defines!(
+    ja_defines_dialogs_image_picker_delete_failed,
+    "ja",
+    "dialogs.image_picker.delete_failed"
+);
+defines!(
+    ja_defines_dialogs_s3_option_custom_key,
+    "ja",
+    "dialogs.s3_option.custom_key"
+);
+defines!(
+    ja_defines_dialogs_s3_option_custom_key_hint,
+    "ja",
+    "dialogs.s3_option.custom_key_hint"
+);
+defines!(
+    ja_defines_dialogs_s3_option_custom_prefix,
+    "ja",
+    "dialogs.s3_option.custom_prefix"
+);
+defines!(
+    ja_defines_dialogs_s3_option_custom_prefix_hint,
+    "ja",
+    "dialogs.s3_option.custom_prefix_hint"
+);
+defines!(
+    ja_defines_dialogs_video_tab_drop,
+    "ja",
+    "dialogs.video.tab_drop"
+);
+defines!(
+    ja_defines_dialogs_video_drop_hint,
+    "ja",
+    "dialogs.video.drop_hint"
+);
+defines!(
+    ja_defines_dialogs_video_drop_rejected,
+    "ja",
+    "dialogs.video.drop_rejected"
+);
+defines!(
+    ja_defines_dialogs_video_uploading,
+    "ja",
+    "dialogs.video.uploading"
+);
+defines!(
+    ja_defines_status_upload_failed,
+    "ja",
+    "status.upload_failed"
+);
 defines!(ko_defines_media_storage_label, "ko", "media_storage.label");
-defines!(ko_defines_media_storage_not_configured, "ko", "media_storage.not_configured");
-defines!(ko_defines_media_storage_recovery_title, "ko", "media_storage.recovery_title");
-defines!(ko_defines_media_storage_recovered, "ko", "media_storage.recovered");
-defines!(ko_defines_media_storage_retry_local, "ko", "media_storage.retry_local");
+defines!(
+    ko_defines_media_storage_not_configured,
+    "ko",
+    "media_storage.not_configured"
+);
+defines!(
+    ko_defines_media_storage_recovery_title,
+    "ko",
+    "media_storage.recovery_title"
+);
+defines!(
+    ko_defines_media_storage_recovered,
+    "ko",
+    "media_storage.recovered"
+);
+defines!(
+    ko_defines_media_storage_retry_local,
+    "ko",
+    "media_storage.retry_local"
+);
 defines!(ko_defines_media_storage_local, "ko", "media_storage.local");
 defines!(ko_defines_media_storage_s3, "ko", "media_storage.s3");
-defines!(ko_defines_media_storage_save_failed, "ko", "media_storage.save_failed");
-defines!(ko_defines_media_storage_load_failed, "ko", "media_storage.load_failed");
-defines!(ko_defines_media_storage_save_copy, "ko", "media_storage.save_copy");
-defines!(ko_defines_media_storage_collection, "ko", "media_storage.collection");
-defines!(ko_defines_media_storage_managed_images, "ko", "media_storage.managed_images");
-defines!(ko_defines_media_storage_server_images, "ko", "media_storage.server_images");
+defines!(
+    ko_defines_media_storage_save_failed,
+    "ko",
+    "media_storage.save_failed"
+);
+defines!(
+    ko_defines_media_storage_load_failed,
+    "ko",
+    "media_storage.load_failed"
+);
+defines!(
+    ko_defines_media_storage_save_copy,
+    "ko",
+    "media_storage.save_copy"
+);
+defines!(
+    ko_defines_media_storage_collection,
+    "ko",
+    "media_storage.collection"
+);
+defines!(
+    ko_defines_media_storage_managed_images,
+    "ko",
+    "media_storage.managed_images"
+);
+defines!(
+    ko_defines_media_storage_server_images,
+    "ko",
+    "media_storage.server_images"
+);
 defines!(ko_defines_library_rename, "ko", "library.rename");
-defines!(ko_defines_library_rename_prompt, "ko", "library.rename_prompt");
-defines!(ko_defines_library_rename_failed, "ko", "library.rename_failed");
+defines!(
+    ko_defines_library_rename_prompt,
+    "ko",
+    "library.rename_prompt"
+);
+defines!(
+    ko_defines_library_rename_failed,
+    "ko",
+    "library.rename_failed"
+);
 defines!(ko_defines_library_renamed, "ko", "library.renamed");
-defines!(ko_defines_dialogs_image_picker_tab_drop, "ko", "dialogs.image_picker.tab_drop");
-defines!(ko_defines_dialogs_image_picker_drop_hint, "ko", "dialogs.image_picker.drop_hint");
-defines!(ko_defines_dialogs_image_picker_drop_rejected, "ko", "dialogs.image_picker.drop_rejected");
-defines!(ko_defines_dialogs_image_picker_processing_image_paste, "ko", "dialogs.image_picker.processing_image_paste");
-defines!(ko_defines_dialogs_image_picker_per_page, "ko", "dialogs.image_picker.per_page");
-defines!(ko_defines_dialogs_image_picker_prev_page, "ko", "dialogs.image_picker.prev_page");
-defines!(ko_defines_dialogs_image_picker_next_page, "ko", "dialogs.image_picker.next_page");
-defines!(ko_defines_dialogs_image_picker_page_status, "ko", "dialogs.image_picker.page_status");
-defines!(ko_defines_dialogs_image_picker_delete_image, "ko", "dialogs.image_picker.delete_image");
-defines!(ko_defines_dialogs_image_picker_delete_confirm, "ko", "dialogs.image_picker.delete_confirm");
-defines!(ko_defines_dialogs_image_picker_delete_failed, "ko", "dialogs.image_picker.delete_failed");
-defines!(ko_defines_dialogs_s3_option_custom_key, "ko", "dialogs.s3_option.custom_key");
-defines!(ko_defines_dialogs_s3_option_custom_key_hint, "ko", "dialogs.s3_option.custom_key_hint");
-defines!(ko_defines_dialogs_s3_option_custom_prefix, "ko", "dialogs.s3_option.custom_prefix");
-defines!(ko_defines_dialogs_s3_option_custom_prefix_hint, "ko", "dialogs.s3_option.custom_prefix_hint");
-defines!(ko_defines_dialogs_video_tab_drop, "ko", "dialogs.video.tab_drop");
-defines!(ko_defines_dialogs_video_drop_hint, "ko", "dialogs.video.drop_hint");
-defines!(ko_defines_dialogs_video_drop_rejected, "ko", "dialogs.video.drop_rejected");
-defines!(ko_defines_dialogs_video_uploading, "ko", "dialogs.video.uploading");
-defines!(ko_defines_status_upload_failed, "ko", "status.upload_failed");
-defines!(pt_br_defines_media_storage_label, "pt-BR", "media_storage.label");
-defines!(pt_br_defines_media_storage_not_configured, "pt-BR", "media_storage.not_configured");
-defines!(pt_br_defines_media_storage_recovery_title, "pt-BR", "media_storage.recovery_title");
-defines!(pt_br_defines_media_storage_recovered, "pt-BR", "media_storage.recovered");
-defines!(pt_br_defines_media_storage_retry_local, "pt-BR", "media_storage.retry_local");
-defines!(pt_br_defines_media_storage_local, "pt-BR", "media_storage.local");
+defines!(
+    ko_defines_dialogs_image_picker_tab_drop,
+    "ko",
+    "dialogs.image_picker.tab_drop"
+);
+defines!(
+    ko_defines_dialogs_image_picker_drop_hint,
+    "ko",
+    "dialogs.image_picker.drop_hint"
+);
+defines!(
+    ko_defines_dialogs_image_picker_drop_rejected,
+    "ko",
+    "dialogs.image_picker.drop_rejected"
+);
+defines!(
+    ko_defines_dialogs_image_picker_processing_image_paste,
+    "ko",
+    "dialogs.image_picker.processing_image_paste"
+);
+defines!(
+    ko_defines_dialogs_image_picker_per_page,
+    "ko",
+    "dialogs.image_picker.per_page"
+);
+defines!(
+    ko_defines_dialogs_image_picker_prev_page,
+    "ko",
+    "dialogs.image_picker.prev_page"
+);
+defines!(
+    ko_defines_dialogs_image_picker_next_page,
+    "ko",
+    "dialogs.image_picker.next_page"
+);
+defines!(
+    ko_defines_dialogs_image_picker_page_status,
+    "ko",
+    "dialogs.image_picker.page_status"
+);
+defines!(
+    ko_defines_dialogs_image_picker_delete_image,
+    "ko",
+    "dialogs.image_picker.delete_image"
+);
+defines!(
+    ko_defines_dialogs_image_picker_delete_confirm,
+    "ko",
+    "dialogs.image_picker.delete_confirm"
+);
+defines!(
+    ko_defines_dialogs_image_picker_delete_failed,
+    "ko",
+    "dialogs.image_picker.delete_failed"
+);
+defines!(
+    ko_defines_dialogs_s3_option_custom_key,
+    "ko",
+    "dialogs.s3_option.custom_key"
+);
+defines!(
+    ko_defines_dialogs_s3_option_custom_key_hint,
+    "ko",
+    "dialogs.s3_option.custom_key_hint"
+);
+defines!(
+    ko_defines_dialogs_s3_option_custom_prefix,
+    "ko",
+    "dialogs.s3_option.custom_prefix"
+);
+defines!(
+    ko_defines_dialogs_s3_option_custom_prefix_hint,
+    "ko",
+    "dialogs.s3_option.custom_prefix_hint"
+);
+defines!(
+    ko_defines_dialogs_video_tab_drop,
+    "ko",
+    "dialogs.video.tab_drop"
+);
+defines!(
+    ko_defines_dialogs_video_drop_hint,
+    "ko",
+    "dialogs.video.drop_hint"
+);
+defines!(
+    ko_defines_dialogs_video_drop_rejected,
+    "ko",
+    "dialogs.video.drop_rejected"
+);
+defines!(
+    ko_defines_dialogs_video_uploading,
+    "ko",
+    "dialogs.video.uploading"
+);
+defines!(
+    ko_defines_status_upload_failed,
+    "ko",
+    "status.upload_failed"
+);
+defines!(
+    pt_br_defines_media_storage_label,
+    "pt-BR",
+    "media_storage.label"
+);
+defines!(
+    pt_br_defines_media_storage_not_configured,
+    "pt-BR",
+    "media_storage.not_configured"
+);
+defines!(
+    pt_br_defines_media_storage_recovery_title,
+    "pt-BR",
+    "media_storage.recovery_title"
+);
+defines!(
+    pt_br_defines_media_storage_recovered,
+    "pt-BR",
+    "media_storage.recovered"
+);
+defines!(
+    pt_br_defines_media_storage_retry_local,
+    "pt-BR",
+    "media_storage.retry_local"
+);
+defines!(
+    pt_br_defines_media_storage_local,
+    "pt-BR",
+    "media_storage.local"
+);
 defines!(pt_br_defines_media_storage_s3, "pt-BR", "media_storage.s3");
-defines!(pt_br_defines_media_storage_save_failed, "pt-BR", "media_storage.save_failed");
-defines!(pt_br_defines_media_storage_load_failed, "pt-BR", "media_storage.load_failed");
-defines!(pt_br_defines_media_storage_save_copy, "pt-BR", "media_storage.save_copy");
-defines!(pt_br_defines_media_storage_collection, "pt-BR", "media_storage.collection");
-defines!(pt_br_defines_media_storage_managed_images, "pt-BR", "media_storage.managed_images");
-defines!(pt_br_defines_media_storage_server_images, "pt-BR", "media_storage.server_images");
+defines!(
+    pt_br_defines_media_storage_save_failed,
+    "pt-BR",
+    "media_storage.save_failed"
+);
+defines!(
+    pt_br_defines_media_storage_load_failed,
+    "pt-BR",
+    "media_storage.load_failed"
+);
+defines!(
+    pt_br_defines_media_storage_save_copy,
+    "pt-BR",
+    "media_storage.save_copy"
+);
+defines!(
+    pt_br_defines_media_storage_collection,
+    "pt-BR",
+    "media_storage.collection"
+);
+defines!(
+    pt_br_defines_media_storage_managed_images,
+    "pt-BR",
+    "media_storage.managed_images"
+);
+defines!(
+    pt_br_defines_media_storage_server_images,
+    "pt-BR",
+    "media_storage.server_images"
+);
 defines!(pt_br_defines_library_rename, "pt-BR", "library.rename");
-defines!(pt_br_defines_library_rename_prompt, "pt-BR", "library.rename_prompt");
-defines!(pt_br_defines_library_rename_failed, "pt-BR", "library.rename_failed");
+defines!(
+    pt_br_defines_library_rename_prompt,
+    "pt-BR",
+    "library.rename_prompt"
+);
+defines!(
+    pt_br_defines_library_rename_failed,
+    "pt-BR",
+    "library.rename_failed"
+);
 defines!(pt_br_defines_library_renamed, "pt-BR", "library.renamed");
-defines!(pt_br_defines_dialogs_image_picker_tab_drop, "pt-BR", "dialogs.image_picker.tab_drop");
-defines!(pt_br_defines_dialogs_image_picker_drop_hint, "pt-BR", "dialogs.image_picker.drop_hint");
-defines!(pt_br_defines_dialogs_image_picker_drop_rejected, "pt-BR", "dialogs.image_picker.drop_rejected");
-defines!(pt_br_defines_dialogs_image_picker_processing_image_paste, "pt-BR", "dialogs.image_picker.processing_image_paste");
-defines!(pt_br_defines_dialogs_image_picker_per_page, "pt-BR", "dialogs.image_picker.per_page");
-defines!(pt_br_defines_dialogs_image_picker_prev_page, "pt-BR", "dialogs.image_picker.prev_page");
-defines!(pt_br_defines_dialogs_image_picker_next_page, "pt-BR", "dialogs.image_picker.next_page");
-defines!(pt_br_defines_dialogs_image_picker_page_status, "pt-BR", "dialogs.image_picker.page_status");
-defines!(pt_br_defines_dialogs_image_picker_delete_image, "pt-BR", "dialogs.image_picker.delete_image");
-defines!(pt_br_defines_dialogs_image_picker_delete_confirm, "pt-BR", "dialogs.image_picker.delete_confirm");
-defines!(pt_br_defines_dialogs_image_picker_delete_failed, "pt-BR", "dialogs.image_picker.delete_failed");
-defines!(pt_br_defines_dialogs_s3_option_custom_key, "pt-BR", "dialogs.s3_option.custom_key");
-defines!(pt_br_defines_dialogs_s3_option_custom_key_hint, "pt-BR", "dialogs.s3_option.custom_key_hint");
-defines!(pt_br_defines_dialogs_s3_option_custom_prefix, "pt-BR", "dialogs.s3_option.custom_prefix");
-defines!(pt_br_defines_dialogs_s3_option_custom_prefix_hint, "pt-BR", "dialogs.s3_option.custom_prefix_hint");
-defines!(pt_br_defines_dialogs_video_tab_drop, "pt-BR", "dialogs.video.tab_drop");
-defines!(pt_br_defines_dialogs_video_drop_hint, "pt-BR", "dialogs.video.drop_hint");
-defines!(pt_br_defines_dialogs_video_drop_rejected, "pt-BR", "dialogs.video.drop_rejected");
-defines!(pt_br_defines_dialogs_video_uploading, "pt-BR", "dialogs.video.uploading");
-defines!(pt_br_defines_status_upload_failed, "pt-BR", "status.upload_failed");
-defines!(pt_pt_defines_media_storage_label, "pt-PT", "media_storage.label");
-defines!(pt_pt_defines_media_storage_not_configured, "pt-PT", "media_storage.not_configured");
-defines!(pt_pt_defines_media_storage_recovery_title, "pt-PT", "media_storage.recovery_title");
-defines!(pt_pt_defines_media_storage_recovered, "pt-PT", "media_storage.recovered");
-defines!(pt_pt_defines_media_storage_retry_local, "pt-PT", "media_storage.retry_local");
-defines!(pt_pt_defines_media_storage_local, "pt-PT", "media_storage.local");
+defines!(
+    pt_br_defines_dialogs_image_picker_tab_drop,
+    "pt-BR",
+    "dialogs.image_picker.tab_drop"
+);
+defines!(
+    pt_br_defines_dialogs_image_picker_drop_hint,
+    "pt-BR",
+    "dialogs.image_picker.drop_hint"
+);
+defines!(
+    pt_br_defines_dialogs_image_picker_drop_rejected,
+    "pt-BR",
+    "dialogs.image_picker.drop_rejected"
+);
+defines!(
+    pt_br_defines_dialogs_image_picker_processing_image_paste,
+    "pt-BR",
+    "dialogs.image_picker.processing_image_paste"
+);
+defines!(
+    pt_br_defines_dialogs_image_picker_per_page,
+    "pt-BR",
+    "dialogs.image_picker.per_page"
+);
+defines!(
+    pt_br_defines_dialogs_image_picker_prev_page,
+    "pt-BR",
+    "dialogs.image_picker.prev_page"
+);
+defines!(
+    pt_br_defines_dialogs_image_picker_next_page,
+    "pt-BR",
+    "dialogs.image_picker.next_page"
+);
+defines!(
+    pt_br_defines_dialogs_image_picker_page_status,
+    "pt-BR",
+    "dialogs.image_picker.page_status"
+);
+defines!(
+    pt_br_defines_dialogs_image_picker_delete_image,
+    "pt-BR",
+    "dialogs.image_picker.delete_image"
+);
+defines!(
+    pt_br_defines_dialogs_image_picker_delete_confirm,
+    "pt-BR",
+    "dialogs.image_picker.delete_confirm"
+);
+defines!(
+    pt_br_defines_dialogs_image_picker_delete_failed,
+    "pt-BR",
+    "dialogs.image_picker.delete_failed"
+);
+defines!(
+    pt_br_defines_dialogs_s3_option_custom_key,
+    "pt-BR",
+    "dialogs.s3_option.custom_key"
+);
+defines!(
+    pt_br_defines_dialogs_s3_option_custom_key_hint,
+    "pt-BR",
+    "dialogs.s3_option.custom_key_hint"
+);
+defines!(
+    pt_br_defines_dialogs_s3_option_custom_prefix,
+    "pt-BR",
+    "dialogs.s3_option.custom_prefix"
+);
+defines!(
+    pt_br_defines_dialogs_s3_option_custom_prefix_hint,
+    "pt-BR",
+    "dialogs.s3_option.custom_prefix_hint"
+);
+defines!(
+    pt_br_defines_dialogs_video_tab_drop,
+    "pt-BR",
+    "dialogs.video.tab_drop"
+);
+defines!(
+    pt_br_defines_dialogs_video_drop_hint,
+    "pt-BR",
+    "dialogs.video.drop_hint"
+);
+defines!(
+    pt_br_defines_dialogs_video_drop_rejected,
+    "pt-BR",
+    "dialogs.video.drop_rejected"
+);
+defines!(
+    pt_br_defines_dialogs_video_uploading,
+    "pt-BR",
+    "dialogs.video.uploading"
+);
+defines!(
+    pt_br_defines_status_upload_failed,
+    "pt-BR",
+    "status.upload_failed"
+);
+defines!(
+    pt_pt_defines_media_storage_label,
+    "pt-PT",
+    "media_storage.label"
+);
+defines!(
+    pt_pt_defines_media_storage_not_configured,
+    "pt-PT",
+    "media_storage.not_configured"
+);
+defines!(
+    pt_pt_defines_media_storage_recovery_title,
+    "pt-PT",
+    "media_storage.recovery_title"
+);
+defines!(
+    pt_pt_defines_media_storage_recovered,
+    "pt-PT",
+    "media_storage.recovered"
+);
+defines!(
+    pt_pt_defines_media_storage_retry_local,
+    "pt-PT",
+    "media_storage.retry_local"
+);
+defines!(
+    pt_pt_defines_media_storage_local,
+    "pt-PT",
+    "media_storage.local"
+);
 defines!(pt_pt_defines_media_storage_s3, "pt-PT", "media_storage.s3");
-defines!(pt_pt_defines_media_storage_save_failed, "pt-PT", "media_storage.save_failed");
-defines!(pt_pt_defines_media_storage_load_failed, "pt-PT", "media_storage.load_failed");
-defines!(pt_pt_defines_media_storage_save_copy, "pt-PT", "media_storage.save_copy");
-defines!(pt_pt_defines_media_storage_collection, "pt-PT", "media_storage.collection");
-defines!(pt_pt_defines_media_storage_managed_images, "pt-PT", "media_storage.managed_images");
-defines!(pt_pt_defines_media_storage_server_images, "pt-PT", "media_storage.server_images");
+defines!(
+    pt_pt_defines_media_storage_save_failed,
+    "pt-PT",
+    "media_storage.save_failed"
+);
+defines!(
+    pt_pt_defines_media_storage_load_failed,
+    "pt-PT",
+    "media_storage.load_failed"
+);
+defines!(
+    pt_pt_defines_media_storage_save_copy,
+    "pt-PT",
+    "media_storage.save_copy"
+);
+defines!(
+    pt_pt_defines_media_storage_collection,
+    "pt-PT",
+    "media_storage.collection"
+);
+defines!(
+    pt_pt_defines_media_storage_managed_images,
+    "pt-PT",
+    "media_storage.managed_images"
+);
+defines!(
+    pt_pt_defines_media_storage_server_images,
+    "pt-PT",
+    "media_storage.server_images"
+);
 defines!(pt_pt_defines_library_rename, "pt-PT", "library.rename");
-defines!(pt_pt_defines_library_rename_prompt, "pt-PT", "library.rename_prompt");
-defines!(pt_pt_defines_library_rename_failed, "pt-PT", "library.rename_failed");
+defines!(
+    pt_pt_defines_library_rename_prompt,
+    "pt-PT",
+    "library.rename_prompt"
+);
+defines!(
+    pt_pt_defines_library_rename_failed,
+    "pt-PT",
+    "library.rename_failed"
+);
 defines!(pt_pt_defines_library_renamed, "pt-PT", "library.renamed");
-defines!(pt_pt_defines_dialogs_image_picker_tab_drop, "pt-PT", "dialogs.image_picker.tab_drop");
-defines!(pt_pt_defines_dialogs_image_picker_drop_hint, "pt-PT", "dialogs.image_picker.drop_hint");
-defines!(pt_pt_defines_dialogs_image_picker_drop_rejected, "pt-PT", "dialogs.image_picker.drop_rejected");
-defines!(pt_pt_defines_dialogs_image_picker_processing_image_paste, "pt-PT", "dialogs.image_picker.processing_image_paste");
-defines!(pt_pt_defines_dialogs_image_picker_per_page, "pt-PT", "dialogs.image_picker.per_page");
-defines!(pt_pt_defines_dialogs_image_picker_prev_page, "pt-PT", "dialogs.image_picker.prev_page");
-defines!(pt_pt_defines_dialogs_image_picker_next_page, "pt-PT", "dialogs.image_picker.next_page");
-defines!(pt_pt_defines_dialogs_image_picker_page_status, "pt-PT", "dialogs.image_picker.page_status");
-defines!(pt_pt_defines_dialogs_image_picker_delete_image, "pt-PT", "dialogs.image_picker.delete_image");
-defines!(pt_pt_defines_dialogs_image_picker_delete_confirm, "pt-PT", "dialogs.image_picker.delete_confirm");
-defines!(pt_pt_defines_dialogs_image_picker_delete_failed, "pt-PT", "dialogs.image_picker.delete_failed");
-defines!(pt_pt_defines_dialogs_s3_option_custom_key, "pt-PT", "dialogs.s3_option.custom_key");
-defines!(pt_pt_defines_dialogs_s3_option_custom_key_hint, "pt-PT", "dialogs.s3_option.custom_key_hint");
-defines!(pt_pt_defines_dialogs_s3_option_custom_prefix, "pt-PT", "dialogs.s3_option.custom_prefix");
-defines!(pt_pt_defines_dialogs_s3_option_custom_prefix_hint, "pt-PT", "dialogs.s3_option.custom_prefix_hint");
-defines!(pt_pt_defines_dialogs_video_tab_drop, "pt-PT", "dialogs.video.tab_drop");
-defines!(pt_pt_defines_dialogs_video_drop_hint, "pt-PT", "dialogs.video.drop_hint");
-defines!(pt_pt_defines_dialogs_video_drop_rejected, "pt-PT", "dialogs.video.drop_rejected");
-defines!(pt_pt_defines_dialogs_video_uploading, "pt-PT", "dialogs.video.uploading");
-defines!(pt_pt_defines_status_upload_failed, "pt-PT", "status.upload_failed");
+defines!(
+    pt_pt_defines_dialogs_image_picker_tab_drop,
+    "pt-PT",
+    "dialogs.image_picker.tab_drop"
+);
+defines!(
+    pt_pt_defines_dialogs_image_picker_drop_hint,
+    "pt-PT",
+    "dialogs.image_picker.drop_hint"
+);
+defines!(
+    pt_pt_defines_dialogs_image_picker_drop_rejected,
+    "pt-PT",
+    "dialogs.image_picker.drop_rejected"
+);
+defines!(
+    pt_pt_defines_dialogs_image_picker_processing_image_paste,
+    "pt-PT",
+    "dialogs.image_picker.processing_image_paste"
+);
+defines!(
+    pt_pt_defines_dialogs_image_picker_per_page,
+    "pt-PT",
+    "dialogs.image_picker.per_page"
+);
+defines!(
+    pt_pt_defines_dialogs_image_picker_prev_page,
+    "pt-PT",
+    "dialogs.image_picker.prev_page"
+);
+defines!(
+    pt_pt_defines_dialogs_image_picker_next_page,
+    "pt-PT",
+    "dialogs.image_picker.next_page"
+);
+defines!(
+    pt_pt_defines_dialogs_image_picker_page_status,
+    "pt-PT",
+    "dialogs.image_picker.page_status"
+);
+defines!(
+    pt_pt_defines_dialogs_image_picker_delete_image,
+    "pt-PT",
+    "dialogs.image_picker.delete_image"
+);
+defines!(
+    pt_pt_defines_dialogs_image_picker_delete_confirm,
+    "pt-PT",
+    "dialogs.image_picker.delete_confirm"
+);
+defines!(
+    pt_pt_defines_dialogs_image_picker_delete_failed,
+    "pt-PT",
+    "dialogs.image_picker.delete_failed"
+);
+defines!(
+    pt_pt_defines_dialogs_s3_option_custom_key,
+    "pt-PT",
+    "dialogs.s3_option.custom_key"
+);
+defines!(
+    pt_pt_defines_dialogs_s3_option_custom_key_hint,
+    "pt-PT",
+    "dialogs.s3_option.custom_key_hint"
+);
+defines!(
+    pt_pt_defines_dialogs_s3_option_custom_prefix,
+    "pt-PT",
+    "dialogs.s3_option.custom_prefix"
+);
+defines!(
+    pt_pt_defines_dialogs_s3_option_custom_prefix_hint,
+    "pt-PT",
+    "dialogs.s3_option.custom_prefix_hint"
+);
+defines!(
+    pt_pt_defines_dialogs_video_tab_drop,
+    "pt-PT",
+    "dialogs.video.tab_drop"
+);
+defines!(
+    pt_pt_defines_dialogs_video_drop_hint,
+    "pt-PT",
+    "dialogs.video.drop_hint"
+);
+defines!(
+    pt_pt_defines_dialogs_video_drop_rejected,
+    "pt-PT",
+    "dialogs.video.drop_rejected"
+);
+defines!(
+    pt_pt_defines_dialogs_video_uploading,
+    "pt-PT",
+    "dialogs.video.uploading"
+);
+defines!(
+    pt_pt_defines_status_upload_failed,
+    "pt-PT",
+    "status.upload_failed"
+);

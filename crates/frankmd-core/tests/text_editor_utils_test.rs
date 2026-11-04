@@ -2,8 +2,8 @@
 //! so the JS UTF-16 offsets equal the Rust byte offsets.
 
 use frankmd_core::text::editor::{
-    get_cursor_info, get_line_at_position, get_line_boundaries, get_position_for_line, insert_at_position,
-    replace_range, wrap_selection,
+    get_cursor_info, get_line_at_position, get_line_boundaries, get_position_for_line,
+    insert_at_position, replace_range, wrap_selection,
 };
 
 // port: test/javascript/lib/text_editor_utils.test.js:16 "wraps selected text with prefix and suffix"

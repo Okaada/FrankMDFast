@@ -45,7 +45,9 @@ pub fn resolve_initial_note(
     };
     let raw = std::path::Path::new(arg);
     let relative = if raw.is_absolute() {
-        let inside = vault_roots.iter().find_map(|root| raw.strip_prefix(root).ok());
+        let inside = vault_roots
+            .iter()
+            .find_map(|root| raw.strip_prefix(root).ok());
         match inside.and_then(std::path::Path::to_str) {
             Some(rel) => rel.to_owned(),
             None => return StartupTarget::None,

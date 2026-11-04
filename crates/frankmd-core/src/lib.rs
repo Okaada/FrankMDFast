@@ -13,7 +13,6 @@
 //! - Async results carry the [`Generation`] they were computed from so stale
 //!   results can be dropped (HP-003).
 
-
 pub mod clock;
 pub mod emoji;
 pub mod error;

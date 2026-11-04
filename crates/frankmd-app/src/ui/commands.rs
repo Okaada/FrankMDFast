@@ -8,12 +8,7 @@ use gpui_kit::*;
 
 impl Shell {
     /// Run registry command `id` (from a shortcut, the palette or a button).
-    pub fn run_command(
-        &mut self,
-        id: &'static str,
-        window: &mut Window,
-        cx: &mut Context<Self>,
-    ) {
+    pub fn run_command(&mut self, id: &'static str, window: &mut Window, cx: &mut Context<Self>) {
         // FE-029 changed: inside Settings only Esc and Ctrl+, work.
         if self.overlays.is_open(&OverlayKind::Settings)
             && !matches!(id, "app.settings" | "app.escape" | "list.escape")
@@ -173,7 +168,12 @@ impl Shell {
             "file.rename" => self.rename_active(window, cx),
             "file.move" => {
                 if let Some(path) = self.active_path() {
-                    self.open_move(&path, frankmd_workspace::explorer::ItemKind::File, window, cx);
+                    self.open_move(
+                        &path,
+                        frankmd_workspace::explorer::ItemKind::File,
+                        window,
+                        cx,
+                    );
                 }
             }
             "file.delete" => self.delete_active(window, cx),
@@ -218,7 +218,12 @@ impl Shell {
         self.show_message(&text, false, cx);
     }
 
-    pub(crate) fn toggle_overlay(&mut self, kind: OverlayKind, window: &mut Window, cx: &mut Context<Self>) {
+    pub(crate) fn toggle_overlay(
+        &mut self,
+        kind: OverlayKind,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
         if self.overlays.is_open(&kind) {
             self.close_overlay(window, cx);
         } else {

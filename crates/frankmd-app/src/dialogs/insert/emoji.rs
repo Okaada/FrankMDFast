@@ -7,7 +7,9 @@
 //! what FrankMD did: `:shortcode:`, `:ph-<name>:` or the raw kaomoji. The new
 //! "Frequently used" row is kept for the session (a GPUI global).
 
-use frankmd_core::emoji::picker::{CellGlyph, EmojiPicker, GridMove, PickerCell, PickerTab, TabKey};
+use frankmd_core::emoji::picker::{
+    CellGlyph, EmojiPicker, GridMove, PickerCell, PickerTab, TabKey,
+};
 use gpui_kit::component::input::{Input, InputEvent, InputState};
 use gpui_kit::component::{ActiveTheme as _, Sizable as _, h_flex, v_flex};
 use gpui_kit::prelude::FluentBuilder as _;
@@ -17,7 +19,10 @@ use super::{InsertDialogEvent, key_text};
 use crate::ui::i18n;
 
 /// Popover size (ui-spec §5.5).
-pub const POPOVER_SIZE: Size<Pixels> = Size { width: px(360.), height: px(320.) };
+pub const POPOVER_SIZE: Size<Pixels> = Size {
+    width: px(360.),
+    height: px(320.),
+};
 
 /// Emoji shortcodes used this session, most recent first.
 #[derive(Default)]
@@ -46,7 +51,10 @@ impl Focusable for EmojiPopover {
 /// Open the picker for the UI `locale` (localized emoji search; FrankMD maps
 /// he → en and pt-BR/pt-PT → pt).
 pub fn open(locale: Option<&str>, window: &mut Window, cx: &mut App) -> Entity<EmojiPopover> {
-    let frequent = cx.try_global::<FrequentEmoji>().map(|f| f.0.clone()).unwrap_or_default();
+    let frequent = cx
+        .try_global::<FrequentEmoji>()
+        .map(|f| f.0.clone())
+        .unwrap_or_default();
     let mut picker = EmojiPicker::new(locale);
     picker.set_frequent(frequent);
     picker.open();
@@ -61,7 +69,9 @@ impl EmojiPopover {
         let search = cx.new(|cx| InputState::new(window, cx).placeholder(placeholder));
         let weak = cx.entity().downgrade();
         let interceptor = cx.intercept_keystrokes(move |event, window, cx| {
-            let Some(popover) = weak.upgrade() else { return };
+            let Some(popover) = weak.upgrade() else {
+                return;
+            };
             if popover.update(cx, |p, cx| p.on_key(&event.keystroke, window, cx)) {
                 cx.stop_propagation();
             }
@@ -104,7 +114,9 @@ impl EmojiPopover {
         self.picker.record_use(&insert);
         let frequent = self.picker.frequent().to_vec();
         cx.set_global(FrequentEmoji(frequent));
-        cx.emit(InsertDialogEvent::Inline { content: insert.text });
+        cx.emit(InsertDialogEvent::Inline {
+            content: insert.text,
+        });
     }
 
     /// Close without inserting.
@@ -121,13 +133,22 @@ impl EmojiPopover {
 
     fn scroll_to_selection(&mut self) {
         if let Some(index) = self.picker.take_scroll_request() {
-            self.scroll.scroll_to_item(index / self.picker.columns().max(1));
+            self.scroll
+                .scroll_to_item(index / self.picker.columns().max(1));
         }
     }
 
-    fn on_key(&mut self, keystroke: &Keystroke, window: &mut Window, cx: &mut Context<Self>) -> bool {
+    fn on_key(
+        &mut self,
+        keystroke: &Keystroke,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) -> bool {
         if !self.focus.contains_focused(window, cx)
-            || self.search.update(cx, |s, cx| s.marked_text_range(window, cx)).is_some()
+            || self
+                .search
+                .update(cx, |s, cx| s.marked_text_range(window, cx))
+                .is_some()
         {
             return false;
         }
@@ -189,7 +210,9 @@ impl EmojiPopover {
             .justify_center()
             .rounded(theme.radius)
             .cursor_pointer()
-            .when(cell.selected, |el| el.bg(theme.accent).border_2().border_color(theme.ring))
+            .when(cell.selected, |el| {
+                el.bg(theme.accent).border_2().border_color(theme.ring)
+            })
             .on_mouse_move(cx.listener(move |this, _: &MouseMoveEvent, _, cx| {
                 if this.picker.hover(index) {
                     cx.notify();
@@ -200,11 +223,21 @@ impl EmojiPopover {
             PickerTab::Emoji => base
                 .size(px(32.))
                 .text_size(px(20.))
-                .child(Self::render_glyph(&cell.glyph, &cell.code, px(20.), theme.foreground))
+                .child(Self::render_glyph(
+                    &cell.glyph,
+                    &cell.code,
+                    px(20.),
+                    theme.foreground,
+                ))
                 .into_any_element(),
             PickerTab::Icons => base
                 .size(px(36.))
-                .child(Self::render_glyph(&cell.glyph, &cell.code, px(20.), theme.foreground))
+                .child(Self::render_glyph(
+                    &cell.glyph,
+                    &cell.code,
+                    px(20.),
+                    theme.foreground,
+                ))
                 .into_any_element(),
             PickerTab::Emoticons => base
                 .flex_1()
@@ -213,7 +246,12 @@ impl EmojiPopover {
                 .px_1()
                 .text_xs()
                 .overflow_hidden()
-                .child(Self::render_glyph(&cell.glyph, &cell.code, px(16.), theme.foreground))
+                .child(Self::render_glyph(
+                    &cell.glyph,
+                    &cell.code,
+                    px(16.),
+                    theme.foreground,
+                ))
                 .into_any_element(),
         }
     }
@@ -235,7 +273,11 @@ impl EmojiPopover {
         let mut cells = self.picker.cells().into_iter().peekable();
         let mut rows = Vec::new();
         while cells.peek().is_some() {
-            let row: Vec<AnyElement> = cells.by_ref().take(columns).map(|c| self.render_cell(c, cx)).collect();
+            let row: Vec<AnyElement> = cells
+                .by_ref()
+                .take(columns)
+                .map(|c| self.render_cell(c, cx))
+                .collect();
             rows.push(h_flex().gap_1().children(row).into_any_element());
         }
         v_flex()
@@ -256,14 +298,18 @@ impl EmojiPopover {
         let tabs = PickerTab::ALL.iter().map(|&tab| {
             let selected = tab == active;
             div()
-                .id(SharedString::from(format!("emoji-tab-{tab:?}").to_lowercase()))
+                .id(SharedString::from(
+                    format!("emoji-tab-{tab:?}").to_lowercase(),
+                ))
                 .test_support()
                 .px_2()
                 .py_0p5()
                 .text_xs()
                 .rounded(theme.radius)
                 .cursor_pointer()
-                .when(selected, |el| el.bg(theme.accent).text_color(theme.accent_foreground))
+                .when(selected, |el| {
+                    el.bg(theme.accent).text_color(theme.accent_foreground)
+                })
                 .when(!selected, |el| el.text_color(theme.muted_foreground))
                 .on_click(cx.listener(move |this, _, _, cx| this.switch_tab(tab, cx)))
                 .child(i18n::t(cx, tab.label_key()))
@@ -298,11 +344,12 @@ impl EmojiPopover {
             .bg(theme.secondary)
             .rounded(theme.radius)
             .when_some(footer, |el, f| {
-                el.child(
-                    div()
-                        .text_size(px(26.))
-                        .child(Self::render_glyph(&f.glyph, &f.code, px(28.), theme.foreground)),
-                )
+                el.child(div().text_size(px(26.)).child(Self::render_glyph(
+                    &f.glyph,
+                    &f.code,
+                    px(28.),
+                    theme.foreground,
+                )))
                 .child(
                     div()
                         .text_xs()

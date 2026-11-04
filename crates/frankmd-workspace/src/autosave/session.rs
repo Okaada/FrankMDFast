@@ -13,9 +13,12 @@ use frankmd_core::DocId;
 use frankmd_core::guard::is_large_deletion;
 use frankmd_core::registry::Remap;
 
-use super::{AutosaveConfig, AutosaveEffect, DeletionPrep, SaveOutcome, SaveRequest, SaveStatus, SaveTicket};
+use super::{
+    AutosaveConfig, AutosaveEffect, DeletionPrep, SaveOutcome, SaveRequest, SaveStatus, SaveTicket,
+};
 use crate::draft_storage::{
-    DraftBackend, DraftError, DraftErrorKind, DraftRecord, DraftStorage, ItemKind, RemoveDraftsError,
+    DraftBackend, DraftError, DraftErrorKind, DraftRecord, DraftStorage, ItemKind,
+    RemoveDraftsError,
 };
 use crate::drafts::draft_subject;
 
@@ -130,7 +133,10 @@ impl<B: DraftBackend> std::fmt::Debug for AutosaveSession<B> {
 }
 
 fn storage_error(message: &str) -> DraftError {
-    DraftError { kind: DraftErrorKind::Storage, message: message.to_owned() }
+    DraftError {
+        kind: DraftErrorKind::Storage,
+        message: message.to_owned(),
+    }
 }
 
 impl<B: DraftBackend> AutosaveSession<B> {
@@ -205,7 +211,10 @@ impl<B: DraftBackend> AutosaveSession<B> {
     /// longer save it (their snapshot is stale).
     pub fn set_file(&mut self, doc: DocId, path: &str, content: &str, revision: Option<&str>) {
         self.dismiss_content_loss_warning();
-        self.active = Some(ActiveDoc { doc, path: path.to_owned() });
+        self.active = Some(ActiveDoc {
+            doc,
+            path: path.to_owned(),
+        });
         self.last_saved_content = Some(content.to_owned());
         self.base_revision = revision.filter(|r| !r.is_empty()).map(str::to_owned);
         self.content_loss = ContentLossState {
@@ -241,8 +250,11 @@ impl<B: DraftBackend> AutosaveSession<B> {
             return Ok(None);
         };
         let content = self.editor_text.clone();
-        if self.last_saved_content.as_deref() != Some(content.as_str()) && self.base_revision.is_none() {
-            let error = storage_error("Cannot persist the outgoing draft without a server revision");
+        if self.last_saved_content.as_deref() != Some(content.as_str())
+            && self.base_revision.is_none()
+        {
+            let error =
+                storage_error("Cannot persist the outgoing draft without a server revision");
             self.draft_persistence_failures.insert(doc);
             self.update_unload_guard();
             self.show_draft_storage_error();
@@ -278,9 +290,17 @@ impl<B: DraftBackend> AutosaveSession<B> {
         // The finished save may have scheduled a follow-up; the note is about
         // to be deleted, so stop it and use the latest acknowledged revision.
         self.clear_pending_timers();
-        match self.known_base_revisions.get(&doc).or(self.base_revision.as_ref()) {
-            Some(revision) => DeletionPrep::Ready { revision: revision.clone() },
-            None => DeletionPrep::Failed(storage_error("Cannot delete the note without a known server revision")),
+        match self
+            .known_base_revisions
+            .get(&doc)
+            .or(self.base_revision.as_ref())
+        {
+            Some(revision) => DeletionPrep::Ready {
+                revision: revision.clone(),
+            },
+            None => DeletionPrep::Failed(storage_error(
+                "Cannot delete the note without a known server revision",
+            )),
         }
     }
 
@@ -318,7 +338,10 @@ impl<B: DraftBackend> AutosaveSession<B> {
             if self.pending_recovery.as_ref().is_some_and(|p| p.doc == doc) {
                 self.pending_recovery = None;
             }
-            match self.drafts.remove_drafts(&draft_subject(doc), ItemKind::File) {
+            match self
+                .drafts
+                .remove_drafts(&draft_subject(doc), ItemKind::File)
+            {
                 Ok(n) => removed += n,
                 Err(e) => {
                     removed += e.removed.unwrap_or(0);
@@ -333,7 +356,10 @@ impl<B: DraftBackend> AutosaveSession<B> {
         match first_error {
             Some(error) => {
                 self.show_draft_storage_error();
-                Err(RemoveDraftsError { error, removed: Some(removed) })
+                Err(RemoveDraftsError {
+                    error,
+                    removed: Some(removed),
+                })
             }
             None => Ok(removed),
         }
@@ -443,14 +469,22 @@ impl<B: DraftBackend> AutosaveSession<B> {
     }
 
     fn next_timer(&self) -> Option<(Instant, Timer)> {
-        let drafts = self.draft_writes.iter().map(|(doc, w)| (w.deadline, Timer::DraftWrite(*doc)));
+        let drafts = self
+            .draft_writes
+            .iter()
+            .map(|(doc, w)| (w.deadline, Timer::DraftWrite(*doc)));
         let others = [
             self.save_deadline.map(|d| (d, Timer::SaveDebounce)),
-            self.max_interval_deadline.map(|d| (d, Timer::SaveMaxInterval)),
-            self.offline_backup.as_ref().map(|b| (b.deadline, Timer::OfflineBackup)),
+            self.max_interval_deadline
+                .map(|d| (d, Timer::SaveMaxInterval)),
+            self.offline_backup
+                .as_ref()
+                .map(|b| (b.deadline, Timer::OfflineBackup)),
             self.status_clear_deadline.map(|d| (d, Timer::StatusClear)),
         ];
-        drafts.chain(others.into_iter().flatten()).min_by_key(|(deadline, _)| *deadline)
+        drafts
+            .chain(others.into_iter().flatten())
+            .min_by_key(|(deadline, _)| *deadline)
     }
 
     fn fire(&mut self, timer: Timer) {
@@ -462,13 +496,20 @@ impl<B: DraftBackend> AutosaveSession<B> {
             }
             Timer::SaveDebounce => {
                 self.save_deadline = None;
-                if let Some(snapshot) = self.scheduled_save.clone().filter(|s| self.is_current_snapshot(s)) {
+                if let Some(snapshot) = self
+                    .scheduled_save
+                    .clone()
+                    .filter(|s| self.is_current_snapshot(s))
+                {
                     self.save(Some(snapshot));
                 }
             }
             Timer::SaveMaxInterval => {
                 self.max_interval_deadline = None;
-                let snapshot = self.scheduled_save.clone().filter(|s| self.is_current_snapshot(s));
+                let snapshot = self
+                    .scheduled_save
+                    .clone()
+                    .filter(|s| self.is_current_snapshot(s));
                 if let Some(snapshot) = snapshot.filter(|_| self.has_unsaved_changes) {
                     self.save(Some(snapshot));
                 }
@@ -476,7 +517,9 @@ impl<B: DraftBackend> AutosaveSession<B> {
             Timer::OfflineBackup => {
                 if let Some(backup) = self.offline_backup.take() {
                     // offline_backup_controller: a failed backup is only a warning.
-                    let _ = self.drafts.backup_save(&draft_subject(backup.doc), &backup.content);
+                    let _ = self
+                        .drafts
+                        .backup_save(&draft_subject(backup.doc), &backup.content);
                 }
             }
             Timer::StatusClear => {
@@ -504,7 +547,10 @@ impl<B: DraftBackend> AutosaveSession<B> {
     }
 
     fn save(&mut self, snapshot: Option<SaveSnapshot>) {
-        if self.current_doc().is_some_and(|doc| self.has_pending_recovery(doc)) {
+        if self
+            .current_doc()
+            .is_some_and(|doc| self.has_pending_recovery(doc))
+        {
             return;
         }
         if self.is_offline {
@@ -514,7 +560,11 @@ impl<B: DraftBackend> AutosaveSession<B> {
         let Some(doc) = self.current_doc() else {
             return;
         };
-        if snapshot.as_ref().is_some_and(|s| !self.is_current_snapshot(s)) || self.in_flight.is_some() {
+        if snapshot
+            .as_ref()
+            .is_some_and(|s| !self.is_current_snapshot(s))
+            || self.in_flight.is_some()
+        {
             return;
         }
         let snapshot = snapshot.unwrap_or_else(|| self.capture_save_snapshot(doc));
@@ -522,14 +572,19 @@ impl<B: DraftBackend> AutosaveSession<B> {
 
         let content = snapshot.content.clone();
         let saved_draft = self.flush_draft_write(doc, &content, snapshot.base_revision.as_deref());
-        let saved_draft_revision = saved_draft.as_ref().ok().and_then(|d| d.as_ref()).map(|d| d.draft_revision.clone());
+        let saved_draft_revision = saved_draft
+            .as_ref()
+            .ok()
+            .and_then(|d| d.as_ref())
+            .map(|d| d.draft_revision.clone());
 
         if self.last_saved_content.as_deref() == Some(content.as_str()) {
             self.has_unsaved_changes = false;
             self.set_status(SaveStatus::Hidden);
             return;
         }
-        let approved = self.content_loss_override() && self.content_loss.override_content.as_deref() == Some(&content);
+        let approved = self.content_loss_override()
+            && self.content_loss.override_content.as_deref() == Some(&content);
         if !approved && is_large_deletion(self.last_saved_content.as_deref(), &content) {
             if saved_draft.is_ok() {
                 self.show_content_loss_warning();
@@ -547,7 +602,12 @@ impl<B: DraftBackend> AutosaveSession<B> {
             content,
             base_revision: snapshot.base_revision.clone(),
         };
-        self.in_flight = Some(InFlightSave { ticket, snapshot, saved_draft_revision, is_config: path == ".fed" });
+        self.in_flight = Some(InFlightSave {
+            ticket,
+            snapshot,
+            saved_draft_revision,
+            is_config: path == ".fed",
+        });
         self.effects.push(AutosaveEffect::Save(request));
     }
 
@@ -633,11 +693,18 @@ impl<B: DraftBackend> AutosaveSession<B> {
                 return;
             }
         };
-        let Some(latest) = latest.filter(|d| d.content != saved_content && d.base_revision != new_revision) else {
+        let Some(latest) =
+            latest.filter(|d| d.content != saved_content && d.base_revision != new_revision)
+        else {
             return;
         };
-        match self.drafts.write_draft(&subject, &latest.content, new_revision) {
-            Ok(written) if self.current_doc() == Some(doc) => self.draft_revision = Some(written.draft.draft_revision),
+        match self
+            .drafts
+            .write_draft(&subject, &latest.content, new_revision)
+        {
+            Ok(written) if self.current_doc() == Some(doc) => {
+                self.draft_revision = Some(written.draft.draft_revision)
+            }
             Ok(_) => {}
             Err(_) => {
                 if self.current_doc() == Some(doc) {
@@ -682,7 +749,10 @@ impl<B: DraftBackend> AutosaveSession<B> {
             self.draft_persistence_failures.remove(&doc);
             self.update_unload_guard();
             if let Some(revision) = self.draft_revision.clone() {
-                match self.drafts.remove_draft_if_revision(&draft_subject(doc), &revision) {
+                match self
+                    .drafts
+                    .remove_draft_if_revision(&draft_subject(doc), &revision)
+                {
                     Err(error) => {
                         self.show_draft_storage_error();
                         return Err(error);
@@ -711,7 +781,11 @@ impl<B: DraftBackend> AutosaveSession<B> {
         if self.has_pending_recovery(doc) {
             return Ok(None);
         }
-        let base = self.known_base_revisions.get(&doc).cloned().unwrap_or_else(|| base_revision.to_owned());
+        let base = self
+            .known_base_revisions
+            .get(&doc)
+            .cloned()
+            .unwrap_or_else(|| base_revision.to_owned());
         let is_current = self.current_doc() == Some(doc);
         match self.drafts.write_draft(&draft_subject(doc), content, &base) {
             Err(error) => {
@@ -748,15 +822,22 @@ impl<B: DraftBackend> AutosaveSession<B> {
     /// must be warned about (the active draft could not be persisted).
     pub fn before_unload(&mut self) -> bool {
         let flushed = self.flush_active_draft();
-        flushed.is_err() && self.current_doc().is_some_and(|doc| self.draft_persistence_failures.contains(&doc))
+        flushed.is_err()
+            && self
+                .current_doc()
+                .is_some_and(|doc| self.draft_persistence_failures.contains(&doc))
     }
 
     fn remove_draft_if_revision(&mut self, doc: DocId, revision: &str) -> Result<bool, DraftError> {
-        let result = self.drafts.remove_draft_if_revision(&draft_subject(doc), revision);
+        let result = self
+            .drafts
+            .remove_draft_if_revision(&draft_subject(doc), revision);
         let is_current = self.current_doc() == Some(doc);
         match &result {
             Err(_) if is_current => self.show_draft_storage_error(),
-            Ok(true) if is_current && self.draft_revision.as_deref() == Some(revision) => self.draft_revision = None,
+            Ok(true) if is_current && self.draft_revision.as_deref() == Some(revision) => {
+                self.draft_revision = None
+            }
             _ => {}
         }
         result
@@ -812,12 +893,18 @@ impl<B: DraftBackend> AutosaveSession<B> {
             return;
         }
         self.draft_storage_error_visible = false;
-        let status = if self.has_unsaved_changes { SaveStatus::Unsaved } else { SaveStatus::Hidden };
+        let status = if self.has_unsaved_changes {
+            SaveStatus::Unsaved
+        } else {
+            SaveStatus::Hidden
+        };
         self.set_status(status);
     }
 
     fn update_unload_guard(&mut self) {
-        let armed = self.current_doc().is_some_and(|doc| self.draft_persistence_failures.contains(&doc));
+        let armed = self
+            .current_doc()
+            .is_some_and(|doc| self.draft_persistence_failures.contains(&doc));
         if armed != self.unload_guard {
             self.unload_guard = armed;
             self.effects.push(AutosaveEffect::UnloadGuard(armed));

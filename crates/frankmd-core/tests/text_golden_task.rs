@@ -12,7 +12,11 @@ use text_common::{arg_str, byte_to_u16, has_lone_surrogates};
 const FIXTURE: &str = "js_task_utils";
 
 fn check(got: Value, want: &Value) -> Result<(), String> {
-    if &got == want { Ok(()) } else { Err(format!("got {got}, want {want}")) }
+    if &got == want {
+        Ok(())
+    } else {
+        Err(format!("got {got}, want {want}"))
+    }
 }
 
 #[test]
@@ -33,7 +37,10 @@ fn golden_toggle_task_marker() {
     let g = golden(FIXTURE);
     assert_cases(FIXTURE, g.cases_for("toggleTaskMarker"), |c| {
         assert!(!has_lone_surrogates(&c.input));
-        check(json!(toggle_task_marker(&arg_str(&c.input, 0))), &c.expected)
+        check(
+            json!(toggle_task_marker(&arg_str(&c.input, 0))),
+            &c.expected,
+        )
     });
 }
 

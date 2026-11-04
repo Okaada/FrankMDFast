@@ -92,7 +92,11 @@ impl Shell {
         .detach();
     }
 
-    pub(crate) fn spawn_tick(&self, delay: std::time::Duration, cx: &mut Context<Self>) -> Task<()> {
+    pub(crate) fn spawn_tick(
+        &self,
+        delay: std::time::Duration,
+        cx: &mut Context<Self>,
+    ) -> Task<()> {
         let window = self.window;
         cx.spawn(async move |this, cx| {
             cx.background_executor().timer(delay).await;

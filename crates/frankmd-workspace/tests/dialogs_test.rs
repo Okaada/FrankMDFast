@@ -15,7 +15,12 @@ fn date() -> jiff::civil::Date {
 }
 
 fn global(sel: &str, style: HugoPathStyle) -> NewNoteForm {
-    NewNoteForm::new(CreationOrigin::Global { selected_folder: sel.into() }, style)
+    NewNoteForm::new(
+        CreationOrigin::Global {
+            selected_folder: sel.into(),
+        },
+        style,
+    )
 }
 
 fn dbg<T: std::fmt::Debug>(v: &T) -> String {
@@ -33,7 +38,10 @@ fn empty_destination_follows_selection_or_context() {
     assert_eq!(f.destination(), "docs");
     f.set_name("a");
     assert_eq!(f.preview(date(), "root", "name").path, "docs/a.md");
-    let f = NewNoteForm::new(CreationOrigin::FolderContext("x/y".into()), HugoPathStyle::Dated);
+    let f = NewNoteForm::new(
+        CreationOrigin::FolderContext("x/y".into()),
+        HugoPathStyle::Dated,
+    );
     assert_eq!(f.destination(), "x/y");
 }
 
@@ -46,7 +54,10 @@ fn hugo_global_goes_to_blog_context_goes_to_folder() {
     let mut f = global("", HugoPathStyle::Flat);
     f.set_template(NoteTemplate::Hugo);
     assert_eq!(f.destination(), "blog");
-    let mut f = NewNoteForm::new(CreationOrigin::FolderContext("docs".into()), HugoPathStyle::Dated);
+    let mut f = NewNoteForm::new(
+        CreationOrigin::FolderContext("docs".into()),
+        HugoPathStyle::Dated,
+    );
     f.set_template(NoteTemplate::Hugo);
     assert_eq!(f.destination(), "docs");
 }
@@ -56,14 +67,23 @@ fn preview_paths_dated_and_flat() {
     // ui-spec §5.13
     let mut f = global("", HugoPathStyle::Dated).with_name("Sample");
     f.set_template(NoteTemplate::Hugo);
-    assert_eq!(f.preview(date(), "root", "name").path, "blog/2026/03/07/sample/index.md");
+    assert_eq!(
+        f.preview(date(), "root", "name").path,
+        "blog/2026/03/07/sample/index.md"
+    );
     let mut f = global("", HugoPathStyle::Flat).with_name("My Post");
     f.set_template(NoteTemplate::Hugo);
     assert_eq!(f.preview(date(), "root", "name").path, "blog/my-post.md");
-    let mut f = NewNoteForm::new(CreationOrigin::FolderContext("docs".into()), HugoPathStyle::Flat)
-        .with_name("Explicit Post");
+    let mut f = NewNoteForm::new(
+        CreationOrigin::FolderContext("docs".into()),
+        HugoPathStyle::Flat,
+    )
+    .with_name("Explicit Post");
     f.set_template(NoteTemplate::Hugo);
-    assert_eq!(f.preview(date(), "root", "name").path, "docs/explicit-post.md");
+    assert_eq!(
+        f.preview(date(), "root", "name").path,
+        "docs/explicit-post.md"
+    );
 }
 
 #[test]
@@ -74,7 +94,10 @@ fn preview_root_placeholder_and_nested() {
     assert_eq!(pv.path, "root/note-name.md");
     assert!(pv.empty && !pv.valid);
     let f = global("docs/nested", HugoPathStyle::Dated).with_name("Sample");
-    assert_eq!(f.preview(date(), "root", "name").path, "docs/nested/Sample.md");
+    assert_eq!(
+        f.preview(date(), "root", "name").path,
+        "docs/nested/Sample.md"
+    );
 }
 
 #[test]
@@ -108,9 +131,19 @@ fn cjk_title_needs_typed_slug() {
     assert!(f.submit().is_none());
     f.set_slug("nihongo");
     assert!(f.can_submit());
-    assert_eq!(f.preview(date(), "root", "name").path, "blog/2026/03/07/nihongo/index.md");
+    assert_eq!(
+        f.preview(date(), "root", "name").path,
+        "blog/2026/03/07/nihongo/index.md"
+    );
     assert!(f.preview(date(), "root", "name").valid);
-    assert_eq!(dbg(&f.submit()), dbg(&Some(Command::CreateHugoPost { parent: p("blog"), title: "日本語".into(), slug: "nihongo".into() })));
+    assert_eq!(
+        dbg(&f.submit()),
+        dbg(&Some(Command::CreateHugoPost {
+            parent: p("blog"),
+            title: "日本語".into(),
+            slug: "nihongo".into()
+        }))
+    );
 }
 
 #[test]
@@ -132,16 +165,37 @@ fn slashes_and_blank_invalid() {
 fn submit_empty_and_root() {
     // adapts: test/system/creation_destination_test.rb "new note in root"
     let f = global("", HugoPathStyle::Dated).with_name("  Idea  ");
-    assert_eq!(dbg(&f.submit()), dbg(&Some(Command::CreateNote { parent: p(""), name: "Idea".into(), template: NoteTemplate::Empty })));
+    assert_eq!(
+        dbg(&f.submit()),
+        dbg(&Some(Command::CreateNote {
+            parent: p(""),
+            name: "Idea".into(),
+            template: NoteTemplate::Empty
+        }))
+    );
     let f = global("docs", HugoPathStyle::Dated).with_name("x.md");
-    assert_eq!(dbg(&f.submit()), dbg(&Some(Command::CreateNote { parent: p("docs"), name: "x.md".into(), template: NoteTemplate::Empty })));
+    assert_eq!(
+        dbg(&f.submit()),
+        dbg(&Some(Command::CreateNote {
+            parent: p("docs"),
+            name: "x.md".into(),
+            template: NoteTemplate::Empty
+        }))
+    );
 }
 
 #[test]
 fn submit_hugo_auto_slug_and_error() {
     let mut f = global("", HugoPathStyle::Dated).with_name("My Post.md");
     f.set_template(NoteTemplate::Hugo);
-    assert_eq!(dbg(&f.submit()), dbg(&Some(Command::CreateHugoPost { parent: p("blog"), title: "My Post".into(), slug: "my-post".into() })));
+    assert_eq!(
+        dbg(&f.submit()),
+        dbg(&Some(Command::CreateHugoPost {
+            parent: p("blog"),
+            title: "My Post".into(),
+            slug: "my-post".into()
+        }))
+    );
     assert!(f.error().is_none());
     f.set_error(Some(frankmd_workspace::command::UserError::new("errors.x")));
     assert!(f.error().is_some());
@@ -158,7 +212,13 @@ fn new_folder_nested() {
     f.set_name("  ");
     assert!(f.submit().is_none());
     f.set_name(" a/b ");
-    assert_eq!(dbg(&f.submit()), dbg(&Some(Command::CreateFolder { parent: p(""), name: "a/b".into() })));
+    assert_eq!(
+        dbg(&f.submit()),
+        dbg(&Some(Command::CreateFolder {
+            parent: p(""),
+            name: "a/b".into()
+        }))
+    );
     let f = NewFolderForm::new("docs");
     assert!(!f.subtitle_root());
 }
@@ -172,7 +232,13 @@ fn move_form_prefill_and_target() {
     assert!(f.submit().unwrap().is_none());
     f.set_name("b");
     assert_eq!(f.target().unwrap(), "docs/b.md");
-    assert_eq!(dbg(&f.submit().unwrap()), dbg(&Some(Command::Rename { from: p("docs/a.md"), to: p("docs/b.md") })));
+    assert_eq!(
+        dbg(&f.submit().unwrap()),
+        dbg(&Some(Command::Rename {
+            from: p("docs/a.md"),
+            to: p("docs/b.md")
+        }))
+    );
     f.set_folder("");
     assert_eq!(f.target().unwrap(), "b.md");
     f.set_name("sub/c.md");
@@ -202,7 +268,13 @@ fn inline_rename_commit() {
     assert_eq!(r.value(), "a");
     assert!(r.commit().unwrap().is_none());
     r.set_value("b");
-    assert_eq!(dbg(&r.commit().unwrap()), dbg(&Some(Command::Rename { from: p("docs/a.md"), to: p("docs/b.md") })));
+    assert_eq!(
+        dbg(&r.commit().unwrap()),
+        dbg(&Some(Command::Rename {
+            from: p("docs/a.md"),
+            to: p("docs/b.md")
+        }))
+    );
     r.set_value("   ");
     assert_eq!(r.commit().unwrap_err().key, "errors.title_required");
     r.set_error(Some(frankmd_workspace::command::UserError::new("errors.x")));
@@ -216,7 +288,13 @@ fn inline_rename_row_folder_and_config() {
     let mut r = InlineRename::start(RenameTarget::Row, "x/dir", ItemKind::Folder).unwrap();
     assert_eq!(r.value(), "dir");
     r.set_value("new");
-    assert_eq!(dbg(&r.commit().unwrap()), dbg(&Some(Command::Rename { from: p("x/dir"), to: p("x/new") })));
+    assert_eq!(
+        dbg(&r.commit().unwrap()),
+        dbg(&Some(Command::Rename {
+            from: p("x/dir"),
+            to: p("x/new")
+        }))
+    );
     assert!(InlineRename::start(RenameTarget::Row, ".fed", ItemKind::File).is_none());
 }
 
@@ -224,11 +302,33 @@ fn inline_rename_row_folder_and_config() {
 fn delete_message_keys() {
     // adapts: test/system/notes_test.rb "delete note"
     let d = DeleteConfirm::new(vec![("docs/a.md".into(), ItemKind::File)]).unwrap();
-    assert_eq!(d.message(), ("dialogs.delete.trash_file", vec![("name", "a.md".to_owned())]));
+    assert_eq!(
+        d.message(),
+        (
+            "dialogs.delete.trash_file",
+            vec![("name", "a.md".to_owned())]
+        )
+    );
     let d = DeleteConfirm::new(vec![("docs/sub".into(), ItemKind::Folder)]).unwrap();
-    assert_eq!(d.message(), ("dialogs.delete.trash_folder", vec![("name", "sub".to_owned())]));
-    let d = DeleteConfirm::new(vec![("a.md".into(), ItemKind::File), ("b.md".into(), ItemKind::File)]).unwrap();
-    assert_eq!(d.message(), ("dialogs.delete.trash_multiple", vec![("count", "2".to_owned())]));
+    assert_eq!(
+        d.message(),
+        (
+            "dialogs.delete.trash_folder",
+            vec![("name", "sub".to_owned())]
+        )
+    );
+    let d = DeleteConfirm::new(vec![
+        ("a.md".into(), ItemKind::File),
+        ("b.md".into(), ItemKind::File),
+    ])
+    .unwrap();
+    assert_eq!(
+        d.message(),
+        (
+            "dialogs.delete.trash_multiple",
+            vec![("count", "2".to_owned())]
+        )
+    );
     assert!(DeleteConfirm::destructive());
     assert!(DeleteConfirm::initial_focus_cancel());
 }
@@ -246,7 +346,15 @@ fn delete_dedupes_and_drops() {
     ])
     .unwrap();
     assert_eq!(d.items.len(), 2);
-    assert_eq!(dbg(&d.commands()), dbg(&vec![Command::Delete { path: p("docs") }, Command::Delete { path: p("docsx/b.md") }]));
+    assert_eq!(
+        dbg(&d.commands()),
+        dbg(&vec![
+            Command::Delete { path: p("docs") },
+            Command::Delete {
+                path: p("docsx/b.md")
+            }
+        ])
+    );
     assert!(DeleteConfirm::new(vec![(".fed".into(), ItemKind::File)]).is_none());
     assert!(DeleteConfirm::new(vec![]).is_none());
 }

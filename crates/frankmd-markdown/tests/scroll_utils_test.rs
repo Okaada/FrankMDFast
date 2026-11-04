@@ -3,8 +3,8 @@
 #![allow(clippy::unwrap_used)]
 
 use frankmd_markdown::linemap::scroll::{
-    DEFAULT_LINE_OFFSET_RATIO, ScrollEntry, line_at_scroll, line_from_scroll, scroll_for_line, scroll_ratio,
-    scroll_to_center_line, scroll_top_for_element, synced_scroll_position,
+    DEFAULT_LINE_OFFSET_RATIO, ScrollEntry, line_at_scroll, line_from_scroll, scroll_for_line,
+    scroll_ratio, scroll_to_center_line, scroll_top_for_element, synced_scroll_position,
 };
 
 fn for_line(line: f64, lh: f64, vh: f64) -> f64 {
@@ -14,8 +14,14 @@ fn for_line(line: f64, lh: f64, vh: f64) -> f64 {
 fn entries() -> Vec<ScrollEntry> {
     vec![
         ScrollEntry { line: 1, top: 0.0 },
-        ScrollEntry { line: 5, top: 100.0 },
-        ScrollEntry { line: 10, top: 200.0 },
+        ScrollEntry {
+            line: 5,
+            top: 100.0,
+        },
+        ScrollEntry {
+            line: 10,
+            top: 200.0,
+        },
     ]
 }
 
@@ -178,7 +184,10 @@ fn element_top_invariant_to_page_offset() {
 // port: test/javascript/lib/scroll_utils.test.js:160 "matches at a zero page offset"
 #[test]
 fn element_top_matches_at_zero_offset() {
-    assert_eq!(scroll_top_for_element(150.0, 50.0, 200.0), scroll_top_for_element(5150.0, 5050.0, 200.0));
+    assert_eq!(
+        scroll_top_for_element(150.0, 50.0, 200.0),
+        scroll_top_for_element(5150.0, 5050.0, 200.0)
+    );
 }
 
 // port: test/javascript/lib/scroll_utils.test.js:165 "accounts for positive container scrollTop"
@@ -210,7 +219,10 @@ fn line_at_scroll_above_all() {
 // port: test/javascript/lib/scroll_utils.test.js:192 "keeps the earlier entry when tops tie (matches previous behavior)"
 #[test]
 fn line_at_scroll_tie_keeps_earlier() {
-    let e = [ScrollEntry { line: 2, top: 50.0 }, ScrollEntry { line: 7, top: 50.0 }];
+    let e = [
+        ScrollEntry { line: 2, top: 50.0 },
+        ScrollEntry { line: 7, top: 50.0 },
+    ];
     assert_eq!(line_at_scroll(&e, 60.0), Some(2));
 }
 

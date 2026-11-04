@@ -5,8 +5,10 @@
 use frankmd_fs::Vault;
 
 fn names(dir: &std::path::Path) -> Vec<String> {
-    let mut v: Vec<String> =
-        std::fs::read_dir(dir).unwrap().map(|e| e.unwrap().file_name().to_string_lossy().into_owned()).collect();
+    let mut v: Vec<String> = std::fs::read_dir(dir)
+        .unwrap()
+        .map(|e| e.unwrap().file_name().to_string_lossy().into_owned())
+        .collect();
     v.sort();
     v
 }
@@ -30,6 +32,11 @@ fn regular_vault_still_uses_the_shared_compat_lock() {
     let root = tempfile::tempdir().unwrap();
     let state = tempfile::tempdir().unwrap();
     let vault = Vault::open(root.path(), state.path()).unwrap();
-    let guard = vault.lock(frankmd_fs::lock::FILESYSTEM_LOCK, frankmd_fs::lock::LockKind::Exclusive).unwrap();
+    let guard = vault
+        .lock(
+            frankmd_fs::lock::FILESYSTEM_LOCK,
+            frankmd_fs::lock::LockKind::Exclusive,
+        )
+        .unwrap();
     assert_eq!(guard.path(), vault.filesystem_lock_path());
 }

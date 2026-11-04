@@ -6,21 +6,29 @@ use frankmd_core::text::table::{
 };
 
 fn t(rows: &[&[&str]]) -> TableData {
-    rows.iter().map(|r| r.iter().map(|c| (*c).to_owned()).collect()).collect()
+    rows.iter()
+        .map(|r| r.iter().map(|c| (*c).to_owned()).collect())
+        .collect()
 }
 
 // port: test/javascript/table_utils.test.js:14 "parses a simple markdown table"
 #[test]
 fn parses_a_simple_markdown_table() {
     let md = "| Name | Age |\n| --- | --- |\n| Alice | 30 |\n| Bob | 25 |";
-    assert_eq!(parse_markdown_table(md), t(&[&["Name", "Age"], &["Alice", "30"], &["Bob", "25"]]));
+    assert_eq!(
+        parse_markdown_table(md),
+        t(&[&["Name", "Age"], &["Alice", "30"], &["Bob", "25"]])
+    );
 }
 
 // port: test/javascript/table_utils.test.js:29 "handles table with extra whitespace"
 #[test]
 fn handles_table_with_extra_whitespace() {
     let md = "|  Name  |  Age  |\n|--------|-------|\n|  Alice |  30   |";
-    assert_eq!(parse_markdown_table(md), t(&[&["Name", "Age"], &["Alice", "30"]]));
+    assert_eq!(
+        parse_markdown_table(md),
+        t(&[&["Name", "Age"], &["Alice", "30"]])
+    );
 }
 
 // port: test/javascript/table_utils.test.js:42 "skips empty lines"
@@ -34,7 +42,10 @@ fn skips_empty_lines() {
 #[test]
 fn handles_array_input() {
     let lines = ["| A | B |", "| --- | --- |", "| 1 | 2 |"];
-    assert_eq!(parse_markdown_table_lines(&lines), t(&[&["A", "B"], &["1", "2"]]));
+    assert_eq!(
+        parse_markdown_table_lines(&lines),
+        t(&[&["A", "B"], &["1", "2"]])
+    );
 }
 
 // port: test/javascript/table_utils.test.js:72 "skips separator rows with colons (alignment)"
@@ -128,7 +139,10 @@ fn roundtrip_reconstructs_table_after_parsing() {
 #[test]
 fn swaps_two_columns() {
     let data = t(&[&["A", "B", "C"], &["1", "2", "3"]]);
-    assert_eq!(swap_columns(&data, 0, 2), t(&[&["C", "B", "A"], &["3", "2", "1"]]));
+    assert_eq!(
+        swap_columns(&data, 0, 2),
+        t(&[&["C", "B", "A"], &["3", "2", "1"]])
+    );
 }
 
 // port: test/javascript/table_utils.test.js:208 "does not mutate original array"
@@ -145,7 +159,10 @@ fn swap_columns_does_not_mutate_original() {
 #[test]
 fn swaps_two_rows() {
     let data = t(&[&["Header"], &["Row1"], &["Row2"]]);
-    assert_eq!(swap_rows(&data, 1, 2), t(&[&["Header"], &["Row2"], &["Row1"]]));
+    assert_eq!(
+        swap_rows(&data, 1, 2),
+        t(&[&["Header"], &["Row2"], &["Row1"]])
+    );
 }
 
 // port: test/javascript/table_utils.test.js:234 "removes a column"
@@ -166,7 +183,10 @@ fn removes_a_row() {
 #[test]
 fn adds_a_column_with_header() {
     let data = t(&[&["A", "B"], &["1", "2"]]);
-    assert_eq!(add_column(&data, "New"), t(&[&["A", "B", "New"], &["1", "2", ""]]));
+    assert_eq!(
+        add_column(&data, "New"),
+        t(&[&["A", "B", "New"], &["1", "2", ""]])
+    );
 }
 
 // port: test/javascript/table_utils.test.js:283 "adds an empty row"

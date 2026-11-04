@@ -13,7 +13,6 @@ use std::sync::{Arc, Mutex, PoisonError};
 /// `.fed` file name at the notes root (**[COMPAT]** `Config::CONFIG_FILE`).
 pub const CONFIG_FILE: &str = ".fed";
 
-
 /// **[COMPAT]** `.fed` is always left with mode 0600 after a write.
 const FED_MODE: ModePolicy = ModePolicy::Fixed(0o600);
 
@@ -70,7 +69,10 @@ impl ConfigStore {
 
     /// Apply `changes` to the global config file (`None` removes a key) and
     /// refresh [`Self::current`]. `.fed` is not touched.
-    pub fn update_global(&mut self, changes: &[(Key, Option<Value>)]) -> Result<Arc<ResolvedConfig>, ConfigError> {
+    pub fn update_global(
+        &mut self,
+        changes: &[(Key, Option<Value>)],
+    ) -> Result<Arc<ResolvedConfig>, ConfigError> {
         let path = self.global.clone().ok_or(ConfigError::NoGlobalConfig)?;
         crate::global::write_global(&path, changes)?;
         let rc = self.read_snapshot();
@@ -84,7 +86,10 @@ impl ConfigStore {
 
     /// Current immutable snapshot (cheap clone).
     pub fn current(&self) -> Arc<ResolvedConfig> {
-        self.current.lock().unwrap_or_else(PoisonError::into_inner).clone()
+        self.current
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
+            .clone()
     }
 
     /// `Config#update` / `#set`: format (validate) **all** changes first, then
@@ -92,7 +97,10 @@ impl ConfigStore {
     /// [`crate::fed::apply_changes`] and replace it atomically with mode 0600.
     /// Nothing is written if any change is invalid. An empty `changes` writes
     /// nothing. Returns the new snapshot (re-parsed from what was written).
-    pub fn update(&mut self, changes: &[(Key, Option<Value>)]) -> Result<Arc<ResolvedConfig>, ConfigError> {
+    pub fn update(
+        &mut self,
+        changes: &[(Key, Option<Value>)],
+    ) -> Result<Arc<ResolvedConfig>, ConfigError> {
         let current = self.current();
         let lines = changes
             .iter()
@@ -114,7 +122,11 @@ impl ConfigStore {
         &mut self,
         changes: &[(Key, Option<Value>)],
     ) -> Result<Arc<ResolvedConfig>, ConfigError> {
-        let ui: Vec<(Key, Option<Value>)> = changes.iter().filter(|(k, _)| k.spec().ui).cloned().collect();
+        let ui: Vec<(Key, Option<Value>)> = changes
+            .iter()
+            .filter(|(k, _)| k.spec().ui)
+            .cloned()
+            .collect();
         if ui.is_empty() {
             return Err(ConfigError::NoValidSettings);
         }
@@ -170,7 +182,10 @@ impl ConfigStore {
         } else {
             match std::fs::read(&path) {
                 Ok(bytes) => ResolvedConfig::from_bytes(Some(&bytes), self.env.clone()),
-                Err(e) => ResolvedConfig::failed(self.env.clone(), format!("Failed to load .fed config: {e}")),
+                Err(e) => ResolvedConfig::failed(
+                    self.env.clone(),
+                    format!("Failed to load .fed config: {e}"),
+                ),
             }
         };
         self.with_global_layer(rc)
@@ -198,7 +213,9 @@ impl ConfigStore {
     fn lock(&self) -> Result<LockGuard, FsError> {
         let shared = self.vault.real_root().join(CONFIG_LOCK);
         if std::fs::symlink_metadata(&shared).is_ok_and(|m| m.file_type().is_symlink()) {
-            return Err(FsError::Io(frankmd_fs::errno::error(frankmd_fs::errno::ELOOP)));
+            return Err(FsError::Io(frankmd_fs::errno::error(
+                frankmd_fs::errno::ELOOP,
+            )));
         }
         self.vault.lock(CONFIG_LOCK, LockKind::Exclusive)
     }
@@ -221,8 +238,12 @@ impl ConfigStore {
     /// `.fed` as UTF-8 text.
     fn read_text(&self) -> Result<String, FsError> {
         let bytes = std::fs::read(self.path())?;
-        String::from_utf8(bytes)
-            .map_err(|_| FsError::Io(io::Error::new(io::ErrorKind::InvalidData, "invalid byte sequence in UTF-8")))
+        String::from_utf8(bytes).map_err(|_| {
+            FsError::Io(io::Error::new(
+                io::ErrorKind::InvalidData,
+                "invalid byte sequence in UTF-8",
+            ))
+        })
     }
 
     /// Replace `.fed` with `text` (0600) and publish its parse.
@@ -249,11 +270,14 @@ impl ConfigStore {
         let json = f(recent_raw(&fresh))?;
         // Compact JSON never contains a raw line break; anything else is not
         // ours to write into `.fed`.
-        if json.contains(['\n', '\r']) || serde_json::from_str::<serde_json::Value>(&json).is_err() {
+        if json.contains(['\n', '\r']) || serde_json::from_str::<serde_json::Value>(&json).is_err()
+        {
             return Ok(false);
         }
         let line = format!("{} = {json}", Key::RecentFiles.name());
-        Ok(self.write(&fed::apply_changes(&text, &[(Key::RecentFiles, line)])).is_ok())
+        Ok(self
+            .write(&fed::apply_changes(&text, &[(Key::RecentFiles, line)]))
+            .is_ok())
     }
 }
 

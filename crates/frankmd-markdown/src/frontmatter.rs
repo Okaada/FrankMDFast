@@ -20,12 +20,23 @@ pub struct Stripped<'a> {
 /// inherit that: [`crate::render`] computes spans from the body's true line.
 pub fn strip(content: &str) -> Stripped<'_> {
     match locate(content) {
-        Some(Located { body_start: Some(start), .. }) => Stripped {
+        Some(Located {
+            body_start: Some(start),
+            ..
+        }) => Stripped {
             content: crate::marked::js_trim_start(&content[start..]),
             frontmatter_lines: line_count(&content[..start]),
         },
-        Some(Located { body_start: None, .. }) => Stripped { content: "", frontmatter_lines: line_count(content) },
-        None => Stripped { content, frontmatter_lines: 0 },
+        Some(Located {
+            body_start: None, ..
+        }) => Stripped {
+            content: "",
+            frontmatter_lines: line_count(content),
+        },
+        None => Stripped {
+            content,
+            frontmatter_lines: 0,
+        },
     }
 }
 
@@ -44,9 +55,21 @@ fn locate(content: &str) -> Option<Located> {
             continue;
         }
         let needle = format!("\n{delim}");
-        let Some(close) = content.get(3..).and_then(|s| s.find(&needle)).map(|i| i + 3) else { continue };
-        let after = content.get(close + 4..).and_then(|s| s.find('\n')).map(|i| i + close + 4);
-        return Some(Located { close, body_start: after.map(|a| a + 1) });
+        let Some(close) = content
+            .get(3..)
+            .and_then(|s| s.find(&needle))
+            .map(|i| i + 3)
+        else {
+            continue;
+        };
+        let after = content
+            .get(close + 4..)
+            .and_then(|s| s.find('\n'))
+            .map(|i| i + close + 4);
+        return Some(Located {
+            close,
+            body_start: after.map(|a| a + 1),
+        });
     }
     None
 }
@@ -60,11 +83,20 @@ fn line_count(s: &str) -> u32 {
 /// Returns `(front matter text between the delimiter lines, untrimmed body,
 /// number of lines before the body)`.
 pub fn split(source: &str) -> (Option<&str>, &str, u32) {
-    let Some(loc) = locate(source) else { return (None, source, 0) };
-    let inner_start = source.find('\n').map_or(source.len(), |i| i + 1).min(loc.close);
+    let Some(loc) = locate(source) else {
+        return (None, source, 0);
+    };
+    let inner_start = source
+        .find('\n')
+        .map_or(source.len(), |i| i + 1)
+        .min(loc.close);
     let inner = &source[inner_start..loc.close];
     match loc.body_start {
-        Some(start) => (Some(inner), &source[start..], crate::marked::newlines(&source[..start])),
+        Some(start) => (
+            Some(inner),
+            &source[start..],
+            crate::marked::newlines(&source[..start]),
+        ),
         None => (Some(inner), "", crate::marked::newlines(source) + 1),
     }
 }

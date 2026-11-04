@@ -4,17 +4,25 @@
 mod client_picker;
 
 use client_picker::{FakeTransport, s};
-use frankmd_media::picker::{AiImageSource, JsArg, PickerCx, PickerResponse, RefImage, RequestBody};
+use frankmd_media::picker::{
+    AiImageSource, JsArg, PickerCx, PickerResponse, RefImage, RequestBody,
+};
 use serde_json::{Value, json};
 
 const NOW: i64 = 1_700_000_000_000;
 
 fn enabled() -> AiImageSource {
-    AiImageSource { enabled: true, ..AiImageSource::default() }
+    AiImageSource {
+        enabled: true,
+        ..AiImageSource::default()
+    }
 }
 
 fn generate(tr: &mut FakeTransport, src: &mut AiImageSource, prompt: &str) -> Value {
-    let mut cx = PickerCx { transport: tr, t: None };
+    let mut cx = PickerCx {
+        transport: tr,
+        t: None,
+    };
     src.generate(&mut cx, &s(prompt)).expect("ok")
 }
 
@@ -26,7 +34,11 @@ fn json_body(tr: &FakeTransport, i: usize) -> Value {
 }
 
 fn fail(tr: &mut FakeTransport, json: Value) {
-    tr.replies.push_back(PickerResponse::Reply { ok: false, status: 422, json });
+    tr.replies.push_back(PickerResponse::Reply {
+        ok: false,
+        status: 422,
+        json,
+    });
 }
 
 // port: test/javascript/image_sources/ai_images.test.js:22 "initializes with default state"
@@ -45,7 +57,10 @@ fn default_state() {
 fn reset_clears_data_and_ref() {
     let mut src = AiImageSource {
         generated_data: Some(json!({"data": "base64..."})),
-        ref_image: Some(RefImage { path: "test.jpg".into(), name: String::new() }),
+        ref_image: Some(RefImage {
+            path: "test.jpg".into(),
+            name: String::new(),
+        }),
         ..AiImageSource::default()
     };
     src.reset();
@@ -71,7 +86,10 @@ fn load_config() {
     let mut tr = FakeTransport::default();
     tr.push_json(json!({"enabled": true, "model": "imagen-3.0"}));
     let mut src = AiImageSource::default();
-    let mut cx = PickerCx { transport: &mut tr, t: None };
+    let mut cx = PickerCx {
+        transport: &mut tr,
+        t: None,
+    };
     let r = src.load_config(&mut cx).expect("ok");
     assert_eq!(tr.requests[0].method, "GET");
     assert_eq!(tr.requests[0].url, "/ai/image_config");
@@ -86,7 +104,10 @@ fn load_config_failed() {
     let mut tr = FakeTransport::default();
     fail(&mut tr, Value::Null);
     let mut src = AiImageSource::default();
-    let mut cx = PickerCx { transport: &mut tr, t: None };
+    let mut cx = PickerCx {
+        transport: &mut tr,
+        t: None,
+    };
     let _ = src.load_config(&mut cx);
     assert!(!src.enabled);
 }
@@ -95,9 +116,13 @@ fn load_config_failed() {
 #[test]
 fn load_config_network_error() {
     let mut tr = FakeTransport::default();
-    tr.replies.push_back(PickerResponse::NetworkError("Network error".into()));
+    tr.replies
+        .push_back(PickerResponse::NetworkError("Network error".into()));
     let mut src = AiImageSource::default();
-    let mut cx = PickerCx { transport: &mut tr, t: None };
+    let mut cx = PickerCx {
+        transport: &mut tr,
+        t: None,
+    };
     let _ = src.load_config(&mut cx);
     assert!(!src.enabled);
 }
@@ -107,7 +132,10 @@ fn load_config_network_error() {
 fn generate_empty_prompt() {
     let mut tr = FakeTransport::default();
     let r = generate(&mut tr, &mut AiImageSource::default(), "");
-    assert_eq!(r["error"], "Please enter a prompt describing the image you want to generate");
+    assert_eq!(
+        r["error"],
+        "Please enter a prompt describing the image you want to generate"
+    );
 }
 
 // port: test/javascript/image_sources/ai_images.test.js:105 "returns error when not enabled"
@@ -115,7 +143,10 @@ fn generate_empty_prompt() {
 fn generate_not_enabled() {
     let mut tr = FakeTransport::default();
     let r = generate(&mut tr, &mut AiImageSource::default(), "a cat");
-    assert_eq!(r["error"], "AI image generation is not configured. Please add your Gemini API key to .fed");
+    assert_eq!(
+        r["error"],
+        "AI image generation is not configured. Please add your Gemini API key to .fed"
+    );
     assert!(tr.requests.is_empty());
 }
 
@@ -142,7 +173,10 @@ fn generate_includes_reference() {
     let mut tr = FakeTransport::default();
     tr.push_json(json!({"data": "base64", "mime_type": "image/png"}));
     let mut src = enabled();
-    src.ref_image = Some(RefImage { path: "ref/photo.jpg".into(), name: "photo.jpg".into() });
+    src.ref_image = Some(RefImage {
+        path: "ref/photo.jpg".into(),
+        name: "photo.jpg".into(),
+    });
     generate(&mut tr, &mut src, "a cat like this");
     assert_eq!(json_body(&tr, 0)["reference_image_path"], "ref/photo.jpg");
 }
@@ -161,7 +195,10 @@ fn generate_url_response() {
 fn generate_api_error() {
     let mut tr = FakeTransport::default();
     tr.push_json(json!({"error": "Content policy violation"}));
-    assert_eq!(generate(&mut tr, &mut enabled(), "bad prompt")["error"], "Content policy violation");
+    assert_eq!(
+        generate(&mut tr, &mut enabled(), "bad prompt")["error"],
+        "Content policy violation"
+    );
 }
 
 // port: test/javascript/image_sources/ai_images.test.js:186 "handles abort"
@@ -169,15 +206,22 @@ fn generate_api_error() {
 fn generate_abort() {
     let mut tr = FakeTransport::default();
     tr.replies.push_back(PickerResponse::Aborted);
-    assert_eq!(generate(&mut tr, &mut enabled(), "a cat")["cancelled"], true);
+    assert_eq!(
+        generate(&mut tr, &mut enabled(), "a cat")["cancelled"],
+        true
+    );
 }
 
 // port: test/javascript/image_sources/ai_images.test.js:199 "handles network error"
 #[test]
 fn generate_network_error() {
     let mut tr = FakeTransport::default();
-    tr.replies.push_back(PickerResponse::NetworkError("Network error".into()));
-    assert_eq!(generate(&mut tr, &mut enabled(), "a cat")["error"], "Failed to generate image. Please try again.");
+    tr.replies
+        .push_back(PickerResponse::NetworkError("Network error".into()));
+    assert_eq!(
+        generate(&mut tr, &mut enabled(), "a cat")["error"],
+        "Failed to generate image. Please try again."
+    );
 }
 
 // port: test/javascript/image_sources/ai_images.test.js:209 "clears abort controller after completion"
@@ -210,13 +254,25 @@ fn abort_with_no_pending_request() {
 fn set_ref_image() {
     let mut src = AiImageSource::default();
     src.set_ref_image("/images/ref.jpg", "ref.jpg");
-    assert_eq!(src.ref_image, Some(RefImage { path: "/images/ref.jpg".into(), name: "ref.jpg".into() }));
+    assert_eq!(
+        src.ref_image,
+        Some(RefImage {
+            path: "/images/ref.jpg".into(),
+            name: "ref.jpg".into()
+        })
+    );
 }
 
 // port: test/javascript/image_sources/ai_images.test.js:247 "clears reference image"
 #[test]
 fn clear_ref_image() {
-    let mut src = AiImageSource { ref_image: Some(RefImage { path: "test.jpg".into(), name: "test.jpg".into() }), ..AiImageSource::default() };
+    let mut src = AiImageSource {
+        ref_image: Some(RefImage {
+            path: "test.jpg".into(),
+            name: "test.jpg".into(),
+        }),
+        ..AiImageSource::default()
+    };
     src.clear_ref_image();
     assert_eq!(src.ref_image, None);
 }
@@ -226,8 +282,13 @@ fn clear_ref_image() {
 fn load_ref_images() {
     let mut tr = FakeTransport::default();
     tr.push_json(json!([{"path": "a.jpg", "name": "a.jpg"}]));
-    let mut cx = PickerCx { transport: &mut tr, t: None };
-    let r = AiImageSource::default().load_ref_images(&mut cx, &JsArg::Undefined).expect("ok");
+    let mut cx = PickerCx {
+        transport: &mut tr,
+        t: None,
+    };
+    let r = AiImageSource::default()
+        .load_ref_images(&mut cx, &JsArg::Undefined)
+        .expect("ok");
     assert_eq!(r, json!([{"path": "a.jpg", "name": "a.jpg"}]));
     assert_eq!(tr.requests[0].url, "/images");
 }
@@ -237,8 +298,13 @@ fn load_ref_images() {
 fn load_ref_images_with_search() {
     let mut tr = FakeTransport::default();
     tr.push_json(json!([]));
-    let mut cx = PickerCx { transport: &mut tr, t: None };
-    AiImageSource::default().load_ref_images(&mut cx, &s("cat")).expect("ok");
+    let mut cx = PickerCx {
+        transport: &mut tr,
+        t: None,
+    };
+    AiImageSource::default()
+        .load_ref_images(&mut cx, &s("cat"))
+        .expect("ok");
     assert_eq!(tr.requests[0].method, "GET");
     assert_eq!(tr.requests[0].url, "/images?search=cat");
 }
@@ -248,8 +314,13 @@ fn load_ref_images_with_search() {
 fn load_ref_images_error() {
     let mut tr = FakeTransport::default();
     fail(&mut tr, Value::Null);
-    let mut cx = PickerCx { transport: &mut tr, t: None };
-    let r = AiImageSource::default().load_ref_images(&mut cx, &JsArg::Undefined).expect("ok");
+    let mut cx = PickerCx {
+        transport: &mut tr,
+        t: None,
+    };
+    let r = AiImageSource::default()
+        .load_ref_images(&mut cx, &JsArg::Undefined)
+        .expect("ok");
     assert_eq!(r["error"], "Error loading images");
 }
 
@@ -262,7 +333,8 @@ fn ref_grid_empty() {
 // port: test/javascript/image_sources/ai_images.test.js:306 "renders image buttons"
 #[test]
 fn ref_grid_items() {
-    let items = AiImageSource::default().ref_grid_items(&[json!({"path": "photos/ref.jpg", "name": "ref.jpg"})]);
+    let items = AiImageSource::default()
+        .ref_grid_items(&[json!({"path": "photos/ref.jpg", "name": "ref.jpg"})]);
     assert_eq!(items[0].path, "photos/ref.jpg");
     assert_eq!(items[0].name, "ref.jpg");
     assert_eq!(items[0].preview_url, "/images/preview/photos/ref.jpg");
@@ -271,16 +343,31 @@ fn ref_grid_items() {
 // port: test/javascript/image_sources/ai_images.test.js:319 "marks selected reference image"
 #[test]
 fn ref_grid_marks_selected() {
-    let src = AiImageSource { ref_image: Some(RefImage { path: "photos/a.jpg".into(), name: String::new() }), ..AiImageSource::default() };
-    let items = src.ref_grid_items(&[json!({"path": "photos/a.jpg", "name": "a.jpg"}), json!({"path": "photos/b.jpg", "name": "b.jpg"})]);
+    let src = AiImageSource {
+        ref_image: Some(RefImage {
+            path: "photos/a.jpg".into(),
+            name: String::new(),
+        }),
+        ..AiImageSource::default()
+    };
+    let items = src.ref_grid_items(&[
+        json!({"path": "photos/a.jpg", "name": "a.jpg"}),
+        json!({"path": "photos/b.jpg", "name": "b.jpg"}),
+    ]);
     assert!(items[0].selected);
     assert!(!items[1].selected);
 }
 
 // skipped (C, HTML escaping): ai_images.test.js:332 "escapes HTML"
 
-fn save(tr: &mut FakeTransport, src: &AiImageSource) -> Result<Value, frankmd_media::picker::Thrown> {
-    let mut cx = PickerCx { transport: tr, t: None };
+fn save(
+    tr: &mut FakeTransport,
+    src: &AiImageSource,
+) -> Result<Value, frankmd_media::picker::Thrown> {
+    let mut cx = PickerCx {
+        transport: tr,
+        t: None,
+    };
     src.save(&mut cx, None, NOW)
 }
 
@@ -288,11 +375,17 @@ fn save(tr: &mut FakeTransport, src: &AiImageSource) -> Result<Value, frankmd_me
 #[test]
 fn save_without_data() {
     let mut tr = FakeTransport::default();
-    assert_eq!(save(&mut tr, &AiImageSource::default()).expect("ok")["error"], "No generated image data available");
+    assert_eq!(
+        save(&mut tr, &AiImageSource::default()).expect("ok")["error"],
+        "No generated image data available"
+    );
 }
 
 fn with_data(v: Value) -> AiImageSource {
-    AiImageSource { generated_data: Some(v), ..AiImageSource::default() }
+    AiImageSource {
+        generated_data: Some(v),
+        ..AiImageSource::default()
+    }
 }
 
 // port: test/javascript/image_sources/ai_images.test.js:353 "saves base64 image locally"
@@ -300,9 +393,16 @@ fn with_data(v: Value) -> AiImageSource {
 fn save_base64_locally() {
     let mut tr = FakeTransport::default();
     tr.push_json(json!({"url": "/images/ai_123.png"}));
-    let r = save(&mut tr, &with_data(json!({"data": "base64imagedata", "mime_type": "image/png"}))).expect("ok");
+    let r = save(
+        &mut tr,
+        &with_data(json!({"data": "base64imagedata", "mime_type": "image/png"})),
+    )
+    .expect("ok");
     assert_eq!(tr.requests[0].url, "/images/upload_base64");
-    assert_eq!(json_body(&tr, 0), json!({"data": "base64imagedata", "mime_type": "image/png", "filename": format!("ai_{NOW}.png")}));
+    assert_eq!(
+        json_body(&tr, 0),
+        json!({"data": "base64imagedata", "mime_type": "image/png", "filename": format!("ai_{NOW}.png")})
+    );
     assert_eq!(r["url"], "/images/ai_123.png");
 }
 
@@ -311,7 +411,11 @@ fn save_base64_locally() {
 fn save_base64_never_sends_upload_to_s3_flag() {
     let mut tr = FakeTransport::default();
     tr.push_json(json!({"url": "https://s3.example.com/ai_123.png"}));
-    let r = save(&mut tr, &with_data(json!({"data": "base64imagedata", "mime_type": "image/png"}))).expect("ok");
+    let r = save(
+        &mut tr,
+        &with_data(json!({"data": "base64imagedata", "mime_type": "image/png"})),
+    )
+    .expect("ok");
     assert!(json_body(&tr, 0).get("upload_to_s3").is_none());
     assert_eq!(r["url"], "https://s3.example.com/ai_123.png");
 }
@@ -321,9 +425,16 @@ fn save_base64_never_sends_upload_to_s3_flag() {
 fn save_url_imports() {
     let mut tr = FakeTransport::default();
     tr.push_json(json!({"url": "images/generated.jpg"}));
-    let r = save(&mut tr, &with_data(json!({"url": "https://ai-service.com/generated.jpg"}))).expect("ok");
+    let r = save(
+        &mut tr,
+        &with_data(json!({"url": "https://ai-service.com/generated.jpg"})),
+    )
+    .expect("ok");
     assert_eq!(tr.requests[0].url, "/images/import");
-    assert_eq!(json_body(&tr, 0), json!({"url": "https://ai-service.com/generated.jpg"}));
+    assert_eq!(
+        json_body(&tr, 0),
+        json!({"url": "https://ai-service.com/generated.jpg"})
+    );
     assert_eq!(r["url"], "images/generated.jpg");
 }
 
@@ -332,10 +443,17 @@ fn save_url_imports() {
 fn save_url_with_null_data_imports() {
     let mut tr = FakeTransport::default();
     tr.push_json(json!({"url": "https://s3.example.com/ai_123.jpg"}));
-    let r = save(&mut tr, &with_data(json!({"url": "https://ai-service.com/generated.jpg", "data": null}))).expect("ok");
+    let r = save(
+        &mut tr,
+        &with_data(json!({"url": "https://ai-service.com/generated.jpg", "data": null})),
+    )
+    .expect("ok");
     assert_eq!(tr.requests[0].method, "POST");
     assert_eq!(tr.requests[0].url, "/images/import");
-    assert_eq!(json_body(&tr, 0), json!({"url": "https://ai-service.com/generated.jpg"}));
+    assert_eq!(
+        json_body(&tr, 0),
+        json!({"url": "https://ai-service.com/generated.jpg"})
+    );
     assert_eq!(r["url"], "https://s3.example.com/ai_123.jpg");
 }
 
@@ -344,7 +462,15 @@ fn save_url_with_null_data_imports() {
 fn save_base64_error_throws() {
     let mut tr = FakeTransport::default();
     fail(&mut tr, json!({"error": "Disk full"}));
-    assert_eq!(save(&mut tr, &with_data(json!({"data": "base64", "mime_type": "image/png"}))).expect_err("throws").message, "Disk full");
+    assert_eq!(
+        save(
+            &mut tr,
+            &with_data(json!({"data": "base64", "mime_type": "image/png"}))
+        )
+        .expect_err("throws")
+        .message,
+        "Disk full"
+    );
 }
 
 // port: test/javascript/image_sources/ai_images.test.js:442 "handles save error for S3 URL upload"
@@ -352,5 +478,13 @@ fn save_base64_error_throws() {
 fn save_url_error_throws() {
     let mut tr = FakeTransport::default();
     fail(&mut tr, json!({"error": "S3 error"}));
-    assert_eq!(save(&mut tr, &with_data(json!({"url": "https://example.com/img.jpg"}))).expect_err("throws").message, "S3 error");
+    assert_eq!(
+        save(
+            &mut tr,
+            &with_data(json!({"url": "https://example.com/img.jpg"}))
+        )
+        .expect_err("throws")
+        .message,
+        "S3 error"
+    );
 }

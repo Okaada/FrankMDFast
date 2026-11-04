@@ -26,11 +26,19 @@ pub fn escape_html_string(text: Option<&str>) -> String {
 /// (case-insensitive) `http:`, `https:`, `data:image/`, `blob:` prefixes and
 /// root-relative paths that are not protocol-relative (`//`, `/\`).
 pub fn is_safe_image_url(url: &str) -> bool {
-    if url.chars().any(|c| is_js_whitespace(c) || c.is_ascii_control()) {
+    if url
+        .chars()
+        .any(|c| is_js_whitespace(c) || c.is_ascii_control())
+    {
         return false;
     }
-    let lower_prefix = |p: &str| url.get(..p.len()).is_some_and(|head| head.eq_ignore_ascii_case(p));
-    ["http:", "https:", "data:image/", "blob:"].into_iter().any(lower_prefix)
+    let lower_prefix = |p: &str| {
+        url.get(..p.len())
+            .is_some_and(|head| head.eq_ignore_ascii_case(p))
+    };
+    ["http:", "https:", "data:image/", "blob:"]
+        .into_iter()
+        .any(lower_prefix)
         || (url.starts_with('/') && !url.starts_with("//") && !url.starts_with("/\\"))
 }
 
@@ -49,7 +57,10 @@ pub fn fuzzy_score(s: &str, query: &str) -> u32 {
     let mut consecutive_bonus: i64 = 0;
 
     for &unit in &needle {
-        let Some(found) = hay.get(from..).and_then(|rest| rest.iter().position(|&u| u == unit)).map(|p| p + from)
+        let Some(found) = hay
+            .get(from..)
+            .and_then(|rest| rest.iter().position(|&u| u == unit))
+            .map(|p| p + from)
         else {
             return 0;
         };
@@ -85,7 +96,11 @@ pub fn levenshtein_distance(a: &str, b: &str) -> usize {
         let mut row = Vec::with_capacity(a.len() + 1);
         row.push(i + 1);
         for (j, &au) in a.iter().enumerate() {
-            let value = if bu == au { prev[j] } else { 1 + prev[j].min(row[j]).min(prev[j + 1]) };
+            let value = if bu == au {
+                prev[j]
+            } else {
+                1 + prev[j].min(row[j]).min(prev[j + 1])
+            };
             row.push(value);
         }
         prev = row;

@@ -25,7 +25,11 @@ impl TrustedHttpClient {
 }
 
 impl HttpClient for TrustedHttpClient {
-    fn http_connector(&self, _settings: &HttpConnectorSettings, _components: &RuntimeComponents) -> SharedHttpConnector {
+    fn http_connector(
+        &self,
+        _settings: &HttpConnectorSettings,
+        _components: &RuntimeComponents,
+    ) -> SharedHttpConnector {
         SharedHttpConnector::new(self.clone())
     }
 }
@@ -38,13 +42,22 @@ impl HttpConnector for TrustedHttpClient {
 }
 
 /// Perform one request.
-async fn send(http: &frankmd_net::TrustedClient, request: HttpRequest) -> Result<HttpResponse, ConnectorError> {
-    let method = reqwest::Method::from_bytes(request.method().as_bytes()).map_err(|e| ConnectorError::user(e.into()))?;
+async fn send(
+    http: &frankmd_net::TrustedClient,
+    request: HttpRequest,
+) -> Result<HttpResponse, ConnectorError> {
+    let method = reqwest::Method::from_bytes(request.method().as_bytes())
+        .map_err(|e| ConnectorError::user(e.into()))?;
     let Some(body) = request.body().bytes() else {
         // Every S3 call FrankMD makes has an in-memory body.
-        return Err(ConnectorError::user("streaming request bodies are not supported".into()));
+        return Err(ConnectorError::user(
+            "streaming request bodies are not supported".into(),
+        ));
     };
-    let mut builder = http.reqwest().request(method, request.uri()).body(body.to_vec());
+    let mut builder = http
+        .reqwest()
+        .request(method, request.uri())
+        .body(body.to_vec());
     for (name, value) in request.headers() {
         builder = builder.header(name, value);
     }
@@ -55,13 +68,17 @@ async fn send(http: &frankmd_net::TrustedClient, request: HttpRequest) -> Result
             ConnectorError::io(e.without_url().into())
         }
     })?;
-    let status = StatusCode::try_from(response.status().as_u16()).map_err(|e| ConnectorError::other(e.into(), None))?;
+    let status = StatusCode::try_from(response.status().as_u16())
+        .map_err(|e| ConnectorError::other(e.into(), None))?;
     let headers: Vec<(String, String)> = response
         .headers()
         .iter()
         .filter_map(|(k, v)| Some((k.as_str().to_owned(), v.to_str().ok()?.to_owned())))
         .collect();
-    let bytes = response.bytes().await.map_err(|e| ConnectorError::io(e.without_url().into()))?;
+    let bytes = response
+        .bytes()
+        .await
+        .map_err(|e| ConnectorError::io(e.without_url().into()))?;
     let mut out = HttpResponse::new(status, SdkBody::from(bytes.to_vec()));
     for (name, value) in headers {
         out.headers_mut().append(name, value);

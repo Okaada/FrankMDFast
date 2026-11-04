@@ -81,7 +81,11 @@ fn configured() -> Configured {
     c.images_path = Some(server_dir.clone());
     c.video_upload_extensions = c.image_upload_extensions.clone();
     let api = MediaApi::new(env_for(c, None).1);
-    Configured { notes, server_dir, api }
+    Configured {
+        notes,
+        server_dir,
+        api,
+    }
 }
 
 impl Configured {
@@ -140,7 +144,10 @@ fn index_honors_limit_and_offset_params() {
 fn index_clamps_an_oversized_limit_and_a_negative_offset() {
     let f = configured();
     f.image("photo.jpg");
-    let idx = f.api.index(None, &Param::Int(500), &Param::Int(-10)).unwrap();
+    let idx = f
+        .api
+        .index(None, &Param::Int(500), &Param::Int(-10))
+        .unwrap();
     assert_eq!(idx.limit, 100);
     assert_eq!(idx.offset, 0);
 }
@@ -150,13 +157,23 @@ fn index_clamps_an_oversized_limit_and_a_negative_offset() {
 fn preview_serves_image_file() {
     let f = configured();
     let p = f.image("test.png");
-    assert_eq!(f.api.preview("test.png").unwrap().canonicalize().unwrap(), p.canonicalize().unwrap());
+    assert_eq!(
+        f.api.preview("test.png").unwrap().canonicalize().unwrap(),
+        p.canonicalize().unwrap()
+    );
 }
 
 // port: test/controllers/images_controller_test.rb:184 "preview returns 404 for non-existent image"
 #[test]
 fn preview_returns_404_for_non_existent_image() {
-    assert_eq!(configured().api.preview("nonexistent.jpg").unwrap_err().status, ApiStatus::NotFound);
+    assert_eq!(
+        configured()
+            .api
+            .preview("nonexistent.jpg")
+            .unwrap_err()
+            .status,
+        ApiStatus::NotFound
+    );
 }
 
 // port: test/controllers/images_controller_test.rb:189 "destroy deletes an image and returns success"
@@ -180,11 +197,23 @@ fn destroy_returns_422_for_a_non_existent_image() {
 #[tokio::test]
 async fn upload_saves_file_to_notes_images_directory() {
     let f = configured();
-    let url = f.api.upload(Some(Upload::new("test_upload.png", PNG_1X1)), &nil(), &nil(), None).await.unwrap();
+    let url = f
+        .api
+        .upload(
+            Some(Upload::new("test_upload.png", PNG_1X1)),
+            &nil(),
+            &nil(),
+            None,
+        )
+        .await
+        .unwrap();
     assert!(url.starts_with("images/"));
     assert!(url.contains("test_upload"));
     assert!(f.notes.path().join(&url).is_file());
-    assert!(!f.server_dir.join(&url).exists(), "saved to <notes>/images, not images_path");
+    assert!(
+        !f.server_dir.join(&url).exists(),
+        "saved to <notes>/images, not images_path"
+    );
 }
 
 // port: test/controllers/images_controller_test.rb:237 "upload rejects a disallowed extension and stores nothing (stored-XSS guard)"
@@ -193,35 +222,65 @@ async fn upload_rejects_a_disallowed_extension_and_stores_nothing() {
     let f = configured();
     let err = f
         .api
-        .upload(Some(Upload::new("evil.html", "<script>alert(1)</script>")), &nil(), &nil(), None)
+        .upload(
+            Some(Upload::new("evil.html", "<script>alert(1)</script>")),
+            &nil(),
+            &nil(),
+            None,
+        )
         .await
         .unwrap_err();
     assert_eq!(err.status, ApiStatus::Unprocessable);
     assert!(err.message.as_str().contains("not an accepted image type"));
     let html: Vec<_> = std::fs::read_dir(f.notes.path().join("images"))
-        .map(|rd| rd.filter_map(Result::ok).filter(|e| e.path().extension().is_some_and(|x| x == "html")).collect())
+        .map(|rd| {
+            rd.filter_map(Result::ok)
+                .filter(|e| e.path().extension().is_some_and(|x| x == "html"))
+                .collect()
+        })
         .unwrap_or_default();
-    assert!(html.is_empty(), "the rejected HTML upload must not be stored");
+    assert!(
+        html.is_empty(),
+        "the rejected HTML upload must not be stored"
+    );
 }
 
 // port: test/controllers/images_controller_test.rb:263 "upload returns error for S3 when not configured"
 #[tokio::test]
 async fn upload_returns_error_for_s3_when_not_configured() {
     let f = configured();
-    let err = f.api.upload(Some(Upload::new("test.png", PNG_1X1)), &nil(), &Param::str("true"), None).await.unwrap_err();
+    let err = f
+        .api
+        .upload(
+            Some(Upload::new("test.png", PNG_1X1)),
+            &nil(),
+            &Param::str("true"),
+            None,
+        )
+        .await
+        .unwrap_err();
     assert_eq!(err.status, ApiStatus::Unprocessable);
     assert!(err.message.as_str().contains("conflicts"));
 }
 
 fn b64_req(data: String, mime: &str, filename: &str) -> Base64Upload {
-    Base64Upload { data, mime_type: mime.into(), filename: filename.into(), ..Default::default() }
+    Base64Upload {
+        data,
+        mime_type: mime.into(),
+        filename: filename.into(),
+        ..Default::default()
+    }
 }
 
 // port: test/controllers/images_controller_test.rb:286 "upload_base64 saves base64 image data to notes/images"
 #[tokio::test]
 async fn upload_base64_saves_base64_image_data_to_notes_images() {
     let f = configured();
-    let url = f.api.upload_base64(&b64_req(b64(&PNG_1X1), "image/png", "ai_test.png")).await.unwrap();
+    let url = f
+        .api
+        .upload_base64(&b64_req(b64(&PNG_1X1), "image/png", "ai_test.png"))
+        .await
+        .unwrap();
     assert!(url.starts_with("images/"));
     assert!(url.contains("ai_test"));
 }
@@ -229,7 +288,11 @@ async fn upload_base64_saves_base64_image_data_to_notes_images() {
 // port: test/controllers/images_controller_test.rb:316 "upload_base64 returns error when no data provided"
 #[tokio::test]
 async fn upload_base64_returns_error_when_no_data_provided() {
-    let err = configured().api.upload_base64(&b64_req(String::new(), "", "")).await.unwrap_err();
+    let err = configured()
+        .api
+        .upload_base64(&b64_req(String::new(), "", ""))
+        .await
+        .unwrap_err();
     assert_eq!(err.status, ApiStatus::BadRequest);
     assert_eq!(err.message, ApiMessage::Key("errors.no_image_data"));
 }
@@ -237,7 +300,11 @@ async fn upload_base64_returns_error_when_no_data_provided() {
 // port: test/controllers/images_controller_test.rb:324 "upload_base64 returns error for invalid base64"
 #[tokio::test]
 async fn upload_base64_returns_error_for_invalid_base64() {
-    let err = configured().api.upload_base64(&b64_req("not valid base64!!!".into(), "image/png", "")).await.unwrap_err();
+    let err = configured()
+        .api
+        .upload_base64(&b64_req("not valid base64!!!".into(), "image/png", ""))
+        .await
+        .unwrap_err();
     assert_eq!(err.status, ApiStatus::Unprocessable);
     assert!(err.message.as_str().contains("Invalid base64"));
 }
@@ -245,7 +312,11 @@ async fn upload_base64_returns_error_for_invalid_base64() {
 // port: test/controllers/images_controller_test.rb:335 "upload_base64 generates filename when not provided"
 #[tokio::test]
 async fn upload_base64_generates_filename_when_not_provided() {
-    let url = configured().api.upload_base64(&b64_req(b64(&PNG_1X1), "image/png", "")).await.unwrap();
+    let url = configured()
+        .api
+        .upload_base64(&b64_req(b64(&PNG_1X1), "image/png", ""))
+        .await
+        .unwrap();
     assert!(url.starts_with("images/"));
     assert!(url.contains("ai_generated_"));
 }
@@ -265,7 +336,11 @@ impl WithS3 {
         std::fs::create_dir_all(&server_dir).unwrap();
         let mock = MockServer::start().await;
         s3_put_ok(&mock, "test-bucket").await;
-        Self { _notes: notes, server_dir, mock }
+        Self {
+            _notes: notes,
+            server_dir,
+            mock,
+        }
     }
 
     /// provider s3, `test-key`/`test-secret`, bucket test-bucket, region us-west-2.
@@ -294,8 +369,15 @@ impl WithS3 {
 async fn upload_to_s3_uploads_local_image_and_returns_s3_url() {
     let f = WithS3::new().await;
     write(&f.server_dir, "s3_test.png", &PNG_1X1);
-    let url = f.api(f.config()).upload_to_s3("s3_test.png", &nil(), None).await.unwrap();
-    assert_match(r"^https://test-bucket\.s3\.us-west-2\.amazonaws\.com/frankmd/", &url);
+    let url = f
+        .api(f.config())
+        .upload_to_s3("s3_test.png", &nil(), None)
+        .await
+        .unwrap();
+    assert_match(
+        r"^https://test-bucket\.s3\.us-west-2\.amazonaws\.com/frankmd/",
+        &url,
+    );
 }
 
 // port: test/controllers/images_controller_test.rb:425 "upload_to_s3 returns error when S3 not configured"
@@ -304,7 +386,11 @@ async fn upload_to_s3_returns_error_when_s3_not_configured() {
     let f = WithS3::new().await;
     let mut c = f.config();
     c.s3.access_key_id = None;
-    let err = f.api_without_recovery(c).upload_to_s3("test.png", &nil(), None).await.unwrap_err();
+    let err = f
+        .api_without_recovery(c)
+        .upload_to_s3("test.png", &nil(), None)
+        .await
+        .unwrap_err();
     assert_eq!(err.status, ApiStatus::Unprocessable);
     assert_eq!(err.message, ApiMessage::Key("errors.s3_not_configured")); // en: "S3 not configured"
     assert!(!err.media_storage_fallback);
@@ -315,15 +401,26 @@ async fn upload_to_s3_returns_error_when_s3_not_configured() {
 async fn upload_external_to_s3_downloads_image_and_uploads_to_s3() {
     let f = WithS3::new().await;
     external(&f.mock, "/photo.jpg", &sample_media(".jpg"), "image/jpeg").await; // security: real JPEG bytes
-    let url = f.api(f.config()).upload_external_to_s3("http://example.com/photo.jpg", &nil(), None).await.unwrap();
-    assert_match(r"^https://test-bucket\.s3\.us-west-2\.amazonaws\.com/frankmd/", &url);
+    let url = f
+        .api(f.config())
+        .upload_external_to_s3("http://example.com/photo.jpg", &nil(), None)
+        .await
+        .unwrap();
+    assert_match(
+        r"^https://test-bucket\.s3\.us-west-2\.amazonaws\.com/frankmd/",
+        &url,
+    );
 }
 
 // port: test/controllers/images_controller_test.rb:450 "upload_external_to_s3 returns error when URL is blank"
 #[tokio::test]
 async fn upload_external_to_s3_returns_error_when_url_is_blank() {
     let f = WithS3::new().await;
-    let err = f.api(f.config()).upload_external_to_s3("", &nil(), None).await.unwrap_err();
+    let err = f
+        .api(f.config())
+        .upload_external_to_s3("", &nil(), None)
+        .await
+        .unwrap_err();
     assert_eq!(err.status, ApiStatus::BadRequest);
     assert_eq!(err.message, ApiMessage::Key("errors.url_required"));
 }
@@ -334,7 +431,11 @@ async fn upload_external_to_s3_returns_error_when_s3_not_configured() {
     let f = WithS3::new().await;
     let mut c = f.config();
     c.s3.access_key_id = None;
-    let err = f.api_without_recovery(c).upload_external_to_s3("http://example.com/photo.jpg", &nil(), None).await.unwrap_err();
+    let err = f
+        .api_without_recovery(c)
+        .upload_external_to_s3("http://example.com/photo.jpg", &nil(), None)
+        .await
+        .unwrap_err();
     assert_eq!(err.status, ApiStatus::Unprocessable);
     assert_eq!(err.message, ApiMessage::Key("errors.s3_not_configured"));
     assert!(!err.media_storage_fallback);
@@ -407,5 +508,8 @@ fn index_returns_404_when_images_disabled() {
 // port: test/controllers/images_controller_test.rb:674 "preview returns 404 when images disabled"
 #[test]
 fn preview_returns_404_when_images_disabled() {
-    assert_eq!(disabled().1.preview("test.jpg").unwrap_err().status, ApiStatus::NotFound);
+    assert_eq!(
+        disabled().1.preview("test.jpg").unwrap_err().status,
+        ApiStatus::NotFound
+    );
 }

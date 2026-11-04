@@ -12,12 +12,21 @@ fn n(v: f64) -> JsArg {
 }
 
 fn load(tr: &mut FakeTransport, search: JsArg, limit: f64, offset: f64) -> Value {
-    let mut cx = PickerCx { transport: tr, t: None };
-    LocalImageSource::default().load(&mut cx, &search, &n(limit), &n(offset)).expect("ok")
+    let mut cx = PickerCx {
+        transport: tr,
+        t: None,
+    };
+    LocalImageSource::default()
+        .load(&mut cx, &search, &n(limit), &n(offset))
+        .expect("ok")
 }
 
 fn fail(tr: &mut FakeTransport, json: Value) {
-    tr.replies.push_back(PickerResponse::Reply { ok: false, status: 422, json });
+    tr.replies.push_back(PickerResponse::Reply {
+        ok: false,
+        status: 422,
+        json,
+    });
 }
 
 // port: test/javascript/image_sources/local_images.test.js:22 "initializes with null selectedPath"
@@ -29,7 +38,9 @@ fn initializes_without_selection() {
 // port: test/javascript/image_sources/local_images.test.js:28 "clears selectedPath"
 #[test]
 fn reset_clears_selection() {
-    let mut src = LocalImageSource { selected_path: Some("/images/photo.jpg".into()) };
+    let mut src = LocalImageSource {
+        selected_path: Some("/images/photo.jpg".into()),
+    };
     src.reset();
     assert_eq!(src.selected_path, None);
 }
@@ -52,7 +63,10 @@ fn load_with_search() {
     let mut tr = FakeTransport::default();
     tr.push_json(json!({"images": [], "total": 0, "limit": 10, "offset": 0}));
     load(&mut tr, s("sunset"), 10.0, 0.0);
-    assert_eq!(tr.requests[0].url, "/images?search=sunset&limit=10&offset=0");
+    assert_eq!(
+        tr.requests[0].url,
+        "/images?search=sunset&limit=10&offset=0"
+    );
 }
 
 // port: test/javascript/image_sources/local_images.test.js:75 "encodes search query"
@@ -61,7 +75,10 @@ fn load_encodes_search() {
     let mut tr = FakeTransport::default();
     tr.push_json(json!({"images": []}));
     load(&mut tr, s("cats & dogs"), 10.0, 0.0);
-    assert_eq!(tr.requests[0].url, "/images?search=cats%20%26%20dogs&limit=10&offset=0");
+    assert_eq!(
+        tr.requests[0].url,
+        "/images?search=cats%20%26%20dogs&limit=10&offset=0"
+    );
 }
 
 // port: test/javascript/image_sources/local_images.test.js:89 "passes custom limit and offset as query params"
@@ -78,15 +95,22 @@ fn load_custom_paging() {
 fn load_failed_response() {
     let mut tr = FakeTransport::default();
     fail(&mut tr, Value::Null);
-    assert_eq!(load(&mut tr, JsArg::Undefined, 10.0, 0.0)["error"], "Error loading images");
+    assert_eq!(
+        load(&mut tr, JsArg::Undefined, 10.0, 0.0)["error"],
+        "Error loading images"
+    );
 }
 
 // port: test/javascript/image_sources/local_images.test.js:113 "handles network error"
 #[test]
 fn load_network_error() {
     let mut tr = FakeTransport::default();
-    tr.replies.push_back(PickerResponse::NetworkError("Network error".into()));
-    assert_eq!(load(&mut tr, JsArg::Undefined, 10.0, 0.0)["error"], "Error loading images");
+    tr.replies
+        .push_back(PickerResponse::NetworkError("Network error".into()));
+    assert_eq!(
+        load(&mut tr, JsArg::Undefined, 10.0, 0.0)["error"],
+        "Error loading images"
+    );
 }
 
 // port: test/javascript/image_sources/local_images.test.js:123 "renders empty state when no images"
@@ -105,7 +129,9 @@ fn grid_null_is_empty() {
 // port: test/javascript/image_sources/local_images.test.js:140 "renders image grid items"
 #[test]
 fn grid_items() {
-    let items = LocalImageSource::default().grid_items(&[json!({"path": "photos/cat.jpg", "name": "cat.jpg", "width": 800, "height": 600})]);
+    let items = LocalImageSource::default().grid_items(&[
+        json!({"path": "photos/cat.jpg", "name": "cat.jpg", "width": 800, "height": 600}),
+    ]);
     assert_eq!(items[0].path, "photos/cat.jpg");
     assert_eq!(items[0].name, "cat.jpg");
     assert_eq!(items[0].dimensions.as_deref(), Some("800x600"));
@@ -114,8 +140,13 @@ fn grid_items() {
 // port: test/javascript/image_sources/local_images.test.js:155 "marks selected image"
 #[test]
 fn grid_marks_selected() {
-    let src = LocalImageSource { selected_path: Some("photos/cat.jpg".into()) };
-    let items = src.grid_items(&[json!({"path": "photos/cat.jpg", "name": "cat.jpg"}), json!({"path": "photos/dog.jpg", "name": "dog.jpg"})]);
+    let src = LocalImageSource {
+        selected_path: Some("photos/cat.jpg".into()),
+    };
+    let items = src.grid_items(&[
+        json!({"path": "photos/cat.jpg", "name": "cat.jpg"}),
+        json!({"path": "photos/dog.jpg", "name": "dog.jpg"}),
+    ]);
     assert!(items[0].selected);
     assert!(!items[1].selected);
 }
@@ -123,7 +154,8 @@ fn grid_marks_selected() {
 // port: test/javascript/image_sources/local_images.test.js:168 "generates preview URL with encoded path"
 #[test]
 fn grid_preview_url_encoded() {
-    let items = LocalImageSource::default().grid_items(&[json!({"path": "photos/my cat.jpg", "name": "my cat.jpg"})]);
+    let items = LocalImageSource::default()
+        .grid_items(&[json!({"path": "photos/my cat.jpg", "name": "my cat.jpg"})]);
     assert_eq!(items[0].preview_url, "/images/preview/photos/my%20cat.jpg");
 }
 
@@ -133,7 +165,8 @@ fn grid_preview_url_encoded() {
 // port: test/javascript/image_sources/local_images.test.js:197 "handles images without dimensions"
 #[test]
 fn grid_without_dimensions() {
-    let items = LocalImageSource::default().grid_items(&[json!({"path": "test.jpg", "name": "test.jpg"})]);
+    let items =
+        LocalImageSource::default().grid_items(&[json!({"path": "test.jpg", "name": "test.jpg"})]);
     assert_eq!(items[0].dimensions, None);
 }
 
@@ -145,12 +178,20 @@ fn grid_without_dimensions() {
 fn save_copy_posts_import() {
     let mut tr = FakeTransport::default();
     tr.push_json(json!({"url": "https://s3.example.com/image.jpg"}));
-    let mut cx = PickerCx { transport: &mut tr, t: None };
-    let r = LocalImageSource::default().save_copy(&mut cx, &json!("photos/cat.jpg"), &json!("0.5"), None).expect("ok");
+    let mut cx = PickerCx {
+        transport: &mut tr,
+        t: None,
+    };
+    let r = LocalImageSource::default()
+        .save_copy(&mut cx, &json!("photos/cat.jpg"), &json!("0.5"), None)
+        .expect("ok");
     assert_eq!(r["url"], "https://s3.example.com/image.jpg");
     assert_eq!(tr.requests[0].method, "POST");
     assert_eq!(tr.requests[0].url, "/images/import");
-    assert_eq!(tr.requests[0].body, RequestBody::Json(json!({"path": "photos/cat.jpg", "resize": "0.5"})));
+    assert_eq!(
+        tr.requests[0].body,
+        RequestBody::Json(json!({"path": "photos/cat.jpg", "resize": "0.5"}))
+    );
 }
 
 // port: test/javascript/image_sources/local_images.test.js:253 "handles upload error"
@@ -158,8 +199,13 @@ fn save_copy_posts_import() {
 fn save_copy_error() {
     let mut tr = FakeTransport::default();
     fail(&mut tr, json!({"error": "S3 bucket not configured"}));
-    let mut cx = PickerCx { transport: &mut tr, t: None };
-    let e = LocalImageSource::default().save_copy(&mut cx, &json!("test.jpg"), &json!(""), None).expect_err("throws");
+    let mut cx = PickerCx {
+        transport: &mut tr,
+        t: None,
+    };
+    let e = LocalImageSource::default()
+        .save_copy(&mut cx, &json!("test.jpg"), &json!(""), None)
+        .expect_err("throws");
     assert_eq!(e.message, "S3 bucket not configured");
 }
 
@@ -168,8 +214,13 @@ fn save_copy_error() {
 fn save_copy_generic_error() {
     let mut tr = FakeTransport::default();
     fail(&mut tr, json!({}));
-    let mut cx = PickerCx { transport: &mut tr, t: None };
-    let e = LocalImageSource::default().save_copy(&mut cx, &json!("test.jpg"), &json!(""), None).expect_err("throws");
+    let mut cx = PickerCx {
+        transport: &mut tr,
+        t: None,
+    };
+    let e = LocalImageSource::default()
+        .save_copy(&mut cx, &json!("test.jpg"), &json!(""), None)
+        .expect_err("throws");
     assert_eq!(e.message, "Failed to upload to S3");
 }
 
@@ -178,8 +229,13 @@ fn save_copy_generic_error() {
 fn delete_sends_delete() {
     let mut tr = FakeTransport::default();
     tr.push_json(json!({"success": true}));
-    let mut cx = PickerCx { transport: &mut tr, t: None };
-    let r = LocalImageSource::default().delete_image(&mut cx, "photos/cat.jpg").expect("ok");
+    let mut cx = PickerCx {
+        transport: &mut tr,
+        t: None,
+    };
+    let r = LocalImageSource::default()
+        .delete_image(&mut cx, "photos/cat.jpg")
+        .expect("ok");
     assert_eq!(r["success"], true);
     assert_eq!(tr.requests[0].method, "DELETE");
     assert_eq!(tr.requests[0].url, "/images/file/photos/cat.jpg");
@@ -189,9 +245,17 @@ fn delete_sends_delete() {
 #[test]
 fn delete_error_message() {
     let mut tr = FakeTransport::default();
-    fail(&mut tr, json!({"error": "Image not found or could not be deleted"}));
-    let mut cx = PickerCx { transport: &mut tr, t: None };
-    let e = LocalImageSource::default().delete_image(&mut cx, "gone.jpg").expect_err("throws");
+    fail(
+        &mut tr,
+        json!({"error": "Image not found or could not be deleted"}),
+    );
+    let mut cx = PickerCx {
+        transport: &mut tr,
+        t: None,
+    };
+    let e = LocalImageSource::default()
+        .delete_image(&mut cx, "gone.jpg")
+        .expect_err("throws");
     assert_eq!(e.message, "Image not found or could not be deleted");
 }
 
@@ -200,7 +264,12 @@ fn delete_error_message() {
 fn delete_generic_error() {
     let mut tr = FakeTransport::default();
     fail(&mut tr, json!({}));
-    let mut cx = PickerCx { transport: &mut tr, t: None };
-    let e = LocalImageSource::default().delete_image(&mut cx, "gone.jpg").expect_err("throws");
+    let mut cx = PickerCx {
+        transport: &mut tr,
+        t: None,
+    };
+    let e = LocalImageSource::default()
+        .delete_image(&mut cx, "gone.jpg")
+        .expect_err("throws");
     assert_eq!(e.message, "Failed to delete image");
 }

@@ -56,7 +56,10 @@ pub struct AutosavePolicy {
 impl Default for AutosavePolicy {
     /// **[COMPAT]** 2000 ms / 30000 ms.
     fn default() -> Self {
-        Self { debounce: SAVE_DEBOUNCE, max_wait: SAVE_MAX_INTERVAL }
+        Self {
+            debounce: SAVE_DEBOUNCE,
+            max_wait: SAVE_MAX_INTERVAL,
+        }
     }
 }
 
@@ -69,7 +72,8 @@ impl AutosaveTimer {
     /// Should we save at `now`? True once `debounce` passed since the last
     /// edit, or `max_wait` passed since the first unsaved edit.
     pub fn due(&self, now: Instant, policy: &AutosavePolicy) -> bool {
-        self.next_deadline(policy).is_some_and(|deadline| now >= deadline)
+        self.next_deadline(policy)
+            .is_some_and(|deadline| now >= deadline)
     }
     /// Earliest instant at which [`Self::due`] becomes true (for scheduling the tick).
     pub fn next_deadline(&self, policy: &AutosavePolicy) -> Option<Instant> {
@@ -131,7 +135,10 @@ pub enum SaveStatus {
 impl SaveStatus {
     /// Rendered with the error style (`text-red-500`).
     pub fn is_error(self) -> bool {
-        matches!(self, Self::ErrorSaving | Self::DraftStorageError | Self::Disconnected)
+        matches!(
+            self,
+            Self::ErrorSaving | Self::DraftStorageError | Self::Disconnected
+        )
     }
 }
 
@@ -299,4 +306,3 @@ pub enum DeletionPrep {
     /// Draft persistence failed or no known revision.
     Failed(DraftError),
 }
-

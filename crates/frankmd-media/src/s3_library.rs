@@ -1,10 +1,10 @@
 //! **[COMPAT]** port of `app/services/s3_media_library_service.rb`: the S3
 //! Library (objects under `frankmd/` only).
 
+use crate::MediaKind;
 use crate::config::MediaConfig;
 use crate::env::MediaEnv;
 use crate::error::MediaError;
-use crate::MediaKind;
 use crate::library::{LibraryListing, MediaItem, RenamedItem};
 use crate::server_folder::extname;
 use crate::upload_storage::{self, UploadKind};
@@ -28,7 +28,10 @@ impl S3MediaLibrary {
     /// `S3MediaLibraryService.new(config:)` (client from `env.s3_client`).
     pub fn new(env: &MediaEnv, config: &MediaConfig) -> Result<Self, MediaError> {
         let client = env.s3_client(config)?;
-        Ok(Self { config: config.clone(), client })
+        Ok(Self {
+            config: config.clone(),
+            client,
+        })
     }
 
     fn bucket(&self) -> &str {
@@ -36,7 +39,12 @@ impl S3MediaLibrary {
     }
 
     fn object_url(&self, key: &str) -> String {
-        upload_storage::s3_url(&self.config, self.bucket(), &upload_storage::s3_region(&self.config), key)
+        upload_storage::s3_url(
+            &self.config,
+            self.bucket(),
+            &upload_storage::s3_region(&self.config),
+            key,
+        )
     }
 
     /// `media_for(key)`: the media kind of a valid managed key (image wins).
@@ -59,17 +67,29 @@ impl S3MediaLibrary {
         let mut results = Vec::new();
         let mut token: Option<String> = None;
         loop {
-            let page = self.client.list_objects_v2(PREFIX, token.as_deref()).await?;
+            let page = self
+                .client
+                .list_objects_v2(PREFIX, token.as_deref())
+                .await?;
             results.extend(page.objects);
             if results.len() > MAX_OBJECTS {
-                return Err(MediaError::Rejected("S3 Library contains too many objects".to_owned()));
+                return Err(MediaError::Rejected(
+                    "S3 Library contains too many objects".to_owned(),
+                ));
             }
             if !page.truncated {
                 break;
             }
-            match page.next_continuation_token.filter(|t| !t.trim().is_empty()) {
+            match page
+                .next_continuation_token
+                .filter(|t| !t.trim().is_empty())
+            {
                 Some(next) => token = Some(next),
-                None => return Err(MediaError::Rejected("S3 Library pagination failed".to_owned())),
+                None => {
+                    return Err(MediaError::Rejected(
+                        "S3 Library pagination failed".to_owned(),
+                    ));
+                }
             }
         }
         Ok(results)
@@ -124,7 +144,11 @@ impl S3MediaLibrary {
     /// `CopyObject(copy_source: "<bucket>/<url-encoded old key>")`, then
     /// `DeleteObject(old)`. `Ok(None)` (no mutation) for invalid names or an
     /// existing target.
-    pub async fn rename(&self, key: &str, new_name: &str) -> Result<Option<RenamedItem>, MediaError> {
+    pub async fn rename(
+        &self,
+        key: &str,
+        new_name: &str,
+    ) -> Result<Option<RenamedItem>, MediaError> {
         let Some(kind) = self.media_for(key) else {
             return Ok(None);
         };
@@ -134,12 +158,19 @@ impl S3MediaLibrary {
         // `File.join(File.dirname(key), new_name)`; managed keys always have a directory.
         let directory = key.rsplit_once('/').map_or(".", |(dir, _)| dir);
         let destination = format!("{directory}/{new_name}");
-        if !valid_key(&destination) || destination == key || self.client.head_object(&destination).await? {
+        if !valid_key(&destination)
+            || destination == key
+            || self.client.head_object(&destination).await?
+        {
             return Ok(None);
         }
         self.client.copy_object(key, &destination).await?;
         self.client.delete_object(key).await?;
-        Ok(Some(RenamedItem { name: new_name.to_owned(), url: self.object_url(&destination), path: destination }))
+        Ok(Some(RenamedItem {
+            name: new_name.to_owned(),
+            url: self.object_url(&destination),
+            path: destination,
+        }))
     }
 
     /// `valid_new_name?`: a bare basename, already sanitized, with an
@@ -165,7 +196,11 @@ fn valid_key(key: &str) -> bool {
     }
     let segments: Vec<&str> = key.split('/').collect();
     segments.len() > 1
-        && segments
-            .iter()
-            .all(|s| !s.trim().is_empty() && *s != "." && *s != ".." && !s.contains('\\') && !s.contains('\0'))
+        && segments.iter().all(|s| {
+            !s.trim().is_empty()
+                && *s != "."
+                && *s != ".."
+                && !s.contains('\\')
+                && !s.contains('\0')
+        })
 }

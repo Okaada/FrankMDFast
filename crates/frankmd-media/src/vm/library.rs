@@ -172,7 +172,10 @@ pub struct MediaLibraryView {
 impl MediaLibraryView {
     /// A closed library over `notes_root`.
     pub fn new(notes_root: PathBuf) -> Self {
-        Self { notes_root, ..Self::default() }
+        Self {
+            notes_root,
+            ..Self::default()
+        }
     }
 
     /// Open (no-op when already open): reload and reset the usage cache.
@@ -188,7 +191,9 @@ impl MediaLibraryView {
         self.usage_notes.clear();
         self.detail = None;
         self.prompt = None;
-        vec![LibraryEffect::Load { generation: self.generation }]
+        vec![LibraryEffect::Load {
+            generation: self.generation,
+        }]
     }
 
     /// Close.
@@ -229,7 +234,8 @@ impl MediaLibraryView {
 
     /// The empty-state text when the active category is empty.
     pub fn empty_text(&self) -> Option<Text> {
-        (self.load == LoadState::Loaded && self.items().is_empty()).then(|| Text::key("media_library.empty"))
+        (self.load == LoadState::Loaded && self.items().is_empty())
+            .then(|| Text::key("media_library.empty"))
     }
 
     /// Active category.
@@ -267,16 +273,26 @@ impl MediaLibraryView {
 
     fn items(&self) -> Vec<&MediaItem> {
         let needle = self.filter.trim().to_lowercase();
-        self.all_items().iter().filter(|i| needle.is_empty() || i.name.to_lowercase().contains(&needle)).collect()
+        self.all_items()
+            .iter()
+            .filter(|i| needle.is_empty() || i.name.to_lowercase().contains(&needle))
+            .collect()
     }
 
     fn find(&self, path: &str) -> Option<&MediaItem> {
-        self.listing.images.iter().chain(&self.listing.videos).find(|i| i.path == path)
+        self.listing
+            .images
+            .iter()
+            .chain(&self.listing.videos)
+            .find(|i| i.path == path)
     }
 
     /// Cards of the active category, in received order.
     pub fn cards(&self) -> Vec<LibraryCard> {
-        self.items().into_iter().map(|item| self.card(item)).collect()
+        self.items()
+            .into_iter()
+            .map(|item| self.card(item))
+            .collect()
     }
 
     fn card(&self, item: &MediaItem) -> LibraryCard {
@@ -316,7 +332,9 @@ impl MediaLibraryView {
             return Vec::new();
         }
         self.usage = Usage::Checking;
-        vec![LibraryEffect::LoadUsage { generation: self.generation }]
+        vec![LibraryEffect::LoadUsage {
+            generation: self.generation,
+        }]
     }
 
     /// Usage counts arrived (only non-negative counts are kept).
@@ -334,11 +352,15 @@ impl MediaLibraryView {
 
     /// Enter on a card / click its preview: open the detail sheet.
     pub fn open_detail(&mut self, path: &str) -> Vec<LibraryEffect> {
-        let Some(item) = self.find(path) else { return Vec::new() };
+        let Some(item) = self.find(path) else {
+            return Vec::new();
+        };
         let local_used = matches!(self.usage_label(item), UsageLabel::Used(_));
         self.detail = Some(path.to_owned());
         if local_used && !self.usage_notes.contains_key(path) {
-            return vec![LibraryEffect::LoadUsageNotes { path: path.to_owned() }];
+            return vec![LibraryEffect::LoadUsageNotes {
+                path: path.to_owned(),
+            }];
         }
         Vec::new()
     }
@@ -350,7 +372,10 @@ impl MediaLibraryView {
 
     /// The open sheet's card.
     pub fn detail(&self) -> Option<LibraryCard> {
-        self.detail.as_deref().and_then(|p| self.find(p)).map(|i| self.card(i))
+        self.detail
+            .as_deref()
+            .and_then(|p| self.find(p))
+            .map(|i| self.card(i))
     }
 
     /// Sheet metadata: `size · date[ · ratio][ · FORMAT]` (ratio from the decoded image).
@@ -387,7 +412,10 @@ impl MediaLibraryView {
 
     /// The sheet's "Used in" list (`None` while loading).
     pub fn detail_notes(&self) -> Option<&[String]> {
-        self.detail.as_deref().and_then(|p| self.usage_notes.get(p)).map(Vec::as_slice)
+        self.detail
+            .as_deref()
+            .and_then(|p| self.usage_notes.get(p))
+            .map(Vec::as_slice)
     }
 
     /// Click a note in "Used in".
@@ -403,8 +431,12 @@ impl MediaLibraryView {
 
     /// Copy path: the S3 URL, or the library path (`images/foo.png`).
     pub fn copy_path(&self, path: &str) -> Vec<LibraryEffect> {
-        let Some(item) = self.find(path) else { return Vec::new() };
-        vec![LibraryEffect::WriteClipboard(item.s3_url.clone().unwrap_or_else(|| item.path.clone()))]
+        let Some(item) = self.find(path) else {
+            return Vec::new();
+        };
+        vec![LibraryEffect::WriteClipboard(
+            item.s3_url.clone().unwrap_or_else(|| item.path.clone()),
+        )]
     }
 
     /// The clipboard write finished.
@@ -412,7 +444,10 @@ impl MediaLibraryView {
         if ok {
             vec![LibraryEffect::Status(Text::key("library.copied"), false)]
         } else {
-            vec![LibraryEffect::Status(Text::key("library.copy_failed"), true)]
+            vec![LibraryEffect::Status(
+                Text::key("library.copy_failed"),
+                true,
+            )]
         }
     }
 
@@ -420,7 +455,10 @@ impl MediaLibraryView {
     pub fn request_delete(&mut self, path: &str) -> Option<Text> {
         let item = self.find(path)?;
         let text = Text::with("library.delete_confirm", &[("name", &item.name)]);
-        self.prompt = Some(LibraryPrompt::Delete { path: item.path.clone(), name: item.name.clone() });
+        self.prompt = Some(LibraryPrompt::Delete {
+            path: item.path.clone(),
+            name: item.name.clone(),
+        });
         Some(text)
     }
 
@@ -428,7 +466,10 @@ impl MediaLibraryView {
     pub fn request_rename(&mut self, path: &str) -> Option<String> {
         let item = self.find(path).filter(|i| i.s3_url.is_some())?;
         let name = item.name.clone();
-        self.prompt = Some(LibraryPrompt::Rename { path: item.path.clone(), name: name.clone() });
+        self.prompt = Some(LibraryPrompt::Rename {
+            path: item.path.clone(),
+            name: name.clone(),
+        });
         Some(name)
     }
 
@@ -451,7 +492,10 @@ impl MediaLibraryView {
                 if new.is_empty() || new == name {
                     return Vec::new();
                 }
-                vec![LibraryEffect::Rename { path, name: new.to_owned() }]
+                vec![LibraryEffect::Rename {
+                    path,
+                    name: new.to_owned(),
+                }]
             }
             None => Vec::new(),
         }
@@ -473,10 +517,19 @@ impl MediaLibraryView {
     }
 
     /// The rename finished: the item is updated in place (references are not).
-    pub fn rename_result(&mut self, path: &str, result: Result<RenamedItem, Text>) -> Vec<LibraryEffect> {
+    pub fn rename_result(
+        &mut self,
+        path: &str,
+        result: Result<RenamedItem, Text>,
+    ) -> Vec<LibraryEffect> {
         match result {
             Ok(renamed) => {
-                for item in self.listing.images.iter_mut().chain(self.listing.videos.iter_mut()) {
+                for item in self
+                    .listing
+                    .images
+                    .iter_mut()
+                    .chain(self.listing.videos.iter_mut())
+                {
                     if item.path == path {
                         item.name = renamed.name.clone();
                         item.path = renamed.path.clone();
@@ -496,7 +549,10 @@ impl MediaLibraryView {
     /// Insert into the open note (`open_note` = its vault path).
     pub fn insert(&mut self, path: &str, open_note: Option<&str>) -> Vec<LibraryEffect> {
         let Some(item) = self.find(path) else {
-            return vec![LibraryEffect::Status(Text::key(LibraryInsertError::InvalidMedia.key()), true)];
+            return vec![LibraryEffect::Status(
+                Text::key(LibraryInsertError::InvalidMedia.key()),
+                true,
+            )];
         };
         match markup::library_insert(&LibraryEntry::from(item), open_note) {
             Ok(insert) => {
@@ -512,7 +568,9 @@ impl MediaLibraryView {
 fn is_relative_note(path: &str) -> bool {
     path.ends_with(".md")
         && !path.starts_with('/')
-        && path.split('/').all(|s| !s.is_empty() && s != "." && s != ".." && !s.contains('\\'))
+        && path
+            .split('/')
+            .all(|s| !s.is_empty() && s != "." && s != ".." && !s.contains('\\'))
 }
 
 /// `2026-07-04T10:15:00-03:00` → `2026-07-04 10:15`; other strings unchanged.

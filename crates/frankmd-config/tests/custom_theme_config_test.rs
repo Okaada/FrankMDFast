@@ -14,7 +14,8 @@ use frankmd_config::{ConfigError, Key};
 use serde_json::json;
 
 fn theme_json(accent: &str) -> String {
-    json!({"version": 1, "name": "My \"theme\"", "base": "dark", "colors": {"accent": accent}}).to_string()
+    json!({"version": 1, "name": "My \"theme\"", "base": "dark", "colors": {"accent": accent}})
+        .to_string()
 }
 
 // port: test/controllers/custom_theme_config_test.rb:12 "saves palette and selection atomically and roundtrips through config"
@@ -22,24 +23,42 @@ fn theme_json(accent: &str) -> String {
 fn saves_palette_and_selection_atomically_and_roundtrips_through_config() {
     let v = TestVault::new();
     let custom = coerce(Key::CustomTheme, &json!(theme_json("#AABBCC"))).unwrap();
-    let rc = v.open_empty_env().update_ui_settings(&[(Key::Theme, s("custom")), (Key::CustomTheme, custom)]).unwrap();
+    let rc = v
+        .open_empty_env()
+        .update_ui_settings(&[(Key::Theme, s("custom")), (Key::CustomTheme, custom)])
+        .unwrap();
     let settings = ui_settings_json(&rc);
     assert_eq!(settings["theme"], json!("custom"));
-    assert_eq!(settings["custom_theme"]["colors"]["accent"], json!("#aabbcc"));
+    assert_eq!(
+        settings["custom_theme"]["colors"]["accent"],
+        json!("#aabbcc")
+    );
 
     let fresh = v.open_empty_env().current();
-    assert_eq!(get_json(&fresh, "custom_theme")["name"], json!("My \"theme\""));
-    assert_eq!(ui_settings_json(&fresh)["custom_theme"]["base"], json!("dark"));
+    assert_eq!(
+        get_json(&fresh, "custom_theme")["name"],
+        json!("My \"theme\"")
+    );
+    assert_eq!(
+        ui_settings_json(&fresh)["custom_theme"]["base"],
+        json!("dark")
+    );
 }
 
 // port: test/controllers/custom_theme_config_test.rb:25 "invalid palette cannot partially change the selected theme"
 #[test]
 fn invalid_palette_cannot_partially_change_the_selected_theme() {
     let v = TestVault::new();
-    v.open_empty_env().update(&[(Key::Theme, s("nord"))]).unwrap();
+    v.open_empty_env()
+        .update(&[(Key::Theme, s("nord"))])
+        .unwrap();
     let before = v.read_fed();
 
-    let err = coerce(Key::CustomTheme, &json!(theme_json("url(https://example.com)"))).unwrap_err();
+    let err = coerce(
+        Key::CustomTheme,
+        &json!(theme_json("url(https://example.com)")),
+    )
+    .unwrap_err();
     assert!(matches!(err, ConfigError::CustomTheme(_)), "{err:?}");
     // The controller answers 422 and nothing is written.
     assert_eq!(v.read_fed(), before);
@@ -57,7 +76,21 @@ fn malformed_on_disk_palette_does_not_discard_other_settings() {
     assert_eq!(get_str(&rc, Key::Theme).as_deref(), Some("nord"));
     assert_eq!(get_int(&rc, Key::EditorFontSize), Some(18));
     assert_eq!(rc.get(Key::CustomTheme).value, None);
-    assert!(rc.warnings.iter().any(|w| w.contains("custom_theme")), "{:?}", rc.warnings);
-    let err = store.update(&[(Key::EditorFont, s("unsafe\"font"))]).unwrap_err();
-    assert!(matches!(err, ConfigError::UnsafeString { key: Key::EditorFont }), "{err:?}");
+    assert!(
+        rc.warnings.iter().any(|w| w.contains("custom_theme")),
+        "{:?}",
+        rc.warnings
+    );
+    let err = store
+        .update(&[(Key::EditorFont, s("unsafe\"font"))])
+        .unwrap_err();
+    assert!(
+        matches!(
+            err,
+            ConfigError::UnsafeString {
+                key: Key::EditorFont
+            }
+        ),
+        "{err:?}"
+    );
 }

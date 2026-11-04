@@ -33,7 +33,10 @@ fn search_content_returns_empty_array_for_blank_query() {
     let sb = Sandbox::new();
     sb.note("note.md", "Some content", M);
     assert!(search(&sb, "").hits.is_empty());
-    let nil = Query { pattern: None, ..Query::new("") };
+    let nil = Query {
+        pattern: None,
+        ..Query::new("")
+    };
     assert!(content::search(&sb.root, &nil).hits.is_empty());
 }
 
@@ -42,7 +45,11 @@ fn search_content_returns_empty_array_for_blank_query() {
 fn search_content_finds_text_in_files() {
     let sb = Sandbox::new();
     sb.note("note1.md", "Hello world\nThis is a test", M);
-    sb.note("note2.md", "Another file\nWith different content", M - 100.0);
+    sb.note(
+        "note2.md",
+        "Another file\nWith different content",
+        M - 100.0,
+    );
 
     let r = search(&sb, "world");
     assert_eq!(r.hits.len(), 1);
@@ -100,7 +107,9 @@ fn search_content_skips_unreadable_file() {
     assert!(p.contains(&"good.md"));
     assert!(!p.contains(&"locked.md"));
     assert!(
-        r.skipped.iter().any(|s| s.path == "locked.md" && matches!(s.reason, SkipReason::Io(_))),
+        r.skipped
+            .iter()
+            .any(|s| s.path == "locked.md" && matches!(s.reason, SkipReason::Io(_))),
         "unreadable file must be reported as skipped: {:?}",
         r.skipped
     );
@@ -125,7 +134,11 @@ fn search_content_skips_files_over_the_size_limit() {
 
     let r = search(&sb, "findme");
     assert_eq!(paths(&r.hits), vec!["small.md"]);
-    assert!(r.skipped.iter().any(|s| s.path == "large.md" && s.reason == SkipReason::TooLarge));
+    assert!(
+        r.skipped
+            .iter()
+            .any(|s| s.path == "large.md" && s.reason == SkipReason::TooLarge)
+    );
 }
 
 // port: test/services/notes_service_test.rb:646 "search_content skips a regex timeout"
@@ -139,10 +152,17 @@ fn search_content_skips_a_regex_timeout() {
 
     let sb = Sandbox::new();
     sb.note("note.md", format!("{}!", "a".repeat(40)), M);
-    let q = Query { timeout: Duration::from_millis(1), ..Query::new("(a|a)+$") };
+    let q = Query {
+        timeout: Duration::from_millis(1),
+        ..Query::new("(a|a)+$")
+    };
     let r = content::search(&sb.root, &q);
     assert!(r.hits.is_empty());
-    assert!(r.skipped.iter().any(|s| s.path == "note.md" && s.reason == SkipReason::Timeout));
+    assert!(
+        r.skipped
+            .iter()
+            .any(|s| s.path == "note.md" && s.reason == SkipReason::Timeout)
+    );
     assert_eq!(SEARCH_REGEX_TIMEOUT, Duration::from_millis(500));
 }
 
@@ -152,14 +172,23 @@ fn search_content_includes_context_lines() {
     let sb = Sandbox::new();
     sb.note("note.md", "line1\nline2\nMATCH HERE\nline4\nline5", M);
 
-    let q = Query { context_lines: 2, ..Query::new("MATCH") };
+    let q = Query {
+        context_lines: 2,
+        ..Query::new("MATCH")
+    };
     let r = content::search(&sb.root, &q);
     assert_eq!(r.hits.len(), 1);
     let ctx = &r.hits[0].context;
     assert_eq!(ctx.len(), 5);
     assert_eq!(ctx.first().unwrap().line_number, 1);
     assert_eq!(ctx.last().unwrap().line_number, 5);
-    assert!(ctx.iter().find(|c| c.is_match).unwrap().content.contains("MATCH"));
+    assert!(
+        ctx.iter()
+            .find(|c| c.is_match)
+            .unwrap()
+            .content
+            .contains("MATCH")
+    );
 }
 
 // port: test/services/notes_service_test.rb:668 "search_content respects max_results"
@@ -169,7 +198,10 @@ fn search_content_respects_max_results() {
     for i in 0..5 {
         sb.note(&format!("note{i}.md"), "findme", M - f64::from(i) * 100.0);
     }
-    let q = Query { max_results: 3, ..Query::new("findme") };
+    let q = Query {
+        max_results: 3,
+        ..Query::new("findme")
+    };
     let r = content::search(&sb.root, &q);
     assert_eq!(r.hits.len(), 3);
     assert!(r.truncated);
@@ -193,7 +225,11 @@ fn search_content_handles_invalid_regex_by_escaping() {
     let sb = Sandbox::new();
     sb.note("note.md", "test [brackets]", M);
     assert_eq!(search(&sb, "[brackets").hits.len(), 1);
-    assert!(SearchRegex::compile("[brackets", SEARCH_REGEX_TIMEOUT).unwrap().is_literal_fallback());
+    assert!(
+        SearchRegex::compile("[brackets", SEARCH_REGEX_TIMEOUT)
+            .unwrap()
+            .is_literal_fallback()
+    );
 }
 
 // security: symlinks escaping the vault (to a folder, to a file, dangling) never
@@ -213,5 +249,9 @@ fn search_never_returns_content_outside_the_vault() {
 
     let r = search(&sb, "findme");
     assert_eq!(paths(&r.hits), vec!["inside.md"]);
-    assert!(r.hits.iter().all(|h| !h.match_text.contains("outside") && !h.match_text.contains("deep")));
+    assert!(
+        r.hits
+            .iter()
+            .all(|h| !h.match_text.contains("outside") && !h.match_text.contains("deep"))
+    );
 }

@@ -25,15 +25,31 @@ fn vim_layer_consumes_normal_mode_keys_before_editor_keymap() {
     buf.sel = 3..3;
     let mut vim = VimState::new(false);
     for k in ["enter", "backspace", "left", "right", "up", "down"] {
-        assert_eq!(vim.feed(&Key::plain(k), false, &mut buf), Outcome::Handled, "normal-mode {k}");
+        assert_eq!(
+            vim.feed(&Key::plain(k), false, &mut buf),
+            Outcome::Handled,
+            "normal-mode {k}"
+        );
     }
-    assert_eq!(buf.text, "first line\nsecond line\n", "normal-mode keys must not edit text");
+    assert_eq!(
+        buf.text, "first line\nsecond line\n",
+        "normal-mode keys must not edit text"
+    );
 
     feed_str(&mut vim, &mut buf, "i");
     assert_eq!(vim.mode(), Mode::Insert);
-    assert_eq!(vim.feed(&Key::plain("x"), false, &mut buf), Outcome::PassThrough);
-    assert_eq!(vim.feed(&Key::plain("enter"), false, &mut buf), Outcome::PassThrough);
+    assert_eq!(
+        vim.feed(&Key::plain("x"), false, &mut buf),
+        Outcome::PassThrough
+    );
+    assert_eq!(
+        vim.feed(&Key::plain("enter"), false, &mut buf),
+        Outcome::PassThrough
+    );
     // IME composition always passes through.
-    assert_eq!(vim.feed(&Key::plain("a"), true, &mut buf), Outcome::PassThrough);
+    assert_eq!(
+        vim.feed(&Key::plain("a"), true, &mut buf),
+        Outcome::PassThrough
+    );
     assert!(vim.ime_allowed());
 }

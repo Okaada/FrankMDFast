@@ -48,7 +48,13 @@ fn preserves_indentation() {
 // port: test/javascript/lib/task_utils.test.js:32 "returns null for non-task lines"
 #[test]
 fn returns_none_for_non_task_lines() {
-    for line in ["plain text", "- no marker", "- [y] not gfm", "[ ] no bullet", ""] {
+    for line in [
+        "plain text",
+        "- no marker",
+        "- [y] not gfm",
+        "[ ] no bullet",
+        "",
+    ] {
         assert_eq!(t(line), None, "{line:?}");
     }
 }

@@ -42,17 +42,32 @@ pub(crate) fn fences(src: &str) -> Option<Fence<'_>> {
             return None;
         }
         let mut j = sp + fence.len();
-        j += s[j..].bytes().take_while(|&b| b == b'~' || b == b'`').count();
+        j += s[j..]
+            .bytes()
+            .take_while(|&b| b == b'~' || b == b'`')
+            .count();
         j += s[j..].bytes().take_while(|&b| b == b' ').count();
         (j == s.len() || s.as_bytes()[j] == b'\n').then_some(pos + j)
     };
-    let pos0 = if line_end < src.len() { line_end + 1 } else { src.len() };
+    let pos0 = if line_end < src.len() {
+        line_end + 1
+    } else {
+        src.len()
+    };
     // Empty-body alternative first.
     if let Some(end) = closing(pos0) {
-        return Some(Fence { raw_len: end, info, body: None });
+        return Some(Fence {
+            raw_len: end,
+            info,
+            body: None,
+        });
     }
     if pos0 == src.len() {
-        return Some(Fence { raw_len: pos0, info, body: None });
+        return Some(Fence {
+            raw_len: pos0,
+            info,
+            body: None,
+        });
     }
     // Lazy body: the first `\n` (from pos0) after which a closing fence or the end follows.
     let mut n = pos0;
@@ -62,14 +77,28 @@ pub(crate) fn fences(src: &str) -> Option<Fence<'_>> {
                 let nl = n + i;
                 let after = nl + 1;
                 if let Some(end) = closing(after) {
-                    return Some(Fence { raw_len: end, info, body: Some(&src[pos0..nl]) });
+                    return Some(Fence {
+                        raw_len: end,
+                        info,
+                        body: Some(&src[pos0..nl]),
+                    });
                 }
                 if after == src.len() {
-                    return Some(Fence { raw_len: after, info, body: Some(&src[pos0..nl]) });
+                    return Some(Fence {
+                        raw_len: after,
+                        info,
+                        body: Some(&src[pos0..nl]),
+                    });
                 }
                 n = after;
             }
-            None => return Some(Fence { raw_len: src.len(), info, body: Some(&src[pos0..]) }),
+            None => {
+                return Some(Fence {
+                    raw_len: src.len(),
+                    info,
+                    body: Some(&src[pos0..]),
+                });
+            }
         }
     }
 }
@@ -78,7 +107,10 @@ pub(crate) fn fences(src: &str) -> Option<Fence<'_>> {
 pub(crate) fn newline(src: &str) -> usize {
     let mut p = 0;
     loop {
-        let q = p + src[p..].bytes().take_while(|&b| b == b' ' || b == b'\t').count();
+        let q = p + src[p..]
+            .bytes()
+            .take_while(|&b| b == b' ' || b == b'\t')
+            .count();
         match src.as_bytes().get(q) {
             Some(b'\n') => p = q + 1,
             None => return q,
@@ -106,16 +138,25 @@ pub(crate) fn paragraph(src: &str) -> Option<usize> {
 
 /// The paragraph's `(?!hr|heading|blockquote|fences|list|html|table| +\n)`.
 fn paragraph_interrupted(rest: &str) -> bool {
-    let c = rest.trim_start_matches(' ').as_bytes().first().copied().unwrap_or(b'\n');
-    let maybe = matches!(c, b'-' | b'_' | b'*' | b'#' | b'>' | b'`' | b'~' | b'+' | b'<' | b'\n') || c.is_ascii_digit();
-    (maybe && exec(&PARAGRAPH_STOP, rest).is_some()) || (table_second_line(rest) && table(rest).is_some())
+    let c = rest
+        .trim_start_matches(' ')
+        .as_bytes()
+        .first()
+        .copied()
+        .unwrap_or(b'\n');
+    let maybe = matches!(
+        c,
+        b'-' | b'_' | b'*' | b'#' | b'>' | b'`' | b'~' | b'+' | b'<' | b'\n'
+    ) || c.is_ascii_digit();
+    (maybe && exec(&PARAGRAPH_STOP, rest).is_some())
+        || (table_second_line(rest) && table(rest).is_some())
 }
 
 /// Cheap necessary condition for [`table`]: the second line looks like a delimiter row.
 pub(crate) fn table_second_line(src: &str) -> bool {
-    src.split('\n')
-        .nth(1)
-        .is_some_and(|l| l.contains('-') && l.bytes().all(|b| matches!(b, b'|' | b':' | b'-' | b' ')))
+    src.split('\n').nth(1).is_some_and(|l| {
+        l.contains('-') && l.bytes().all(|b| matches!(b, b'|' | b':' | b'-' | b' '))
+    })
 }
 
 static PARAGRAPH_STOP: LazyLock<fancy_regex::Regex> = LazyLock::new(rules::paragraph_stop);
@@ -131,7 +172,8 @@ pub(crate) struct TableMatch<'a> {
 
 /// `^ {0,3}(DELIM)(?:\n|$)` (no look-around: the plain `regex` engine).
 static DELIMITER: LazyLock<regex::Regex> = LazyLock::new(|| {
-    regex::Regex::new(r"^ {0,3}((?:\| *)?:?-+:? *(?:\| *:?-+:? *)*(?:\| *)?)(?:\n|$)").expect("valid regex")
+    regex::Regex::new(r"^ {0,3}((?:\| *)?:?-+:? *(?:\| *:?-+:? *)*(?:\| *)?)(?:\n|$)")
+        .expect("valid regex")
 });
 
 /// JS `.`: anything but a line terminator.
@@ -148,7 +190,10 @@ pub(crate) fn table(src: &str) -> Option<TableMatch<'_>> {
     if first == '\n' || first == ' ' {
         return None;
     }
-    let header_end = lead + src[lead..].find(|c: char| !is_js_dot(c)).unwrap_or(src.len() - lead);
+    let header_end = lead
+        + src[lead..]
+            .find(|c: char| !is_js_dot(c))
+            .unwrap_or(src.len() - lead);
     if src.as_bytes().get(header_end) != Some(&b'\n') {
         return None;
     }
@@ -160,7 +205,12 @@ pub(crate) fn table(src: &str) -> Option<TableMatch<'_>> {
     let after_delim = delim_start + d.get(0)?.end();
     if !src[..after_delim].ends_with('\n') {
         // `$` alternative: the delimiter row is the last line.
-        return Some(TableMatch { raw_len: after_delim, header, align, rows: None });
+        return Some(TableMatch {
+            raw_len: after_delim,
+            header,
+            align,
+            rows: None,
+        });
     }
     let rows_start = after_delim;
     let mut pos = rows_start;
@@ -168,7 +218,9 @@ pub(crate) fn table(src: &str) -> Option<TableMatch<'_>> {
         if exec(&TABLE_ROW_STOP, &src[pos..]).is_some() {
             break;
         }
-        let line_len = src[pos..].find(|c: char| !is_js_dot(c)).unwrap_or(src.len() - pos);
+        let line_len = src[pos..]
+            .find(|c: char| !is_js_dot(c))
+            .unwrap_or(src.len() - pos);
         let end = pos + line_len;
         match src.as_bytes().get(end) {
             None => {
@@ -181,7 +233,12 @@ pub(crate) fn table(src: &str) -> Option<TableMatch<'_>> {
     }
     let rows = &src[rows_start..pos];
     let raw_len = pos + src[pos..].bytes().take_while(|&b| b == b'\n').count();
-    Some(TableMatch { raw_len, header, align, rows: Some(rows) })
+    Some(TableMatch {
+        raw_len,
+        header,
+        align,
+        rows: Some(rows),
+    })
 }
 
 /// The table rows' negative look-ahead, as a rule of its own.
@@ -193,21 +250,64 @@ mod tests {
     use crate::marked::rules::group;
 
     const SAMPLES: &[&str] = &[
-        "```js\nlet a = 1;\n```\n\nnext", "```\n```", "```", "``` x`\n", "~~~ruby\nputs 1\n~~~~\n", "````\na\n```\nb\n````",
-        "   ```\n x\n   ```  \n", "    ```\nx\n```", "```\nno close\nat all", "```\nno close\n", "~~~\n~~~x\n~~~",
-        "```js title=\"a\"\n\n\n```\n", "```\n```\n```\n", "~~\n", "``` \n `` \n```",
-        "| a | b |\n|---|---|\n| 1 | 2 |\n\nafter", "a | b\n--|--\n1\n1 | 2 | 3", "| h1 | h2 |\n| --- | --- |",
-        "| a |\n|:-:|\n| x |\n# heading", "| a |\n| - |\n| x |\n> quote\n", "| a |\n|-|\n|x|\n    code\n",
-        "| a |\n|-|\n- list\n", "| a |\n|-|\n1. one\n", "| a |\n|-|\n<div>\n", "| a |\n|-|\nrow\u{2028}x\nmore",
-        "| a |\n|-|\n```\ncode\n```\n", "| a |\n|-|\n---\n", "a\n- b\n", "  |a|\n|-|  \nx\n\n\n\ny", "| a |\n|-| x\n",
+        "```js\nlet a = 1;\n```\n\nnext",
+        "```\n```",
+        "```",
+        "``` x`\n",
+        "~~~ruby\nputs 1\n~~~~\n",
+        "````\na\n```\nb\n````",
+        "   ```\n x\n   ```  \n",
+        "    ```\nx\n```",
+        "```\nno close\nat all",
+        "```\nno close\n",
+        "~~~\n~~~x\n~~~",
+        "```js title=\"a\"\n\n\n```\n",
+        "```\n```\n```\n",
+        "~~\n",
+        "``` \n `` \n```",
+        "| a | b |\n|---|---|\n| 1 | 2 |\n\nafter",
+        "a | b\n--|--\n1\n1 | 2 | 3",
+        "| h1 | h2 |\n| --- | --- |",
+        "| a |\n|:-:|\n| x |\n# heading",
+        "| a |\n| - |\n| x |\n> quote\n",
+        "| a |\n|-|\n|x|\n    code\n",
+        "| a |\n|-|\n- list\n",
+        "| a |\n|-|\n1. one\n",
+        "| a |\n|-|\n<div>\n",
+        "| a |\n|-|\nrow\u{2028}x\nmore",
+        "| a |\n|-|\n```\ncode\n```\n",
+        "| a |\n|-|\n---\n",
+        "a\n- b\n",
+        "  |a|\n|-|  \nx\n\n\n\ny",
+        "| a |\n|-| x\n",
     ];
 
     #[test]
     fn newline_and_paragraph_match_the_rules() {
         let extra = [
-            "a\nb\n\nc", "a\n# h", "a\n#h", "a\n> q", "a\n- l", "a\n2. x", "a\n1. x", "a\n```\nx", "a\n***",
-            "a\n<div>", "a\n<span>", "a\n   \nb", "a\n   ", "a\n| x |\n|---|", "a\n\tb", " \n\t\n x", "\n\n\n", "   ",
-            "a\n    code", "a\n===", "a\n---\nb", "a\n~~~\n", "a\n<!-- c -->",
+            "a\nb\n\nc",
+            "a\n# h",
+            "a\n#h",
+            "a\n> q",
+            "a\n- l",
+            "a\n2. x",
+            "a\n1. x",
+            "a\n```\nx",
+            "a\n***",
+            "a\n<div>",
+            "a\n<span>",
+            "a\n   \nb",
+            "a\n   ",
+            "a\n| x |\n|---|",
+            "a\n\tb",
+            " \n\t\n x",
+            "\n\n\n",
+            "   ",
+            "a\n    code",
+            "a\n===",
+            "a\n---\nb",
+            "a\n~~~\n",
+            "a\n<!-- c -->",
         ];
         for s in SAMPLES.iter().copied().chain(extra) {
             for start in s.char_indices().map(|(i, _)| i) {

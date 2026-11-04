@@ -489,7 +489,8 @@ impl Shell {
                         .outline()
                         .label(format!("{}  Esc", i18n::t(cx, "common.cancel")))
                         .on_click(move |_, window, cx| {
-                            let _ = this.update(cx, |shell, cx| shell.cancel_grammar_check(window, cx));
+                            let _ =
+                                this.update(cx, |shell, cx| shell.cancel_grammar_check(window, cx));
                         }),
                 )
                 .into_any_element(),

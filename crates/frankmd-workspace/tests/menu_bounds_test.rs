@@ -7,17 +7,26 @@ use frankmd_workspace::menu_bounds::{
 };
 
 fn top_only(top: f64) -> MenuRect {
-    MenuRect { top, left: None, right: None }
+    MenuRect {
+        top,
+        left: None,
+        right: None,
+    }
 }
 
 fn transform(p: &MenuPlacement) -> String {
-    p.shift_x.map(|x| format!("translateX({x}px)")).unwrap_or_default()
+    p.shift_x
+        .map(|x| format!("translateX({x}px)"))
+        .unwrap_or_default()
 }
 
 // port: test/javascript/lib/menu_bounds.test.js:16 "bounds the menu to the remaining viewport below its top edge"
 #[test]
 fn max_height_bounds_to_remaining_viewport() {
-    assert_eq!(menu_max_height(400.0, 900.0, VIEWPORT_PADDING), 900 - 400 - 8);
+    assert_eq!(
+        menu_max_height(400.0, 900.0, VIEWPORT_PADDING),
+        900 - 400 - 8
+    );
 }
 
 // port: test/javascript/lib/menu_bounds.test.js:21 "keeps a usable minimum when opened near the bottom"
@@ -46,8 +55,15 @@ fn clamp_sets_max_height_sized_to_viewport() {
 // port: test/javascript/lib/menu_bounds.test.js:47 "shifts an overhanging menu into a 320px viewport" (it.each ×2)
 #[test]
 fn clamp_shifts_overhanging_menu_into_320px_viewport() {
-    for (left, right, expected) in [(177.0, 449.0, "translateX(-137px)"), (-20.0, 252.0, "translateX(28px)")] {
-        let rect = MenuRect { top: 80.0, left: Some(left), right: Some(right) };
+    for (left, right, expected) in [
+        (177.0, 449.0, "translateX(-137px)"),
+        (-20.0, 252.0, "translateX(28px)"),
+    ] {
+        let rect = MenuRect {
+            top: 80.0,
+            left: Some(left),
+            right: Some(right),
+        };
         let p = clamp_menu_to_viewport(&rect, 720.0, 320.0);
         assert_eq!(transform(&p), expected, "left={left} right={right}");
     }
@@ -58,7 +74,11 @@ fn clamp_shifts_overhanging_menu_into_320px_viewport() {
 // the contract reduces to: an in-bounds rect yields no transform at all.
 #[test]
 fn clamp_in_bounds_after_resize_has_no_shift() {
-    let rect = MenuRect { top: 80.0, left: Some(8.0), right: Some(280.0) };
+    let rect = MenuRect {
+        top: 80.0,
+        left: Some(8.0),
+        right: Some(280.0),
+    };
     let p = clamp_menu_to_viewport(&rect, 720.0, 320.0);
     assert_eq!(transform(&p), "");
 }

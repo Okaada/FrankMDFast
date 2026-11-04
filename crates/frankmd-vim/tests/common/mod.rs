@@ -18,7 +18,10 @@ pub struct FakeBuffer {
 
 impl FakeBuffer {
     pub fn new(text: &str) -> Self {
-        Self { text: text.to_owned(), ..Self::default() }
+        Self {
+            text: text.to_owned(),
+            ..Self::default()
+        }
     }
 }
 
@@ -44,12 +47,18 @@ impl VimBuffer for FakeBuffer {
     }
     fn undo(&mut self) {
         if let Some((t, s)) = self.undo.pop() {
-            self.redo.push((std::mem::replace(&mut self.text, t), std::mem::replace(&mut self.sel, s)));
+            self.redo.push((
+                std::mem::replace(&mut self.text, t),
+                std::mem::replace(&mut self.sel, s),
+            ));
         }
     }
     fn redo(&mut self) {
         if let Some((t, s)) = self.redo.pop() {
-            self.undo.push((std::mem::replace(&mut self.text, t), std::mem::replace(&mut self.sel, s)));
+            self.undo.push((
+                std::mem::replace(&mut self.text, t),
+                std::mem::replace(&mut self.sel, s),
+            ));
         }
     }
     fn visible_lines(&self) -> Range<usize> {

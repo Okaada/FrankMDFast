@@ -7,8 +7,7 @@ use frankmd_core::hugo::HugoPathStyle;
 use frankmd_core::new_note::NoteTemplate;
 use frankmd_workspace::command::UserError;
 use frankmd_workspace::dialogs::{
-    CreationOrigin, DeleteConfirm, InlineRename, MoveForm, NewFolderForm, NewNoteForm,
-    RenameTarget,
+    CreationOrigin, DeleteConfirm, InlineRename, MoveForm, NewFolderForm, NewNoteForm, RenameTarget,
 };
 use frankmd_workspace::explorer::{Item, ItemKind, MovePlan};
 
@@ -60,84 +59,108 @@ impl FileDialogs {
         let move_folder = input(cx, window, "dialogs.move.folder_placeholder");
         let rename_input = input(cx, window, "dialogs.rename.placeholder");
         let subs = vec![
-            cx.subscribe_in(&note_name, window, |shell, input, ev, window, cx| match ev {
-                InputEvent::Change => {
-                    let value = input.read(cx).value().to_string();
-                    if let Some(form) = shell.files.new_note.as_mut() {
-                        form.set_name(&value);
-                        form.set_error(None);
+            cx.subscribe_in(
+                &note_name,
+                window,
+                |shell, input, ev, window, cx| match ev {
+                    InputEvent::Change => {
+                        let value = input.read(cx).value().to_string();
+                        if let Some(form) = shell.files.new_note.as_mut() {
+                            form.set_name(&value);
+                            form.set_error(None);
+                        }
+                        cx.notify();
                     }
-                    cx.notify();
-                }
-                InputEvent::PressEnter { .. } => shell.submit_new_note(window, cx),
-                _ => {}
-            }),
-            cx.subscribe_in(&note_slug, window, |shell, input, ev, window, cx| match ev {
-                InputEvent::Change => {
-                    let value = input.read(cx).value().to_string();
-                    if let Some(form) = shell.files.new_note.as_mut()
-                        && value != form.slug()
-                    {
-                        form.set_slug(&value);
+                    InputEvent::PressEnter { .. } => shell.submit_new_note(window, cx),
+                    _ => {}
+                },
+            ),
+            cx.subscribe_in(
+                &note_slug,
+                window,
+                |shell, input, ev, window, cx| match ev {
+                    InputEvent::Change => {
+                        let value = input.read(cx).value().to_string();
+                        if let Some(form) = shell.files.new_note.as_mut()
+                            && value != form.slug()
+                        {
+                            form.set_slug(&value);
+                        }
+                        cx.notify();
                     }
-                    cx.notify();
-                }
-                InputEvent::PressEnter { .. } => shell.submit_new_note(window, cx),
-                _ => {}
-            }),
-            cx.subscribe_in(&folder_name, window, |shell, input, ev, window, cx| match ev {
-                InputEvent::Change => {
-                    let value = input.read(cx).value().to_string();
-                    if let Some(form) = shell.files.new_folder.as_mut() {
-                        form.set_name(&value);
-                        form.set_error(None);
+                    InputEvent::PressEnter { .. } => shell.submit_new_note(window, cx),
+                    _ => {}
+                },
+            ),
+            cx.subscribe_in(
+                &folder_name,
+                window,
+                |shell, input, ev, window, cx| match ev {
+                    InputEvent::Change => {
+                        let value = input.read(cx).value().to_string();
+                        if let Some(form) = shell.files.new_folder.as_mut() {
+                            form.set_name(&value);
+                            form.set_error(None);
+                        }
+                        cx.notify();
                     }
-                    cx.notify();
-                }
-                InputEvent::PressEnter { .. } => shell.submit_new_folder(window, cx),
-                _ => {}
-            }),
-            cx.subscribe_in(&move_name, window, |shell, input, ev, window, cx| match ev {
-                InputEvent::Change => {
-                    let value = input.read(cx).value().to_string();
-                    if let Some(form) = shell.files.move_form.as_mut() {
-                        form.set_name(&value);
-                        form.set_error(None);
+                    InputEvent::PressEnter { .. } => shell.submit_new_folder(window, cx),
+                    _ => {}
+                },
+            ),
+            cx.subscribe_in(
+                &move_name,
+                window,
+                |shell, input, ev, window, cx| match ev {
+                    InputEvent::Change => {
+                        let value = input.read(cx).value().to_string();
+                        if let Some(form) = shell.files.move_form.as_mut() {
+                            form.set_name(&value);
+                            form.set_error(None);
+                        }
+                        cx.notify();
                     }
-                    cx.notify();
-                }
-                InputEvent::PressEnter { .. } => shell.submit_move(window, cx),
-                _ => {}
-            }),
-            cx.subscribe_in(&move_folder, window, |shell, input, ev, window, cx| match ev {
-                InputEvent::Change => {
-                    let value = input.read(cx).value().to_string();
-                    if let Some(form) = shell.files.move_form.as_mut() {
-                        form.set_folder(value.trim().trim_matches('/'));
-                        form.set_error(None);
+                    InputEvent::PressEnter { .. } => shell.submit_move(window, cx),
+                    _ => {}
+                },
+            ),
+            cx.subscribe_in(
+                &move_folder,
+                window,
+                |shell, input, ev, window, cx| match ev {
+                    InputEvent::Change => {
+                        let value = input.read(cx).value().to_string();
+                        if let Some(form) = shell.files.move_form.as_mut() {
+                            form.set_folder(value.trim().trim_matches('/'));
+                            form.set_error(None);
+                        }
+                        cx.notify();
                     }
-                    cx.notify();
-                }
-                InputEvent::PressEnter { .. } => shell.submit_move(window, cx),
-                _ => {}
-            }),
-            cx.subscribe_in(&rename_input, window, |shell, input, ev, window, cx| match ev {
-                InputEvent::Change => {
-                    let value = input.read(cx).value().to_string();
-                    if let Some(rename) = shell.files.rename.as_mut() {
-                        rename.set_value(&value);
+                    InputEvent::PressEnter { .. } => shell.submit_move(window, cx),
+                    _ => {}
+                },
+            ),
+            cx.subscribe_in(
+                &rename_input,
+                window,
+                |shell, input, ev, window, cx| match ev {
+                    InputEvent::Change => {
+                        let value = input.read(cx).value().to_string();
+                        if let Some(rename) = shell.files.rename.as_mut() {
+                            rename.set_value(&value);
+                        }
+                        cx.notify();
                     }
-                    cx.notify();
-                }
-                InputEvent::PressEnter { .. } => shell.commit_inline_rename(window, cx),
-                // Blur commits (F.14), unless the rename already ended.
-                InputEvent::Blur => {
-                    if shell.files.rename.is_some() {
-                        shell.commit_inline_rename(window, cx);
+                    InputEvent::PressEnter { .. } => shell.commit_inline_rename(window, cx),
+                    // Blur commits (F.14), unless the rename already ended.
+                    InputEvent::Blur => {
+                        if shell.files.rename.is_some() {
+                            shell.commit_inline_rename(window, cx);
+                        }
                     }
-                }
-                InputEvent::Focus => {}
-            }),
+                    InputEvent::Focus => {}
+                },
+            ),
         ];
         (
             Self {
@@ -263,7 +286,9 @@ impl Shell {
         window: &mut Window,
         cx: &mut Context<Self>,
     ) {
-        let folder = self.focused_tree_folder(window, cx).unwrap_or_else(|| self.explorer.creation_folder());
+        let folder = self
+            .focused_tree_folder(window, cx)
+            .unwrap_or_else(|| self.explorer.creation_folder());
         self.open_new_note(
             CreationOrigin::Global {
                 selected_folder: folder,
@@ -285,7 +310,12 @@ impl Shell {
             .map(str::to_owned)
     }
 
-    fn set_note_template(&mut self, template: NoteTemplate, window: &mut Window, cx: &mut Context<Self>) {
+    fn set_note_template(
+        &mut self,
+        template: NoteTemplate,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
         if let Some(form) = self.files.new_note.as_mut() {
             form.set_template(template);
         }
@@ -296,7 +326,12 @@ impl Shell {
 
     /// "Change…" picked a destination: an explicit folder, like the folder
     /// context menu (so Hugo posts go there too).
-    fn pick_note_destination(&mut self, folder: String, window: &mut Window, cx: &mut Context<Self>) {
+    fn pick_note_destination(
+        &mut self,
+        folder: String,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
         let Some(old) = self.files.new_note.take() else {
             return;
         };
@@ -344,7 +379,12 @@ impl Shell {
 
     // ----- New folder (F.9) -------------------------------------------------------------
 
-    pub(crate) fn open_new_folder(&mut self, parent: &str, window: &mut Window, cx: &mut Context<Self>) {
+    pub(crate) fn open_new_folder(
+        &mut self,
+        parent: &str,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
         if self.core.is_none() {
             return;
         }
@@ -359,7 +399,9 @@ impl Shell {
     }
 
     pub(crate) fn new_folder_global(&mut self, window: &mut Window, cx: &mut Context<Self>) {
-        let folder = self.focused_tree_folder(window, cx).unwrap_or_else(|| self.explorer.creation_folder());
+        let folder = self
+            .focused_tree_folder(window, cx)
+            .unwrap_or_else(|| self.explorer.creation_folder());
         self.open_new_folder(&folder, window, cx);
     }
 
@@ -413,7 +455,8 @@ impl Shell {
         self.files.move_origin = folder.clone();
         self.files.move_form = Some(form);
         self.open_overlay(OverlayKind::Dialog(MOVE), window, cx);
-        let (name_input, folder_input) = (self.files.move_name.clone(), self.files.move_folder.clone());
+        let (name_input, folder_input) =
+            (self.files.move_name.clone(), self.files.move_folder.clone());
         Self::set_input(&folder_input, &folder, false, window, cx);
         Self::set_input(&name_input, &name, true, window, cx);
         name_input.update(cx, |input, cx| input.select_all(window, cx));
@@ -444,7 +487,12 @@ impl Shell {
 
     /// Drag & drop result: sequential moves, stop at the first failure;
     /// the destination is revealed (F.12, §5.14).
-    pub(crate) fn run_move_plan(&mut self, plan: MovePlan, window: &mut Window, cx: &mut Context<Self>) {
+    pub(crate) fn run_move_plan(
+        &mut self,
+        plan: MovePlan,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
         let items: Vec<RelPath> = plan
             .items
             .iter()
@@ -471,7 +519,12 @@ impl Shell {
 
     // ----- Delete (F.11, §5.13) ---------------------------------------------------------
 
-    pub(crate) fn open_delete(&mut self, items: Vec<Item>, window: &mut Window, cx: &mut Context<Self>) {
+    pub(crate) fn open_delete(
+        &mut self,
+        items: Vec<Item>,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
         let items = items.into_iter().map(|i| (i.path, i.kind)).collect();
         let Some(confirm) = DeleteConfirm::new(items) else {
             return;
@@ -522,7 +575,12 @@ impl Shell {
         cx.notify();
     }
 
-    fn delete_key(&mut self, keystroke: &Keystroke, window: &mut Window, cx: &mut Context<Self>) -> bool {
+    fn delete_key(
+        &mut self,
+        keystroke: &Keystroke,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) -> bool {
         match keystroke.key.as_str() {
             "tab" | "left" | "right" => {
                 self.files.delete_on_confirm = !self.files.delete_on_confirm;
@@ -740,7 +798,11 @@ impl Shell {
         }
     }
 
-    fn render_new_note(&mut self, _window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement + use<> {
+    fn render_new_note(
+        &mut self,
+        _window: &mut Window,
+        cx: &mut Context<Self>,
+    ) -> impl IntoElement + use<> {
         let theme = cx.theme().clone();
         let Some(form) = self.files.new_note.as_ref() else {
             return div().into_any_element();
@@ -754,7 +816,11 @@ impl Shell {
         let destination = form.destination();
         let error = form.error().map(|e| Self::err_text(cx, e));
         let this = cx.entity().downgrade();
-        let segment = |id: &'static str, t: NoteTemplate, title: &str, subtitle: &str, cx: &mut Context<Self>| {
+        let segment = |id: &'static str,
+                       t: NoteTemplate,
+                       title: &str,
+                       subtitle: &str,
+                       cx: &mut Context<Self>| {
             let this = this.clone();
             v_flex()
                 .id(id)
@@ -763,7 +829,11 @@ impl Shell {
                 .p_2()
                 .rounded(theme.radius)
                 .border_1()
-                .border_color(if template == t { theme.primary } else { theme.border })
+                .border_color(if template == t {
+                    theme.primary
+                } else {
+                    theme.border
+                })
                 .when(template == t, |el| el.bg(theme.primary.opacity(0.08)))
                 .child(div().font_medium().child(i18n::t(cx, title)))
                 .child(
@@ -823,7 +893,9 @@ impl Shell {
                     .child(label)
                     .on_click(move |_, window, cx| {
                         let folder = folder.clone();
-                        let _ = this.update(cx, |shell, cx| shell.pick_note_destination(folder, window, cx));
+                        let _ = this.update(cx, |shell, cx| {
+                            shell.pick_note_destination(folder, window, cx)
+                        });
                     })
             });
             v_flex()
@@ -1075,7 +1147,11 @@ impl Shell {
         let (key, args) = confirm.message();
         let args: Vec<(&str, &str)> = args.iter().map(|(k, v)| (*k, v.as_str())).collect();
         let message = i18n::t_args(cx, key, &args);
-        let error = self.files.delete_error.as_ref().map(|e| Self::err_text(cx, e));
+        let error = self
+            .files
+            .delete_error
+            .as_ref()
+            .map(|e| Self::err_text(cx, e));
         let on_confirm = self.files.delete_on_confirm;
         let this = cx.entity().downgrade();
         let cancel = this.clone();
@@ -1103,7 +1179,12 @@ impl Shell {
             v_flex()
                 .p_4()
                 .gap_2()
-                .child(div().id("dialog-delete-message").test_support().child(message))
+                .child(
+                    div()
+                        .id("dialog-delete-message")
+                        .test_support()
+                        .child(message),
+                )
                 .child(Self::error_row(error, &theme)),
         )
         .child(

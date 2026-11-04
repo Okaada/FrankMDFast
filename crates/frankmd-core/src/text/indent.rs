@@ -40,14 +40,20 @@ pub fn parse_indent_setting(value: Option<&IndentValue>) -> &'static str {
 
 /// Prefix every `\n`-separated line (including empty ones) with `indent`.
 pub fn indent_lines(text: &str, indent: &str) -> String {
-    text.split('\n').map(|line| format!("{indent}{line}")).collect::<Vec<_>>().join("\n")
+    text.split('\n')
+        .map(|line| format!("{indent}{line}"))
+        .collect::<Vec<_>>()
+        .join("\n")
 }
 
 /// Remove one level of indentation from each line: the exact `indent` if
 /// present; else, for a space indent, up to `indent.len()` leading spaces;
 /// else a single leading tab.
 pub fn unindent_lines(text: &str, indent: &str) -> String {
-    text.split('\n').map(|line| unindent_line(line, indent)).collect::<Vec<_>>().join("\n")
+    text.split('\n')
+        .map(|line| unindent_line(line, indent))
+        .collect::<Vec<_>>()
+        .join("\n")
 }
 
 /// One line of [`unindent_lines`].
@@ -86,8 +92,13 @@ fn parse_int(text: &str) -> Option<JsInt> {
     if digits.is_empty() {
         return None;
     }
-    let magnitude = digits.iter().fold(0u64, |acc, d| acc.saturating_mul(10).saturating_add(u64::from(d - b'0')));
-    Some(JsInt { negative, magnitude })
+    let magnitude = digits.iter().fold(0u64, |acc, d| {
+        acc.saturating_mul(10).saturating_add(u64::from(d - b'0'))
+    });
+    Some(JsInt {
+        negative,
+        magnitude,
+    })
 }
 
 /// JS `parseInt(number, 10)`, which first formats the number with
@@ -102,10 +113,16 @@ fn parse_int_number(number: f64) -> Option<JsInt> {
     let uses_exponent = abs >= 1e21 || (abs != 0.0 && abs < 1e-6);
     let magnitude = if uses_exponent {
         let formatted = format!("{abs:e}");
-        formatted.bytes().next().map_or(0, |d| u64::from(d.saturating_sub(b'0')))
+        formatted
+            .bytes()
+            .next()
+            .map_or(0, |d| u64::from(d.saturating_sub(b'0')))
     } else {
         // Below 1e21, so the truncated value fits a u64 saturating cast.
         abs.trunc() as u64
     };
-    Some(JsInt { negative, magnitude })
+    Some(JsInt {
+        negative,
+        magnitude,
+    })
 }

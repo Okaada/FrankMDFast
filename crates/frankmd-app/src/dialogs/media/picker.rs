@@ -5,23 +5,25 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
+use frankmd_media::Param;
 use frankmd_media::api::Base64Upload;
 use frankmd_media::import::ImportRequest;
 use frankmd_media::library::{Library, PickerCollection, PickerQuery};
 use frankmd_media::upload_storage::Upload;
 use frankmd_media::vm::Text;
 use frankmd_media::vm::picker::{
-    AiResult, Busy, Engine, ImageCard, ImagePicker, LocalFile, PickerConfig, PickerEffect, Source, StoreError,
-    StoreRequest, Thumb,
+    AiResult, Busy, Engine, ImageCard, ImagePicker, LocalFile, PickerConfig, PickerEffect, Source,
+    StoreError, StoreRequest, Thumb,
 };
 use frankmd_media::vm::storage::{KeyMode, Provider, Ready};
-use frankmd_media::Param;
 use gpui_kit::component::button::{Button, ButtonVariants as _};
 use gpui_kit::component::checkbox::Checkbox;
 use gpui_kit::component::input::{Input, InputEvent, InputState, Textarea, TextareaState};
 use gpui_kit::component::progress::Progress;
 use gpui_kit::component::theme::Theme;
-use gpui_kit::component::{ActiveTheme as _, Disableable as _, Selectable as _, Sizable as _, h_flex, v_flex};
+use gpui_kit::component::{
+    ActiveTheme as _, Disableable as _, Selectable as _, Sizable as _, h_flex, v_flex,
+};
 use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::*;
 
@@ -84,8 +86,11 @@ impl RemoteThumbs for ImagePickerDialog {
             return;
         }
         for engine in [Engine::Web, Engine::Google, Engine::Pinterest] {
-            while let Some(card) =
-                self.vm.search_cards(engine).into_iter().find(|c| c.thumb == Some(Thumb::Url(url.to_owned())))
+            while let Some(card) = self
+                .vm
+                .search_cards(engine)
+                .into_iter()
+                .find(|c| c.thumb == Some(Thumb::Url(url.to_owned())))
             {
                 self.vm.thumbnail_failed(engine, &card.key);
             }
@@ -112,78 +117,119 @@ impl ImagePickerDialog {
         let folder_search = input("dialogs.image_picker.search_images_placeholder", window, cx);
         let web_query = input("dialogs.image_picker.search_web_placeholder", window, cx);
         let google_query = input("dialogs.image_picker.search_google_placeholder", window, cx);
-        let pinterest_query = input("dialogs.image_picker.search_pinterest_placeholder", window, cx);
-        let ref_search = input("dialogs.image_picker.search_reference_placeholder", window, cx);
+        let pinterest_query = input(
+            "dialogs.image_picker.search_pinterest_placeholder",
+            window,
+            cx,
+        );
+        let ref_search = input(
+            "dialogs.image_picker.search_reference_placeholder",
+            window,
+            cx,
+        );
         let prompt_placeholder = t(cx, "dialogs.image_picker.prompt_placeholder");
         let prompt = cx.new(|cx| {
-            TextareaState::new(window, cx).rows(2).submit_on_enter(true).placeholder(prompt_placeholder)
+            TextareaState::new(window, cx)
+                .rows(2)
+                .submit_on_enter(true)
+                .placeholder(prompt_placeholder)
         });
 
         let mut subs = vec![cx.subscribe_in(&storage, window, Self::on_storage)];
-        subs.push(cx.subscribe_in(&alt, window, |this, input, ev: &InputEvent, _, cx| {
-            if matches!(ev, InputEvent::Change) && !this.syncing {
-                this.vm.set_alt(&input.read(cx).value());
-            }
-        }));
-        subs.push(cx.subscribe_in(&link, window, |this, input, ev: &InputEvent, _, cx| {
-            if matches!(ev, InputEvent::Change) && !this.syncing {
-                this.vm.set_link(&input.read(cx).value());
-            }
-        }));
-        subs.push(cx.subscribe_in(&key, window, |this, input, ev: &InputEvent, _, cx| {
-            if matches!(ev, InputEvent::Change) && !this.syncing {
-                this.vm.row_mut().on_key_edited(&input.read(cx).value());
-            }
-        }));
-        subs.push(cx.subscribe_in(&lib_search, window, |this, input, ev: &InputEvent, window, cx| {
-            if matches!(ev, InputEvent::Change) && !this.syncing {
-                let text = input.read(cx).value().to_string();
-                this.debounced(window, cx, move |this, window, cx| {
-                    let effects = this.vm.set_library_search(&text);
-                    this.run(effects, window, cx);
-                });
-            }
-        }));
-        subs.push(cx.subscribe_in(&folder_search, window, |this, input, ev: &InputEvent, window, cx| {
-            if matches!(ev, InputEvent::Change) && !this.syncing {
-                let text = input.read(cx).value().to_string();
-                this.debounced(window, cx, move |this, _, cx| {
-                    this.vm.set_folder_search(&text);
-                    cx.notify();
-                });
-            }
-        }));
-        subs.push(cx.subscribe_in(&ref_search, window, |this, input, ev: &InputEvent, window, cx| {
-            if matches!(ev, InputEvent::Change) && !this.syncing {
-                let text = input.read(cx).value().to_string();
-                this.debounced(window, cx, move |this, window, cx| {
-                    let effects = this.vm.set_ref_search(&text);
-                    this.run(effects, window, cx);
-                });
-            }
-        }));
-        for (state, engine) in
-            [(&web_query, Engine::Web), (&google_query, Engine::Google), (&pinterest_query, Engine::Pinterest)]
-        {
-            subs.push(cx.subscribe_in(state, window, move |this, input, ev: &InputEvent, window, cx| match ev {
-                InputEvent::Change if !this.syncing => this.vm.set_query(engine, &input.read(cx).value()),
-                InputEvent::PressEnter { .. } => {
-                    this.vm.set_query(engine, &input.read(cx).value());
-                    let effects = this.vm.search(engine);
+        subs.push(
+            cx.subscribe_in(&alt, window, |this, input, ev: &InputEvent, _, cx| {
+                if matches!(ev, InputEvent::Change) && !this.syncing {
+                    this.vm.set_alt(&input.read(cx).value());
+                }
+            }),
+        );
+        subs.push(
+            cx.subscribe_in(&link, window, |this, input, ev: &InputEvent, _, cx| {
+                if matches!(ev, InputEvent::Change) && !this.syncing {
+                    this.vm.set_link(&input.read(cx).value());
+                }
+            }),
+        );
+        subs.push(
+            cx.subscribe_in(&key, window, |this, input, ev: &InputEvent, _, cx| {
+                if matches!(ev, InputEvent::Change) && !this.syncing {
+                    this.vm.row_mut().on_key_edited(&input.read(cx).value());
+                }
+            }),
+        );
+        subs.push(cx.subscribe_in(
+            &lib_search,
+            window,
+            |this, input, ev: &InputEvent, window, cx| {
+                if matches!(ev, InputEvent::Change) && !this.syncing {
+                    let text = input.read(cx).value().to_string();
+                    this.debounced(window, cx, move |this, window, cx| {
+                        let effects = this.vm.set_library_search(&text);
+                        this.run(effects, window, cx);
+                    });
+                }
+            },
+        ));
+        subs.push(cx.subscribe_in(
+            &folder_search,
+            window,
+            |this, input, ev: &InputEvent, window, cx| {
+                if matches!(ev, InputEvent::Change) && !this.syncing {
+                    let text = input.read(cx).value().to_string();
+                    this.debounced(window, cx, move |this, _, cx| {
+                        this.vm.set_folder_search(&text);
+                        cx.notify();
+                    });
+                }
+            },
+        ));
+        subs.push(cx.subscribe_in(
+            &ref_search,
+            window,
+            |this, input, ev: &InputEvent, window, cx| {
+                if matches!(ev, InputEvent::Change) && !this.syncing {
+                    let text = input.read(cx).value().to_string();
+                    this.debounced(window, cx, move |this, window, cx| {
+                        let effects = this.vm.set_ref_search(&text);
+                        this.run(effects, window, cx);
+                    });
+                }
+            },
+        ));
+        for (state, engine) in [
+            (&web_query, Engine::Web),
+            (&google_query, Engine::Google),
+            (&pinterest_query, Engine::Pinterest),
+        ] {
+            subs.push(cx.subscribe_in(
+                state,
+                window,
+                move |this, input, ev: &InputEvent, window, cx| match ev {
+                    InputEvent::Change if !this.syncing => {
+                        this.vm.set_query(engine, &input.read(cx).value())
+                    }
+                    InputEvent::PressEnter { .. } => {
+                        this.vm.set_query(engine, &input.read(cx).value());
+                        let effects = this.vm.search(engine);
+                        this.run(effects, window, cx);
+                    }
+                    _ => {}
+                },
+            ));
+        }
+        subs.push(cx.subscribe_in(
+            &prompt,
+            window,
+            |this, input, ev: &InputEvent, window, cx| match ev {
+                InputEvent::Change if !this.syncing => this.vm.set_prompt(&input.read(cx).value()),
+                InputEvent::PressEnter { shift: false, .. } => {
+                    this.vm.set_prompt(&input.read(cx).value());
+                    let effects = this.vm.generate();
                     this.run(effects, window, cx);
                 }
                 _ => {}
-            }));
-        }
-        subs.push(cx.subscribe_in(&prompt, window, |this, input, ev: &InputEvent, window, cx| match ev {
-            InputEvent::Change if !this.syncing => this.vm.set_prompt(&input.read(cx).value()),
-            InputEvent::PressEnter { shift: false, .. } => {
-                this.vm.set_prompt(&input.read(cx).value());
-                let effects = this.vm.generate();
-                this.run(effects, window, cx);
-            }
-            _ => {}
-        }));
+            },
+        ));
 
         Self {
             services,
@@ -263,7 +309,9 @@ impl ImagePickerDialog {
         cx: &mut Context<Self>,
     ) {
         self.open(note, window, cx);
-        let work = cx.background_executor().spawn(async move { super::files::describe_all(&paths) });
+        let work = cx
+            .background_executor()
+            .spawn(async move { super::files::describe_all(&paths) });
         let task = cx.spawn_in(window, async move |this, cx| {
             let files = work.await;
             this.update_in(cx, |this, window, cx| {
@@ -273,7 +321,13 @@ impl ImagePickerDialog {
             })
             .ok();
         });
-        self.jobs.insert("describe", Job { _abort: None, _task: task });
+        self.jobs.insert(
+            "describe",
+            Job {
+                _abort: None,
+                _task: task,
+            },
+        );
     }
 
     /// Close without inserting (Esc, Cancel, ×). Running work is aborted.
@@ -290,7 +344,9 @@ impl ImagePickerDialog {
 
     fn refresh_config(&mut self, cx: &mut Context<Self>) {
         let services = Arc::clone(&self.services);
-        let work = cx.background_executor().spawn(async move { services.picker_config() });
+        let work = cx
+            .background_executor()
+            .spawn(async move { services.picker_config() });
         let storage = self.storage.clone();
         let task = cx.spawn(async move |this, cx| {
             let (config, snapshot) = work.await;
@@ -302,10 +358,22 @@ impl ImagePickerDialog {
             })
             .ok();
         });
-        self.jobs.insert("config", Job { _abort: None, _task: task });
+        self.jobs.insert(
+            "config",
+            Job {
+                _abort: None,
+                _task: task,
+            },
+        );
     }
 
-    fn on_storage(&mut self, storage: &Entity<StorageModel>, ev: &StorageEvent, window: &mut Window, cx: &mut Context<Self>) {
+    fn on_storage(
+        &mut self,
+        storage: &Entity<StorageModel>,
+        ev: &StorageEvent,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
         let (provider, s3) = {
             let state = storage.read(cx).state();
             (state.provider(), state.s3_available())
@@ -330,7 +398,9 @@ impl ImagePickerDialog {
         f: impl FnOnce(&mut Self, &mut Window, &mut Context<Self>) + 'static,
     ) {
         self.debounce = Some(cx.spawn_in(window, async move |this, cx| {
-            cx.background_executor().timer(std::time::Duration::from_millis(300)).await;
+            cx.background_executor()
+                .timer(std::time::Duration::from_millis(300))
+                .await;
             this.update_in(cx, |this, window, cx| {
                 f(this, window, cx);
                 cx.notify();
@@ -345,7 +415,10 @@ impl ImagePickerDialog {
         let alt = self.vm.alt().to_owned();
         let link = self.vm.link().to_owned();
         let key = self.vm.row().key_text().to_owned();
-        let set = |state: &Entity<InputState>, value: String, window: &mut Window, cx: &mut Context<Self>| {
+        let set = |state: &Entity<InputState>,
+                   value: String,
+                   window: &mut Window,
+                   cx: &mut Context<Self>| {
             if state.read(cx).value() != value.as_str() {
                 state.update(cx, |s, cx| s.set_value(value, window, cx));
             }
@@ -373,7 +446,8 @@ impl ImagePickerDialog {
         }
         let prompt = self.vm.prompt().to_owned();
         if self.prompt.read(cx).value() != prompt.as_str() {
-            self.prompt.update(cx, |s, cx| s.set_value(prompt, window, cx));
+            self.prompt
+                .update(cx, |s, cx| s.set_value(prompt, window, cx));
         }
         self.syncing = false;
     }
@@ -399,8 +473,13 @@ impl ImagePickerDialog {
                     prompt: Some(t(cx, "dialogs.image_picker.insert_image")),
                 });
                 let task = cx.spawn_in(window, async move |this, cx| {
-                    let Ok(Ok(Some(paths))) = rx.await else { return };
-                    let files = cx.background_executor().spawn(async move { super::files::describe_all(&paths) }).await;
+                    let Ok(Ok(Some(paths))) = rx.await else {
+                        return;
+                    };
+                    let files = cx
+                        .background_executor()
+                        .spawn(async move { super::files::describe_all(&paths) })
+                        .await;
                     this.update_in(cx, |this, window, cx| {
                         this.vm.ingest(files);
                         this.sync_inputs(window, cx);
@@ -408,7 +487,13 @@ impl ImagePickerDialog {
                     })
                     .ok();
                 });
-                self.jobs.insert("choose", Job { _abort: None, _task: task });
+                self.jobs.insert(
+                    "choose",
+                    Job {
+                        _abort: None,
+                        _task: task,
+                    },
+                );
             }
             PickerEffect::ChooseFolder => {
                 let rx = cx.prompt_for_paths(PathPromptOptions {
@@ -430,10 +515,18 @@ impl ImagePickerDialog {
                     })
                     .ok();
                 });
-                self.jobs.insert("choose", Job { _abort: None, _task: task });
+                self.jobs.insert(
+                    "choose",
+                    Job {
+                        _abort: None,
+                        _task: task,
+                    },
+                );
             }
             PickerEffect::ReadFolder { generation, dir } => {
-                let work = cx.background_executor().spawn(async move { super::files::list_folder(&dir) });
+                let work = cx
+                    .background_executor()
+                    .spawn(async move { super::files::list_folder(&dir) });
                 let task = cx.spawn(async move |this, cx| {
                     let result = work.await.map_err(|e| Text::Raw(e.to_string()));
                     this.update(cx, |this, cx| {
@@ -442,9 +535,21 @@ impl ImagePickerDialog {
                     })
                     .ok();
                 });
-                self.jobs.insert("folder", Job { _abort: None, _task: task });
+                self.jobs.insert(
+                    "folder",
+                    Job {
+                        _abort: None,
+                        _task: task,
+                    },
+                );
             }
-            PickerEffect::LoadLibrary { generation, collection, search, limit, offset } => {
+            PickerEffect::LoadLibrary {
+                generation,
+                collection,
+                search,
+                limit,
+                offset,
+            } => {
                 let work = cx.background_executor().spawn(async move {
                     let config = services.media_config();
                     let query = PickerQuery {
@@ -467,16 +572,29 @@ impl ImagePickerDialog {
                     })
                     .ok();
                 });
-                self.jobs.insert("library", Job { _abort: None, _task: task });
+                self.jobs.insert(
+                    "library",
+                    Job {
+                        _abort: None,
+                        _task: task,
+                    },
+                );
             }
             PickerEffect::DeleteImage { collection, path } => {
                 let (abort, work) = spawn_net(cx, async move {
                     match collection {
-                        PickerCollection::Managed => Library::new(&services.vault, &services.api.env)
-                            .with_recovery(&services.api.recovery)
-                            .delete(&path)
-                            .await
-                            .map_err(|e| e.i18n_key().map_or(Text::key("dialogs.image_picker.delete_failed"), Text::key)),
+                        PickerCollection::Managed => {
+                            Library::new(&services.vault, &services.api.env)
+                                .with_recovery(&services.api.recovery)
+                                .delete(&path)
+                                .await
+                                .map_err(|e| {
+                                    e.i18n_key().map_or(
+                                        Text::key("dialogs.image_picker.delete_failed"),
+                                        Text::key,
+                                    )
+                                })
+                        }
                         PickerCollection::Server => services
                             .api
                             .destroy(&path)
@@ -484,16 +602,29 @@ impl ImagePickerDialog {
                     }
                 });
                 let task = cx.spawn_in(window, async move |this, cx| {
-                    let result = work.await.unwrap_or_else(|| Err(Text::key("dialogs.image_picker.delete_failed")));
+                    let result = work
+                        .await
+                        .unwrap_or_else(|| Err(Text::key("dialogs.image_picker.delete_failed")));
                     this.update_in(cx, |this, window, cx| {
                         let effects = this.vm.delete_result(result);
                         this.run(effects, window, cx);
                     })
                     .ok();
                 });
-                self.jobs.insert("delete", Job { _abort: abort, _task: task });
+                self.jobs.insert(
+                    "delete",
+                    Job {
+                        _abort: abort,
+                        _task: task,
+                    },
+                );
             }
-            PickerEffect::Search { generation, engine, query, start } => {
+            PickerEffect::Search {
+                generation,
+                engine,
+                query,
+                start,
+            } => {
                 let (abort, work) = spawn_net(cx, async move {
                     let result = match engine {
                         Engine::Web => services.search.search_web(&query).await,
@@ -506,22 +637,40 @@ impl ImagePickerDialog {
                     result.map_err(|e| Text::key(e.i18n_key()))
                 });
                 let task = cx.spawn(async move |this, cx| {
-                    let result = work.await.unwrap_or_else(|| Err(Text::key("dialogs.image_picker.search_failed")));
+                    let result = work
+                        .await
+                        .unwrap_or_else(|| Err(Text::key("dialogs.image_picker.search_failed")));
                     this.update(cx, |this, cx| {
                         this.vm.search_result(engine, generation, start, result);
                         cx.notify();
                     })
                     .ok();
                 });
-                self.jobs.insert(engine_job(engine), Job { _abort: abort, _task: task });
+                self.jobs.insert(
+                    engine_job(engine),
+                    Job {
+                        _abort: abort,
+                        _task: task,
+                    },
+                );
             }
             PickerEffect::LoadRefImages { search } => {
                 let work = cx.background_executor().spawn(async move {
-                    let search = if search.is_empty() { None } else { Some(search.as_str()) };
+                    let search = if search.is_empty() {
+                        None
+                    } else {
+                        Some(search.as_str())
+                    };
                     services
                         .api
                         .index(search, &Param::Nil, &Param::Nil)
-                        .map(|index| index.images.into_iter().map(|i| (i.path, i.name)).collect::<Vec<_>>())
+                        .map(|index| {
+                            index
+                                .images
+                                .into_iter()
+                                .map(|i| (i.path, i.name))
+                                .collect::<Vec<_>>()
+                        })
                         .unwrap_or_default()
                 });
                 let task = cx.spawn(async move |this, cx| {
@@ -532,13 +681,29 @@ impl ImagePickerDialog {
                     })
                     .ok();
                 });
-                self.jobs.insert("refs", Job { _abort: None, _task: task });
+                self.jobs.insert(
+                    "refs",
+                    Job {
+                        _abort: None,
+                        _task: task,
+                    },
+                );
             }
-            PickerEffect::Generate { generation, prompt, reference } => {
+            PickerEffect::Generate {
+                generation,
+                prompt,
+                reference,
+            } => {
                 let (abort, work) = spawn_net(cx, async move {
                     let service = services.ai();
                     let refs = ServerRefs(Arc::clone(&services));
-                    frankmd_ai::generate_image_request(&service, &prompt, reference.as_deref(), &refs).await
+                    frankmd_ai::generate_image_request(
+                        &service,
+                        &prompt,
+                        reference.as_deref(),
+                        &refs,
+                    )
+                    .await
                 });
                 let task = cx.spawn(async move |this, cx| {
                     let result = work.await;
@@ -550,16 +715,27 @@ impl ImagePickerDialog {
                                 model: image.model,
                                 revised_prompt: None,
                             }),
-                            Some(Err(frankmd_ai::AiRequestError::BadRequest(key))) => Err(Text::key(key)),
-                            Some(Err(frankmd_ai::AiRequestError::Service(e))) => Err(Text::Raw(e.to_string())),
+                            Some(Err(frankmd_ai::AiRequestError::BadRequest(key))) => {
+                                Err(Text::key(key))
+                            }
+                            Some(Err(frankmd_ai::AiRequestError::Service(e))) => {
+                                Err(Text::Raw(e.to_string()))
+                            }
                             _ => Err(Text::key("dialogs.image_picker.ai_generation_failed")),
                         };
-                        this.vm.generate_result(generation, result, super::files::now_ms() as i64);
+                        this.vm
+                            .generate_result(generation, result, super::files::now_ms() as i64);
                         cx.notify();
                     })
                     .ok();
                 });
-                self.jobs.insert("generate", Job { _abort: abort, _task: task });
+                self.jobs.insert(
+                    "generate",
+                    Job {
+                        _abort: abort,
+                        _task: task,
+                    },
+                );
             }
             PickerEffect::CancelGenerate => {
                 self.jobs.remove("generate");
@@ -590,9 +766,12 @@ impl ImagePickerDialog {
         // Read local bytes off the UI thread first (cap checked before reading).
         let read = cx.background_executor().spawn(async move {
             match request {
-                StoreRequest::Upload { file, resize, s3_key } => {
-                    super::files::read_bytes(&file).map(|bytes| (Some((file.name, bytes, resize, s3_key)), None))
-                }
+                StoreRequest::Upload {
+                    file,
+                    resize,
+                    s3_key,
+                } => super::files::read_bytes(&file)
+                    .map(|bytes| (Some((file.name, bytes, resize, s3_key)), None)),
                 other => Ok((None, Some(other))),
             }
         });
@@ -602,7 +781,10 @@ impl ImagePickerDialog {
                 Ok(parts) => parts,
                 Err(message) => {
                     this.update_in(cx, |this, window, cx| {
-                        let effects = this.vm.store_result(Err(StoreError { message, fallback: false }));
+                        let effects = this.vm.store_result(Err(StoreError {
+                            message,
+                            fallback: false,
+                        }));
                         this.run(effects, window, cx);
                     })
                     .ok();
@@ -614,20 +796,54 @@ impl ImagePickerDialog {
                     if let Some((name, bytes, resize, s3_key)) = bytes {
                         return services
                             .api
-                            .upload(Some(Upload::new(name, bytes)), &float(resize), &Param::Nil, s3_key.as_deref())
+                            .upload(
+                                Some(Upload::new(name, bytes)),
+                                &float(resize),
+                                &Param::Nil,
+                                s3_key.as_deref(),
+                            )
                             .await;
                     }
                     match other {
-                        Some(StoreRequest::ImportUrl { url, resize, s3_prefix }) => {
-                            let req = ImportRequest { url: Param::str(url), resize, s3_prefix, ..ImportRequest::default() };
+                        Some(StoreRequest::ImportUrl {
+                            url,
+                            resize,
+                            s3_prefix,
+                        }) => {
+                            let req = ImportRequest {
+                                url: Param::str(url),
+                                resize,
+                                s3_prefix,
+                                ..ImportRequest::default()
+                            };
                             services.api.import(&req).await
                         }
-                        Some(StoreRequest::ImportPath { path, resize, s3_key }) => {
-                            let req = ImportRequest { path: Param::str(path), resize, s3_key, ..ImportRequest::default() };
+                        Some(StoreRequest::ImportPath {
+                            path,
+                            resize,
+                            s3_key,
+                        }) => {
+                            let req = ImportRequest {
+                                path: Param::str(path),
+                                resize,
+                                s3_key,
+                                ..ImportRequest::default()
+                            };
                             services.api.import(&req).await
                         }
-                        Some(StoreRequest::Base64 { data, mime, filename, s3_prefix }) => {
-                            let req = Base64Upload { data, mime_type: mime, filename, s3_prefix, ..Base64Upload::default() };
+                        Some(StoreRequest::Base64 {
+                            data,
+                            mime,
+                            filename,
+                            s3_prefix,
+                        }) => {
+                            let req = Base64Upload {
+                                data,
+                                mime_type: mime,
+                                filename,
+                                s3_prefix,
+                                ..Base64Upload::default()
+                            };
                             services.api.upload_base64(&req).await
                         }
                         _ => Ok(String::new()),
@@ -646,18 +862,30 @@ impl ImagePickerDialog {
                         message: tr(cx, &Text::from_api(&error.message)).to_string(),
                         fallback: error.media_storage_fallback,
                     }),
-                    None => Err(StoreError { message: t(cx, "errors.upload_failed").to_string(), fallback: false }),
+                    None => Err(StoreError {
+                        message: t(cx, "errors.upload_failed").to_string(),
+                        fallback: false,
+                    }),
                 };
                 let failed = result.is_err();
                 if failed {
-                    cx.emit(MediaEvent::Status { text: t(cx, "dialogs.image_picker.image_upload_failed"), error: true });
+                    cx.emit(MediaEvent::Status {
+                        text: t(cx, "dialogs.image_picker.image_upload_failed"),
+                        error: true,
+                    });
                 }
                 let effects = this.vm.store_result(result);
                 this.run(effects, window, cx);
             })
             .ok();
         });
-        self.jobs.insert("store", Job { _abort: None, _task: task });
+        self.jobs.insert(
+            "store",
+            Job {
+                _abort: None,
+                _task: task,
+            },
+        );
     }
 
     // ----- actions ---------------------------------------------------------------------
@@ -714,7 +942,10 @@ impl frankmd_ai::ReferenceImages for ServerRefs {
         let path = self.0.api.preview(rel_path).ok()?;
         let bytes = std::fs::read(&path).ok()?;
         let mime = frankmd_media::images::content_type_for(&path.to_string_lossy()).to_owned();
-        Some(frankmd_ai::ReferenceImage { bytes, mime_type: mime })
+        Some(frankmd_ai::ReferenceImage {
+            bytes,
+            mime_type: mime,
+        })
     }
 }
 
@@ -757,15 +988,33 @@ impl Render for ImagePickerDialog {
             .key_context(super::CONTEXT)
             .on_action(cx.listener(|this, _: &super::Confirm, window, cx| this.insert(window, cx)))
             .on_action(cx.listener(|this, _: &super::Cancel, _, cx| this.cancel(cx)))
-            .on_action(cx.listener(|this, _: &super::NextSource, window, cx| this.step(true, window, cx)))
-            .on_action(cx.listener(|this, _: &super::PrevSource, window, cx| this.step(false, window, cx)))
-            .on_action(cx.listener(|this, _: &super::Source1, window, cx| this.select_source(Source::ALL[0], window, cx)))
-            .on_action(cx.listener(|this, _: &super::Source2, window, cx| this.select_source(Source::ALL[1], window, cx)))
-            .on_action(cx.listener(|this, _: &super::Source3, window, cx| this.select_source(Source::ALL[2], window, cx)))
-            .on_action(cx.listener(|this, _: &super::Source4, window, cx| this.select_source(Source::ALL[3], window, cx)))
-            .on_action(cx.listener(|this, _: &super::Source5, window, cx| this.select_source(Source::ALL[4], window, cx)))
-            .on_action(cx.listener(|this, _: &super::Source6, window, cx| this.select_source(Source::ALL[5], window, cx)))
-            .on_action(cx.listener(|this, _: &super::Source7, window, cx| this.select_source(Source::ALL[6], window, cx)))
+            .on_action(
+                cx.listener(|this, _: &super::NextSource, window, cx| this.step(true, window, cx)),
+            )
+            .on_action(
+                cx.listener(|this, _: &super::PrevSource, window, cx| this.step(false, window, cx)),
+            )
+            .on_action(cx.listener(|this, _: &super::Source1, window, cx| {
+                this.select_source(Source::ALL[0], window, cx)
+            }))
+            .on_action(cx.listener(|this, _: &super::Source2, window, cx| {
+                this.select_source(Source::ALL[1], window, cx)
+            }))
+            .on_action(cx.listener(|this, _: &super::Source3, window, cx| {
+                this.select_source(Source::ALL[2], window, cx)
+            }))
+            .on_action(cx.listener(|this, _: &super::Source4, window, cx| {
+                this.select_source(Source::ALL[3], window, cx)
+            }))
+            .on_action(cx.listener(|this, _: &super::Source5, window, cx| {
+                this.select_source(Source::ALL[4], window, cx)
+            }))
+            .on_action(cx.listener(|this, _: &super::Source6, window, cx| {
+                this.select_source(Source::ALL[5], window, cx)
+            }))
+            .on_action(cx.listener(|this, _: &super::Source7, window, cx| {
+                this.select_source(Source::ALL[6], window, cx)
+            }))
             .w(width)
             .h(height)
             .flex()
@@ -775,9 +1024,14 @@ impl Render for ImagePickerDialog {
             .border_color(theme.border)
             .rounded(theme.radius_lg)
             .overflow_hidden()
-            .child(widgets::header(t(cx, "dialogs.image_picker.title"), "picker-close", &theme, move |_, cx| {
-                let _ = this.update(cx, |this, cx| this.close(cx));
-            }))
+            .child(widgets::header(
+                t(cx, "dialogs.image_picker.title"),
+                "picker-close",
+                &theme,
+                move |_, cx| {
+                    let _ = this.update(cx, |this, cx| this.close(cx));
+                },
+            ))
             .child(
                 h_flex()
                     .flex_1()
@@ -823,7 +1077,11 @@ impl ImagePickerDialog {
                     .small()
                     .w_full()
                     .selected(source == active)
-                    .label(if setup { SharedString::from(format!("{label}  · {}", t(cx, "media_dialogs.set_up"))) } else { label })
+                    .label(if setup {
+                        SharedString::from(format!("{label}  · {}", t(cx, "media_dialogs.set_up")))
+                    } else {
+                        label
+                    })
                     .on_click(cx.listener(move |this, _, window, cx| {
                         this.select_source(source, window, cx);
                         this.rail_focus.focus(window, cx);
@@ -831,62 +1089,96 @@ impl ImagePickerDialog {
             }))
     }
 
-    fn render_panel(&mut self, theme: &Theme, window: &mut Window, cx: &mut Context<Self>) -> AnyElement {
+    fn render_panel(
+        &mut self,
+        theme: &Theme,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) -> AnyElement {
         match self.vm.source() {
             Source::Upload => self.render_upload(theme, cx).into_any_element(),
             Source::Library => self.render_library(theme, cx).into_any_element(),
             Source::Folder => self.render_folder(theme, cx).into_any_element(),
-            Source::Web => self.render_search(Engine::Web, theme, window, cx).into_any_element(),
-            Source::Google => self.render_search(Engine::Google, theme, window, cx).into_any_element(),
-            Source::Pinterest => self.render_search(Engine::Pinterest, theme, window, cx).into_any_element(),
+            Source::Web => self
+                .render_search(Engine::Web, theme, window, cx)
+                .into_any_element(),
+            Source::Google => self
+                .render_search(Engine::Google, theme, window, cx)
+                .into_any_element(),
+            Source::Pinterest => self
+                .render_search(Engine::Pinterest, theme, window, cx)
+                .into_any_element(),
             Source::Ai => self.render_ai(theme, cx).into_any_element(),
         }
     }
 
-    fn grid(&self, prefix: &'static str, cards: Vec<ImageCard>, theme: &Theme, cx: &mut Context<Self>) -> Div {
+    fn grid(
+        &self,
+        prefix: &'static str,
+        cards: Vec<ImageCard>,
+        theme: &Theme,
+        cx: &mut Context<Self>,
+    ) -> Div {
         let remote = &self.remote;
-        div().flex().flex_wrap().gap_2().children(cards.into_iter().map(|card| {
-            let key = card.key.clone();
-            let border = if card.selected { theme.accent } else { theme.border };
-            v_flex()
-                .id(SharedString::from(format!("picker-card-{prefix}-{}", card.key)))
-                .test_support()
-                .w(px(120.))
-                .gap_1()
-                .cursor_pointer()
-                .on_click(cx.listener(move |this, _, window, cx| {
-                    this.vm.select_card(&key);
-                    this.sync_inputs(window, cx);
-                    cx.notify();
-                }))
-                .child(
-                    div()
-                        .relative()
-                        .size(px(120.))
-                        .rounded(theme.radius)
-                        .overflow_hidden()
-                        .border_2()
-                        .border_color(border)
-                        .child(widgets::thumb_element(card.thumb.as_ref(), remote, theme))
-                        .when_some(card.badge.clone(), |el, badge| {
-                            el.child(
-                                div()
-                                    .absolute()
-                                    .bottom_1()
-                                    .left_1()
-                                    .px_1()
-                                    .rounded_sm()
-                                    .text_xs()
-                                    .bg(theme.background.opacity(0.8))
-                                    .child(badge),
-                            )
-                        }),
-                )
-                .child(div().text_xs().truncate().child(card.label.clone()))
-                .when_some(card.caption.clone(), |el, caption| {
-                    el.child(div().text_xs().text_color(theme.muted_foreground).truncate().child(caption))
-                })
-        }))
+        div()
+            .flex()
+            .flex_wrap()
+            .gap_2()
+            .children(cards.into_iter().map(|card| {
+                let key = card.key.clone();
+                let border = if card.selected {
+                    theme.accent
+                } else {
+                    theme.border
+                };
+                v_flex()
+                    .id(SharedString::from(format!(
+                        "picker-card-{prefix}-{}",
+                        card.key
+                    )))
+                    .test_support()
+                    .w(px(120.))
+                    .gap_1()
+                    .cursor_pointer()
+                    .on_click(cx.listener(move |this, _, window, cx| {
+                        this.vm.select_card(&key);
+                        this.sync_inputs(window, cx);
+                        cx.notify();
+                    }))
+                    .child(
+                        div()
+                            .relative()
+                            .size(px(120.))
+                            .rounded(theme.radius)
+                            .overflow_hidden()
+                            .border_2()
+                            .border_color(border)
+                            .child(widgets::thumb_element(card.thumb.as_ref(), remote, theme))
+                            .when_some(card.badge.clone(), |el, badge| {
+                                el.child(
+                                    div()
+                                        .absolute()
+                                        .bottom_1()
+                                        .left_1()
+                                        .px_1()
+                                        .rounded_sm()
+                                        .text_xs()
+                                        .bg(theme.background.opacity(0.8))
+                                        .child(badge),
+                                )
+                            }),
+                    )
+                    .child(div().text_xs().truncate().child(card.label.clone()))
+                    .when_some(card.caption.clone(), |el, caption| {
+                        el.child(
+                            div()
+                                .text_xs()
+                                .text_color(theme.muted_foreground)
+                                .truncate()
+                                .child(caption),
+                        )
+                    })
+            }))
     }
 
     fn render_upload(&mut self, theme: &Theme, cx: &mut Context<Self>) -> impl IntoElement + use<> {
@@ -912,7 +1204,9 @@ impl ImagePickerDialog {
                     .drag_over::<ExternalPaths>(move |style, _, _, _| style.border_color(accent))
                     .on_drop(cx.listener(|this, paths: &ExternalPaths, window, cx| {
                         let paths = paths.paths().to_vec();
-                        let work = cx.background_executor().spawn(async move { super::files::describe_all(&paths) });
+                        let work = cx
+                            .background_executor()
+                            .spawn(async move { super::files::describe_all(&paths) });
                         let task = cx.spawn_in(window, async move |this, cx| {
                             let files = work.await;
                             this.update_in(cx, |this, window, cx| {
@@ -922,7 +1216,13 @@ impl ImagePickerDialog {
                             })
                             .ok();
                         });
-                        this.jobs.insert("describe", Job { _abort: None, _task: task });
+                        this.jobs.insert(
+                            "describe",
+                            Job {
+                                _abort: None,
+                                _task: task,
+                            },
+                        );
                     }))
                     .on_action(cx.listener(|this, _: &super::Activate, window, cx| {
                         let effects = this.vm.choose_files();
@@ -934,19 +1234,39 @@ impl ImagePickerDialog {
                     }))
                     .child(t(cx, "media_dialogs.drop_images_hint")),
             )
-            .children(self.vm.upload_rejections().iter().map(|r| widgets::error_line(tr(cx, r), theme)))
+            .children(
+                self.vm
+                    .upload_rejections()
+                    .iter()
+                    .map(|r| widgets::error_line(tr(cx, r), theme)),
+            )
             .when_some(self.vm.upload_status(), |el, status| {
-                el.child(div().text_sm().text_color(theme.muted_foreground).child(tr(cx, &status)))
+                el.child(
+                    div()
+                        .text_sm()
+                        .text_color(theme.muted_foreground)
+                        .child(tr(cx, &status)),
+                )
             })
             .child(self.grid("upload", self.vm.upload_cards(), theme, cx))
     }
 
-    fn render_library(&mut self, theme: &Theme, cx: &mut Context<Self>) -> impl IntoElement + use<> {
+    fn render_library(
+        &mut self,
+        theme: &Theme,
+        cx: &mut Context<Self>,
+    ) -> impl IntoElement + use<> {
         let collection = self.vm.collection();
         let server_disabled = self.vm.server_collection_disabled_reason();
         let per_page = self.vm.library_per_page();
         let selected_path = (self.vm.selected_source() == Some(Source::Library))
-            .then(|| self.vm.library_cards().into_iter().find(|c| c.selected).map(|c| c.key))
+            .then(|| {
+                self.vm
+                    .library_cards()
+                    .into_iter()
+                    .find(|c| c.selected)
+                    .map(|c| c.key)
+            })
             .flatten();
         v_flex()
             .gap_2()
@@ -969,14 +1289,20 @@ impl ImagePickerDialog {
                             .small()
                             .selected(collection == PickerCollection::Server)
                             .disabled(server_disabled.is_some())
-                            .when_some(server_disabled.as_ref(), |b, reason| b.tooltip(tr(cx, reason)))
+                            .when_some(server_disabled.as_ref(), |b, reason| {
+                                b.tooltip(tr(cx, reason))
+                            })
                             .label(t(cx, "media_storage.server_images"))
                             .on_click(cx.listener(|this, _, window, cx| {
                                 let effects = this.vm.set_collection(PickerCollection::Server);
                                 this.run(effects, window, cx);
                             })),
                     )
-                    .child(div().w(px(220.)).child(Input::new(&self.lib_search).small()))
+                    .child(
+                        div()
+                            .w(px(220.))
+                            .child(Input::new(&self.lib_search).small()),
+                    )
                     .children([10usize, 25, 50].map(|n| {
                         Button::new(SharedString::from(format!("library-per-page-{n}")))
                             .xsmall()
@@ -988,39 +1314,64 @@ impl ImagePickerDialog {
                             }))
                     })),
             )
-            .when_some(self.vm.library_error().cloned(), |el, e| el.child(widgets::error_line(tr(cx, &e), theme)))
-            .when_some(self.vm.pending_delete().map(|(p, n)| (p.to_owned(), n.to_owned())), |el, (_, name)| {
-                el.child(
-                    h_flex()
-                        .id("library-delete-confirm")
-                        .test_support()
-                        .gap_2()
-                        .p_2()
-                        .rounded(theme.radius)
-                        .bg(theme.secondary)
-                        .child(div().flex_1().text_sm().child(crate::ui::i18n::t_args(
-                            cx,
-                            "dialogs.image_picker.delete_confirm",
-                            &[("name", &name)],
-                        )))
-                        .child(Button::new("library-delete-cancel").small().label(t(cx, "common.cancel")).on_click(
-                            cx.listener(|this, _, _, cx| {
-                                this.vm.confirm_delete(false);
-                                cx.notify();
-                            }),
-                        ))
-                        .child(Button::new("library-delete-accept").small().danger().label(t(cx, "common.delete")).on_click(
-                            cx.listener(|this, _, window, cx| {
-                                let effects = this.vm.confirm_delete(true);
-                                this.run(effects, window, cx);
-                            }),
-                        )),
-                )
+            .when_some(self.vm.library_error().cloned(), |el, e| {
+                el.child(widgets::error_line(tr(cx, &e), theme))
             })
-            .when(self.vm.library_loading(), |el| el.child(Progress::new("library-loading").loading(true)))
+            .when_some(
+                self.vm
+                    .pending_delete()
+                    .map(|(p, n)| (p.to_owned(), n.to_owned())),
+                |el, (_, name)| {
+                    el.child(
+                        h_flex()
+                            .id("library-delete-confirm")
+                            .test_support()
+                            .gap_2()
+                            .p_2()
+                            .rounded(theme.radius)
+                            .bg(theme.secondary)
+                            .child(div().flex_1().text_sm().child(crate::ui::i18n::t_args(
+                                cx,
+                                "dialogs.image_picker.delete_confirm",
+                                &[("name", &name)],
+                            )))
+                            .child(
+                                Button::new("library-delete-cancel")
+                                    .small()
+                                    .label(t(cx, "common.cancel"))
+                                    .on_click(cx.listener(|this, _, _, cx| {
+                                        this.vm.confirm_delete(false);
+                                        cx.notify();
+                                    })),
+                            )
+                            .child(
+                                Button::new("library-delete-accept")
+                                    .small()
+                                    .danger()
+                                    .label(t(cx, "common.delete"))
+                                    .on_click(cx.listener(|this, _, window, cx| {
+                                        let effects = this.vm.confirm_delete(true);
+                                        this.run(effects, window, cx);
+                                    })),
+                            ),
+                    )
+                },
+            )
+            .when(self.vm.library_loading(), |el| {
+                el.child(Progress::new("library-loading").loading(true))
+            })
             .when(
-                !self.vm.library_loading() && self.vm.library_cards().is_empty() && self.vm.library_error().is_none(),
-                |el| el.child(div().text_sm().text_color(theme.muted_foreground).child(t(cx, "dialogs.image_picker.no_images_found"))),
+                !self.vm.library_loading()
+                    && self.vm.library_cards().is_empty()
+                    && self.vm.library_error().is_none(),
+                |el| {
+                    el.child(
+                        div()
+                            .text_sm()
+                            .text_color(theme.muted_foreground)
+                            .child(t(cx, "dialogs.image_picker.no_images_found")),
+                    )
+                },
             )
             .child(self.grid("library", self.vm.library_cards(), theme, cx))
             .when_some(selected_path, |el, path| {
@@ -1035,12 +1386,24 @@ impl ImagePickerDialog {
                         })),
                 )
             })
-            .when_some(self.vm.library_pager(), |el, (from, to, total, prev, next)| {
-                el.child(self.pager("library", from, to, total, prev, next, cx, |this, next, window, cx| {
-                    let effects = this.vm.library_page(next);
-                    this.run(effects, window, cx);
-                }))
-            })
+            .when_some(
+                self.vm.library_pager(),
+                |el, (from, to, total, prev, next)| {
+                    el.child(self.pager(
+                        "library",
+                        from,
+                        to,
+                        total,
+                        prev,
+                        next,
+                        cx,
+                        |this, next, window, cx| {
+                            let effects = this.vm.library_page(next);
+                            this.run(effects, window, cx);
+                        },
+                    ))
+                },
+            )
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -1058,7 +1421,11 @@ impl ImagePickerDialog {
         let status = crate::ui::i18n::t_args(
             cx,
             "dialogs.image_picker.page_status",
-            &[("from", &from.to_string()), ("to", &to.to_string()), ("total", &total.to_string())],
+            &[
+                ("from", &from.to_string()),
+                ("to", &to.to_string()),
+                ("total", &total.to_string()),
+            ],
         );
         h_flex()
             .gap_2()
@@ -1102,15 +1469,26 @@ impl ImagePickerDialog {
                                 this.run(effects, window, cx);
                             })),
                     )
-                    .child(div().text_sm().text_color(theme.muted_foreground).truncate().child(
-                        dir.clone().map_or_else(|| t(cx, "dialogs.image_picker.select_folder_prompt"), SharedString::from),
-                    )),
+                    .child(
+                        div()
+                            .text_sm()
+                            .text_color(theme.muted_foreground)
+                            .truncate()
+                            .child(dir.clone().map_or_else(
+                                || t(cx, "dialogs.image_picker.select_folder_prompt"),
+                                SharedString::from,
+                            )),
+                    ),
             )
             .when(dir.is_some(), |el| {
                 el.child(
                     h_flex()
                         .gap_2()
-                        .child(div().w(px(220.)).child(Input::new(&self.folder_search).small()))
+                        .child(
+                            div()
+                                .w(px(220.))
+                                .child(Input::new(&self.folder_search).small()),
+                        )
                         .children([10usize, 25, 50].map(|n| {
                             Button::new(SharedString::from(format!("folder-per-page-{n}")))
                                 .xsmall()
@@ -1123,20 +1501,45 @@ impl ImagePickerDialog {
                         })),
                 )
             })
-            .when_some(self.vm.folder_error().cloned(), |el, e| el.child(widgets::error_line(tr(cx, &e), theme)))
+            .when_some(self.vm.folder_error().cloned(), |el, e| {
+                el.child(widgets::error_line(tr(cx, &e), theme))
+            })
             .when(self.vm.folder_empty(), |el| {
-                el.child(div().text_sm().text_color(theme.muted_foreground).child(t(cx, "dialogs.image_picker.no_images_in_folder")))
+                el.child(
+                    div()
+                        .text_sm()
+                        .text_color(theme.muted_foreground)
+                        .child(t(cx, "dialogs.image_picker.no_images_in_folder")),
+                )
             })
             .child(self.grid("folder", self.vm.folder_cards(), theme, cx))
-            .when_some(self.vm.folder_pager(), |el, (from, to, total, prev, next)| {
-                el.child(self.pager("folder", from, to, total, prev, next, cx, |this, next, _, cx| {
-                    this.vm.folder_page(next);
-                    cx.notify();
-                }))
-            })
+            .when_some(
+                self.vm.folder_pager(),
+                |el, (from, to, total, prev, next)| {
+                    el.child(self.pager(
+                        "folder",
+                        from,
+                        to,
+                        total,
+                        prev,
+                        next,
+                        cx,
+                        |this, next, _, cx| {
+                            this.vm.folder_page(next);
+                            cx.notify();
+                        },
+                    ))
+                },
+            )
     }
 
-    fn render_search(&mut self, engine: Engine, theme: &Theme, _window: &mut Window, cx: &mut Context<Self>) -> AnyElement {
+    fn render_search(
+        &mut self,
+        engine: Engine,
+        theme: &Theme,
+        _window: &mut Window,
+        cx: &mut Context<Self>,
+    ) -> AnyElement {
         if engine == Engine::Google && !self.config.google_enabled {
             return widgets::setup_notice(
                 "google-setup",
@@ -1163,30 +1566,49 @@ impl ImagePickerDialog {
             Engine::Pinterest => self.pinterest_query.clone(),
         };
         let (status, is_error) = self.vm.search_status(engine);
-        let status = status.map_or_else(|| t(cx, "dialogs.image_picker.search_status"), |s| tr(cx, s));
+        let status = status.map_or_else(
+            || t(cx, "dialogs.image_picker.search_status"),
+            |s| tr(cx, s),
+        );
         let searching = self.vm.searching(engine);
-        let search_button = Button::new(SharedString::from(format!("search-{}", engine_job(engine))))
-            .small()
-            .label(t(cx, "common.search"))
-            .disabled(searching)
-            .on_click(cx.listener(move |this, _, window, cx| {
-                let effects = this.vm.search(engine);
-                this.run(effects, window, cx);
-            }));
-        let search_button = if engine == Engine::Pinterest { search_button.danger() } else { search_button.primary() };
+        let search_button =
+            Button::new(SharedString::from(format!("search-{}", engine_job(engine))))
+                .small()
+                .label(t(cx, "common.search"))
+                .disabled(searching)
+                .on_click(cx.listener(move |this, _, window, cx| {
+                    let effects = this.vm.search(engine);
+                    this.run(effects, window, cx);
+                }));
+        let search_button = if engine == Engine::Pinterest {
+            search_button.danger()
+        } else {
+            search_button.primary()
+        };
         let grid = self.grid(engine_job(engine), self.vm.search_cards(engine), theme, cx);
         let scroll = self.google_scroll.clone();
         v_flex()
             .gap_2()
             .size_full()
-            .child(h_flex().gap_2().child(div().flex_1().child(Input::new(&input).small())).child(search_button))
+            .child(
+                h_flex()
+                    .gap_2()
+                    .child(div().flex_1().child(Input::new(&input).small()))
+                    .child(search_button),
+            )
             .child(
                 div()
                     .text_sm()
-                    .text_color(if is_error { theme.danger } else { theme.muted_foreground })
+                    .text_color(if is_error {
+                        theme.danger
+                    } else {
+                        theme.muted_foreground
+                    })
                     .child(status),
             )
-            .when(searching, |el| el.child(Progress::new("search-progress").loading(true)))
+            .when(searching, |el| {
+                el.child(Progress::new("search-progress").loading(true))
+            })
             .child(if engine == Engine::Google {
                 div()
                     .id("google-results")
@@ -1215,7 +1637,10 @@ impl ImagePickerDialog {
             return widgets::setup_notice(
                 "ai-setup",
                 t(cx, "media_dialogs.ai_image_required"),
-                vec![t(cx, "media_dialogs.ai_image_description"), t(cx, "media_dialogs.ai_image_step")],
+                vec![
+                    t(cx, "media_dialogs.ai_image_description"),
+                    t(cx, "media_dialogs.ai_image_step"),
+                ],
                 theme,
                 t(cx, "media_dialogs.open_settings"),
                 {
@@ -1229,35 +1654,61 @@ impl ImagePickerDialog {
         }
         let model = self.config.ai_model.clone();
         let generating = self.vm.generating();
-        let reference = self.vm.reference().map(|(p, n)| (p.to_owned(), n.to_owned()));
+        let reference = self
+            .vm
+            .reference()
+            .map(|(p, n)| (p.to_owned(), n.to_owned()));
         let result = self.vm.ai_result().cloned();
         let refs = self.vm.ref_cards();
         v_flex()
             .gap_2()
-            .child(div().text_sm().text_color(theme.muted_foreground).child(format!(
-                "{} {model}",
-                t(cx, "dialogs.image_picker.model_label")
-            )))
+            .child(
+                div()
+                    .text_sm()
+                    .text_color(theme.muted_foreground)
+                    .child(format!(
+                        "{} {model}",
+                        t(cx, "dialogs.image_picker.model_label")
+                    )),
+            )
             .when(self.config.server_images, |el| {
-                el.child(div().text_sm().child(t(cx, "dialogs.image_picker.reference_image_label")))
-                    .child(match reference.clone() {
-                        Some((_, name)) => h_flex()
-                            .gap_2()
-                            .child(div().text_sm().child(name))
-                            .child(Button::new("ai-remove-reference").xsmall().label(t(cx, "dialogs.image_picker.remove_reference")).on_click(
-                                cx.listener(|this, _, window, cx| {
+                el.child(
+                    div()
+                        .text_sm()
+                        .child(t(cx, "dialogs.image_picker.reference_image_label")),
+                )
+                .child(match reference.clone() {
+                    Some((_, name)) => h_flex()
+                        .gap_2()
+                        .child(div().text_sm().child(name))
+                        .child(
+                            Button::new("ai-remove-reference")
+                                .xsmall()
+                                .label(t(cx, "dialogs.image_picker.remove_reference"))
+                                .on_click(cx.listener(|this, _, window, cx| {
                                     let effects = this.vm.clear_ref();
                                     this.run(effects, window, cx);
-                                }),
-                            ))
-                            .into_any_element(),
-                        None => v_flex()
-                            .gap_1()
-                            .child(div().w(px(220.)).child(Input::new(&self.ref_search).small()))
-                            .child(if refs.is_empty() {
-                                div().text_xs().text_color(theme.muted_foreground).child(t(cx, "dialogs.image_picker.no_images_found"))
-                            } else {
-                                div().flex().flex_wrap().gap_1().children(refs.into_iter().map(|card| {
+                                })),
+                        )
+                        .into_any_element(),
+                    None => v_flex()
+                        .gap_1()
+                        .child(
+                            div()
+                                .w(px(220.))
+                                .child(Input::new(&self.ref_search).small()),
+                        )
+                        .child(if refs.is_empty() {
+                            div()
+                                .text_xs()
+                                .text_color(theme.muted_foreground)
+                                .child(t(cx, "dialogs.image_picker.no_images_found"))
+                        } else {
+                            div()
+                                .flex()
+                                .flex_wrap()
+                                .gap_1()
+                                .children(refs.into_iter().map(|card| {
                                     let path = card.key.clone();
                                     div()
                                         .id(SharedString::from(format!("ai-ref-{}", card.key)))
@@ -1265,18 +1716,30 @@ impl ImagePickerDialog {
                                         .rounded(theme.radius)
                                         .overflow_hidden()
                                         .border_1()
-                                        .border_color(if card.selected { theme.accent } else { theme.border })
+                                        .border_color(if card.selected {
+                                            theme.accent
+                                        } else {
+                                            theme.border
+                                        })
                                         .on_click(cx.listener(move |this, _, _, cx| {
                                             this.vm.choose_ref(&path);
                                             cx.notify();
                                         }))
-                                        .child(widgets::thumb_element(card.thumb.as_ref(), &self.remote, theme))
+                                        .child(widgets::thumb_element(
+                                            card.thumb.as_ref(),
+                                            &self.remote,
+                                            theme,
+                                        ))
                                 }))
-                            })
-                            .into_any_element(),
-                    })
+                        })
+                        .into_any_element(),
+                })
             })
-            .child(div().text_sm().child(t(cx, "dialogs.image_picker.prompt_label")))
+            .child(
+                div()
+                    .text_sm()
+                    .child(t(cx, "dialogs.image_picker.prompt_label")),
+            )
             .child(Textarea::new(&self.prompt))
             .child(
                 Button::new("ai-generate")
@@ -1305,25 +1768,31 @@ impl ImagePickerDialog {
                         ))),
                 )
             })
-            .when_some(self.vm.ai_error().cloned(), |el, e| el.child(widgets::error_line(tr(cx, &e), theme)))
+            .when_some(self.vm.ai_error().cloned(), |el, e| {
+                el.child(widgets::error_line(tr(cx, &e), theme))
+            })
             .when_some(result, |el, result| {
                 let bytes = result.decoded();
                 el.child(
                     v_flex()
                         .gap_1()
-                        .child(div().text_sm().child(t(cx, "dialogs.image_picker.generated_image")))
                         .child(
-                            div().w(px(200.)).h(px(150.)).child(widgets::thumb_element(
-                                bytes.map(|b| Thumb::Bytes(Arc::new(b))).as_ref(),
-                                &self.remote,
-                                theme,
-                            )),
+                            div()
+                                .text_sm()
+                                .child(t(cx, "dialogs.image_picker.generated_image")),
                         )
+                        .child(div().w(px(200.)).h(px(150.)).child(widgets::thumb_element(
+                            bytes.map(|b| Thumb::Bytes(Arc::new(b))).as_ref(),
+                            &self.remote,
+                            theme,
+                        )))
                         .when_some(result.revised_prompt.clone(), |el, revised| {
-                            el.child(div().text_xs().text_color(theme.muted_foreground).child(format!(
-                                "{}: {revised}",
-                                t(cx, "dialogs.image_picker.revised_prompt")
-                            )))
+                            el.child(div().text_xs().text_color(theme.muted_foreground).child(
+                                format!(
+                                    "{}: {revised}",
+                                    t(cx, "dialogs.image_picker.revised_prompt")
+                                ),
+                            ))
                         }),
                 )
             })
@@ -1343,24 +1812,39 @@ impl ImagePickerDialog {
             .border_t_1()
             .border_color(theme.border)
             .when_some(self.vm.error().cloned(), |el, e| {
-                el.child(widgets::error_line(tr(cx, &e), theme).id("picker-error").test_support())
+                el.child(
+                    widgets::error_line(tr(cx, &e), theme)
+                        .id("picker-error")
+                        .test_support(),
+                )
             })
-            .when_some(storage.error().cloned(), |el, e| el.child(widgets::error_line(tr(cx, &e), theme)))
+            .when_some(storage.error().cloned(), |el, e| {
+                el.child(widgets::error_line(tr(cx, &e), theme))
+            })
             .when_some(selected, |el, name| {
                 el.child(
                     h_flex()
                         .gap_2()
                         .items_center()
-                        .child(div().text_sm().child(format!("{} {name}", t(cx, "dialogs.image_picker.selected"))))
+                        .child(
+                            div().text_sm().child(format!(
+                                "{} {name}",
+                                t(cx, "dialogs.image_picker.selected")
+                            )),
+                        )
                         .child(div().flex_1().child(Input::new(&self.alt).small()))
                         .child(div().flex_1().child(Input::new(&self.link).small())),
                 )
             })
-            .when(row_visible, |el| el.child(self.render_storage_row(&storage, &row, theme, cx)))
+            .when(row_visible, |el| {
+                el.child(self.render_storage_row(&storage, &row, theme, cx))
+            })
             .when(busy.is_some(), |el| {
                 let label = match busy {
                     Some(Busy::Paste) => t(cx, "dialogs.image_picker.processing_image_paste"),
-                    _ if self.vm.waiting_for_storage() => t(cx, "media_dialogs.waiting_for_storage"),
+                    _ if self.vm.waiting_for_storage() => {
+                        t(cx, "media_dialogs.waiting_for_storage")
+                    }
                     _ => t(cx, "dialogs.image_picker.processing_image"),
                 };
                 el.child(
@@ -1369,19 +1853,31 @@ impl ImagePickerDialog {
                         .test_support()
                         .gap_1()
                         .child(Progress::new("picker-upload-progress").loading(true))
-                        .child(div().text_xs().text_color(theme.muted_foreground).child(label)),
+                        .child(
+                            div()
+                                .text_xs()
+                                .text_color(theme.muted_foreground)
+                                .child(label),
+                        ),
                 )
             })
             .child(
                 h_flex()
                     .gap_2()
                     .justify_end()
-                    .child(Button::new("picker-cancel").label(t(cx, "common.cancel")).on_click(cx.listener(|this, _, _, cx| this.close(cx))))
+                    .child(
+                        Button::new("picker-cancel")
+                            .label(t(cx, "common.cancel"))
+                            .on_click(cx.listener(|this, _, _, cx| this.close(cx))),
+                    )
                     .child(
                         Button::new("picker-insert")
                             .primary()
                             .disabled(!can_insert)
-                            .label(format!("{}  Ctrl+↵", t(cx, "dialogs.image_picker.insert_image")))
+                            .label(format!(
+                                "{}  Ctrl+↵",
+                                t(cx, "dialogs.image_picker.insert_image")
+                            ))
                             .on_click(cx.listener(|this, _, window, cx| this.insert(window, cx))),
                     ),
             )
@@ -1433,8 +1929,12 @@ impl ImagePickerDialog {
             })
             .when(row.resize_enabled(), |el| {
                 let current = row.resize();
-                el.child(div().text_sm().child(t(cx, "dialogs.s3_option.resize"))).children(row.resize_options().map(|ratio| {
-                    Button::new(SharedString::from(format!("storage-resize-{}", (ratio * 100.0) as u32)))
+                el.child(div().text_sm().child(t(cx, "dialogs.s3_option.resize")))
+                    .children(row.resize_options().map(|ratio| {
+                        Button::new(SharedString::from(format!(
+                            "storage-resize-{}",
+                            (ratio * 100.0) as u32
+                        )))
                         .xsmall()
                         .selected((current - ratio).abs() < f64::EPSILON)
                         .label(format!("{}%", (ratio * 100.0) as u32))
@@ -1442,16 +1942,16 @@ impl ImagePickerDialog {
                             this.vm.row_mut().set_resize(ratio);
                             cx.notify();
                         }))
-                }))
+                    }))
             })
             .when(row.key_visible(), |el| {
                 let label = match row.key_mode() {
                     KeyMode::Full => t(cx, "dialogs.s3_option.custom_key"),
                     KeyMode::Prefix => t(cx, "dialogs.s3_option.custom_prefix"),
                 };
-                el.child(div().text_sm().child(label)).child(div().w(px(260.)).child(Input::new(&self.key).small()))
+                el.child(div().text_sm().child(label))
+                    .child(div().w(px(260.)).child(Input::new(&self.key).small()))
             })
             .text_color(theme.foreground)
     }
 }
-

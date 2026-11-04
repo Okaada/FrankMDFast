@@ -10,7 +10,9 @@
 use std::ops::Range;
 
 use frankmd_core::text::cursor::{CursorInfo, CursorPosition, Selection};
-use frankmd_core::text::insertion::{BlockInsert, EditorSurface, insert_block_content, insert_image};
+use frankmd_core::text::insertion::{
+    BlockInsert, EditorSurface, insert_block_content, insert_image,
+};
 
 use crate::url_utils::encode_uri_component;
 
@@ -53,16 +55,27 @@ pub fn insertion_edit(
     slash: Option<Range<usize>>,
     insert: &MediaInsert,
 ) -> Option<InsertEdit> {
-    let mut surface = StringSurface { text: text.to_owned(), selection, last: None };
+    let mut surface = StringSurface {
+        text: text.to_owned(),
+        selection,
+        last: None,
+    };
     match insert {
         MediaInsert::Image(markdown) => insert_image(Some(&mut surface), markdown, slash),
         MediaInsert::Block(content) => {
-            let opts = BlockInsert { replace: slash, ..BlockInsert::default() };
+            let opts = BlockInsert {
+                replace: slash,
+                ..BlockInsert::default()
+            };
             insert_block_content(Some(&mut surface), content, &opts)
         }
     };
     let (range, replacement) = surface.last?;
-    Some(InsertEdit { range, text: replacement, caret: surface.selection.start })
+    Some(InsertEdit {
+        range,
+        text: replacement,
+        caret: surface.selection.start,
+    })
 }
 
 /// A plain-string [`EditorSurface`] that records the one replace it receives.
@@ -81,8 +94,16 @@ impl EditorSurface for StringSurface {
         self.text = text.to_owned();
     }
     fn selection(&self) -> Selection {
-        let text = self.text.get(self.selection.clone()).unwrap_or("").to_owned();
-        Selection { from: self.selection.start, to: self.selection.end, text }
+        let text = self
+            .text
+            .get(self.selection.clone())
+            .unwrap_or("")
+            .to_owned();
+        Selection {
+            from: self.selection.start,
+            to: self.selection.end,
+            text,
+        }
     }
     fn set_selection(&mut self, from: usize, to: usize) {
         self.selection = from..to;
@@ -92,11 +113,18 @@ impl EditorSurface for StringSurface {
         let before = &self.text[..offset.min(self.text.len())];
         let line = before.matches('\n').count() + 1;
         let column = before.rsplit('\n').next().map_or(0, str::len) + 1;
-        CursorPosition { offset, line, column }
+        CursorPosition {
+            offset,
+            line,
+            column,
+        }
     }
     fn cursor_info(&self) -> CursorInfo {
         let position = self.cursor_position();
-        CursorInfo { current_line: position.line, total_lines: self.text.matches('\n').count() + 1 }
+        CursorInfo {
+            current_line: position.line,
+            total_lines: self.text.matches('\n').count() + 1,
+        }
     }
     fn replace_range(&mut self, text: &str, from: usize, to: usize) {
         self.text.replace_range(from..to, text);
@@ -133,7 +161,11 @@ pub fn relative_media_path(note_path: &str, media_path: &str) -> Option<String> 
         return None;
     }
     let parents = &note[..note.len() - 1];
-    let shared = parents.iter().zip(&media).take_while(|(a, b)| a == b).count();
+    let shared = parents
+        .iter()
+        .zip(&media)
+        .take_while(|(a, b)| a == b)
+        .count();
     let mut out: Vec<&str> = std::iter::repeat_n("..", parents.len() - shared).collect();
     out.extend_from_slice(&media[shared..]);
     Some(out.join("/"))
@@ -160,7 +192,10 @@ pub fn encode_relative_media_path(path: &str) -> String {
 /// (WHATWG `href`) and with `(` `)` percent-encoded; `None` otherwise.
 pub fn safe_remote_media_url(value: &str) -> Option<String> {
     let url = url::Url::parse(value).ok()?;
-    if !matches!(url.scheme(), "http" | "https") || !url.username().is_empty() || url.password().is_some() {
+    if !matches!(url.scheme(), "http" | "https")
+        || !url.username().is_empty()
+        || url.password().is_some()
+    {
         return None;
     }
     Some(url.as_str().replace('(', "%28").replace(')', "%29"))
@@ -220,19 +255,33 @@ pub fn web_alt(title: &str) -> String {
 
 /// AI default alt: the prompt, or its first 100 units plus `...`.
 pub fn ai_alt(prompt: &str) -> String {
-    if prompt.encode_utf16().count() > 100 { format!("{}...", js_prefix(prompt, 100)) } else { prompt.to_owned() }
+    if prompt.encode_utf16().count() > 100 {
+        format!("{}...", js_prefix(prompt, 100))
+    } else {
+        prompt.to_owned()
+    }
 }
 
 /// The picker's Markdown (`insertImage` in `image_picker_controller.js`):
 /// `![alt](url)`, or `[![alt](url)](link)`; the alt is **not** escaped here.
 pub fn picker_markdown(alt: &str, url: &str, link: &str) -> String {
-    if link.is_empty() { format!("![{alt}]({url})") } else { format!("[![{alt}]({url})]({link})") }
+    if link.is_empty() {
+        format!("![{alt}]({url})")
+    } else {
+        format!("[![{alt}]({url})]({link})")
+    }
 }
 
 /// The full Insert-image result: `alt = alt_input.trim() || name || "Image"`,
 /// `link = link_input.trim()`, then the app-side rewrite of local `images/…`
 /// uploads to a note-relative, percent-encoded path with an escaped alt.
-pub fn final_image_markdown(note_path: Option<&str>, url: &str, alt_input: &str, name: &str, link_input: &str) -> ImageMarkdown {
+pub fn final_image_markdown(
+    note_path: Option<&str>,
+    url: &str,
+    alt_input: &str,
+    name: &str,
+    link_input: &str,
+) -> ImageMarkdown {
     let alt = match alt_input.trim() {
         "" if name.is_empty() => "Image".to_owned(),
         "" => name.to_owned(),
@@ -249,7 +298,12 @@ pub fn final_image_markdown(note_path: Option<&str>, url: &str, alt_input: &str,
             markdown = format!("[{markdown}]({link})");
         }
     }
-    ImageMarkdown { markdown, url: url.to_owned(), alt, link }
+    ImageMarkdown {
+        markdown,
+        url: url.to_owned(),
+        alt,
+        link,
+    }
 }
 
 /// `image-picker:image-selected` detail.
@@ -314,7 +368,9 @@ fn last_dot_part(text: &str) -> String {
 pub fn video_file_embed(url: &str) -> String {
     let mime = video_mime(&last_dot_part(url)).unwrap_or("video/mp4");
     let src = frankmd_core::text::utils::escape_html(Some(url));
-    format!("<video controls class=\"video-player\">\n  <source src=\"{src}\" type=\"{mime}\">\n  Your browser does not support the video tag.\n</video>")
+    format!(
+        "<video controls class=\"video-player\">\n  <source src=\"{src}\" type=\"{mime}\">\n  Your browser does not support the video tag.\n</video>"
+    )
 }
 
 // ---------------------------------------------------------------------------
@@ -336,7 +392,12 @@ pub struct LibraryEntry {
 
 impl From<&crate::library::MediaItem> for LibraryEntry {
     fn from(item: &crate::library::MediaItem) -> Self {
-        Self { name: item.name.clone(), path: item.path.clone(), kind: item.kind, s3_url: item.s3_url.clone() }
+        Self {
+            name: item.name.clone(),
+            path: item.path.clone(),
+            kind: item.kind,
+            s3_url: item.s3_url.clone(),
+        }
     }
 }
 
@@ -371,7 +432,11 @@ pub fn is_valid_library_entry(entry: &LibraryEntry) -> bool {
     match &entry.s3_url {
         Some(url) => segments[0] == "frankmd" && safe_remote_media_url(url).is_some(),
         None => {
-            let root = if entry.kind == crate::MediaKind::Image { "images" } else { "videos" };
+            let root = if entry.kind == crate::MediaKind::Image {
+                "images"
+            } else {
+                "videos"
+            };
             segments[0] == root
         }
     }
@@ -379,7 +444,10 @@ pub fn is_valid_library_entry(entry: &LibraryEntry) -> bool {
 
 /// `insertLibraryMedia`: `![escaped name](note-relative or S3 url)` for
 /// images, a `<video>` block (no fallback text, `type` only when known) for videos.
-pub fn library_insert(entry: &LibraryEntry, open_note: Option<&str>) -> Result<MediaInsert, LibraryInsertError> {
+pub fn library_insert(
+    entry: &LibraryEntry,
+    open_note: Option<&str>,
+) -> Result<MediaInsert, LibraryInsertError> {
     let note = open_note.ok_or(LibraryInsertError::NoOpenNote)?;
     if !note.to_lowercase().ends_with(".md") {
         return Err(LibraryInsertError::MarkdownNoteRequired);
@@ -389,16 +457,24 @@ pub fn library_insert(entry: &LibraryEntry, open_note: Option<&str>) -> Result<M
     }
     let url = match &entry.s3_url {
         Some(url) => safe_remote_media_url(url),
-        None => Some(encode_relative_media_path(&relative_media_path(note, &entry.path).unwrap_or_default())),
+        None => Some(encode_relative_media_path(
+            &relative_media_path(note, &entry.path).unwrap_or_default(),
+        )),
     }
     .filter(|u| !u.is_empty())
     .ok_or(LibraryInsertError::InvalidMedia)?;
     Ok(match entry.kind {
-        crate::MediaKind::Image => MediaInsert::Image(format!("![{}]({url})", escape_markdown_alt(&entry.name))),
+        crate::MediaKind::Image => {
+            MediaInsert::Image(format!("![{}]({url})", escape_markdown_alt(&entry.name)))
+        }
         crate::MediaKind::Video => {
             let file = entry.path.rsplit('/').next().unwrap_or("");
-            let typ = video_mime(&last_dot_part(file)).map(|m| format!(" type=\"{m}\"")).unwrap_or_default();
-            MediaInsert::Block(format!("<video controls class=\"video-player\">\n  <source src=\"{url}\"{typ}>\n</video>"))
+            let typ = video_mime(&last_dot_part(file))
+                .map(|m| format!(" type=\"{m}\""))
+                .unwrap_or_default();
+            MediaInsert::Block(format!(
+                "<video controls class=\"video-player\">\n  <source src=\"{url}\"{typ}>\n</video>"
+            ))
         }
     })
 }
@@ -428,7 +504,8 @@ pub fn format_bytes(bytes: u64) -> String {
 
 /// `WxH` badge (ASCII `x`, OQ-65) when both sides are known and non-zero.
 pub fn dims_badge(dims: Option<(u32, u32)>) -> Option<String> {
-    dims.filter(|(w, h)| *w > 0 && *h > 0).map(|(w, h)| format!("{w}x{h}"))
+    dims.filter(|(w, h)| *w > 0 && *h > 0)
+        .map(|(w, h)| format!("{w}x{h}"))
 }
 
 /// `imageAspectRatio`: the reduced `w:h` (e.g. `16:9`).

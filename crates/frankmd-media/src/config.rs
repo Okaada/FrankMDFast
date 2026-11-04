@@ -55,7 +55,8 @@ pub struct MediaConfig {
 /// **[COMPAT]** default `image_upload_extensions`.
 pub const DEFAULT_IMAGE_EXTENSIONS: [&str; 6] = [".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp"];
 /// **[COMPAT]** default `video_upload_extensions`.
-pub const DEFAULT_VIDEO_EXTENSIONS: [&str; 7] = [".mp4", ".webm", ".mkv", ".mov", ".avi", ".m4v", ".ogv"];
+pub const DEFAULT_VIDEO_EXTENSIONS: [&str; 7] =
+    [".mp4", ".webm", ".mkv", ".mov", ".avi", ".m4v", ".ogv"];
 
 impl MediaConfig {
     /// Defaults for a notes root: local provider, default extensions, nothing else set.
@@ -64,8 +65,14 @@ impl MediaConfig {
             notes_root: notes_root.into(),
             images_path: None,
             media_storage_provider: Some("local".to_owned()),
-            image_upload_extensions: DEFAULT_IMAGE_EXTENSIONS.iter().map(|s| (*s).to_owned()).collect(),
-            video_upload_extensions: DEFAULT_VIDEO_EXTENSIONS.iter().map(|s| (*s).to_owned()).collect(),
+            image_upload_extensions: DEFAULT_IMAGE_EXTENSIONS
+                .iter()
+                .map(|s| (*s).to_owned())
+                .collect(),
+            video_upload_extensions: DEFAULT_VIDEO_EXTENSIONS
+                .iter()
+                .map(|s| (*s).to_owned())
+                .collect(),
             s3: S3Settings::default(),
             youtube_api_key: None,
             google_api_key: None,
@@ -74,7 +81,10 @@ impl MediaConfig {
     }
 
     /// Read from the resolved config (`.fed > ENV > default`).
-    pub fn from_resolved(config: &frankmd_config::ResolvedConfig, notes_root: impl Into<PathBuf>) -> Self {
+    pub fn from_resolved(
+        config: &frankmd_config::ResolvedConfig,
+        notes_root: impl Into<PathBuf>,
+    ) -> Self {
         use frankmd_config::Key;
         let string = |key: Key| present_string(config.value(key));
         let home = config.env().raw("HOME").map(PathBuf::from);
@@ -94,7 +104,10 @@ impl MediaConfig {
                 bucket: string(Key::AwsS3Bucket),
                 region: string(Key::AwsRegion),
                 endpoint: string(Key::AwsS3Endpoint),
-                force_path_style: matches!(config.value(Key::AwsS3ForcePathStyle), Some(frankmd_config::Value::Bool(true))),
+                force_path_style: matches!(
+                    config.value(Key::AwsS3ForcePathStyle),
+                    Some(frankmd_config::Value::Bool(true))
+                ),
             },
             youtube_api_key: string(Key::YoutubeApiKey),
             google_api_key: string(Key::GoogleApiKey),
@@ -116,7 +129,9 @@ fn present_string(value: Option<frankmd_config::Value>) -> Option<String> {
 fn expand_path(raw: &str, home: Option<&std::path::Path>) -> PathBuf {
     let path = match (raw.strip_prefix('~'), home) {
         (Some(""), Some(home)) => home.to_path_buf(),
-        (Some(rest), Some(home)) if rest.starts_with('/') => home.join(rest.trim_start_matches('/')),
+        (Some(rest), Some(home)) if rest.starts_with('/') => {
+            home.join(rest.trim_start_matches('/'))
+        }
         _ => PathBuf::from(raw),
     };
     let absolute = if path.is_absolute() {

@@ -37,13 +37,24 @@ pub async fn save_upload(
     };
     let config = env.settings.current();
     let provider = us::provider(&config, upload_to_s3)?;
-    let mut req = UploadRequest::new(UploadOrigin::Drop, MediaKind::Video, file.original_filename, file.bytes);
+    let mut req = UploadRequest::new(
+        UploadOrigin::Drop,
+        MediaKind::Video,
+        file.original_filename,
+        file.bytes,
+    );
     req.s3_prefix = s3_prefix.map(str::to_owned);
-    Ok(store_media(env, &config, provider, req).await?.url().to_owned())
+    Ok(store_media(env, &config, provider, req)
+        .await?
+        .url()
+        .to_owned())
 }
 
 /// S3 `Content-Type` for a video key (by its extension, case-insensitive).
 pub fn content_type_for_key(key: &str) -> &'static str {
     let ext = us::ruby_extname(key).to_lowercase();
-    VIDEO_MIME_TYPES.iter().find(|(e, _)| *e == ext).map_or("application/octet-stream", |(_, t)| t)
+    VIDEO_MIME_TYPES
+        .iter()
+        .find(|(e, _)| *e == ext)
+        .map_or("application/octet-stream", |(_, t)| t)
 }

@@ -131,7 +131,11 @@ impl Shell {
         };
         let disk = String::from_utf8_lossy(&file.bytes).into_owned();
         let mine = self.editor.text(cx);
-        self.recovery = Some(RecoveryState::new(RecoveryView::Compare { path, disk, mine }));
+        self.recovery = Some(RecoveryState::new(RecoveryView::Compare {
+            path,
+            disk,
+            mine,
+        }));
         self.open_overlay(OverlayKind::Dialog("recovery"), window, cx);
     }
 
@@ -151,7 +155,9 @@ impl Shell {
         match state.view {
             RecoveryView::Draft(request) => {
                 let cmd = match keep_draft {
-                    Some(true) => Command::ResolveRecovery(RecoveryResolution::accept_local(&request)),
+                    Some(true) => {
+                        Command::ResolveRecovery(RecoveryResolution::accept_local(&request))
+                    }
                     Some(false) => {
                         Command::ResolveRecovery(RecoveryResolution::accept_server(&request))
                     }
@@ -255,30 +261,69 @@ impl Shell {
                 .gap_3()
                 .items_start()
                 .child(column("recovery-file", left_title, file.into_any_element()))
-                .child(column("recovery-draft", right_title, draft.into_any_element()))
+                .child(column(
+                    "recovery-draft",
+                    right_title,
+                    draft.into_any_element(),
+                ))
                 .into_any_element(),
         };
         let this = cx.entity().downgrade();
-        let button = |id: &'static str, key: &str, answer: Option<bool>, primary: bool, cx: &mut Context<Self>| {
-            let this = this.clone();
-            let b = Button::new(id)
-                .small()
-                .label(i18n::t(cx, key))
-                .on_click(move |_, window, cx| {
-                    let _ = this.update(cx, |shell, cx| shell.resolve_recovery(answer, window, cx));
-                });
-            if primary { b.primary() } else { b }
-        };
+        let button =
+            |id: &'static str,
+             key: &str,
+             answer: Option<bool>,
+             primary: bool,
+             cx: &mut Context<Self>| {
+                let this = this.clone();
+                let b = Button::new(id).small().label(i18n::t(cx, key)).on_click(
+                    move |_, window, cx| {
+                        let _ =
+                            this.update(cx, |shell, cx| shell.resolve_recovery(answer, window, cx));
+                    },
+                );
+                if primary { b.primary() } else { b }
+            };
         let buttons: Vec<Button> = if compare {
             vec![
-                button("recovery-use-file", "dialogs.recovery_native.reload", Some(false), false, cx),
-                button("recovery-keep-mine", "dialogs.recovery_native.keep_mine", Some(true), true, cx),
+                button(
+                    "recovery-use-file",
+                    "dialogs.recovery_native.reload",
+                    Some(false),
+                    false,
+                    cx,
+                ),
+                button(
+                    "recovery-keep-mine",
+                    "dialogs.recovery_native.keep_mine",
+                    Some(true),
+                    true,
+                    cx,
+                ),
             ]
         } else {
             vec![
-                button("recovery-use-file", "dialogs.recovery_native.use_file", Some(false), false, cx),
-                button("recovery-keep-both", "dialogs.recovery_native.keep_both", None, false, cx),
-                button("recovery-restore-draft", "dialogs.recovery_native.restore", Some(true), true, cx),
+                button(
+                    "recovery-use-file",
+                    "dialogs.recovery_native.use_file",
+                    Some(false),
+                    false,
+                    cx,
+                ),
+                button(
+                    "recovery-keep-both",
+                    "dialogs.recovery_native.keep_both",
+                    None,
+                    false,
+                    cx,
+                ),
+                button(
+                    "recovery-restore-draft",
+                    "dialogs.recovery_native.restore",
+                    Some(true),
+                    true,
+                    cx,
+                ),
             ]
         };
         let title = if compare {

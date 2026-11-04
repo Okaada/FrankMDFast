@@ -47,7 +47,10 @@ impl StorageRecovery {
     /// `recover_missing_upload_storage` (before every upload): same check;
     /// on a successful switch, set the flag and return
     /// `Err(MediaError::StorageFallback)` so nothing is written.
-    pub fn recover_missing_upload_storage(&self, settings: &dyn SettingsStore) -> Result<(), MediaError> {
+    pub fn recover_missing_upload_storage(
+        &self,
+        settings: &dyn SettingsStore,
+    ) -> Result<(), MediaError> {
         if s3_selected_but_unusable(settings) && settings.set_provider_local() {
             self.pending.store(true, Ordering::SeqCst);
             return Err(MediaError::StorageFallback);
@@ -65,7 +68,9 @@ impl StorageRecovery {
         if !crate::upload_storage::invalid_s3_configuration_error(s3_error) {
             return false;
         }
-        if settings.current().media_storage_provider.as_deref() != Some("s3") || !settings.set_provider_local() {
+        if settings.current().media_storage_provider.as_deref() != Some("s3")
+            || !settings.set_provider_local()
+        {
             return false;
         }
         self.pending.store(true, Ordering::SeqCst);
@@ -81,5 +86,6 @@ impl StorageRecovery {
 /// `provider == "s3" && !feature_available?(:s3_upload)`.
 fn s3_selected_but_unusable(settings: &dyn SettingsStore) -> bool {
     let config = settings.current();
-    config.media_storage_provider.as_deref() == Some("s3") && !crate::upload_storage::s3_configured(&config)
+    config.media_storage_provider.as_deref() == Some("s3")
+        && !crate::upload_storage::s3_configured(&config)
 }

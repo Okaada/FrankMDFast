@@ -33,7 +33,11 @@ impl WidthClass {
     /// [`HYSTERESIS`] around both boundaries so a tile on a boundary doesn't flicker.
     pub fn with_hysteresis(current: WidthClass, width: f32) -> WidthClass {
         let threshold = |boundary: f32, currently_above: bool| {
-            if currently_above { boundary - HYSTERESIS } else { boundary + HYSTERESIS }
+            if currently_above {
+                boundary - HYSTERESIS
+            } else {
+                boundary + HYSTERESIS
+            }
         };
         let above_medium = width >= threshold(MEDIUM_MIN_WIDTH, current >= WidthClass::Medium);
         let above_wide = width >= threshold(WIDE_MIN_WIDTH, current == WidthClass::Wide);
@@ -239,7 +243,11 @@ impl LayoutState {
             return arrangement;
         }
         if narrow {
-            arrangement.sidebar = if self.drawer_open { SidebarMode::Drawer } else { SidebarMode::Hidden };
+            arrangement.sidebar = if self.drawer_open {
+                SidebarMode::Drawer
+            } else {
+                SidebarMode::Hidden
+            };
         } else if self.sidebar_visible {
             arrangement.sidebar = SidebarMode::Docked;
         }

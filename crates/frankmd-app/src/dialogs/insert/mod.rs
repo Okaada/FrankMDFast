@@ -146,7 +146,12 @@ pub(crate) fn modal_frame(
         .rounded(theme.radius_lg)
         .shadow_lg()
         .on_mouse_down(MouseButton::Left, |_, _, cx| cx.stop_propagation())
-        .child(div().text_sm().font_weight(FontWeight::SEMIBOLD).child(title))
+        .child(
+            div()
+                .text_sm()
+                .font_weight(FontWeight::SEMIBOLD)
+                .child(title),
+        )
         .child(body)
         .child(footer)
         .children(extra)

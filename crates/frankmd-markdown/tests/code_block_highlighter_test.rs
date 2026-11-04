@@ -20,7 +20,8 @@ use common::*;
 use frankmd_markdown::highlight::{BuiltinHighlighter, language_for_fence};
 use frankmd_markdown::html::to_html;
 use frankmd_markdown::ir::TokenClass::{
-    Comment, Constant, Function, Identifier, Keyword, Number, Operator, Property, String as Str, Type,
+    Comment, Constant, Function, Identifier, Keyword, Number, Operator, Property, String as Str,
+    Type,
 };
 use frankmd_markdown::{RenderDoc, RenderOptions, render_body};
 
@@ -29,7 +30,14 @@ fn label(alias: &str) -> Option<&'static str> {
 }
 
 fn render_hl(md: &str) -> RenderDoc {
-    render_body(md, 0, &RenderOptions { highlighter: Some(Arc::new(BuiltinHighlighter)), ..RenderOptions::default() })
+    render_body(
+        md,
+        0,
+        &RenderOptions {
+            highlighter: Some(Arc::new(BuiltinHighlighter)),
+            ..RenderOptions::default()
+        },
+    )
 }
 
 fn fence(lang: &str, code: &str) -> String {
@@ -39,7 +47,10 @@ fn fence(lang: &str, code: &str) -> String {
 // port: test/javascript/lib/code_block_highlighter.test.js:11 "highlights JavaScript and TypeScript tokens"
 #[test]
 fn javascript_and_typescript_tokens() {
-    let t = tokens("typescript", "const x: number = 1; describe(\"suite\", () => { expect(x).toBe(true); });\n");
+    let t = tokens(
+        "typescript",
+        "const x: number = 1; describe(\"suite\", () => { expect(x).toBe(true); });\n",
+    );
     assert_token(&t, "const", Keyword, false);
     assert_token(&t, "1", Number, false);
     assert_token(&t, "describe", Function, false);
@@ -60,7 +71,10 @@ fn comments_and_object_properties() {
 // port: test/javascript/lib/code_block_highlighter.test.js:35 "highlights YAML keys, comments, scalar values, and yml fences"
 #[test]
 fn yaml_tokens() {
-    let t = tokens("yaml", "# app settings\napp:\n  port: 3000\n  enabled: true\n  message: \"ready\"\n");
+    let t = tokens(
+        "yaml",
+        "# app settings\napp:\n  port: 3000\n  enabled: true\n  message: \"ready\"\n",
+    );
     assert_token(&t, "# app settings", Comment, false);
     assert_token(&t, "app", Property, true);
     assert_token(&t, "3000", Number, false);
@@ -73,7 +87,10 @@ fn yaml_tokens() {
 // port: test/javascript/lib/code_block_highlighter.test.js:48 "highlights Rust keywords, types, functions, strings, and numbers"
 #[test]
 fn rust_tokens() {
-    let t = tokens("rust", "// entry point\nfn main() { let answer: i32 = 42; println!(\"hello\"); }");
+    let t = tokens(
+        "rust",
+        "// entry point\nfn main() { let answer: i32 = 42; println!(\"hello\"); }",
+    );
     assert_token(&t, "// entry point", Comment, false);
     assert_token(&t, "fn", Keyword, false);
     assert_token(&t, "main", Function, true);
@@ -103,7 +120,10 @@ fn go_tokens() {
 // port: test/javascript/lib/code_block_highlighter.test.js:77 "highlights Python comments, keywords, functions, types, strings, and numbers"
 #[test]
 fn python_tokens() {
-    let t = tokens("python", "# greeting\ndef greet(name: str) -> str:\n    return f\"hello {name}\"\n\nanswer = 42");
+    let t = tokens(
+        "python",
+        "# greeting\ndef greet(name: str) -> str:\n    return f\"hello {name}\"\n\nanswer = 42",
+    );
     assert_token(&t, "# greeting", Comment, false);
     assert_token(&t, "def", Keyword, false);
     assert_token(&t, "greet", Function, true);
@@ -150,7 +170,10 @@ fn php_tokens() {
 // port: test/javascript/lib/code_block_highlighter.test.js:120 "highlights Kotlin comments, declarations, types, strings, and aliases"
 #[test]
 fn kotlin_tokens() {
-    let t = tokens("kotlin", "// greeting\ndata class Greeter(val name: String) {\n  fun greet() = \"Hello, $name\"\n}");
+    let t = tokens(
+        "kotlin",
+        "// greeting\ndata class Greeter(val name: String) {\n  fun greet() = \"Hello, $name\"\n}",
+    );
     assert_token(&t, "// greeting", Comment, false);
     assert_token(&t, "data", Keyword, false);
     assert_token(&t, "class", Keyword, false);
@@ -164,7 +187,10 @@ fn kotlin_tokens() {
 // port: test/javascript/lib/code_block_highlighter.test.js:134 "highlights Ruby comments, class names, method definitions, strings, and numbers"
 #[test]
 fn ruby_tokens() {
-    let t = tokens("ruby", "# greeting\nclass Greeter\n  def greet(name)\n    puts \"hello #{name}\"\n    42\n  end\nend");
+    let t = tokens(
+        "ruby",
+        "# greeting\nclass Greeter\n  def greet(name)\n    puts \"hello #{name}\"\n    42\n  end\nend",
+    );
     assert_token(&t, "# greeting", Comment, false);
     assert_token(&t, "class", Keyword, false);
     assert_token(&t, "Greeter", Type, false);
@@ -179,7 +205,10 @@ fn ruby_tokens() {
 // port: test/javascript/lib/code_block_highlighter.test.js:149 "highlights dotenv comments, variable assignments, strings, and numeric values"
 #[test]
 fn dotenv_tokens() {
-    let t = tokens("dotenv", "# local settings\nDATABASE_URL=\"postgres://db/app\"\nPORT=5432\nDEBUG=true\n");
+    let t = tokens(
+        "dotenv",
+        "# local settings\nDATABASE_URL=\"postgres://db/app\"\nPORT=5432\nDEBUG=true\n",
+    );
     assert_token(&t, "# local settings", Comment, false);
     assert_token(&t, "DATABASE_URL", Identifier, true);
     assert_token(&t, "\"postgres://db/app\"", Str, false);
@@ -191,7 +220,10 @@ fn dotenv_tokens() {
 // port: test/javascript/lib/code_block_highlighter.test.js:161 "highlights common shell fences and aliases"
 #[test]
 fn shell_tokens() {
-    let t = tokens("bash", "# clean temporary files\nfor file in \"$@\"; do\n  echo \"$file\"\ndone");
+    let t = tokens(
+        "bash",
+        "# clean temporary files\nfor file in \"$@\"; do\n  echo \"$file\"\ndone",
+    );
     assert_token(&t, "# clean temporary files", Comment, false);
     assert_token(&t, "for", Keyword, false);
     assert_token(&t, "\"", Str, false);
@@ -204,7 +236,10 @@ fn shell_tokens() {
 // port: test/javascript/lib/code_block_highlighter.test.js:174 "highlights SQL comments, keywords, literals, operators, and dialect aliases"
 #[test]
 fn sql_tokens() {
-    let t = tokens("sql", "-- active users\nSELECT id, name FROM users WHERE active = TRUE AND score >= 42;");
+    let t = tokens(
+        "sql",
+        "-- active users\nSELECT id, name FROM users WHERE active = TRUE AND score >= 42;",
+    );
     assert_token(&t, "-- active users", Comment, false);
     assert_token(&t, "SELECT", Keyword, false);
     assert_token(&t, "FROM", Keyword, false);
@@ -219,7 +254,10 @@ fn sql_tokens() {
 // port: test/javascript/lib/code_block_highlighter.test.js:189 "highlights TOML comments, sections, keys, strings, numbers, and aliases"
 #[test]
 fn toml_tokens() {
-    let t = tokens("toml", "# server settings\n[server]\nhost = \"localhost\"\nport = 5432\nenabled = true");
+    let t = tokens(
+        "toml",
+        "# server settings\n[server]\nhost = \"localhost\"\nport = 5432\nenabled = true",
+    );
     assert_token(&t, "# server settings", Comment, false);
     assert_token(&t, "[server]", Constant, false);
     assert_token(&t, "host", Property, false);
@@ -234,7 +272,10 @@ fn toml_tokens() {
 // notes; the test suite's intent, highlighting Dockerfile, is what we keep)
 #[test]
 fn dockerfile_tokens() {
-    let t = tokens("dockerfile", "# minimal image\nFROM node:22-alpine\nWORKDIR /app\nCOPY package*.json ./\nRUN npm install");
+    let t = tokens(
+        "dockerfile",
+        "# minimal image\nFROM node:22-alpine\nWORKDIR /app\nCOPY package*.json ./\nRUN npm install",
+    );
     assert_token(&t, "# minimal image", Comment, false);
     assert_token(&t, "FROM", Keyword, false);
     assert_token(&t, "WORKDIR", Keyword, false);
@@ -265,7 +306,10 @@ fn terraform_tokens() {
 // port: test/javascript/lib/code_block_highlighter.test.js:230 "highlights C and C++ tokens and common fence aliases"
 #[test]
 fn c_and_cpp_tokens() {
-    let t = tokens("cpp", "// entry point\nint main() { const int answer = 42; return answer; }");
+    let t = tokens(
+        "cpp",
+        "// entry point\nint main() { const int answer = 42; return answer; }",
+    );
     assert_token(&t, "// entry point", Comment, false);
     assert_token(&t, "main", Function, true);
     assert_token(&t, "42", Number, false);
@@ -307,7 +351,10 @@ fn common_aliases_html_css() {
     ];
     for (alias, src, class) in cases {
         let t = tokens(alias, src);
-        assert!(t.iter().any(|(_, s)| s.class == class), "{alias}: no {class:?} token in {t:?}");
+        assert!(
+            t.iter().any(|(_, s)| s.class == class),
+            "{alias}: no {class:?} token in {t:?}"
+        );
     }
 }
 
@@ -347,8 +394,11 @@ fn unsupported_language_unchanged() {
     let doc = render_hl(&fence("unrecognized", "puts \"hello\"\n"));
     let code = collect_code(&doc);
     assert!(!is_highlighted(&code[0].1));
-    check_same_structure(&to_html(&doc), "<pre><code class=\"language-unrecognized\">puts \"hello\"\n</code></pre>")
-        .unwrap();
+    check_same_structure(
+        &to_html(&doc),
+        "<pre><code class=\"language-unrecognized\">puts \"hello\"\n</code></pre>",
+    )
+    .unwrap();
 }
 
 // port: test/javascript/lib/code_block_highlighter.test.js:311 "keeps large supported fences readable without highlighting them"
@@ -366,7 +416,10 @@ fn large_fence_not_highlighted() {
 #[test]
 fn total_highlight_budget_per_render() {
     let source = format!("const value = 1;\n{}", "// filler\n".repeat(850));
-    let md: String = (0..6).map(|_| fence("js", &source)).collect::<Vec<_>>().join("\n");
+    let md: String = (0..6)
+        .map(|_| fence("js", &source))
+        .collect::<Vec<_>>()
+        .join("\n");
     let doc = render_hl(&md);
     let code = collect_code(&doc);
     assert_eq!(code.len(), 6);
@@ -379,7 +432,10 @@ fn total_highlight_budget_per_render() {
 // port: test/javascript/lib/code_block_highlighter.test.js:340 "limits the number of code blocks highlighted per render"
 #[test]
 fn max_blocks_per_render() {
-    let md: String = (0..101).map(|_| fence("js", "const value = 1;\n")).collect::<Vec<_>>().join("\n");
+    let md: String = (0..101)
+        .map(|_| fence("js", "const value = 1;\n"))
+        .collect::<Vec<_>>()
+        .join("\n");
     let doc = render_hl(&md);
     let code = collect_code(&doc);
     assert_eq!(code.len(), 101);
@@ -392,7 +448,11 @@ fn max_blocks_per_render() {
 // the same synchronous render pass — no lazily loaded parsers)
 #[test]
 fn common_and_lazy_languages_in_one_pass() {
-    let doc = render_hl(&format!("{}\n{}", fence("js", "const immediate = 1;\n"), fence("tf", "value = 1\n")));
+    let doc = render_hl(&format!(
+        "{}\n{}",
+        fence("js", "const immediate = 1;\n"),
+        fence("tf", "value = 1\n")
+    ));
     let code = collect_code(&doc);
     assert!(is_highlighted(&code[0].1));
     assert!(is_highlighted(&code[1].1));

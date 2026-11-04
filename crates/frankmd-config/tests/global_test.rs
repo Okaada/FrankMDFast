@@ -6,8 +6,8 @@ mod common;
 use common::*;
 use frankmd_config::dirs::AppDirs;
 use frankmd_config::{
-    ConfigError, ConfigStore, EnvSnapshot, Key, Provenance, ResolvedConfig, Value, global_config_path, load_global,
-    write_global,
+    ConfigError, ConfigStore, EnvSnapshot, Key, Provenance, ResolvedConfig, Value,
+    global_config_path, load_global, write_global,
 };
 use secrecy::ExposeSecret;
 use std::path::PathBuf;
@@ -27,7 +27,10 @@ fn path_is_config_dir_join_file() {
         state: PathBuf::from("/s"),
         cache: PathBuf::from("/k"),
     };
-    assert_eq!(global_config_path(&dirs), PathBuf::from("/c/frankmd/config.toml"));
+    assert_eq!(
+        global_config_path(&dirs),
+        PathBuf::from("/c/frankmd/config.toml")
+    );
 }
 
 #[test]
@@ -42,7 +45,10 @@ fn precedence_fed_global_env_default() {
     assert_eq!((r.value, r.source), (s("pt-BR"), Provenance::Global));
 
     let r = rc(None, vec![], e).get(Key::Locale);
-    assert_eq!((r.value, r.source), (s("es"), Provenance::Env("FRANKMD_LOCALE")));
+    assert_eq!(
+        (r.value, r.source),
+        (s("es"), Provenance::Env("FRANKMD_LOCALE"))
+    );
 
     let r = rc(None, vec![], EnvSnapshot::default()).get(Key::Locale);
     assert_eq!((r.value, r.source), (s("en"), Provenance::Default));
@@ -51,25 +57,44 @@ fn precedence_fed_global_env_default() {
 
 #[test]
 fn global_beats_env_even_when_env_set() {
-    let r = rc(None, vec![(Key::Locale, s("de"))], env(&[("FRANKMD_LOCALE", "es")])).get(Key::Locale);
+    let r = rc(
+        None,
+        vec![(Key::Locale, s("de"))],
+        env(&[("FRANKMD_LOCALE", "es")]),
+    )
+    .get(Key::Locale);
     assert_eq!(r.source, Provenance::Global);
 }
 
 #[test]
 fn empty_global_value_blocks_env_and_default() {
-    let r = rc(None, vec![(Key::Locale, None)], env(&[("FRANKMD_LOCALE", "es")])).get(Key::Locale);
+    let r = rc(
+        None,
+        vec![(Key::Locale, None)],
+        env(&[("FRANKMD_LOCALE", "es")]),
+    )
+    .get(Key::Locale);
     assert_eq!((r.value, r.source), (None, Provenance::Global));
 }
 
 #[test]
 fn empty_fed_value_blocks_global() {
-    let r = rc(Some("locale =\n"), vec![(Key::Locale, s("de"))], EnvSnapshot::default()).get(Key::Locale);
+    let r = rc(
+        Some("locale =\n"),
+        vec![(Key::Locale, s("de"))],
+        EnvSnapshot::default(),
+    )
+    .get(Key::Locale);
     assert_eq!((r.value, r.source), (None, Provenance::Fed));
 }
 
 #[test]
 fn in_file_predicates() {
-    let c = rc(Some("theme = x\n"), vec![(Key::Locale, s("de"))], EnvSnapshot::default());
+    let c = rc(
+        Some("theme = x\n"),
+        vec![(Key::Locale, s("de"))],
+        EnvSnapshot::default(),
+    );
     assert!(c.in_vault_file(Key::Theme) && !c.in_global_file(Key::Theme));
     assert!(c.in_global_file(Key::Locale) && !c.in_vault_file(Key::Locale));
     assert!(!c.in_vault_file(Key::VimMode) && !c.in_global_file(Key::VimMode));
@@ -77,15 +102,26 @@ fn in_file_predicates() {
 
 #[test]
 fn global_ai_credentials_enable_file_only_mode() {
-    let e = env(&[("OPENAI_API_KEY", "sk-env"), ("ANTHROPIC_API_KEY", "ak-env")]);
-    let c = rc(None, vec![(Key::AnthropicApiKey, s("ak-global"))], e.clone());
+    let e = env(&[
+        ("OPENAI_API_KEY", "sk-env"),
+        ("ANTHROPIC_API_KEY", "ak-env"),
+    ]);
+    let c = rc(
+        None,
+        vec![(Key::AnthropicApiKey, s("ak-global"))],
+        e.clone(),
+    );
     assert!(c.ai_configured_in_file());
     // ENV openai key is ignored in file-only mode.
     assert_eq!(c.get_ai(Key::OpenaiApiKey).source, Provenance::Default);
     assert_eq!(c.get_ai(Key::AnthropicApiKey).source, Provenance::Global);
     assert_eq!(c.ai_providers_available().len(), 1);
     // .fed still wins over global inside file-only mode.
-    let c = rc(Some("anthropic_api_key = ak-fed\n"), vec![(Key::AnthropicApiKey, s("ak-global"))], e);
+    let c = rc(
+        Some("anthropic_api_key = ak-fed\n"),
+        vec![(Key::AnthropicApiKey, s("ak-global"))],
+        e,
+    );
     assert_eq!(c.get_ai(Key::AnthropicApiKey).source, Provenance::Fed);
 }
 
@@ -94,7 +130,11 @@ fn image_generation_key_uses_global_between_fed_and_env() {
     let e = env(&[("OPENROUTER_API_KEY", "env")]);
     let c = rc(None, vec![(Key::OpenrouterApiKey, s("glob"))], e.clone());
     assert_eq!(c.image_generation_key().unwrap().expose_secret(), "glob");
-    let c = rc(Some("openrouter_api_key = fed\n"), vec![(Key::OpenrouterApiKey, s("glob"))], e);
+    let c = rc(
+        Some("openrouter_api_key = fed\n"),
+        vec![(Key::OpenrouterApiKey, s("glob"))],
+        e,
+    );
     assert_eq!(c.image_generation_key().unwrap().expose_secret(), "fed");
 }
 
@@ -102,8 +142,15 @@ fn image_generation_key_uses_global_between_fed_and_env() {
 fn write_read_round_trip_keeps_other_keys_and_removes_on_none() {
     let d = tempfile::tempdir().unwrap();
     let p = gpath(&d);
-    write_global(&p, &[(Key::Locale, s("de")), (Key::EditorFontSize, Some(Value::Int(18))), (Key::VimMode, Some(Value::Bool(true)))])
-        .unwrap();
+    write_global(
+        &p,
+        &[
+            (Key::Locale, s("de")),
+            (Key::EditorFontSize, Some(Value::Int(18))),
+            (Key::VimMode, Some(Value::Bool(true))),
+        ],
+    )
+    .unwrap();
     write_global(&p, &[(Key::Theme, s("dark")), (Key::Locale, None)]).unwrap();
     let (vals, warns) = load_global(&p);
     assert!(warns.is_empty(), "{warns:?}");
@@ -134,9 +181,15 @@ fn file_mode_is_0600_and_parent_created() {
     let p = gpath(&d);
     assert!(!p.parent().unwrap().exists());
     write_global(&p, &[(Key::Locale, s("de"))]).unwrap();
-    assert_eq!(std::fs::metadata(&p).unwrap().permissions().mode() & 0o777, 0o600);
+    assert_eq!(
+        std::fs::metadata(&p).unwrap().permissions().mode() & 0o777,
+        0o600
+    );
     write_global(&p, &[(Key::Locale, s("fr"))]).unwrap();
-    assert_eq!(std::fs::metadata(&p).unwrap().permissions().mode() & 0o777, 0o600);
+    assert_eq!(
+        std::fs::metadata(&p).unwrap().permissions().mode() & 0o777,
+        0o600
+    );
 }
 
 #[test]
@@ -159,7 +212,14 @@ fn unknown_and_mistyped_keys_warn_and_are_skipped() {
     let (vals, warns) = load_global(&p);
     assert_eq!(vals, vec![(Key::ShowStats, Some(Value::Bool(true)))]);
     assert_eq!(warns.len(), 6, "{warns:?}");
-    for name in ["bogus", "editor_font_size", "vim_mode", "locale", "recent_files", "auth_token"] {
+    for name in [
+        "bogus",
+        "editor_font_size",
+        "vim_mode",
+        "locale",
+        "recent_files",
+        "auth_token",
+    ] {
         assert!(warns.iter().any(|w| w.contains(name)), "{name}: {warns:?}");
     }
 }
@@ -181,24 +241,49 @@ fn recent_files_and_auth_token_are_refused_on_write() {
     let p = gpath(&d);
     for k in [Key::RecentFiles, Key::AuthToken] {
         let err = write_global(&p, &[(Key::Locale, s("de")), (k, s("x"))]).unwrap_err();
-        assert!(matches!(err, ConfigError::GlobalKeyNotAllowed { key } if key == k), "{err:?}");
+        assert!(
+            matches!(err, ConfigError::GlobalKeyNotAllowed { key } if key == k),
+            "{err:?}"
+        );
     }
     assert!(!p.exists(), "nothing written when any change is refused");
 }
 
 #[test]
 fn secrets_are_masked_in_debug_and_entries() {
-    let c = rc(None, vec![(Key::AnthropicApiKey, s("sk-super-secret")), (Key::Locale, s("de"))], EnvSnapshot::default());
+    let c = rc(
+        None,
+        vec![
+            (Key::AnthropicApiKey, s("sk-super-secret")),
+            (Key::Locale, s("de")),
+        ],
+        EnvSnapshot::default(),
+    );
     let dbg = format!("{c:?}");
     assert!(!dbg.contains("sk-super-secret"), "{dbg}");
     assert!(dbg.contains("****"));
-    let e = c.entries().into_iter().find(|e| e.key == Key::AnthropicApiKey).unwrap();
+    let e = c
+        .entries()
+        .into_iter()
+        .find(|e| e.key == Key::AnthropicApiKey)
+        .unwrap();
     assert_eq!(e.source, Provenance::Global);
     assert_eq!(e.value, serde_json::json!("****"));
-    let l = c.entries().into_iter().find(|e| e.key == Key::Locale).unwrap();
-    assert_eq!((l.source, l.value), (Provenance::Global, serde_json::json!("de")));
+    let l = c
+        .entries()
+        .into_iter()
+        .find(|e| e.key == Key::Locale)
+        .unwrap();
+    assert_eq!(
+        (l.source, l.value),
+        (Provenance::Global, serde_json::json!("de"))
+    );
     let masked = c.all_settings_masked();
-    assert!(masked.iter().any(|(k, v)| k == "anthropic_api_key_configured" && *v == serde_json::json!(true)));
+    assert!(
+        masked
+            .iter()
+            .any(|(k, v)| k == "anthropic_api_key_configured" && *v == serde_json::json!(true))
+    );
     assert!(!format!("{masked:?}").contains("sk-super-secret"));
 }
 
@@ -226,7 +311,10 @@ fn store_update_global_without_path_errors() {
     let v = TestVault::new();
     let mut store: ConfigStore = v.open_empty_env();
     assert!(store.global_path().is_none());
-    assert!(matches!(store.update_global(&[(Key::Locale, s("de"))]), Err(ConfigError::NoGlobalConfig)));
+    assert!(matches!(
+        store.update_global(&[(Key::Locale, s("de"))]),
+        Err(ConfigError::NoGlobalConfig)
+    ));
 }
 
 #[test]
@@ -251,7 +339,10 @@ fn no_global_attached_behaves_as_before() {
     assert!(rc.global_values().is_empty());
     assert_eq!(rc.get(Key::Theme).source, Provenance::Fed);
     assert_eq!(rc.get(Key::EditorFontSize).value, Some(Value::Int(20)));
-    assert_eq!(rc.get(Key::Locale).source, Provenance::Env("FRANKMD_LOCALE"));
+    assert_eq!(
+        rc.get(Key::Locale).source,
+        Provenance::Env("FRANKMD_LOCALE")
+    );
     assert_eq!(rc.get(Key::VimMode).source, Provenance::Default);
     assert!(!rc.in_global_file(Key::Theme));
     assert!(rc.entries().iter().all(|e| e.source != Provenance::Global));

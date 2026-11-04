@@ -20,7 +20,11 @@ use frankmd_markdown::linemap::scroll::{ScrollEntry, line_at_scroll, scroll_top_
 use frankmd_markdown::{RenderOptions, render_body};
 
 fn lines(md: &str, offset: u32) -> Vec<u32> {
-    render_body(md, offset, &RenderOptions::default()).blocks.iter().map(|b| b.span().start_line).collect()
+    render_body(md, offset, &RenderOptions::default())
+        .blocks
+        .iter()
+        .map(|b| b.span().start_line)
+        .collect()
 }
 
 /// A preview container at `page_offset` whose annotated elements sit at
@@ -30,7 +34,11 @@ fn entries(tops: &[(u32, f64)], page_offset: f64, container_scroll: f64) -> Vec<
     tops.iter()
         .map(|&(line, top)| ScrollEntry {
             line,
-            top: scroll_top_for_element(page_offset + top - container_scroll, page_offset, container_scroll),
+            top: scroll_top_for_element(
+                page_offset + top - container_scroll,
+                page_offset,
+                container_scroll,
+            ),
         })
         .collect()
 }
@@ -41,7 +49,11 @@ const GEOMETRY: &[(u32, f64)] = &[(1, 0.0), (5, 100.0), (10, 200.0)];
 #[test]
 fn annotates_blocks_with_one_based_lines() {
     assert_eq!(lines("# First\n\n# Second\n\n", 0), vec![1, 3]);
-    let html = to_html(&render_body("# First\n\n# Second\n\n", 0, &RenderOptions::default()));
+    let html = to_html(&render_body(
+        "# First\n\n# Second\n\n",
+        0,
+        &RenderOptions::default(),
+    ));
     assert!(html.contains(r#"data-source-line="1""#), "{html}");
     assert!(html.contains(r#"data-source-line="3""#), "{html}");
 }
@@ -55,42 +67,76 @@ fn applies_frontmatter_line_offset() {
 // port: test/javascript/lib/markdown_line_mapper.test.js:60 "highlights supported fenced code without losing its source line"
 #[test]
 fn highlighted_code_keeps_source_line() {
-    let opts = RenderOptions { highlighter: Some(Arc::new(BuiltinHighlighter)), ..RenderOptions::default() };
+    let opts = RenderOptions {
+        highlighter: Some(Arc::new(BuiltinHighlighter)),
+        ..RenderOptions::default()
+    };
     let doc = render_body("```typescript\nconst x: number = 1;\n```", 0, &opts);
-    let Block::Code { lang, lines, span } = &doc.blocks[0] else { panic!("{:?}", doc.blocks) };
+    let Block::Code { lang, lines, span } = &doc.blocks[0] else {
+        panic!("{:?}", doc.blocks)
+    };
     assert_eq!(span.start_line, 1);
     assert_eq!(lang.as_deref(), Some("typescript"));
     let toks = flatten_runs(lines);
     assert_token_class(&toks, "const", TokenClass::Keyword);
     assert_token_class(&toks, "1", TokenClass::Number);
     let html = to_html(&doc);
-    assert!(html.contains(r#"data-source-line="1""#) && html.contains(r#"class="language-typescript""#), "{html}");
+    assert!(
+        html.contains(r#"data-source-line="1""#) && html.contains(r#"class="language-typescript""#),
+        "{html}"
+    );
 }
 
 // port: test/javascript/lib/markdown_line_mapper.test.js:82 "annotates display math blocks so following preview lines stay aligned"
 #[test]
 fn display_math_blocks_are_annotated() {
-    let doc = render_body("Before\n\n$$\nx + y\n$$\n\nAfter", 0, &RenderOptions::default());
-    assert!(matches!(&doc.blocks[1], Block::Math { tex, span } if tex == "x + y" && span.start_line == 3), "{:?}", doc.blocks);
-    assert_eq!(doc.blocks.iter().map(|b| b.span().start_line).collect::<Vec<_>>(), vec![1, 3, 7]);
+    let doc = render_body(
+        "Before\n\n$$\nx + y\n$$\n\nAfter",
+        0,
+        &RenderOptions::default(),
+    );
+    assert!(
+        matches!(&doc.blocks[1], Block::Math { tex, span } if tex == "x + y" && span.start_line == 3),
+        "{:?}",
+        doc.blocks
+    );
+    assert_eq!(
+        doc.blocks
+            .iter()
+            .map(|b| b.span().start_line)
+            .collect::<Vec<_>>(),
+        vec![1, 3, 7]
+    );
 }
 
 // port: test/javascript/lib/markdown_line_mapper.test.js:150 "annotates each li with its own source line, including nested items"
 #[test]
 fn annotates_each_list_item_including_nested() {
-    let doc = render_body("# Intro\n\n- [ ] a\n- plain\n- parent\n  - [x] child\n", 0, &RenderOptions::default());
+    let doc = render_body(
+        "# Intro\n\n- [ ] a\n- plain\n- parent\n  - [x] child\n",
+        0,
+        &RenderOptions::default(),
+    );
     assert_eq!(ir_li_lines(&doc), vec![3, 4, 5, 6]);
-    let Block::List { items, .. } = &doc.blocks[1] else { panic!("{:?}", doc.blocks) };
+    let Block::List { items, .. } = &doc.blocks[1] else {
+        panic!("{:?}", doc.blocks)
+    };
     assert_eq!(items[0].task, Some(false));
     assert_eq!(items[1].task, None);
-    let Block::List { items: nested, .. } = &items[2].children[1] else { panic!("{:?}", items[2]) };
+    let Block::List { items: nested, .. } = &items[2].children[1] else {
+        panic!("{:?}", items[2])
+    };
     assert_eq!(nested[0].task, Some(true));
 }
 
 // port: test/javascript/lib/markdown_line_mapper.test.js:160 "shifts li lines by the frontmatter offset"
 #[test]
 fn shifts_list_item_lines_by_offset() {
-    let doc = render_body("- [ ] a\n- plain\n- parent\n  - [x] child\n", 3, &RenderOptions::default());
+    let doc = render_body(
+        "- [ ] a\n- plain\n- parent\n  - [x] child\n",
+        3,
+        &RenderOptions::default(),
+    );
     assert_eq!(ir_li_lines(&doc), vec![4, 5, 6, 7]);
 }
 

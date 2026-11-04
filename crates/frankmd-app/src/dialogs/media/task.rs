@@ -57,6 +57,8 @@ where
     let handle = rt.spawn(fut);
     let abort_handle = handle.abort_handle();
     let abort = Abort(Some(Box::new(move || abort_handle.abort())));
-    let task = cx.background_executor().spawn(async move { handle.await.ok() });
+    let task = cx
+        .background_executor()
+        .spawn(async move { handle.await.ok() });
     (Some(abort), task)
 }

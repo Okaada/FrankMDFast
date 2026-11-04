@@ -59,8 +59,19 @@ fn config_masks_sensitive_values() {
         "auth_token = t\naws_access_key_id = a\naws_secret_access_key = b\nyoutube_api_key = c\n\
          google_api_key = d\nopenai_api_key = e\nopenrouter_api_key = f\nanthropic_api_key = g\ngemini_api_key = h\n",
     );
-    for e in v.open_empty_env().current().entries().iter().filter(|e| e.sensitive) {
-        assert_eq!(e.value, json!("****"), "Sensitive key {:?} should be masked", e.key);
+    for e in v
+        .open_empty_env()
+        .current()
+        .entries()
+        .iter()
+        .filter(|e| e.sensitive)
+    {
+        assert_eq!(
+            e.value,
+            json!("****"),
+            "Sensitive key {:?} should be masked",
+            e.key
+        );
     }
 }
 
@@ -69,7 +80,10 @@ fn config_masks_sensitive_values() {
 fn config_source_reflects_env_when_env_is_set() {
     let store = TestVault::new().open(env(&[("YOUTUBE_API_KEY", "test-yt-key-12345678")]));
     let entries = store.current().entries();
-    let yt = entries.iter().find(|e| e.key == Key::YoutubeApiKey).unwrap();
+    let yt = entries
+        .iter()
+        .find(|e| e.key == Key::YoutubeApiKey)
+        .unwrap();
     assert_eq!(yt.source, Provenance::Env("YOUTUBE_API_KEY"));
     assert_eq!(yt.value, json!("****"));
 }

@@ -24,7 +24,10 @@ pub fn calculate_stats(text: Option<&str>) -> DocStats {
     let Some(text) = text.filter(|t| !t.is_empty()) else {
         return DocStats::default();
     };
-    let word_count = text.split(is_js_whitespace).filter(|word| !word.is_empty()).count();
+    let word_count = text
+        .split(is_js_whitespace)
+        .filter(|word| !word.is_empty())
+        .count();
     DocStats {
         word_count,
         char_count_utf16: utf16_len(text),

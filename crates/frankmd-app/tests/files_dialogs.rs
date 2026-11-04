@@ -93,9 +93,15 @@ fn hugo_post_from_the_toolbar_goes_to_blog_with_front_matter(cx: &mut TestAppCon
     assert!(harness::is_shown(cx, w, "dialog-new-note-slug"));
     harness::press(cx, w, "enter");
     let path = shell.active_note(cx).unwrap();
-    assert!(path.starts_with("blog/") && path.ends_with("/hello-world/index.md"), "{path}");
+    assert!(
+        path.starts_with("blog/") && path.ends_with("/hello-world/index.md"),
+        "{path}"
+    );
     let text = shell.read_note(&path).unwrap();
-    assert!(text.starts_with("---\ntitle: \"Hello World\"\nslug: \"hello-world\"\n"), "{text}");
+    assert!(
+        text.starts_with("---\ntitle: \"Hello World\"\nslug: \"hello-world\"\n"),
+        "{text}"
+    );
 }
 
 // adapts: creation_destination_test.rb:52 "context menu Hugo post goes to that folder"
@@ -239,22 +245,35 @@ fn clicking_the_pane_title_renames_the_open_note(cx: &mut TestAppContext) {
     harness::press(cx, w, "ctrl-a");
     harness::type_text(cx, w, "Brief v2");
     harness::press(cx, w, "enter");
-    assert_eq!(shell.active_note(cx).as_deref(), Some("blog/2026/Brief v2.md"));
+    assert_eq!(
+        shell.active_note(cx).as_deref(),
+        Some("blog/2026/Brief v2.md")
+    );
     assert!(exists(&shell, "blog/2026/Brief v2.md"));
 }
 
 // adapts: workspace_test.rb:318 "shows an error when the new title already exists"
 #[gpui_kit::test]
 fn title_rename_collision_shows_an_inline_error(cx: &mut TestAppContext) {
-    let shell = open_shell(cx, WIDE, VaultFixture::sample_with(&[("blog/2026/Other.md", "x")]));
+    let shell = open_shell(
+        cx,
+        WIDE,
+        VaultFixture::sample_with(&[("blog/2026/Other.md", "x")]),
+    );
     let w = shell.window;
     harness::press(cx, w, "ctrl-2 f2");
     harness::press(cx, w, "ctrl-a");
     harness::type_text(cx, w, "Other");
     harness::press(cx, w, "enter");
     assert!(harness::is_shown(cx, w, "rename-error"));
-    assert!(harness::is_shown(cx, w, "pane-title-input"), "still editing");
-    assert_eq!(shell.active_note(cx).as_deref(), Some("blog/2026/Project brief.md"));
+    assert!(
+        harness::is_shown(cx, w, "pane-title-input"),
+        "still editing"
+    );
+    assert_eq!(
+        shell.active_note(cx).as_deref(),
+        Some("blog/2026/Project brief.md")
+    );
     harness::press(cx, w, "escape");
     assert!(!harness::is_shown(cx, w, "pane-title-input"));
 }
@@ -266,7 +285,10 @@ fn blank_title_is_rejected(cx: &mut TestAppContext) {
     let w = shell.window;
     harness::press(cx, w, "ctrl-2 f2 ctrl-a backspace enter");
     assert!(harness::is_shown(cx, w, "rename-error"));
-    assert_eq!(shell.active_note(cx).as_deref(), Some("blog/2026/Project brief.md"));
+    assert_eq!(
+        shell.active_note(cx).as_deref(),
+        Some("blog/2026/Project brief.md")
+    );
 }
 
 // ui-spec §5.13: "Move to…" shows a folder picker plus the name field.
@@ -278,7 +300,10 @@ fn move_to_moves_the_open_note_into_another_folder(cx: &mut TestAppContext) {
     assert_eq!(dialog(cx, &shell), Some("move"));
     click(cx, &shell, "dialog-move-folder-reference");
     click(cx, &shell, "dialog-move-confirm");
-    assert_eq!(shell.active_note(cx).as_deref(), Some("reference/Project brief.md"));
+    assert_eq!(
+        shell.active_note(cx).as_deref(),
+        Some("reference/Project brief.md")
+    );
     assert!(exists(&shell, "reference/Project brief.md"));
     assert_eq!(shell.overlay(cx), None);
     let _ = w;
@@ -290,15 +315,27 @@ fn context_menus_list_the_items_of_their_target(cx: &mut TestAppContext) {
     let shell = open_shell(cx, WIDE, VaultFixture::sample());
     let w = shell.window;
     right_click(cx, &shell, "explorer-row-Inbox.md");
-    for id in ["explorer-menu-rename", "explorer-menu-move", "explorer-menu-delete"] {
+    for id in [
+        "explorer-menu-rename",
+        "explorer-menu-move",
+        "explorer-menu-delete",
+    ] {
         assert!(harness::is_shown(cx, w, id), "{id}");
     }
-    assert!(!harness::is_shown(cx, w, "explorer-menu-new-note"), "notes have no New Note");
+    assert!(
+        !harness::is_shown(cx, w, "explorer-menu-new-note"),
+        "notes have no New Note"
+    );
     harness::press(cx, w, "escape");
     assert!(!harness::is_shown(cx, w, "explorer-context-menu"));
 
     right_click(cx, &shell, "explorer-row-projects");
-    for id in ["explorer-menu-new-note", "explorer-menu-new-folder", "explorer-menu-rename", "explorer-menu-delete"] {
+    for id in [
+        "explorer-menu-new-note",
+        "explorer-menu-new-folder",
+        "explorer-menu-rename",
+        "explorer-menu-delete",
+    ] {
         assert!(harness::is_shown(cx, w, id), "{id}");
     }
     harness::press(cx, w, "escape");
@@ -324,6 +361,8 @@ fn background_select_all_selects_every_visible_row(cx: &mut TestAppContext) {
     let shell = open_shell(cx, WIDE, VaultFixture::sample_no_note());
     right_click(cx, &shell, "explorer-tree");
     click(cx, &shell, "explorer-menu-select-all");
-    let selected = shell.view.read_with(cx, |s, _| s.explorer().selection().len());
+    let selected = shell
+        .view
+        .read_with(cx, |s, _| s.explorer().selection().len());
     assert_eq!(selected, 4, "blog, projects, reference, Inbox.md");
 }

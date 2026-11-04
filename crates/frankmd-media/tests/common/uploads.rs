@@ -1,6 +1,11 @@
 //! Shared helpers for the upload / import / recovery ports (owned by the
 //! media-uploads port; other test files have their own helpers).
-#![allow(dead_code, unreachable_pub, clippy::disallowed_methods, clippy::unwrap_used)]
+#![allow(
+    dead_code,
+    unreachable_pub,
+    clippy::disallowed_methods,
+    clippy::unwrap_used
+)]
 
 use std::net::IpAddr;
 use std::path::{Path, PathBuf};
@@ -20,10 +25,11 @@ use wiremock::{Mock, MockServer, ResponseTemplate};
 /// a corrupted IDAT chunk (CRC mismatch, so no strict decoder could read it);
 /// these are the same IHDR/IEND chunks with a correct IDAT.
 pub const PNG_1X1: [u8; 69] = [
-    0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 0x52, 0x00, 0x00,
-    0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x08, 0x02, 0x00, 0x00, 0x00, 0x90, 0x77, 0x53, 0xDE, 0x00, 0x00, 0x00,
-    0x0C, 0x49, 0x44, 0x41, 0x54, 0x78, 0x9C, 0x63, 0xF8, 0xCF, 0xC0, 0x00, 0x00, 0x03, 0x01, 0x01, 0x00, 0xC9,
-    0xFE, 0x92, 0xEF, 0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4E, 0x44, 0xAE, 0x42, 0x60, 0x82,
+    0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 0x52,
+    0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x08, 0x02, 0x00, 0x00, 0x00, 0x90, 0x77, 0x53,
+    0xDE, 0x00, 0x00, 0x00, 0x0C, 0x49, 0x44, 0x41, 0x54, 0x78, 0x9C, 0x63, 0xF8, 0xCF, 0xC0, 0x00,
+    0x00, 0x03, 0x01, 0x01, 0x00, 0xC9, 0xFE, 0x92, 0xEF, 0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4E,
+    0x44, 0xAE, 0x42, 0x60, 0x82,
 ];
 
 /// security: uploads are content-sniffed, so tests that stored placeholder
@@ -33,7 +39,9 @@ pub fn sample_media(ext: &str) -> Vec<u8> {
     use image::ImageFormat;
     let image = |format: ImageFormat| {
         let mut out = std::io::Cursor::new(Vec::new());
-        image::DynamicImage::new_rgb8(1, 1).write_to(&mut out, format).unwrap();
+        image::DynamicImage::new_rgb8(1, 1)
+            .write_to(&mut out, format)
+            .unwrap();
         out.into_inner()
     };
     match ext.to_ascii_lowercase().as_str() {
@@ -76,7 +84,9 @@ fn iso_bmff(brand: &[u8; 4]) -> Vec<u8> {
 
 /// EBML header with the given DocType, padded past infer's 256-byte window.
 fn ebml(doctype: &[u8]) -> Vec<u8> {
-    let mut v = vec![0x1A, 0x45, 0xDF, 0xA3, 0x9F, 0x42, 0x86, 0x81, 0x01, 0x42, 0x82];
+    let mut v = vec![
+        0x1A, 0x45, 0xDF, 0xA3, 0x9F, 0x42, 0x86, 0x81, 0x01, 0x42, 0x82,
+    ];
     v.push(0x80 | doctype.len() as u8);
     v.extend_from_slice(doctype);
     v.resize(300, 0);
@@ -90,7 +100,8 @@ pub fn sample_for(name: &str) -> Vec<u8> {
 }
 
 /// 1x1 24-bit BMP from image_import_test.rb (base64 decoded).
-pub const BMP_1X1_B64: &str = "Qk06AAAAAAAAADYAAAAoAAAAAQAAAAEAAAABABgAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAA////AA==";
+pub const BMP_1X1_B64: &str =
+    "Qk06AAAAAAAAADYAAAAoAAAAAQAAAAEAAAABABgAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAA////AA==";
 
 /// The public IP every test host resolves to (`EgressPolicy.resolve` stub).
 pub const PUBLIC_IP: &str = "93.184.216.34";
@@ -117,7 +128,9 @@ pub fn ctx_from_pinned(input: &Value) -> MediaCtx {
 /// Strings are slices of the hex alphabet in pinned mode; real mode needs a
 /// regex check. `true` if `s` is `n` lowercase hex chars.
 pub fn is_hex(s: &str, n: usize) -> bool {
-    s.len() == n && s.bytes().all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
+    s.len() == n
+        && s.bytes()
+            .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
 }
 
 /// JSON fixture value → [`Param`].
@@ -191,7 +204,13 @@ pub fn env_with(
 /// Default env for a config (pinned ctx, default resolver, external-image limits).
 pub fn env_for(config: MediaConfig, mock: Option<&MockServer>) -> (Arc<MemorySettings>, MediaEnv) {
     let settings = MemorySettings::new(config);
-    let env = env_with(settings.clone(), pinned_ctx(), mock, default_resolver(), Limits::EXTERNAL_IMAGE);
+    let env = env_with(
+        settings.clone(),
+        pinned_ctx(),
+        mock,
+        default_resolver(),
+        Limits::EXTERNAL_IMAGE,
+    );
     (settings, env)
 }
 
@@ -254,7 +273,10 @@ pub async fn puts(server: &MockServer) -> Vec<wiremock::Request> {
 
 /// Header value of a recorded request.
 pub fn header(req: &wiremock::Request, name: &str) -> Option<String> {
-    req.headers.get(name).and_then(|v| v.to_str().ok()).map(str::to_owned)
+    req.headers
+        .get(name)
+        .and_then(|v| v.to_str().ok())
+        .map(str::to_owned)
 }
 
 /// Write a file (creating parents) and return its path.
@@ -302,7 +324,11 @@ const B64: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz012
 pub fn b64(bytes: &[u8]) -> String {
     let mut out = String::new();
     for chunk in bytes.chunks(3) {
-        let b = [chunk[0], *chunk.get(1).unwrap_or(&0), *chunk.get(2).unwrap_or(&0)];
+        let b = [
+            chunk[0],
+            *chunk.get(1).unwrap_or(&0),
+            *chunk.get(2).unwrap_or(&0),
+        ];
         let n = (u32::from(b[0]) << 16) | (u32::from(b[1]) << 8) | u32::from(b[2]);
         for i in 0..4 {
             if i <= chunk.len() {

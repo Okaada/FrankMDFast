@@ -73,7 +73,12 @@ pub struct AlignedTable {
 impl AlignedTable {
     /// Number of columns (widest row or alignment list).
     pub fn column_count(&self) -> usize {
-        self.rows.iter().map(Vec::len).max().unwrap_or(0).max(self.alignments.len())
+        self.rows
+            .iter()
+            .map(Vec::len)
+            .max()
+            .unwrap_or(0)
+            .max(self.alignments.len())
     }
 
     /// Alignment of column `col`.
@@ -144,15 +149,19 @@ pub fn parse_aligned_table(text: &str) -> AlignedTable {
         if cells.is_empty() {
             continue;
         }
-        let separator: Option<Vec<Alignment>> =
-            cells.iter().map(|c| Alignment::from_separator_cell(c)).collect();
+        let separator: Option<Vec<Alignment>> = cells
+            .iter()
+            .map(|c| Alignment::from_separator_cell(c))
+            .collect();
         if let Some(alignments) = separator {
             if table.alignments.is_empty() {
                 table.alignments = alignments;
             }
             continue;
         }
-        table.rows.push(cells.iter().map(|c| unescape_cell(js_trim(c))).collect());
+        table
+            .rows
+            .push(cells.iter().map(|c| unescape_cell(js_trim(c))).collect());
     }
     table
 }
@@ -166,10 +175,21 @@ pub fn generate_aligned_table(table: &AlignedTable) -> String {
     let escaped: Vec<Vec<String>> = table
         .rows
         .iter()
-        .map(|row| (0..col_count).map(|c| row.get(c).map_or_else(String::new, |s| escape_cell(s))).collect())
+        .map(|row| {
+            (0..col_count)
+                .map(|c| row.get(c).map_or_else(String::new, |s| escape_cell(s)))
+                .collect()
+        })
         .collect();
     let widths: Vec<usize> = (0..col_count)
-        .map(|c| escaped.iter().map(|row| utf16_len(&row[c])).max().unwrap_or(0).max(3))
+        .map(|c| {
+            escaped
+                .iter()
+                .map(|row| utf16_len(&row[c]))
+                .max()
+                .unwrap_or(0)
+                .max(3)
+        })
         .collect();
     let render = |row: &[String]| {
         let cells: Vec<String> = row
@@ -181,8 +201,11 @@ pub fn generate_aligned_table(table: &AlignedTable) -> String {
     };
     let mut lines = Vec::with_capacity(escaped.len() + 1);
     lines.push(render(&escaped[0]));
-    let separator: Vec<String> =
-        widths.iter().enumerate().map(|(c, &w)| table.alignment(c).separator(w)).collect();
+    let separator: Vec<String> = widths
+        .iter()
+        .enumerate()
+        .map(|(c, &w)| table.alignment(c).separator(w))
+        .collect();
     lines.push(format!("| {} |", separator.join(" | ")));
     lines.extend(escaped[1..].iter().map(|row| render(row)));
     lines.join("\n")
@@ -193,8 +216,10 @@ pub fn generate_aligned_table(table: &AlignedTable) -> String {
 /// tab, using the original's three rules (space on both sides → drop one after;
 /// query at the start → drop one after; nothing after → trim spaces before).
 pub fn strip_slash_query(table_text: &str, query_range: std::ops::Range<usize>) -> String {
-    let (Some(before), Some(after)) = (table_text.get(..query_range.start), table_text.get(query_range.end..))
-    else {
+    let (Some(before), Some(after)) = (
+        table_text.get(..query_range.start),
+        table_text.get(query_range.end..),
+    ) else {
         return table_text.to_owned();
     };
     let is_blank = |c: char| c == ' ' || c == '\t';
@@ -214,14 +239,24 @@ mod tests {
 
     fn table(rows: &[&[&str]], alignments: &[Alignment]) -> AlignedTable {
         AlignedTable {
-            rows: rows.iter().map(|r| r.iter().map(|c| (*c).to_owned()).collect()).collect(),
+            rows: rows
+                .iter()
+                .map(|r| r.iter().map(|c| (*c).to_owned()).collect())
+                .collect(),
             alignments: alignments.to_vec(),
         }
     }
 
     #[test]
     fn default_table_matches_frankmd_output() {
-        let t = table(&[&["Header 1", "Header 2", "Header 3"], &["", "", ""], &["", "", ""]], &[]);
+        let t = table(
+            &[
+                &["Header 1", "Header 2", "Header 3"],
+                &["", "", ""],
+                &["", "", ""],
+            ],
+            &[],
+        );
         assert_eq!(
             generate_aligned_table(&t),
             "| Header 1 | Header 2 | Header 3 |\n| -------- | -------- | -------- |\n|          |          |          |\n|          |          |          |"
@@ -232,10 +267,19 @@ mod tests {
     fn alignment_round_trips() {
         let src = "| Name | Qty | Price |\n| :--- | :-: | ----: |\n| a | 1 | 2 |";
         let t = parse_aligned_table(src);
-        assert_eq!(t.alignments, vec![Alignment::Left, Alignment::Center, Alignment::Right]);
-        assert_eq!(t.rows, vec![vec!["Name", "Qty", "Price"], vec!["a", "1", "2"]]);
+        assert_eq!(
+            t.alignments,
+            vec![Alignment::Left, Alignment::Center, Alignment::Right]
+        );
+        assert_eq!(
+            t.rows,
+            vec![vec!["Name", "Qty", "Price"], vec!["a", "1", "2"]]
+        );
         let out = generate_aligned_table(&t);
-        assert_eq!(out, "| Name | Qty | Price |\n| :--- | :-: | ----: |\n| a    | 1   | 2     |");
+        assert_eq!(
+            out,
+            "| Name | Qty | Price |\n| :--- | :-: | ----: |\n| a    | 1   | 2     |"
+        );
         assert_eq!(parse_aligned_table(&out), t);
     }
 
@@ -266,7 +310,10 @@ mod tests {
 
     #[test]
     fn separator_cells_parse_and_render() {
-        assert_eq!(Alignment::from_separator_cell(" :--: "), Some(Alignment::Center));
+        assert_eq!(
+            Alignment::from_separator_cell(" :--: "),
+            Some(Alignment::Center)
+        );
         assert_eq!(Alignment::from_separator_cell("-"), Some(Alignment::None));
         assert_eq!(Alignment::from_separator_cell(":"), None);
         assert_eq!(Alignment::from_separator_cell("a"), None);

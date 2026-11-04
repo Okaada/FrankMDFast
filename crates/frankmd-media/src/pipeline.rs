@@ -39,7 +39,12 @@ pub struct UploadRequest {
 
 impl UploadRequest {
     /// A request whose content type follows `file_name`.
-    pub fn new(origin: UploadOrigin, kind: MediaKind, file_name: impl Into<String>, bytes: Vec<u8>) -> Self {
+    pub fn new(
+        origin: UploadOrigin,
+        kind: MediaKind,
+        file_name: impl Into<String>,
+        bytes: Vec<u8>,
+    ) -> Self {
         let file_name = file_name.into();
         Self {
             origin,
@@ -102,22 +107,35 @@ pub async fn store_media(
 /// [`store_media`] for the local provider only, synchronously (callers that
 /// already know the destination is the vault, e.g. `save_to_notes_directory`).
 /// Runs exactly the same validation.
-pub fn store_media_local(env: &MediaEnv, config: &MediaConfig, req: UploadRequest) -> Result<StoredMedia, MediaError> {
+pub fn store_media_local(
+    env: &MediaEnv,
+    config: &MediaConfig,
+    req: UploadRequest,
+) -> Result<StoredMedia, MediaError> {
     validate(env, config, &req)?;
     store_local(env, config, req)
 }
 
 /// Validate extension + content without storing; returns the detected kind.
-pub fn validate_bytes(file_name: &str, bytes: &[u8], allowed_exts: &[String]) -> Result<MediaKind, MediaError> {
+pub fn validate_bytes(
+    file_name: &str,
+    bytes: &[u8],
+    allowed_exts: &[String],
+) -> Result<MediaKind, MediaError> {
     let extension = us::ruby_extname(file_name).to_lowercase();
     if !allowed_exts.contains(&extension) {
         return Err(MediaError::Rejected(format!(
             "{} is not an accepted type. Accepted: {}",
-            if extension.is_empty() { "no extension" } else { &extension },
+            if extension.is_empty() {
+                "no extension"
+            } else {
+                &extension
+            },
             allowed_exts.join(", ")
         )));
     }
-    let detected = sniff::detect(bytes).ok_or_else(|| MediaError::Rejected(sniff::rejection_message(MediaKind::Image)))?;
+    let detected = sniff::detect(bytes)
+        .ok_or_else(|| MediaError::Rejected(sniff::rejection_message(MediaKind::Image)))?;
     sniff::check(bytes, detected.kind, allowed_exts).map(|d| d.kind)
 }
 
@@ -142,18 +160,38 @@ fn validate(env: &MediaEnv, config: &MediaConfig, req: &UploadRequest) -> Result
 
 /// `save_to_notes_directory` / `MediaService.store_local`: a fresh,
 /// collision-resistant name under `<notes>/images|videos`, written no-clobber.
-fn store_local(env: &MediaEnv, config: &MediaConfig, req: UploadRequest) -> Result<StoredMedia, MediaError> {
+fn store_local(
+    env: &MediaEnv,
+    config: &MediaConfig,
+    req: UploadRequest,
+) -> Result<StoredMedia, MediaError> {
     let (dir, dest, bytes) = match req.kind {
-        MediaKind::Video => (video::SUBDIR, us::dest_filename(&env.ctx, Some(&req.file_name)), req.bytes),
+        MediaKind::Video => (
+            video::SUBDIR,
+            us::dest_filename(&env.ctx, Some(&req.file_name)),
+            req.bytes,
+        ),
         MediaKind::Image => {
             let safe = us::sanitize_filename(&req.file_name);
             match req.resize.filter(|r| *r > 0.0) {
                 Some(ratio) => {
-                    let dest = us::dest_filename(&env.ctx, Some(&format!("{}.jpg", us::ruby_basename_without_ext(&safe))));
-                    let resized = images::resize_and_compress(&req.bytes, &req.type_name, Some(&dest), &Param::Float(ratio));
+                    let dest = us::dest_filename(
+                        &env.ctx,
+                        Some(&format!("{}.jpg", us::ruby_basename_without_ext(&safe))),
+                    );
+                    let resized = images::resize_and_compress(
+                        &req.bytes,
+                        &req.type_name,
+                        Some(&dest),
+                        &Param::Float(ratio),
+                    );
                     ("images", dest, resized.bytes)
                 }
-                None => ("images", us::dest_filename(&env.ctx, Some(&safe)), req.bytes),
+                None => (
+                    "images",
+                    us::dest_filename(&env.ctx, Some(&safe)),
+                    req.bytes,
+                ),
             }
         }
     };
@@ -179,22 +217,45 @@ pub(crate) fn app_state_dir() -> std::path::PathBuf {
 
 /// `upload_temp_to_s3` / `MediaService.store_s3`: conditional create
 /// (`If-None-Match: *`), never an overwrite.
-async fn store_s3(env: &MediaEnv, config: &MediaConfig, req: UploadRequest) -> Result<StoredMedia, MediaError> {
+async fn store_s3(
+    env: &MediaEnv,
+    config: &MediaConfig,
+    req: UploadRequest,
+) -> Result<StoredMedia, MediaError> {
     let client = env.s3_client(config)?;
     let (key, bytes, content_type, collision) = match req.kind {
         MediaKind::Image => {
             let (bytes, content_type, filename) = match req.resize {
                 Some(ratio) => {
-                    let r = images::resize_and_compress(&req.bytes, &req.type_name, Some(&req.file_name), &Param::Float(ratio));
+                    let r = images::resize_and_compress(
+                        &req.bytes,
+                        &req.type_name,
+                        Some(&req.file_name),
+                        &Param::Float(ratio),
+                    );
                     (r.bytes, r.content_type, r.filename)
                 }
-                None => (req.bytes, images::content_type_for(&req.type_name).to_owned(), req.file_name.clone()),
+                None => (
+                    req.bytes,
+                    images::content_type_for(&req.type_name).to_owned(),
+                    req.file_name.clone(),
+                ),
             };
-            let key = us::s3_key(&env.ctx, Some(&filename), req.s3_key.as_deref(), req.s3_prefix.as_deref());
+            let key = us::s3_key(
+                &env.ctx,
+                Some(&filename),
+                req.s3_key.as_deref(),
+                req.s3_prefix.as_deref(),
+            );
             (key, bytes, content_type, "Image upload failed")
         }
         MediaKind::Video => {
-            let key = us::s3_key(&env.ctx, Some(&req.file_name), None, req.s3_prefix.as_deref());
+            let key = us::s3_key(
+                &env.ctx,
+                Some(&req.file_name),
+                None,
+                req.s3_prefix.as_deref(),
+            );
             let content_type = video::content_type_for_key(&key).to_owned();
             (key, req.bytes, content_type, "Video upload failed")
         }
@@ -205,7 +266,8 @@ async fn store_s3(env: &MediaEnv, config: &MediaConfig, req: UploadRequest) -> R
             return Err(MediaError::Upstream(collision.to_owned()));
         }
         // Buckets with ACLs disabled; the object was still written (images only, as in the original).
-        Err(S3Error::Service { code, .. }) if code == "AccessControlListNotSupported" && req.kind == MediaKind::Image => {}
+        Err(S3Error::Service { code, .. })
+            if code == "AccessControlListNotSupported" && req.kind == MediaKind::Image => {}
         Err(e) => return Err(MediaError::S3(e)),
     }
     let bucket = config.s3.bucket.as_deref().unwrap_or_default();

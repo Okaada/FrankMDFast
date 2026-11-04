@@ -73,7 +73,10 @@ pub fn block_edit(
     target: &BlockTarget,
     cursor_offset: Option<usize>,
 ) -> Option<Edit> {
-    let mut opts = BlockInsert { cursor_offset, ..BlockInsert::default() };
+    let mut opts = BlockInsert {
+        cursor_offset,
+        ..BlockInsert::default()
+    };
     match target {
         BlockTarget::Replace(range) => opts.edit = Some(range.clone()),
         BlockTarget::Caret => {}
@@ -149,7 +152,14 @@ impl Scratch {
         if !self.changed {
             return None;
         }
-        Some(Edit { range: 0..old.len(), text: self.text, selection: self.selection }.minimized(old))
+        Some(
+            Edit {
+                range: 0..old.len(),
+                text: self.text,
+                selection: self.selection,
+            }
+            .minimized(old),
+        )
     }
 
     fn splice(&mut self, from: usize, to: usize, insert: &str) {
@@ -176,7 +186,11 @@ impl EditorSurface for Scratch {
         Selection {
             from: self.selection.start,
             to: self.selection.end,
-            text: self.text.get(self.selection.clone()).unwrap_or_default().to_owned(),
+            text: self
+                .text
+                .get(self.selection.clone())
+                .unwrap_or_default()
+                .to_owned(),
         }
     }
 
@@ -189,7 +203,11 @@ impl EditorSurface for Scratch {
         let before = &self.text[..offset.min(self.text.len())];
         let line = before.matches('\n').count() + 1;
         let column = before.len() - before.rfind('\n').map_or(0, |i| i + 1) + 1;
-        CursorPosition { line, column, offset }
+        CursorPosition {
+            line,
+            column,
+            offset,
+        }
     }
 
     fn cursor_info(&self) -> CursorInfo {
@@ -221,7 +239,11 @@ mod tests {
     }
 
     fn pending(action: PendingAction, range: Range<usize>, query: &str) -> PendingInsertion {
-        PendingInsertion { action, range, query: query.to_owned() }
+        PendingInsertion {
+            action,
+            range,
+            query: query.to_owned(),
+        }
     }
 
     const TABLE: &str = "| A |\n| --- |\n| 1 |";
@@ -251,7 +273,14 @@ mod tests {
         // adapts: app_slash_commands.test.js:95 "replaces the saved query when the video dialog returns an embed"
         let text = "before /video after";
         let p = pending(PendingAction::Video, 7..13, "/video");
-        let e = block_edit(text, 13..13, "<video></video>", &BlockTarget::Slash(p), None).expect("edit");
+        let e = block_edit(
+            text,
+            13..13,
+            "<video></video>",
+            &BlockTarget::Slash(p),
+            None,
+        )
+        .expect("edit");
         assert_eq!(apply(text, &e), "before\n\n<video></video>\n\nafter");
     }
 
@@ -259,8 +288,14 @@ mod tests {
     fn edit_mode_replaces_the_table_range_only() {
         // adapts: app_slash_commands.test.js:105 "keeps an existing table edit range when handling a table action"
         let text = format!("{TABLE}\n\ntext");
-        let e = block_edit(&text, 2..2, "| B |\n| --- |", &BlockTarget::Replace(0..TABLE.len()), None)
-            .expect("edit");
+        let e = block_edit(
+            &text,
+            2..2,
+            "| B |\n| --- |",
+            &BlockTarget::Replace(0..TABLE.len()),
+            None,
+        )
+        .expect("edit");
         assert_eq!(apply(&text, &e), "| B |\n| --- |\n\ntext");
         assert_eq!(e.selection, 13..13);
     }
@@ -269,7 +304,16 @@ mod tests {
     fn stale_query_drops_the_insertion() {
         // adapts: app_slash_commands.test.js:172 "drops a stale query range if the document changed while the dialog was open"
         let p = pending(PendingAction::Image, 7..13, "/image");
-        assert!(block_edit("before /imaXe after", 0..0, "x", &BlockTarget::Slash(p.clone()), None).is_none());
+        assert!(
+            block_edit(
+                "before /imaXe after",
+                0..0,
+                "x",
+                &BlockTarget::Slash(p.clone()),
+                None
+            )
+            .is_none()
+        );
         assert!(inline_edit("before /imaXe after", 0..0, "x", Some(&p)).is_none());
         assert!(p.is_current("before /image after"));
     }

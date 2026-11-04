@@ -45,7 +45,11 @@ fn golden_parse_with_line_numbers() {
         if let Err(e) = check_anchors(&doc, want, 0) {
             errs.push(e);
         }
-        if errs.is_empty() { Ok(()) } else { Err(errs.join("\n    ")) }
+        if errs.is_empty() {
+            Ok(())
+        } else {
+            Err(errs.join("\n    "))
+        }
     });
 }
 
@@ -91,14 +95,21 @@ fn golden_find_element_by_line() {
             let map = LineMap::new(&doc);
             map.nearest_anchor(target).map(|a| {
                 let (tag, text) = anchor_info(&doc, &a.target);
-                let cut: String = String::from_utf16_lossy(&text.encode_utf16().take(40).collect::<Vec<_>>());
+                let cut: String =
+                    String::from_utf16_lossy(&text.encode_utf16().take(40).collect::<Vec<_>>());
                 json!({"tag": tag, "line": a.line.to_string(), "text": cut})
             })
         } else {
-            LineMap::from_lines(&[]).nearest_anchor(target).map(|a| json!({"line": a.line.to_string()}))
+            LineMap::from_lines(&[])
+                .nearest_anchor(target)
+                .map(|a| json!({"line": a.line.to_string()}))
         };
         let got = got.unwrap_or(Value::Null);
-        if got == want { Ok(()) } else { Err(format!("got {got}, expected {want}")) }
+        if got == want {
+            Ok(())
+        } else {
+            Err(format!("got {got}, expected {want}"))
+        }
     });
 }
 
@@ -107,18 +118,35 @@ fn golden_find_line_at_scroll() {
     let g = golden(FIXTURE);
     assert_cases(FIXTURE, g.cases_for("findLineAtScroll"), |case| {
         let i = &case.input;
-        let lines: Vec<u32> = i["lines"].as_array().unwrap().iter().map(|v| v.as_u64().unwrap() as u32).collect();
-        let tops: Vec<f64> = i["tops"].as_array().unwrap().iter().map(|v| v.as_f64().unwrap()).collect();
+        let lines: Vec<u32> = i["lines"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|v| v.as_u64().unwrap() as u32)
+            .collect();
+        let tops: Vec<f64> = i["tops"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|v| v.as_f64().unwrap())
+            .collect();
         let ct = i["containerTop"].as_f64().unwrap();
         let cst = i["containerScrollTop"].as_f64().unwrap();
         let st = i["scrollTop"].as_f64().unwrap();
         let entries: Vec<ScrollEntry> = lines
             .iter()
             .zip(&tops)
-            .map(|(&line, &top)| ScrollEntry { line, top: scroll_top_for_element(top, ct, cst) })
+            .map(|(&line, &top)| ScrollEntry {
+                line,
+                top: scroll_top_for_element(top, ct, cst),
+            })
             .collect();
         let got = line_at_scroll(&entries, st).map_or(Value::Null, |l| json!(l));
         let want = expected(case);
-        if got == want { Ok(()) } else { Err(format!("got {got}, expected {want}")) }
+        if got == want {
+            Ok(())
+        } else {
+            Err(format!("got {got}, expected {want}"))
+        }
     });
 }

@@ -8,11 +8,19 @@ use frankmd_media::picker::{GoogleImageSource, PickerCx, PickerResponse, externa
 use serde_json::{Value, json};
 
 fn src_with(query: &str, next_start: Value, results: Vec<Value>) -> GoogleImageSource {
-    GoogleImageSource { query: query.into(), next_start, results, ..GoogleImageSource::default() }
+    GoogleImageSource {
+        query: query.into(),
+        next_start,
+        results,
+        ..GoogleImageSource::default()
+    }
 }
 
 fn load_more(tr: &mut FakeTransport, src: &mut GoogleImageSource) -> Value {
-    let mut cx = PickerCx { transport: tr, t: None };
+    let mut cx = PickerCx {
+        transport: tr,
+        t: None,
+    };
     src.load_more(&mut cx).expect("ok")
 }
 
@@ -30,7 +38,13 @@ fn default_state() {
 // port: test/javascript/image_sources/google_images.test.js:32 "clears all state except enabled"
 #[test]
 fn reset_keeps_enabled() {
-    let mut s = GoogleImageSource { enabled: true, results: vec![json!({"url": "test.jpg"})], next_start: json!(10), loading: true, query: "cats".into() };
+    let mut s = GoogleImageSource {
+        enabled: true,
+        results: vec![json!({"url": "test.jpg"})],
+        next_start: json!(10),
+        loading: true,
+        query: "cats".into(),
+    };
     s.reset();
     assert!(s.enabled);
     assert!(s.results.is_empty());
@@ -43,8 +57,16 @@ fn reset_keeps_enabled() {
 #[test]
 fn empty_query() {
     let mut tr = FakeTransport::default();
-    let mut cx = PickerCx { transport: &mut tr, t: None };
-    assert_eq!(GoogleImageSource::default().search(&mut cx, &s("")).expect("ok")["error"], "Please enter search keywords");
+    let mut cx = PickerCx {
+        transport: &mut tr,
+        t: None,
+    };
+    assert_eq!(
+        GoogleImageSource::default()
+            .search(&mut cx, &s(""))
+            .expect("ok")["error"],
+        "Please enter search keywords"
+    );
 }
 
 // port: test/javascript/image_sources/google_images.test.js:55 "resets state and calls loadMore"
@@ -53,7 +75,10 @@ fn search_resets_and_loads() {
     let mut tr = FakeTransport::default();
     tr.push_json(json!({"images": [{"url": "new.jpg"}], "next_start": 11, "total": 100}));
     let mut src = src_with("", json!(10), vec![json!({"url": "old.jpg"})]);
-    let mut cx = PickerCx { transport: &mut tr, t: None };
+    let mut cx = PickerCx {
+        transport: &mut tr,
+        t: None,
+    };
     src.search(&mut cx, &s("cats")).expect("ok");
     assert_eq!(src.query, "cats");
     assert_eq!(src.next_start, json!(11));
@@ -65,7 +90,9 @@ fn search_resets_and_loads() {
 #[test]
 fn load_more_paginates() {
     let mut tr = FakeTransport::default();
-    tr.push_json(json!({"images": [{"url": "http://example.com/1.jpg"}], "next_start": 11, "total": 50}));
+    tr.push_json(
+        json!({"images": [{"url": "http://example.com/1.jpg"}], "next_start": 11, "total": 50}),
+    );
     let mut src = src_with("cats", json!(1), vec![]);
     let r = load_more(&mut tr, &mut src);
     assert_eq!(tr.requests[0].method, "GET");
@@ -91,7 +118,11 @@ fn load_more_appends() {
 #[test]
 fn load_more_guard() {
     let mut tr = FakeTransport::default();
-    let mut src = GoogleImageSource { loading: true, results: vec![json!({"url": "existing.jpg"})], ..GoogleImageSource::default() };
+    let mut src = GoogleImageSource {
+        loading: true,
+        results: vec![json!({"url": "existing.jpg"})],
+        ..GoogleImageSource::default()
+    };
     let r = load_more(&mut tr, &mut src);
     assert_eq!(r["images"], json!([{"url": "existing.jpg"}]));
     assert!(tr.requests.is_empty());
@@ -111,9 +142,13 @@ fn load_more_api_error() {
 #[test]
 fn load_more_network_error() {
     let mut tr = FakeTransport::default();
-    tr.replies.push_back(PickerResponse::NetworkError("Network error".into()));
+    tr.replies
+        .push_back(PickerResponse::NetworkError("Network error".into()));
     let mut src = src_with("cats", json!(1), vec![]);
-    assert_eq!(load_more(&mut tr, &mut src)["error"], "Search failed. Please try again.");
+    assert_eq!(
+        load_more(&mut tr, &mut src)["error"],
+        "Search failed. Please try again."
+    );
     assert!(!src.loading);
 }
 
@@ -132,11 +167,18 @@ fn load_more_count_message_uses_total() {
     let mut tr = FakeTransport::default();
     tr.push_json(json!({"images": [{"url": "1.jpg"}, {"url": "2.jpg"}], "total": 150}));
     let mut src = src_with("cats", json!(1), vec![]);
-    assert_eq!(load_more(&mut tr, &mut src)["message"], "Found 150 images - click to select");
+    assert_eq!(
+        load_more(&mut tr, &mut src)["message"],
+        "Found 150 images - click to select"
+    );
 }
 
 fn with(loading: bool, n: usize) -> GoogleImageSource {
-    GoogleImageSource { loading, results: vec![json!({"url": "test.jpg"}); n], ..GoogleImageSource::default() }
+    GoogleImageSource {
+        loading,
+        results: vec![json!({"url": "test.jpg"}); n],
+        ..GoogleImageSource::default()
+    }
 }
 
 // port: test/javascript/image_sources/google_images.test.js:185 "returns true when near bottom and not loading"
@@ -172,8 +214,10 @@ fn grid_empty() {
 // port: test/javascript/image_sources/google_images.test.js:224 "renders image buttons with all data attributes"
 #[test]
 fn grid_items() {
-    let items = external_grid_items(&[json!({"url": "http://example.com/full.jpg", "thumbnail": "http://example.com/thumb.jpg",
-        "title": "Cat Photo", "source": "example.com", "width": 1024, "height": 768})]);
+    let items = external_grid_items(&[
+        json!({"url": "http://example.com/full.jpg", "thumbnail": "http://example.com/thumb.jpg",
+        "title": "Cat Photo", "source": "example.com", "width": 1024, "height": 768}),
+    ]);
     let i = &items[0];
     assert_eq!(i.url, "http://example.com/full.jpg");
     assert_eq!(i.thumbnail, "http://example.com/thumb.jpg");

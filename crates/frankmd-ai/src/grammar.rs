@@ -152,12 +152,16 @@ impl GrammarState {
     /// Availability from the AI config (`GET /ai/config`, read once).
     pub fn from_config(info: &ProviderInfo) -> Self {
         let availability = match (&info.provider, &info.model) {
-            (Some(provider), Some(model)) if info.enabled => {
-                Availability::Available { provider: provider.as_str().to_owned(), model: model.clone() }
-            }
+            (Some(provider), Some(model)) if info.enabled => Availability::Available {
+                provider: provider.as_str().to_owned(),
+                model: model.clone(),
+            },
             _ => Availability::NotConfigured,
         };
-        Self { availability, ..Self::default() }
+        Self {
+            availability,
+            ..Self::default()
+        }
     }
 
     /// Availability.
@@ -171,7 +175,11 @@ impl GrammarState {
     }
 
     /// Start a check of `path` whose editor text is `text`.
-    pub fn start(&mut self, path: Option<&str>, text: &str) -> Result<Vec<GrammarEffect>, StartError> {
+    pub fn start(
+        &mut self,
+        path: Option<&str>,
+        text: &str,
+    ) -> Result<Vec<GrammarEffect>, StartError> {
         if self.request.is_some() {
             return Err(StartError::Busy);
         }
@@ -195,7 +203,10 @@ impl GrammarState {
             GrammarEffect::FlushAutosave,
             GrammarEffect::SetReadOnly(true),
             GrammarEffect::ShowBanner { provider, model },
-            GrammarEffect::Request { id: self.next_id, path: path.to_owned() },
+            GrammarEffect::Request {
+                id: self.next_id,
+                path: path.to_owned(),
+            },
         ])
     }
 
@@ -210,7 +221,11 @@ impl GrammarState {
         if self.request.take().is_none() {
             return Vec::new();
         }
-        vec![GrammarEffect::Abort, GrammarEffect::SetReadOnly(false), GrammarEffect::HideBanner]
+        vec![
+            GrammarEffect::Abort,
+            GrammarEffect::SetReadOnly(false),
+            GrammarEffect::HideBanner,
+        ]
     }
 
     /// The request finished; a stale `id` is ignored. Errors show inline in
@@ -248,7 +263,11 @@ impl GrammarState {
                 DiffKind::Delete | DiffKind::Insert => {
                     if !open {
                         segments.push(Segment::Change(hunks.len()));
-                        hunks.push(Hunk { deleted: String::new(), inserted: String::new(), accepted: true });
+                        hunks.push(Hunk {
+                            deleted: String::new(),
+                            inserted: String::new(),
+                            accepted: true,
+                        });
                         open = true;
                     }
                     if let Some(hunk) = hunks.last_mut() {
@@ -292,7 +311,14 @@ impl GrammarState {
 
     /// `(focused 1-based, total)` for "Change 3 of 17".
     pub fn counter(&self) -> (usize, usize) {
-        (if self.hunks.is_empty() { 0 } else { self.focused + 1 }, self.hunks.len())
+        (
+            if self.hunks.is_empty() {
+                0
+            } else {
+                self.focused + 1
+            },
+            self.hunks.len(),
+        )
     }
 
     /// The focused hunk.
@@ -306,7 +332,11 @@ impl GrammarState {
         if n == 0 {
             return;
         }
-        self.focused = if forward { (self.focused + 1) % n } else { (self.focused + n - 1) % n };
+        self.focused = if forward {
+            (self.focused + 1) % n
+        } else {
+            (self.focused + n - 1) % n
+        };
     }
 
     /// Focus a hunk.

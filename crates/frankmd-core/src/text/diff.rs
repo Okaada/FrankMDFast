@@ -91,7 +91,10 @@ pub fn lcs_word_diff(old_tokens: &[&str], new_tokens: &[&str]) -> Vec<DiffOp> {
     for (kind, value) in reversed.into_iter().rev() {
         match merged.last_mut() {
             Some(last) if last.kind == kind => last.value.push_str(value),
-            _ => merged.push(DiffOp { kind, value: value.to_owned() }),
+            _ => merged.push(DiffOp {
+                kind,
+                value: value.to_owned(),
+            }),
         }
     }
     merged

@@ -5,7 +5,9 @@
 //! properties alone" holds by construction.
 #![allow(clippy::unwrap_used)]
 
-use frankmd_theme::custom::{applicable_overrides, contrast_ratio_hex, normalize_color, theme_color};
+use frankmd_theme::custom::{
+    applicable_overrides, contrast_ratio_hex, normalize_color, theme_color,
+};
 use serde_json::json;
 
 // port: test/javascript/lib/custom_theme.test.js:10 "accepts hex colors and rejects CSS expressions"
@@ -13,7 +15,12 @@ use serde_json::json;
 fn accepts_hex_colors_and_rejects_css_expressions() {
     assert_eq!(normalize_color(" #AABBCC ").as_deref(), Some("#aabbcc"));
     // `null` is unrepresentable as &str (the Rust API takes a string).
-    for color in ["#abc", "red", "url(https://example.com)", "#ffffff;display:none"] {
+    for color in [
+        "#abc",
+        "red",
+        "url(https://example.com)",
+        "#ffffff;display:none",
+    ] {
         assert_eq!(normalize_color(color), None, "{color}");
     }
 }
@@ -21,7 +28,9 @@ fn accepts_hex_colors_and_rejects_css_expressions() {
 // port: test/javascript/lib/custom_theme.test.js:17 "applies only known color tokens and cleans up without touching layout"
 #[test]
 fn applies_only_known_color_tokens_and_cleans_up_without_touching_layout() {
-    let applied = applicable_overrides(&json!({"accent": "#112233", "bg-primary": "url(secret)", "font-family": "#abcdef"}));
+    let applied = applicable_overrides(
+        &json!({"accent": "#112233", "bg-primary": "url(secret)", "font-family": "#abcdef"}),
+    );
     assert_eq!(applied, vec![("accent", "#112233".to_owned())]);
 
     let base = frankmd_theme::builtin("dark").unwrap();

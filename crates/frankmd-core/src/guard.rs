@@ -46,7 +46,9 @@ pub fn check_deletion(previous: Option<&str>, next: &str) -> DeletionVerdict {
     };
     let lost_fraction = lost as f64 / baseline as f64;
     if lost_fraction > LOST_FRACTION_THRESHOLD && lost > LOST_CHARS_THRESHOLD {
-        DeletionVerdict::LargeDeletion { removed_chars: lost }
+        DeletionVerdict::LargeDeletion {
+            removed_chars: lost,
+        }
     } else {
         DeletionVerdict::Ok
     }
@@ -54,5 +56,8 @@ pub fn check_deletion(previous: Option<&str>, next: &str) -> DeletionVerdict {
 
 /// Boolean form (`isLargeDeletion`).
 pub fn is_large_deletion(previous: Option<&str>, next: &str) -> bool {
-    matches!(check_deletion(previous, next), DeletionVerdict::LargeDeletion { .. })
+    matches!(
+        check_deletion(previous, next),
+        DeletionVerdict::LargeDeletion { .. }
+    )
 }

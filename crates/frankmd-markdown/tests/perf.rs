@@ -13,7 +13,11 @@ fn assert_fast(name: &str, src: &str) {
     let t = Instant::now();
     let doc = render(src, &RenderOptions::default());
     let took = t.elapsed();
-    eprintln!("{name}: {} bytes, {} blocks, {took:?}", src.len(), doc.blocks.len());
+    eprintln!(
+        "{name}: {} bytes, {} blocks, {took:?}",
+        src.len(),
+        doc.blocks.len()
+    );
     assert!(took < BUDGET, "{name} took {took:?} (budget {BUDGET:?})");
 }
 
@@ -32,11 +36,17 @@ fn mixed_markdown_5mb() {
 #[test]
 #[ignore = "timing; run in release"]
 fn duplicate_headings_256kb() {
-    assert_fast("duplicate headings 256 KB", &repeat_to("# Same\n\n", 256 * 1024));
+    assert_fast(
+        "duplicate headings 256 KB",
+        &repeat_to("# Same\n\n", 256 * 1024),
+    );
 }
 
 #[test]
 #[ignore = "timing; run in release"]
 fn loose_list_1mb() {
-    assert_fast("loose list 1 MB", &repeat_to("- item text here\n\n", 1024 * 1024));
+    assert_fast(
+        "loose list 1 MB",
+        &repeat_to("- item text here\n\n", 1024 * 1024),
+    );
 }

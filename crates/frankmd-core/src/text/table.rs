@@ -33,7 +33,12 @@ pub fn parse_markdown_table_lines<S: AsRef<str>>(lines: &[S]) -> TableData {
             // `split("|").slice(1, -1)` leaves nothing.
             continue;
         }
-        rows.push(pieces[1..pieces.len() - 1].iter().map(|cell| js_trim(cell).to_owned()).collect());
+        rows.push(
+            pieces[1..pieces.len() - 1]
+                .iter()
+                .map(|cell| js_trim(cell).to_owned())
+                .collect(),
+        );
     }
     rows
 }
@@ -50,7 +55,14 @@ pub fn generate_markdown_table(table: &[Vec<String>]) -> String {
     }
     let col_count = table.iter().map(Vec::len).max().unwrap_or(0);
     let widths: Vec<usize> = (0..col_count)
-        .map(|col| table.iter().map(|row| utf16_len(cell(row, col))).max().unwrap_or(0).max(3))
+        .map(|col| {
+            table
+                .iter()
+                .map(|row| utf16_len(cell(row, col)))
+                .max()
+                .unwrap_or(0)
+                .max(3)
+        })
         .collect();
 
     let render_row = |row: &[String]| {
@@ -125,7 +137,11 @@ pub fn add_column(table: &[Vec<String>], header: &str) -> TableData {
         .enumerate()
         .map(|(i, row)| {
             let mut row = row.clone();
-            row.push(if i == 0 { header.to_owned() } else { String::new() });
+            row.push(if i == 0 {
+                header.to_owned()
+            } else {
+                String::new()
+            });
             row
         })
         .collect()
@@ -156,9 +172,12 @@ fn is_separator_row(line: &str) -> bool {
     let Some(inner) = line.strip_prefix('|') else {
         return false;
     };
-    let simple = inner
-        .strip_suffix('|')
-        .is_some_and(|mid| !mid.is_empty() && mid.chars().all(|c| c == '-' || c == ':' || is_js_whitespace(c)));
+    let simple = inner.strip_suffix('|').is_some_and(|mid| {
+        !mid.is_empty()
+            && mid
+                .chars()
+                .all(|c| c == '-' || c == ':' || is_js_whitespace(c))
+    });
     simple || is_aligned_cells(inner)
 }
 

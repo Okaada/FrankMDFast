@@ -17,7 +17,10 @@ pub(crate) fn tr(cx: &App, text: &Text) -> SharedString {
     match text {
         Text::Raw(raw) => raw.clone().into(),
         Text::Key(key, args) => {
-            let resolved: Vec<(&str, String)> = args.iter().map(|(k, v)| (*k, tr(cx, v).to_string())).collect();
+            let resolved: Vec<(&str, String)> = args
+                .iter()
+                .map(|(k, v)| (*k, tr(cx, v).to_string()))
+                .collect();
             let refs: Vec<(&str, &str)> = resolved.iter().map(|(k, v)| (*k, v.as_str())).collect();
             i18n::t_args(cx, key, &refs)
         }
@@ -55,7 +58,9 @@ pub(crate) fn fetch_remote<V: RemoteThumbs>(view: &mut V, url: &str, cx: &mut Co
         let state = match task.await {
             Some(Ok(fetched)) => {
                 let bytes = fetched.bytes;
-                cx.background_executor().spawn(async move { remote::decode(bytes) }).await
+                cx.background_executor()
+                    .spawn(async move { remote::decode(bytes) })
+                    .await
             }
             _ => RemoteState::Unavailable,
         };
@@ -71,7 +76,11 @@ pub(crate) fn fetch_remote<V: RemoteThumbs>(view: &mut V, url: &str, cx: &mut Co
 }
 
 /// A thumbnail element (cover-fit). Remote URLs come from the cache only.
-pub(crate) fn thumb_element(thumb: Option<&Thumb>, cache: &RemoteImages, theme: &Theme) -> AnyElement {
+pub(crate) fn thumb_element(
+    thumb: Option<&Thumb>,
+    cache: &RemoteImages,
+    theme: &Theme,
+) -> AnyElement {
     let placeholder = || div().size_full().bg(theme.secondary).into_any_element();
     match thumb {
         Some(Thumb::File(path)) => img(path.clone())
@@ -87,9 +96,10 @@ pub(crate) fn thumb_element(thumb: Option<&Thumb>, cache: &RemoteImages, theme: 
             None => placeholder(),
         },
         Some(Thumb::Url(url)) => match cache.get(url) {
-            Some(RemoteState::Ready(image)) => {
-                img(image).size_full().object_fit(ObjectFit::Cover).into_any_element()
-            }
+            Some(RemoteState::Ready(image)) => img(image)
+                .size_full()
+                .object_fit(ObjectFit::Cover)
+                .into_any_element(),
             _ => placeholder(),
         },
         None => placeholder(),
@@ -97,14 +107,24 @@ pub(crate) fn thumb_element(thumb: Option<&Thumb>, cache: &RemoteImages, theme: 
 }
 
 /// Dialog header: title + close button.
-pub(crate) fn header(title: SharedString, close_id: &'static str, theme: &Theme, on_close: impl Fn(&mut Window, &mut App) + 'static) -> Div {
+pub(crate) fn header(
+    title: SharedString,
+    close_id: &'static str,
+    theme: &Theme,
+    on_close: impl Fn(&mut Window, &mut App) + 'static,
+) -> Div {
     h_flex()
         .h(px(40.))
         .px_4()
         .justify_between()
         .border_b_1()
         .border_color(theme.border)
-        .child(div().text_sm().font_weight(FontWeight::SEMIBOLD).child(title))
+        .child(
+            div()
+                .text_sm()
+                .font_weight(FontWeight::SEMIBOLD)
+                .child(title),
+        )
         .child(
             gpui_kit::component::button::Button::new(close_id)
                 .label("×")
@@ -131,7 +151,11 @@ pub(crate) fn setup_notice(
         .bg(theme.secondary)
         .child(div().font_weight(FontWeight::SEMIBOLD).child(title))
         .children(lines.into_iter().map(|line| {
-            div().text_sm().text_color(theme.muted_foreground).font_family(theme.mono_font_family.clone()).child(line)
+            div()
+                .text_sm()
+                .text_color(theme.muted_foreground)
+                .font_family(theme.mono_font_family.clone())
+                .child(line)
         }))
         .child(
             gpui_kit::component::button::Button::new(SharedString::from(format!("{id}-settings")))

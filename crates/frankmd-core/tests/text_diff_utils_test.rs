@@ -3,11 +3,15 @@
 use frankmd_core::text::diff::{DiffKind, DiffOp, compute_word_diff, lcs_word_diff, tokenize};
 
 fn op(kind: DiffKind, value: &str) -> DiffOp {
-    DiffOp { kind, value: value.to_owned() }
+    DiffOp {
+        kind,
+        value: value.to_owned(),
+    }
 }
 
 fn has(diff: &[DiffOp], kind: DiffKind, needle: &str) -> bool {
-    diff.iter().any(|d| d.kind == kind && d.value.contains(needle))
+    diff.iter()
+        .any(|d| d.kind == kind && d.value.contains(needle))
 }
 
 // port: test/javascript/diff_utils.test.js:9 "splits text into words"
@@ -43,7 +47,10 @@ fn tokenize_handles_leading_trailing_spaces() {
 // port: test/javascript/diff_utils.test.js:36 "returns equal for identical text"
 #[test]
 fn compute_word_diff_returns_equal_for_identical_text() {
-    assert_eq!(compute_word_diff("hello world", "hello world"), [op(DiffKind::Equal, "hello world")]);
+    assert_eq!(
+        compute_word_diff("hello world", "hello world"),
+        [op(DiffKind::Equal, "hello world")]
+    );
 }
 
 // port: test/javascript/diff_utils.test.js:41 "detects inserted word"
@@ -72,14 +79,23 @@ fn compute_word_diff_detects_changed_word() {
 #[test]
 fn compute_word_diff_handles_empty_strings() {
     assert!(compute_word_diff("", "").is_empty());
-    assert_eq!(compute_word_diff("hello", ""), [op(DiffKind::Delete, "hello")]);
-    assert_eq!(compute_word_diff("", "hello"), [op(DiffKind::Insert, "hello")]);
+    assert_eq!(
+        compute_word_diff("hello", ""),
+        [op(DiffKind::Delete, "hello")]
+    );
+    assert_eq!(
+        compute_word_diff("", "hello"),
+        [op(DiffKind::Insert, "hello")]
+    );
 }
 
 // port: test/javascript/diff_utils.test.js:65 "returns equal for identical tokens"
 #[test]
 fn lcs_returns_equal_for_identical_tokens() {
-    assert_eq!(lcs_word_diff(&["a", "b", "c"], &["a", "b", "c"]), [op(DiffKind::Equal, "abc")]);
+    assert_eq!(
+        lcs_word_diff(&["a", "b", "c"], &["a", "b", "c"]),
+        [op(DiffKind::Equal, "abc")]
+    );
 }
 
 // port: test/javascript/diff_utils.test.js:70 "detects insertions"
@@ -105,13 +121,19 @@ fn lcs_handles_empty_arrays() {
 // port: test/javascript/diff_utils.test.js:84 "handles all new tokens"
 #[test]
 fn lcs_handles_all_new_tokens() {
-    assert_eq!(lcs_word_diff(&[], &["a", "b"]), [op(DiffKind::Insert, "ab")]);
+    assert_eq!(
+        lcs_word_diff(&[], &["a", "b"]),
+        [op(DiffKind::Insert, "ab")]
+    );
 }
 
 // port: test/javascript/diff_utils.test.js:89 "handles all deleted tokens"
 #[test]
 fn lcs_handles_all_deleted_tokens() {
-    assert_eq!(lcs_word_diff(&["a", "b"], &[]), [op(DiffKind::Delete, "ab")]);
+    assert_eq!(
+        lcs_word_diff(&["a", "b"], &[]),
+        [op(DiffKind::Delete, "ab")]
+    );
 }
 
 // port: test/javascript/diff_utils.test.js:94 "merges consecutive operations"

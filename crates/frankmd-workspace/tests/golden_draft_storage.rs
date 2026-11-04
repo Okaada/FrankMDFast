@@ -94,8 +94,10 @@ fn remap_err_js(e: &RemapError) -> Value {
         m.insert("conflictId".into(), json!(c));
     }
     if let Some(cs) = &e.collisions {
-        let v: Vec<Value> =
-            cs.iter().map(|p| json!({"sourcePath": p.source_path, "destinationPath": p.destination_path})).collect();
+        let v: Vec<Value> = cs
+            .iter()
+            .map(|p| json!({"sourcePath": p.source_path, "destinationPath": p.destination_path}))
+            .collect();
         m.insert("collisions".into(), Value::Array(v));
     }
     Value::Object(m)
@@ -198,14 +200,20 @@ fn run_call(d: &mut draft_common::Drafts, call: &str, args: &[Value]) -> Step {
         "listDraftConflicts" => {
             let Some(p) = s1() else { return U };
             V(match d.list_draft_conflicts(p) {
-                Ok(cs) => json!({"ok": true, "conflicts": cs.iter().map(conflict_js).collect::<Vec<_>>()}),
+                Ok(cs) => {
+                    json!({"ok": true, "conflicts": cs.iter().map(conflict_js).collect::<Vec<_>>()})
+                }
                 Err(e) => fail(&e),
             })
         }
         "preserveDraftConflict" => {
-            let (Some(p), Some(draft)) = (s1(), args.get(1).and_then(draft_arg)) else { return U };
+            let (Some(p), Some(draft)) = (s1(), args.get(1).and_then(draft_arg)) else {
+                return U;
+            };
             V(match d.preserve_draft_conflict(p, &draft) {
-                Ok(c) => json!({"ok": true, "conflictId": c.conflict_id, "conflict": conflict_js(&c)}),
+                Ok(c) => {
+                    json!({"ok": true, "conflictId": c.conflict_id, "conflict": conflict_js(&c)})
+                }
                 Err(e) => fail(&e),
             })
         }
@@ -252,7 +260,9 @@ fn run_call(d: &mut draft_common::Drafts, call: &str, args: &[Value]) -> Step {
             })
         }
         "removeBackupIfSnapshot" => {
-            let (Some((p, c)), Some(ts)) = (s2(), args.get(2).and_then(Value::as_f64)) else { return U };
+            let (Some((p, c)), Some(ts)) = (s2(), args.get(2).and_then(Value::as_f64)) else {
+                return U;
+            };
             V(match d.remove_backup_if_snapshot(p, c, ts) {
                 Ok(removed) => json!({"ok": true, "removed": removed}),
                 Err(e) => fail(&e),
@@ -290,7 +300,11 @@ fn fault_from(v: &Value) -> Fault {
         method,
         key: v.get("key").and_then(Value::as_str).map(str::to_owned),
         prefix: v.get("prefix").and_then(Value::as_str).map(str::to_owned),
-        mode: if v.get("mode").and_then(Value::as_str) == Some("noop") { FaultMode::Noop } else { FaultMode::Throw },
+        mode: if v.get("mode").and_then(Value::as_str) == Some("noop") {
+            FaultMode::Noop
+        } else {
+            FaultMode::Throw
+        },
         message: v.get("message").and_then(Value::as_str).map(str::to_owned),
         times: None,
     }
@@ -306,9 +320,21 @@ fn golden_draft_storage_scenarios() {
     assert_cases("js_draft_storage", g.cases_for("scenario"), |case| {
         let initial: Vec<(String, String)> = case.input["initial"]
             .as_array()
-            .map(|a| a.iter().map(|e| (e[0].as_str().unwrap().to_owned(), e[1].as_str().unwrap().to_owned())).collect())
+            .map(|a| {
+                a.iter()
+                    .map(|e| {
+                        (
+                            e[0].as_str().unwrap().to_owned(),
+                            e[1].as_str().unwrap().to_owned(),
+                        )
+                    })
+                    .collect()
+            })
             .unwrap_or_default();
-        let seed: Vec<(&str, &str)> = initial.iter().map(|(k, v)| (k.as_str(), v.as_str())).collect();
+        let seed: Vec<(&str, &str)> = initial
+            .iter()
+            .map(|(k, v)| (k.as_str(), v.as_str()))
+            .collect();
         let mut d = drafts_seeded(&seed);
         let expected = case.expected["results"].as_array().unwrap();
         let steps = case.input["steps"].as_array().unwrap();
@@ -329,11 +355,16 @@ fn golden_draft_storage_scenarios() {
                 continue;
             }
             if let Some(raw) = step.get("raw") {
-                d.backend_mut().put_raw(raw[0].as_str().unwrap(), raw[1].as_str().unwrap());
+                d.backend_mut()
+                    .put_raw(raw[0].as_str().unwrap(), raw[1].as_str().unwrap());
                 continue;
             }
             let call = step["call"].as_str().unwrap();
-            let args: Vec<Value> = step.get("args").and_then(Value::as_array).cloned().unwrap_or_default();
+            let args: Vec<Value> = step
+                .get("args")
+                .and_then(Value::as_array)
+                .cloned()
+                .unwrap_or_default();
             match run_call(&mut d, call, &args) {
                 Step::Value(got) => {
                     if &got != want {
@@ -352,11 +383,23 @@ fn golden_draft_storage_scenarios() {
             .as_array()
             .unwrap()
             .iter()
-            .map(|e| (e[0].as_str().unwrap().to_owned(), e[1].as_str().unwrap().to_owned()))
+            .map(|e| {
+                (
+                    e[0].as_str().unwrap().to_owned(),
+                    e[1].as_str().unwrap().to_owned(),
+                )
+            })
             .collect();
         if d.backend().entries != want_after {
-            errs.push(format!("storage_after: got {:?}, want {want_after:?}", d.backend().entries));
+            errs.push(format!(
+                "storage_after: got {:?}, want {want_after:?}",
+                d.backend().entries
+            ));
         }
-        if errs.is_empty() { Ok(()) } else { Err(errs.join("\n    ")) }
+        if errs.is_empty() {
+            Ok(())
+        } else {
+            Err(errs.join("\n    "))
+        }
     });
 }

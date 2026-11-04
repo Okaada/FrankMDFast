@@ -17,10 +17,16 @@ pub fn u16_to_byte(s: &str, u16_off: usize) -> usize {
         if units == u16_off {
             return b;
         }
-        assert!(units < u16_off, "utf16 offset {u16_off} splits a surrogate pair in {s:?}");
+        assert!(
+            units < u16_off,
+            "utf16 offset {u16_off} splits a surrogate pair in {s:?}"
+        );
         units += ch.len_utf16();
     }
-    assert!(units <= u16_off, "utf16 offset {u16_off} splits a surrogate pair in {s:?}");
+    assert!(
+        units <= u16_off,
+        "utf16 offset {u16_off} splits a surrogate pair in {s:?}"
+    );
     s.len()
 }
 
@@ -51,7 +57,10 @@ pub fn arg(input: &Value, i: usize) -> Value {
 
 /// `arg` as `&str`-owned String (panics if not a string).
 pub fn arg_str(input: &Value, i: usize) -> String {
-    arg(input, i).as_str().unwrap_or_else(|| panic!("arg {i} not a string: {input}")).to_owned()
+    arg(input, i)
+        .as_str()
+        .unwrap_or_else(|| panic!("arg {i} not a string: {input}"))
+        .to_owned()
 }
 
 /// Like [`u16_to_byte`] but an offset inside a surrogate pair snaps DOWN to the

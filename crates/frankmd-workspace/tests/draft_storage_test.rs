@@ -13,18 +13,26 @@ use frankmd_workspace::draft_storage::{
 const T: &str = "test/javascript/lib/draft_storage.test.js";
 
 fn backup_json(content: &str, ts: u64) -> String {
-    format!(r#"{{"content":{},"timestamp":{ts}}}"#, frankmd_testkit::serde_json::to_string(content).unwrap())
+    format!(
+        r#"{{"content":{},"timestamp":{ts}}}"#,
+        frankmd_testkit::serde_json::to_string(content).unwrap()
+    )
 }
 
 fn with_path(d: &DraftRecord, path: &str) -> DraftRecord {
-    DraftRecord { path: path.to_owned(), ..d.clone() }
+    DraftRecord {
+        path: path.to_owned(),
+        ..d.clone()
+    }
 }
 
 // port: test/javascript/lib/draft_storage.test.js:17 "stores and reads an empty draft with its server baseline"
 #[test]
 fn stores_and_reads_an_empty_draft_with_its_server_baseline() {
     let mut d = drafts();
-    let write = d.write_draft("folder/note.md", "", "server-revision").unwrap();
+    let write = d
+        .write_draft("folder/note.md", "", "server-revision")
+        .unwrap();
     let read = d.read_draft("folder/note.md").unwrap();
 
     assert_eq!(read.draft.as_ref(), Some(&write.draft), "{T}");
@@ -55,9 +63,22 @@ fn removes_only_the_matching_draft_revision() {
     let first = d.write_draft("note.md", "older", "baseline").unwrap().draft;
     let second = d.write_draft("note.md", "newer", "baseline").unwrap().draft;
 
-    assert_eq!(d.remove_draft_if_revision("note.md", &first.draft_revision), Ok(false));
-    assert_eq!(d.read_draft("note.md").unwrap().draft.unwrap().draft_revision, second.draft_revision);
-    assert_eq!(d.remove_draft_if_revision("note.md", &second.draft_revision), Ok(true));
+    assert_eq!(
+        d.remove_draft_if_revision("note.md", &first.draft_revision),
+        Ok(false)
+    );
+    assert_eq!(
+        d.read_draft("note.md")
+            .unwrap()
+            .draft
+            .unwrap()
+            .draft_revision,
+        second.draft_revision
+    );
+    assert_eq!(
+        d.remove_draft_if_revision("note.md", &second.draft_revision),
+        Ok(true)
+    );
     assert_eq!(d.read_draft("note.md").unwrap().draft, None);
 }
 
@@ -65,11 +86,20 @@ fn removes_only_the_matching_draft_revision() {
 #[test]
 fn remaps_a_file_draft_and_preserves_its_revision_metadata() {
     let mut d = drafts();
-    let original = d.write_draft("notes/old.md", "local edit", "server-revision").unwrap().draft;
+    let original = d
+        .write_draft("notes/old.md", "local edit", "server-revision")
+        .unwrap()
+        .draft;
 
-    assert_eq!(d.remap_drafts("notes/old.md", "archive/new.md", ItemKind::File), Ok(1));
+    assert_eq!(
+        d.remap_drafts("notes/old.md", "archive/new.md", ItemKind::File),
+        Ok(1)
+    );
     assert_eq!(d.read_draft("notes/old.md").unwrap().draft, None);
-    assert_eq!(d.read_draft("archive/new.md").unwrap().draft, Some(with_path(&original, "archive/new.md")));
+    assert_eq!(
+        d.read_draft("archive/new.md").unwrap().draft,
+        Some(with_path(&original, "archive/new.md"))
+    );
 }
 
 // port: test/javascript/lib/draft_storage.test.js:71 "remaps only a folder path and its descendants"
@@ -77,13 +107,35 @@ fn remaps_a_file_draft_and_preserves_its_revision_metadata() {
 fn remaps_only_a_folder_path_and_its_descendants() {
     let mut d = drafts();
     d.write_draft("docs/index.md", "index", "rev-1").unwrap();
-    d.write_draft("docs/guides/setup.md", "guide", "rev-2").unwrap();
+    d.write_draft("docs/guides/setup.md", "guide", "rev-2")
+        .unwrap();
     d.write_draft("docs-old/keep.md", "keep", "rev-3").unwrap();
 
     assert_eq!(d.remap_drafts("docs", "archive", ItemKind::Folder), Ok(2));
-    assert_eq!(d.read_draft("archive/index.md").unwrap().draft.unwrap().content, "index");
-    assert_eq!(d.read_draft("archive/guides/setup.md").unwrap().draft.unwrap().content, "guide");
-    assert_eq!(d.read_draft("docs-old/keep.md").unwrap().draft.unwrap().content, "keep");
+    assert_eq!(
+        d.read_draft("archive/index.md")
+            .unwrap()
+            .draft
+            .unwrap()
+            .content,
+        "index"
+    );
+    assert_eq!(
+        d.read_draft("archive/guides/setup.md")
+            .unwrap()
+            .draft
+            .unwrap()
+            .content,
+        "guide"
+    );
+    assert_eq!(
+        d.read_draft("docs-old/keep.md")
+            .unwrap()
+            .draft
+            .unwrap()
+            .content,
+        "keep"
+    );
     assert_eq!(d.read_draft("docs/index.md").unwrap().draft, None);
 }
 
@@ -93,9 +145,15 @@ fn remaps_a_legacy_backup_with_a_renamed_file() {
     let backup = backup_json("unsaved legacy edit", 123);
     let mut d = drafts_seeded(&[(&backup_key("notes/old.md"), &backup)]);
 
-    assert_eq!(d.remap_drafts("notes/old.md", "archive/new.md", ItemKind::File), Ok(1));
+    assert_eq!(
+        d.remap_drafts("notes/old.md", "archive/new.md", ItemKind::File),
+        Ok(1)
+    );
     assert_eq!(d.backend().raw(&backup_key("notes/old.md")), None);
-    assert_eq!(d.backend().raw(&backup_key("archive/new.md")), Some(backup.as_str()));
+    assert_eq!(
+        d.backend().raw(&backup_key("archive/new.md")),
+        Some(backup.as_str())
+    );
 }
 
 // port: test/javascript/lib/draft_storage.test.js:96 "remaps legacy backups in a moved folder without touching neighboring paths"
@@ -115,8 +173,14 @@ fn remaps_legacy_backups_in_a_moved_folder_without_touching_neighboring_paths() 
     assert_eq!(b.raw(&backup_key("docs/index.md")), None);
     assert_eq!(b.raw(&backup_key("docs/guides/setup.md")), None);
     assert_eq!(b.raw(&backup_key("archive/index.md")), Some(index.as_str()));
-    assert_eq!(b.raw(&backup_key("archive/guides/setup.md")), Some(nested.as_str()));
-    assert_eq!(b.raw(&backup_key("docs-old/keep.md")), Some(unrelated.as_str()));
+    assert_eq!(
+        b.raw(&backup_key("archive/guides/setup.md")),
+        Some(nested.as_str())
+    );
+    assert_eq!(
+        b.raw(&backup_key("docs-old/keep.md")),
+        Some(unrelated.as_str())
+    );
 }
 
 // port: test/javascript/lib/draft_storage.test.js:114 "preserves both legacy backups and reports a destination collision"
@@ -126,7 +190,9 @@ fn preserves_both_legacy_backups_and_reports_a_destination_collision() {
     let dst = backup_json("other edit", 456);
     let mut d = drafts_seeded(&[(&backup_key("old.md"), &src), (&backup_key("new.md"), &dst)]);
 
-    let err = d.remap_drafts("old.md", "new.md", ItemKind::File).unwrap_err();
+    let err = d
+        .remap_drafts("old.md", "new.md", ItemKind::File)
+        .unwrap_err();
 
     assert!(err.backup_collision);
     assert_eq!(err.source_path.as_deref(), Some("old.md"));
@@ -140,11 +206,20 @@ fn preserves_both_legacy_backups_and_reports_a_destination_collision() {
 fn retains_the_source_legacy_backup_when_writing_the_destination_fails() {
     let backup = backup_json("unsaved edit", 123);
     let mut d = drafts_seeded(&[(&backup_key("old.md"), &backup)]);
-    d.backend_mut().add_fault(Fault::throw(Method::SetItem).on_key(&backup_key("new.md")).message("quota exceeded"));
+    d.backend_mut().add_fault(
+        Fault::throw(Method::SetItem)
+            .on_key(&backup_key("new.md"))
+            .message("quota exceeded"),
+    );
 
-    let err = d.remap_drafts("old.md", "new.md", ItemKind::File).unwrap_err();
+    let err = d
+        .remap_drafts("old.md", "new.md", ItemKind::File)
+        .unwrap_err();
     assert_eq!(err.source_path.as_deref(), Some("old.md"));
-    assert_eq!(d.backend().raw(&backup_key("old.md")), Some(backup.as_str()));
+    assert_eq!(
+        d.backend().raw(&backup_key("old.md")),
+        Some(backup.as_str())
+    );
     assert_eq!(d.backend().raw(&backup_key("new.md")), None);
 }
 
@@ -153,27 +228,47 @@ fn retains_the_source_legacy_backup_when_writing_the_destination_fails() {
 fn keeps_both_legacy_backup_copies_if_removing_the_verified_source_fails() {
     let backup = backup_json("unsaved edit", 123);
     let mut d = drafts_seeded(&[(&backup_key("old.md"), &backup)]);
-    d.backend_mut().add_fault(Fault::throw(Method::RemoveItem).on_key(&backup_key("old.md")));
+    d.backend_mut()
+        .add_fault(Fault::throw(Method::RemoveItem).on_key(&backup_key("old.md")));
 
-    let err = d.remap_drafts("old.md", "new.md", ItemKind::File).unwrap_err();
+    let err = d
+        .remap_drafts("old.md", "new.md", ItemKind::File)
+        .unwrap_err();
     assert_eq!(err.source_path.as_deref(), Some("old.md"));
-    assert_eq!(d.backend().raw(&backup_key("old.md")), Some(backup.as_str()));
-    assert_eq!(d.backend().raw(&backup_key("new.md")), Some(backup.as_str()));
+    assert_eq!(
+        d.backend().raw(&backup_key("old.md")),
+        Some(backup.as_str())
+    );
+    assert_eq!(
+        d.backend().raw(&backup_key("new.md")),
+        Some(backup.as_str())
+    );
 
     d.backend_mut().clear_faults();
     assert_eq!(d.remap_drafts("old.md", "new.md", ItemKind::File), Ok(1));
     assert_eq!(d.backend().raw(&backup_key("old.md")), None);
-    assert_eq!(d.backend().raw(&backup_key("new.md")), Some(backup.as_str()));
+    assert_eq!(
+        d.backend().raw(&backup_key("new.md")),
+        Some(backup.as_str())
+    );
 }
 
 // port: test/javascript/lib/draft_storage.test.js:169 "preserves both source and destination drafts when a remap collides"
 #[test]
 fn preserves_both_source_and_destination_drafts_when_a_remap_collides() {
     let mut d = drafts();
-    let source = d.write_draft("old.md", "source version", "source-revision").unwrap().draft;
-    let destination = d.write_draft("new.md", "destination version", "destination-revision").unwrap().draft;
+    let source = d
+        .write_draft("old.md", "source version", "source-revision")
+        .unwrap()
+        .draft;
+    let destination = d
+        .write_draft("new.md", "destination version", "destination-revision")
+        .unwrap()
+        .draft;
 
-    let err = d.remap_drafts("old.md", "new.md", ItemKind::File).unwrap_err();
+    let err = d
+        .remap_drafts("old.md", "new.md", ItemKind::File)
+        .unwrap_err();
 
     assert!(err.collision);
     assert_eq!(err.source_path.as_deref(), Some("old.md"));
@@ -194,38 +289,76 @@ fn preserves_both_source_and_destination_drafts_when_a_remap_collides() {
 #[test]
 fn keeps_every_nested_draft_recoverable_when_a_folder_remap_has_one_collision() {
     let mut d = drafts();
-    d.write_draft("docs/index.md", "index draft", "index-revision").unwrap();
-    let source = d.write_draft("docs/guides/setup.md", "source guide", "source-revision").unwrap().draft;
-    let destination =
-        d.write_draft("archive/guides/setup.md", "destination guide", "destination-revision").unwrap().draft;
-    d.write_draft("docs-old/keep.md", "unrelated", "keep-revision").unwrap();
+    d.write_draft("docs/index.md", "index draft", "index-revision")
+        .unwrap();
+    let source = d
+        .write_draft("docs/guides/setup.md", "source guide", "source-revision")
+        .unwrap()
+        .draft;
+    let destination = d
+        .write_draft(
+            "archive/guides/setup.md",
+            "destination guide",
+            "destination-revision",
+        )
+        .unwrap()
+        .draft;
+    d.write_draft("docs-old/keep.md", "unrelated", "keep-revision")
+        .unwrap();
 
-    let err = d.remap_drafts("docs", "archive", ItemKind::Folder).unwrap_err();
+    let err = d
+        .remap_drafts("docs", "archive", ItemKind::Folder)
+        .unwrap_err();
 
     assert!(err.collision);
     assert_eq!(err.source_path.as_deref(), Some("docs/guides/setup.md"));
-    assert_eq!(err.destination_path.as_deref(), Some("archive/guides/setup.md"));
+    assert_eq!(
+        err.destination_path.as_deref(),
+        Some("archive/guides/setup.md")
+    );
     assert_eq!(d.read_draft("docs/index.md").unwrap().draft, None);
     assert_eq!(d.read_draft("archive/index.md").unwrap().draft, None);
     let idx = d.list_draft_conflicts("archive/index.md").unwrap();
     assert_eq!(idx.len(), 1);
-    assert_eq!((idx[0].source_path.as_str(), idx[0].content.as_str()), ("docs/index.md", "index draft"));
+    assert_eq!(
+        (idx[0].source_path.as_str(), idx[0].content.as_str()),
+        ("docs/index.md", "index draft")
+    );
     assert_eq!(d.read_draft("docs/guides/setup.md").unwrap().draft, None);
-    assert_eq!(d.read_draft("archive/guides/setup.md").unwrap().draft, Some(destination));
+    assert_eq!(
+        d.read_draft("archive/guides/setup.md").unwrap().draft,
+        Some(destination)
+    );
     let setup = d.list_draft_conflicts("archive/guides/setup.md").unwrap();
     assert_eq!(setup.len(), 1);
-    assert_eq!((setup[0].source_path.as_str(), setup[0].content.as_str()), (source.path.as_str(), source.content.as_str()));
-    assert_eq!(d.read_draft("docs-old/keep.md").unwrap().draft.unwrap().content, "unrelated");
+    assert_eq!(
+        (setup[0].source_path.as_str(), setup[0].content.as_str()),
+        (source.path.as_str(), source.content.as_str())
+    );
+    assert_eq!(
+        d.read_draft("docs-old/keep.md")
+            .unwrap()
+            .draft
+            .unwrap()
+            .content,
+        "unrelated"
+    );
 }
 
 // port: test/javascript/lib/draft_storage.test.js:220 "retains the source draft when a destination write fails"
 #[test]
 fn retains_the_source_draft_when_a_destination_write_fails() {
     let mut d = drafts();
-    let source = d.write_draft("old.md", "local edit", "revision").unwrap().draft;
-    d.backend_mut().add_fault(Fault::throw(Method::SetItem).on_key(&draft_key("new.md")));
+    let source = d
+        .write_draft("old.md", "local edit", "revision")
+        .unwrap()
+        .draft;
+    d.backend_mut()
+        .add_fault(Fault::throw(Method::SetItem).on_key(&draft_key("new.md")));
 
-    let err = d.remap_drafts("old.md", "new.md", ItemKind::File).unwrap_err();
+    let err = d
+        .remap_drafts("old.md", "new.md", ItemKind::File)
+        .unwrap_err();
     assert_eq!(err.source_path.as_deref(), Some("old.md"));
     assert_eq!(d.read_draft("old.md").unwrap().draft, Some(source));
     assert_eq!(d.read_draft("new.md").unwrap().draft, None);
@@ -235,10 +368,19 @@ fn retains_the_source_draft_when_a_destination_write_fails() {
 #[test]
 fn does_not_remove_a_source_draft_until_the_verified_copy_exists() {
     let mut d = drafts();
-    let source = d.write_draft("old.md", "local edit", "revision").unwrap().draft;
-    d.backend_mut().add_fault(Fault::throw(Method::SetItem).on_key(&draft_key("new.md")).noop());
+    let source = d
+        .write_draft("old.md", "local edit", "revision")
+        .unwrap()
+        .draft;
+    d.backend_mut().add_fault(
+        Fault::throw(Method::SetItem)
+            .on_key(&draft_key("new.md"))
+            .noop(),
+    );
 
-    let err = d.remap_drafts("old.md", "new.md", ItemKind::File).unwrap_err();
+    let err = d
+        .remap_drafts("old.md", "new.md", ItemKind::File)
+        .unwrap_err();
     assert_eq!(err.source_path.as_deref(), Some("old.md"));
     assert_eq!(d.read_draft("old.md").unwrap().draft, Some(source));
     assert_eq!(d.read_draft("new.md").unwrap().draft, None);
@@ -248,13 +390,22 @@ fn does_not_remove_a_source_draft_until_the_verified_copy_exists() {
 #[test]
 fn retains_both_copies_if_removing_the_verified_source_fails() {
     let mut d = drafts();
-    let source = d.write_draft("old.md", "local edit", "revision").unwrap().draft;
-    d.backend_mut().add_fault(Fault::throw(Method::RemoveItem).on_key(&draft_key("old.md")));
+    let source = d
+        .write_draft("old.md", "local edit", "revision")
+        .unwrap()
+        .draft;
+    d.backend_mut()
+        .add_fault(Fault::throw(Method::RemoveItem).on_key(&draft_key("old.md")));
 
-    let err = d.remap_drafts("old.md", "new.md", ItemKind::File).unwrap_err();
+    let err = d
+        .remap_drafts("old.md", "new.md", ItemKind::File)
+        .unwrap_err();
     assert_eq!(err.source_path.as_deref(), Some("old.md"));
     assert_eq!(d.read_draft("old.md").unwrap().draft, Some(source.clone()));
-    assert_eq!(d.read_draft("new.md").unwrap().draft, Some(with_path(&source, "new.md")));
+    assert_eq!(
+        d.read_draft("new.md").unwrap().draft,
+        Some(with_path(&source, "new.md"))
+    );
 }
 
 // port: test/javascript/lib/draft_storage.test.js:265 "removes deleted file or folder drafts and backups by path boundary"
@@ -262,7 +413,8 @@ fn retains_both_copies_if_removing_the_verified_source_fails() {
 fn removes_deleted_file_or_folder_drafts_and_backups_by_path_boundary() {
     let mut d = drafts();
     d.write_draft("docs/index.md", "index", "rev-1").unwrap();
-    d.write_draft("docs/guides/setup.md", "guide", "rev-2").unwrap();
+    d.write_draft("docs/guides/setup.md", "guide", "rev-2")
+        .unwrap();
     d.write_draft("docs-old/keep.md", "keep", "rev-3").unwrap();
     d.write_backup("docs/index.md", "legacy").unwrap();
     d.write_backup("docs-old/keep.md", "keep legacy").unwrap();
@@ -270,9 +422,23 @@ fn removes_deleted_file_or_folder_drafts_and_backups_by_path_boundary() {
     assert_eq!(d.remove_drafts("docs", ItemKind::Folder), Ok(3));
     assert_eq!(d.read_draft("docs/index.md").unwrap().draft, None);
     assert_eq!(d.read_draft("docs/guides/setup.md").unwrap().draft, None);
-    assert_eq!(d.read_draft("docs-old/keep.md").unwrap().draft.unwrap().content, "keep");
+    assert_eq!(
+        d.read_draft("docs-old/keep.md")
+            .unwrap()
+            .draft
+            .unwrap()
+            .content,
+        "keep"
+    );
     assert_eq!(d.read_backup("docs/index.md").unwrap().backup, None);
-    assert_eq!(d.read_backup("docs-old/keep.md").unwrap().backup.unwrap().content, "keep legacy");
+    assert_eq!(
+        d.read_backup("docs-old/keep.md")
+            .unwrap()
+            .backup
+            .unwrap()
+            .content,
+        "keep legacy"
+    );
 }
 
 // port: test/javascript/lib/draft_storage.test.js:282 "removes recovery conflict copies when their file or folder is deleted"
@@ -280,7 +446,8 @@ fn removes_deleted_file_or_folder_drafts_and_backups_by_path_boundary() {
 fn removes_recovery_conflict_copies_when_their_file_or_folder_is_deleted() {
     let mut d = drafts();
     d.write_draft("docs/old.md", "source", "revision").unwrap();
-    d.write_draft("docs/new.md", "destination", "other-revision").unwrap();
+    d.write_draft("docs/new.md", "destination", "other-revision")
+        .unwrap();
     let _ = d.remap_drafts("docs/old.md", "docs/new.md", ItemKind::File);
 
     assert_eq!(d.list_draft_conflicts("docs/new.md").unwrap().len(), 1);
@@ -328,7 +495,11 @@ fn preserves_draft_records_from_a_newer_schema_it_cannot_read() {
 
     let err = d.read_draft("note.md").unwrap_err();
 
-    assert!(err.message.contains("Unsupported draft schema version"), "{}", err.message);
+    assert!(
+        err.message.contains("Unsupported draft schema version"),
+        "{}",
+        err.message
+    );
     assert_eq!(d.backend().raw("frankmd:draft:note.md"), Some(raw));
 }
 
@@ -336,20 +507,39 @@ fn preserves_draft_records_from_a_newer_schema_it_cannot_read() {
 #[test]
 fn reports_storage_read_write_and_removal_failures_to_callers() {
     let mut d = drafts();
-    d.backend_mut().add_fault(Fault::throw(Method::GetItem).message("QuotaExceededError"));
+    d.backend_mut()
+        .add_fault(Fault::throw(Method::GetItem).message("QuotaExceededError"));
     let e = d.read_draft("note.md").unwrap_err();
-    assert_eq!((e.kind, e.message.as_str()), (DraftErrorKind::Storage, "QuotaExceededError"));
+    assert_eq!(
+        (e.kind, e.message.as_str()),
+        (DraftErrorKind::Storage, "QuotaExceededError")
+    );
     let e = d.write_draft("note.md", "content", "baseline").unwrap_err();
     assert_eq!(e.message, "QuotaExceededError");
 
     let mut w = drafts();
-    w.backend_mut().add_fault(Fault::throw(Method::SetItem).message("QuotaExceededError"));
-    assert_eq!(w.write_draft("note.md", "content", "baseline").unwrap_err().message, "QuotaExceededError");
+    w.backend_mut()
+        .add_fault(Fault::throw(Method::SetItem).message("QuotaExceededError"));
+    assert_eq!(
+        w.write_draft("note.md", "content", "baseline")
+            .unwrap_err()
+            .message,
+        "QuotaExceededError"
+    );
 
     let mut r = drafts();
-    let record = r.write_draft("note.md", "content", "baseline").unwrap().draft;
-    r.backend_mut().add_fault(Fault::throw(Method::RemoveItem).message("QuotaExceededError"));
-    assert_eq!(r.remove_draft_if_revision("note.md", &record.draft_revision).unwrap_err().message, "QuotaExceededError");
+    let record = r
+        .write_draft("note.md", "content", "baseline")
+        .unwrap()
+        .draft;
+    r.backend_mut()
+        .add_fault(Fault::throw(Method::RemoveItem).message("QuotaExceededError"));
+    assert_eq!(
+        r.remove_draft_if_revision("note.md", &record.draft_revision)
+            .unwrap_err()
+            .message,
+        "QuotaExceededError"
+    );
 }
 
 // port: test/javascript/lib/draft_storage.test.js:361 "continues to read and remove legacy offline backup records"
@@ -357,7 +547,14 @@ fn reports_storage_read_write_and_removal_failures_to_callers() {
 fn continues_to_read_and_remove_legacy_offline_backup_records() {
     let mut d = drafts();
     assert!(d.write_backup("folder/note.md", "offline").is_ok());
-    assert_eq!(d.read_backup("folder/note.md").unwrap().backup.unwrap().content, "offline");
+    assert_eq!(
+        d.read_backup("folder/note.md")
+            .unwrap()
+            .backup
+            .unwrap()
+            .content,
+        "offline"
+    );
     assert_eq!(d.remove_backup("folder/note.md"), Ok(()));
     assert_eq!(d.read_backup("folder/note.md").unwrap().backup, None);
 }
@@ -371,8 +568,13 @@ fn continues_to_read_and_remove_legacy_offline_backup_records() {
 fn offline_backup_save_writes_content_and_timestamp() {
     let mut d = drafts();
     d.backup_save("notes/test.md", "hello world").unwrap();
-    let raw = d.backend().raw("frankmd:backup:notes/test.md").unwrap().to_owned();
-    let v: frankmd_testkit::serde_json::Value = frankmd_testkit::serde_json::from_str(&raw).unwrap();
+    let raw = d
+        .backend()
+        .raw("frankmd:backup:notes/test.md")
+        .unwrap()
+        .to_owned();
+    let v: frankmd_testkit::serde_json::Value =
+        frankmd_testkit::serde_json::from_str(&raw).unwrap();
     assert_eq!(v["content"], "hello world");
     // SeqEnv pins Date.now() to 1700000000000 for the first call.
     assert_eq!(v["timestamp"].as_f64(), Some(1_700_000_000_000.0));
@@ -382,7 +584,8 @@ fn offline_backup_save_writes_content_and_timestamp() {
 #[test]
 fn offline_backup_save_handles_quota_exceeded_gracefully() {
     let mut d = drafts();
-    d.backend_mut().add_fault(Fault::throw(Method::SetItem).message("QuotaExceededError"));
+    d.backend_mut()
+        .add_fault(Fault::throw(Method::SetItem).message("QuotaExceededError"));
     // Must not panic; the failure is reported (and logged as a warning by the app).
     let e = d.backup_save("test.md", "content").unwrap_err();
     assert_eq!(e.message, "QuotaExceededError");
@@ -401,7 +604,13 @@ fn offline_backup_check_returns_data_when_backup_differs() {
     let mut d = drafts();
     d.backup_save("test.md", "local backup content").unwrap();
     let b = d.backup_check("test.md", "server content").unwrap();
-    assert_eq!(b, LegacyBackup { content: "local backup content".into(), timestamp: 1_700_000_000_000.0 });
+    assert_eq!(
+        b,
+        LegacyBackup {
+            content: "local backup content".into(),
+            timestamp: 1_700_000_000_000.0
+        }
+    );
 }
 
 // port: test/javascript/controllers/offline_backup_controller.test.js:107 "returns null and auto-clears when backup matches server content"

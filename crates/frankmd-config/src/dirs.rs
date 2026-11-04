@@ -24,7 +24,10 @@ impl AppDirs {
         Some(Self {
             config: s.config_dir().join("frankmd"),
             // Windows has no state dir: keep state with the app data there.
-            state: s.state_dir().unwrap_or_else(|| s.data_dir()).join("frankmd"),
+            state: s
+                .state_dir()
+                .unwrap_or_else(|| s.data_dir())
+                .join("frankmd"),
             cache: s.cache_dir().join("frankmd"),
         })
     }

@@ -53,7 +53,10 @@ pub fn normalize_image_file(file: PastedFile) -> PastedFile {
     if has_extension(&file.name) {
         return file;
     }
-    let stamp = file.last_modified.filter(|&ms| ms != 0).map_or_else(|| "clip".to_owned(), |ms| ms.to_string());
+    let stamp = file
+        .last_modified
+        .filter(|&ms| ms != 0)
+        .map_or_else(|| "clip".to_owned(), |ms| ms.to_string());
     let name = format!("pasted-image-{stamp}{}", extension_for_mime(&file.mime));
     PastedFile { name, ..file }
 }
@@ -76,8 +79,15 @@ pub fn extension_for_mime(mime: &str) -> String {
     }
     let subtype = mime.split('/').nth(1).unwrap_or("");
     let subtype = subtype.split_once('+').map_or(subtype, |(head, _)| head);
-    let cleaned: String = subtype.chars().filter(char::is_ascii_alphanumeric).collect();
-    if cleaned.is_empty() { ".bin".to_owned() } else { format!(".{}", cleaned.to_ascii_lowercase()) }
+    let cleaned: String = subtype
+        .chars()
+        .filter(char::is_ascii_alphanumeric)
+        .collect();
+    if cleaned.is_empty() {
+        ".bin".to_owned()
+    } else {
+        format!(".{}", cleaned.to_ascii_lowercase())
+    }
 }
 
 /// `/\.[a-z0-9]+$/i`.

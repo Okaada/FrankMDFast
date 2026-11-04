@@ -12,12 +12,24 @@ use wiremock::matchers::{header, method, path, query_param};
 use wiremock::{Mock, MockServer, ResponseTemplate};
 
 fn search(server: &MockServer) -> ImageSearch {
-    ImageSearch::new(http(), SearchEndpoints { duckduckgo: server.uri(), google: server.uri() })
+    ImageSearch::new(
+        http(),
+        SearchEndpoints {
+            duckduckgo: server.uri(),
+            google: server.uri(),
+        },
+    )
 }
 
 fn offline() -> ImageSearch {
     // Nothing listens here; validation must fail before any request.
-    ImageSearch::new(http(), SearchEndpoints { duckduckgo: "http://127.0.0.1:9".into(), google: "http://127.0.0.1:9".into() })
+    ImageSearch::new(
+        http(),
+        SearchEndpoints {
+            duckduckgo: "http://127.0.0.1:9".into(),
+            google: "http://127.0.0.1:9".into(),
+        },
+    )
 }
 
 async fn mount_ddg(server: &MockServer, page: &str, ijs: &str) {
@@ -30,7 +42,11 @@ async fn mount_ddg(server: &MockServer, page: &str, ijs: &str) {
         .await;
     Mock::given(method("GET"))
         .and(path("/i.js"))
-        .respond_with(ResponseTemplate::new(200).set_body_string(ijs).insert_header("content-type", "application/json"))
+        .respond_with(
+            ResponseTemplate::new(200)
+                .set_body_string(ijs)
+                .insert_header("content-type", "application/json"),
+        )
         .mount(server)
         .await;
 }
@@ -38,14 +54,23 @@ async fn mount_ddg(server: &MockServer, page: &str, ijs: &str) {
 // port: test/controllers/images_controller_test.rb:31 "search_web returns error when query is blank"
 #[tokio::test]
 async fn search_web_blank_query() {
-    assert_eq!(offline().search_web("").await.expect_err("400"), SearchError::QueryRequired);
+    assert_eq!(
+        offline().search_web("").await.expect_err("400"),
+        SearchError::QueryRequired
+    );
 }
 
 // port: test/controllers/images_controller_test.rb:41 "search_google returns error when no API key"
 #[tokio::test]
 async fn search_google_without_key() {
-    let err = offline().search_google(&bare_config(), "test", 0).await.expect_err("503");
-    assert_eq!(err, SearchError::NotConfigured("errors.google_not_configured"));
+    let err = offline()
+        .search_google(&bare_config(), "test", 0)
+        .await
+        .expect_err("503");
+    assert_eq!(
+        err,
+        SearchError::NotConfigured("errors.google_not_configured")
+    );
     assert!(!search_flags(&bare_config()).google_enabled);
     assert!(search_flags(&google_config()).google_enabled);
 }
@@ -53,13 +78,22 @@ async fn search_google_without_key() {
 // port: test/controllers/images_controller_test.rb:52 "search_google returns error when query is blank"
 #[tokio::test]
 async fn search_google_blank_query() {
-    assert_eq!(offline().search_google(&google_config(), "  ", 0).await.expect_err("400"), SearchError::QueryRequired);
+    assert_eq!(
+        offline()
+            .search_google(&google_config(), "  ", 0)
+            .await
+            .expect_err("400"),
+        SearchError::QueryRequired
+    );
 }
 
 // port: test/controllers/images_controller_test.rb:62 "search_pinterest returns error when query is blank"
 #[tokio::test]
 async fn search_pinterest_blank_query() {
-    assert_eq!(offline().search_pinterest("").await.expect_err("400"), SearchError::QueryRequired);
+    assert_eq!(
+        offline().search_pinterest("").await.expect_err("400"),
+        SearchError::QueryRequired
+    );
 }
 
 // port: test/controllers/images_controller_test.rb:496 "search_web returns images from DuckDuckGo"
@@ -92,8 +126,17 @@ async fn search_web_missing_vqd_is_empty() {
     mount_ddg(&server, &data("ddg_no_vqd.html"), "{}").await;
     let r = search(&server).search_web("test").await.expect("200");
     assert!(r.images.is_empty());
-    assert_eq!(r.note.as_deref(), Some("DuckDuckGo search temporarily unavailable"));
-    let ijs = server.received_requests().await.unwrap_or_default().iter().filter(|r| r.url.path() == "/i.js").count();
+    assert_eq!(
+        r.note.as_deref(),
+        Some("DuckDuckGo search temporarily unavailable")
+    );
+    let ijs = server
+        .received_requests()
+        .await
+        .unwrap_or_default()
+        .iter()
+        .filter(|r| r.url.path() == "/i.js")
+        .count();
     assert_eq!(ijs, 0, "no i.js request without a vqd token");
 }
 
@@ -114,11 +157,17 @@ async fn search_google_returns_cse_images() {
         .expect(1)
         .mount(&server)
         .await;
-    let r = search(&server).search_google(&google_config(), "landscape", 0).await.expect("results");
+    let r = search(&server)
+        .search_google(&google_config(), "landscape", 0)
+        .await
+        .expect("results");
     assert_eq!(r.images.len(), 1);
     assert_eq!(r.images[0].url, "https://example.com/photo.jpg");
     assert_eq!(r.images[0].title.as_deref(), Some("Beautiful photo"));
-    assert_eq!(r.images[0].thumbnail.as_deref(), Some("https://example.com/photo_thumb.jpg"));
+    assert_eq!(
+        r.images[0].thumbnail.as_deref(),
+        Some("https://example.com/photo_thumb.jpg")
+    );
     assert_eq!(r.total, Some(42));
     assert_eq!(r.next_start, Some(10));
 }
@@ -134,9 +183,16 @@ async fn search_google_api_error() {
         ))
         .mount(&server)
         .await;
-    let r = search(&server).search_google(&google_config(), "test", 0).await.expect("200");
+    let r = search(&server)
+        .search_google(&google_config(), "test", 0)
+        .await
+        .expect("200");
     assert!(r.images.is_empty());
-    assert!(r.error.as_deref().is_some_and(|e| e.contains("quotaExceeded")));
+    assert!(
+        r.error
+            .as_deref()
+            .is_some_and(|e| e.contains("quotaExceeded"))
+    );
 }
 
 // port: test/controllers/images_controller_test.rb:587 "search_pinterest uses DuckDuckGo with site filter"
@@ -158,7 +214,10 @@ async fn search_pinterest_uses_site_filter() {
         .expect(1)
         .mount(&server)
         .await;
-    let r = search(&server).search_pinterest("home decor").await.expect("results");
+    let r = search(&server)
+        .search_pinterest("home decor")
+        .await
+        .expect("results");
     assert_eq!(r.images.len(), 1);
     assert_eq!(r.images[0].title.as_deref(), Some("Pinterest Pin"));
 }

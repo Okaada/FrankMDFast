@@ -58,7 +58,13 @@ pub struct LineColumnInfo {
 }
 
 /// `before + prefix + selected + suffix + after`.
-pub fn wrap_selection(text: &str, start: usize, end: usize, prefix: &str, suffix: &str) -> WrapResult {
+pub fn wrap_selection(
+    text: &str,
+    start: usize,
+    end: usize,
+    prefix: &str,
+    suffix: &str,
+) -> WrapResult {
     let before = js_substring(text, 0, start);
     let selected = js_substring(text, start, end);
     let after = js_substring(text, end, text.len());
@@ -73,15 +79,25 @@ pub fn wrap_selection(text: &str, start: usize, end: usize, prefix: &str, suffix
 pub fn insert_at_position(text: &str, position: usize, insertion: &str) -> EditResult {
     let before = js_substring(text, 0, position);
     let after = js_substring(text, position, text.len());
-    EditResult { text: [before, insertion, after].concat(), cursor: position + insertion.len() }
+    EditResult {
+        text: [before, insertion, after].concat(),
+        cursor: position + insertion.len(),
+    }
 }
 
 /// Expand a selection to whole lines.
 pub fn get_line_boundaries(text: &str, start: usize, end: usize) -> LineBoundaries {
     let line_start = last_newline_at_or_before(text, start.saturating_sub(1)).map_or(0, |i| i + 1);
     let line_end = first_newline_from(text, end.saturating_sub(1)).unwrap_or(text.len());
-    let lines = js_substring(text, line_start, line_end).split('\n').map(str::to_owned).collect();
-    LineBoundaries { line_start, line_end, lines }
+    let lines = js_substring(text, line_start, line_end)
+        .split('\n')
+        .map(str::to_owned)
+        .collect();
+    LineBoundaries {
+        line_start,
+        line_end,
+        lines,
+    }
 }
 
 /// Line/column of a cursor.
@@ -94,7 +110,11 @@ pub fn get_cursor_info(text: &str, cursor: usize) -> LineColumnInfo {
         Some(newline) => cursor_utf16 - utf16_len(&before[..newline]),
         None => cursor_utf16 + 1,
     };
-    LineColumnInfo { line: line_count(before), column_utf16, total_lines: line_count(text) }
+    LineColumnInfo {
+        line: line_count(before),
+        column_utf16,
+        total_lines: line_count(text),
+    }
 }
 
 /// 1-based line containing `position` (clamped).
@@ -105,12 +125,18 @@ pub fn get_line_at_position(text: &str, position: usize) -> usize {
 /// Byte offset of the start of 1-based `line_number` (`0` and `1` → 0).
 /// **[COMPAT]** past the last line it returns `text.len() + 1`.
 pub fn get_position_for_line(text: &str, line_number: usize) -> usize {
-    text.split('\n').take(line_number.saturating_sub(1)).map(|line| line.len() + 1).sum()
+    text.split('\n')
+        .take(line_number.saturating_sub(1))
+        .map(|line| line.len() + 1)
+        .sum()
 }
 
 /// Replace `text[start..end]` with `replacement`; cursor = `start + replacement.len()`.
 pub fn replace_range(text: &str, start: usize, end: usize, replacement: &str) -> EditResult {
     let before = js_substring(text, 0, start);
     let after = js_substring(text, end, text.len());
-    EditResult { text: [before, replacement, after].concat(), cursor: start + replacement.len() }
+    EditResult {
+        text: [before, replacement, after].concat(),
+        cursor: start + replacement.len(),
+    }
 }

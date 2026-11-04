@@ -4,7 +4,6 @@ use frankmd_core::text::utils::{
     escape_html, escape_html_string, fuzzy_score, is_safe_image_url, levenshtein_distance,
 };
 
-
 // port: test/javascript/text_utils.test.js:11 "escapes HTML and both quote types for attribute interpolation"
 #[test]
 fn escape_html_escapes_html_and_both_quote_types() {
@@ -48,7 +47,10 @@ fn escape_html_string_escapes_ampersands() {
 // port: test/javascript/text_utils.test.js:42 "escapes quotes"
 #[test]
 fn escape_html_string_escapes_quotes() {
-    assert_eq!(escape_html_string(Some("He said \"hello\"")), "He said &quot;hello&quot;");
+    assert_eq!(
+        escape_html_string(Some("He said \"hello\"")),
+        "He said &quot;hello&quot;"
+    );
 }
 
 // port: test/javascript/text_utils.test.js:46 "handles empty string"
@@ -152,7 +154,10 @@ fn levenshtein_counts_multiple_changes() {
 // port: test/javascript/text_utils.test.js:126 "is symmetric"
 #[test]
 fn levenshtein_is_symmetric() {
-    assert_eq!(levenshtein_distance("abc", "def"), levenshtein_distance("def", "abc"));
+    assert_eq!(
+        levenshtein_distance("abc", "def"),
+        levenshtein_distance("def", "abc")
+    );
 }
 
 // port: test/javascript/text_utils.test.js:130 "handles empty strings"

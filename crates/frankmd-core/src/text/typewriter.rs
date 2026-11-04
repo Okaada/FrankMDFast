@@ -19,7 +19,10 @@ pub fn calculate_typewriter_scroll(cursor_y: f64, viewport_height: f64, target_r
 /// Current/total lines for a byte offset `cursor` (clamped to the text).
 pub fn get_typewriter_sync_data(text: &str, cursor: usize) -> TypewriterSyncData {
     let before = js_substring(text, 0, cursor);
-    CursorInfo { current_line: line_count(before), total_lines: line_count(text) }
+    CursorInfo {
+        current_line: line_count(before),
+        total_lines: line_count(text),
+    }
 }
 
 /// `(current_line - 1) / (total_lines - 1)` clamped to `0..=1`; 0 when

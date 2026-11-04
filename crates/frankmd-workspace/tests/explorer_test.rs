@@ -3,25 +3,46 @@
 use frankmd_workspace::explorer::*;
 
 fn file(p: &str) -> Item {
-    Item { path: p.into(), kind: ItemKind::File }
+    Item {
+        path: p.into(),
+        kind: ItemKind::File,
+    }
 }
 fn folder(p: &str) -> Item {
-    Item { path: p.into(), kind: ItemKind::Folder }
+    Item {
+        path: p.into(),
+        kind: ItemKind::Folder,
+    }
 }
 fn ctrl() -> Modifiers {
-    Modifiers { ctrl: true, shift: false }
+    Modifiers {
+        ctrl: true,
+        shift: false,
+    }
 }
 fn shift() -> Modifiers {
-    Modifiers { ctrl: false, shift: true }
+    Modifiers {
+        ctrl: false,
+        shift: true,
+    }
 }
 fn ctrl_shift() -> Modifiers {
-    Modifiers { ctrl: true, shift: true }
+    Modifiers {
+        ctrl: true,
+        shift: true,
+    }
 }
 fn paths(items: &[Item]) -> Vec<&str> {
     items.iter().map(|i| i.path.as_str()).collect()
 }
 fn visible() -> Vec<Item> {
-    vec![folder("docs"), file("docs/a.md"), file("b.md"), file("c.md"), file("d.md")]
+    vec![
+        folder("docs"),
+        file("docs/a.md"),
+        file("b.md"),
+        file("c.md"),
+        file("d.md"),
+    ]
 }
 
 #[test]
@@ -166,7 +187,10 @@ fn no_context_menu_for_config_file() {
 fn menu_items_per_target() {
     // adapts: test/system/explorer_background_test.rb:6 "clicking the explorer's empty area deselects and offers the explorer menu (#261, #267)"
     use MenuItem::*;
-    assert_eq!(Explorer::menu_items(&MenuTarget::Row(file("a.md"))), [Rename, MoveTo, Delete]);
+    assert_eq!(
+        Explorer::menu_items(&MenuTarget::Row(file("a.md"))),
+        [Rename, MoveTo, Delete]
+    );
     assert_eq!(
         Explorer::menu_items(&MenuTarget::Row(folder("a"))),
         [NewNote, NewFolder, Rename, MoveTo, Delete]
@@ -196,7 +220,12 @@ fn delete_targets_dedupe_and_drop_nested_and_config() {
 
 fn drag_setup() -> Explorer {
     let mut e = Explorer::default();
-    let v = vec![file("first.md"), file("second.md"), file("rooted.md"), folder("target")];
+    let v = vec![
+        file("first.md"),
+        file("second.md"),
+        file("rooted.md"),
+        folder("target"),
+    ];
     e.click(file("first.md"), Modifiers::default(), &v);
     e.click(file("second.md"), ctrl(), &v);
     e
@@ -213,7 +242,10 @@ fn multi_drag_moves_whole_selection() {
     let plan = e.drop(&DropHover::Folder("target".into()));
     assert_eq!(
         plan,
-        Some(MovePlan { items: vec!["first.md".into(), "second.md".into()], dest: "target".into() })
+        Some(MovePlan {
+            items: vec!["first.md".into(), "second.md".into()],
+            dest: "target".into()
+        })
     );
     assert!(!e.is_dragging());
 }
@@ -249,7 +281,10 @@ fn drop_on_note_moves_into_its_folder() {
     assert_eq!(e.drop_target(&DropHover::File("b.md".into())), None);
     e.end_drag();
     e.begin_drag(file("docs/a.md"));
-    assert_eq!(e.drop_target(&DropHover::File("b.md".into())), Some(DropTarget::Root));
+    assert_eq!(
+        e.drop_target(&DropHover::File("b.md".into())),
+        Some(DropTarget::Root)
+    );
     assert_eq!(e.drop_target(&DropHover::File("docs/z.md".into())), None);
 }
 
@@ -259,7 +294,13 @@ fn drop_on_background_moves_to_root() {
     let mut e = Explorer::default();
     e.begin_drag(file("docs/a.md"));
     let plan = e.drop(&DropHover::Background);
-    assert_eq!(plan, Some(MovePlan { items: vec!["docs/a.md".into()], dest: String::new() }));
+    assert_eq!(
+        plan,
+        Some(MovePlan {
+            items: vec!["docs/a.md".into()],
+            dest: String::new()
+        })
+    );
     e.begin_drag(file("b.md"));
     assert_eq!(e.drop_target(&DropHover::Background), None);
     assert_eq!(e.drop(&DropHover::Background), None);
@@ -321,7 +362,10 @@ fn remove_drops_descendants_only() {
     e.toggle_selected(file("docs-old/x.md"));
     e.set_cursor(Some("docs/a.md".into()));
     e.remove("docs");
-    assert_eq!(e.expanded().iter().map(String::as_str).collect::<Vec<_>>(), ["docs-old"]);
+    assert_eq!(
+        e.expanded().iter().map(String::as_str).collect::<Vec<_>>(),
+        ["docs-old"]
+    );
     assert_eq!(paths(&e.selection()), ["docs-old/x.md"]);
     assert_eq!(e.cursor(), None);
 }
@@ -354,11 +398,25 @@ fn toggle_and_expand() {
 #[test]
 fn type_ahead_wraps_and_ignores_case_and_extension() {
     // ui-spec §5.14
-    let v = vec![folder("Docs"), file("docs/alpha.md"), file("beta.md"), file("Bravo.md")];
+    let v = vec![
+        folder("Docs"),
+        file("docs/alpha.md"),
+        file("beta.md"),
+        file("Bravo.md"),
+    ];
     assert_eq!(type_ahead(&v, None, "b").as_deref(), Some("beta.md"));
-    assert_eq!(type_ahead(&v, Some("beta.md"), "b").as_deref(), Some("Bravo.md"));
-    assert_eq!(type_ahead(&v, Some("Bravo.md"), "b").as_deref(), Some("beta.md"));
-    assert_eq!(type_ahead(&v, Some("beta.md"), "al").as_deref(), Some("docs/alpha.md"));
+    assert_eq!(
+        type_ahead(&v, Some("beta.md"), "b").as_deref(),
+        Some("Bravo.md")
+    );
+    assert_eq!(
+        type_ahead(&v, Some("Bravo.md"), "b").as_deref(),
+        Some("beta.md")
+    );
+    assert_eq!(
+        type_ahead(&v, Some("beta.md"), "al").as_deref(),
+        Some("docs/alpha.md")
+    );
     assert_eq!(type_ahead(&v, None, "md"), None);
     assert_eq!(type_ahead(&[], None, "a"), None);
 }

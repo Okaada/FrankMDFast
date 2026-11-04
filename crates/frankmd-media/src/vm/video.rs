@@ -156,13 +156,17 @@ impl VideoDialog {
         self.generation = generation;
         self.youtube_enabled = youtube_enabled;
         self.extensions = if video_extensions.is_empty() {
-            crate::config::DEFAULT_VIDEO_EXTENSIONS.iter().map(|e| (*e).to_owned()).collect()
+            crate::config::DEFAULT_VIDEO_EXTENSIONS
+                .iter()
+                .map(|e| (*e).to_owned())
+                .collect()
         } else {
             video_extensions
         };
         self.row = StorageRow::new(provider, s3_available);
         self.row.set_mode(RowMode::S3Only, KeyMode::Prefix);
-        self.row.set_default_key(&crate::s3_key::default_s3_prefix(today));
+        self.row
+            .set_default_key(&crate::s3_key::default_s3_prefix(today));
     }
 
     /// Configuration read after opening (YouTube key, video extensions).
@@ -187,9 +191,16 @@ impl VideoDialog {
 
     /// Next / previous tab with wrap.
     pub fn step_tab(&mut self, forward: bool) {
-        let index = VideoTab::ALL.iter().position(|t| *t == self.tab).unwrap_or(0);
+        let index = VideoTab::ALL
+            .iter()
+            .position(|t| *t == self.tab)
+            .unwrap_or(0);
         let n = VideoTab::ALL.len();
-        self.tab = VideoTab::ALL[if forward { (index + 1) % n } else { (index + n - 1) % n }];
+        self.tab = VideoTab::ALL[if forward {
+            (index + 1) % n
+        } else {
+            (index + n - 1) % n
+        }];
     }
 
     /// "Use Hugo shortcode instead of HTML embed".
@@ -239,8 +250,15 @@ impl VideoDialog {
             None
         } else if let Some(id) = crate::url_utils::extract_youtube_id(Some(url)) {
             Some(Detected::YouTube { id })
-        } else if self.extensions.iter().any(|ext| url.to_lowercase().ends_with(ext.as_str())) {
-            Some(Detected::File { url: url.to_owned(), filename: url.rsplit('/').next().unwrap_or(url).to_owned() })
+        } else if self
+            .extensions
+            .iter()
+            .any(|ext| url.to_lowercase().ends_with(ext.as_str()))
+        {
+            Some(Detected::File {
+                url: url.to_owned(),
+                filename: url.rsplit('/').next().unwrap_or(url).to_owned(),
+            })
         } else {
             None
         };
@@ -265,7 +283,9 @@ impl VideoDialog {
 
     /// The YouTube thumbnail to show: `mqdefault.jpg`, then `default.jpg`, then none.
     pub fn url_thumbnail(&self) -> Option<String> {
-        let Some(Detected::YouTube { id }) = &self.detected else { return None };
+        let Some(Detected::YouTube { id }) = &self.detected else {
+            return None;
+        };
         match self.thumb_stage {
             0 => Some(format!("https://img.youtube.com/vi/{id}/mqdefault.jpg")),
             1 => Some(format!("https://img.youtube.com/vi/{id}/default.jpg")),
@@ -289,7 +309,11 @@ impl VideoDialog {
 
     /// Enter in the URL field: inserts only when something was detected.
     pub fn url_enter(&mut self) -> Vec<VideoEffect> {
-        if self.detected.is_some() { self.confirm() } else { Vec::new() }
+        if self.detected.is_some() {
+            self.confirm()
+        } else {
+            Vec::new()
+        }
     }
 
     /// Insert button / Ctrl+Enter (`insertVideo`): nothing detected just closes.
@@ -300,10 +324,18 @@ impl VideoDialog {
                 None => vec![VideoEffect::Close],
             };
         }
-        let detected = if self.tab == VideoTab::Upload { &self.upload_detected } else { &self.detected };
+        let detected = if self.tab == VideoTab::Upload {
+            &self.upload_detected
+        } else {
+            &self.detected
+        };
         match detected {
-            Some(Detected::YouTube { id }) => vec![VideoEffect::Insert(MediaInsert::Block(markup::youtube_embed(id, None, self.hugo)))],
-            Some(Detected::File { url, .. }) => vec![VideoEffect::Insert(MediaInsert::Block(markup::video_file_embed(url)))],
+            Some(Detected::YouTube { id }) => vec![VideoEffect::Insert(MediaInsert::Block(
+                markup::youtube_embed(id, None, self.hugo),
+            ))],
+            Some(Detected::File { url, .. }) => vec![VideoEffect::Insert(MediaInsert::Block(
+                markup::video_file_embed(url),
+            ))],
             None => vec![VideoEffect::Close],
         }
     }
@@ -312,7 +344,11 @@ impl VideoDialog {
 
     /// Enter / Space / click on the dropzone.
     pub fn choose_file(&self) -> Vec<VideoEffect> {
-        if matches!(self.upload, UploadState::Uploading { .. }) { Vec::new() } else { vec![VideoEffect::ChooseFile] }
+        if matches!(self.upload, UploadState::Uploading { .. }) {
+            Vec::new()
+        } else {
+            vec![VideoEffect::ChooseFile]
+        }
     }
 
     /// Dropped / chosen files: only the first is used; wrong types are refused;
@@ -321,28 +357,45 @@ impl VideoDialog {
         if matches!(self.upload, UploadState::Uploading { .. }) {
             return Vec::new();
         }
-        let Some(file) = files.into_iter().next() else { return Vec::new() };
+        let Some(file) = files.into_iter().next() else {
+            return Vec::new();
+        };
         let lower = file.name.to_lowercase();
-        if !self.extensions.iter().any(|ext| lower.ends_with(ext.as_str())) {
+        if !self
+            .extensions
+            .iter()
+            .any(|ext| lower.ends_with(ext.as_str()))
+        {
             let ext = match lower.rfind('.') {
                 Some(dot) if dot + 1 < lower.len() => Text::Raw(lower[dot..].to_owned()),
                 _ => Text::key("dialogs.image_picker.no_file_extension"),
             };
             self.upload_feedback = Some(Text::Key(
                 "dialogs.video.drop_rejected",
-                vec![("name", Text::Raw(file.name.clone())), ("ext", ext), ("list", Text::Raw(self.extensions.join(", ")))],
+                vec![
+                    ("name", Text::Raw(file.name.clone())),
+                    ("ext", ext),
+                    ("list", Text::Raw(self.extensions.join(", "))),
+                ],
             ));
             return Vec::new();
         }
         self.upload_feedback = None;
         self.upload_detected = None;
-        self.upload = UploadState::Uploading { name: file.name.clone() };
-        vec![VideoEffect::Upload { file, s3_prefix: self.row.key_value() }]
+        self.upload = UploadState::Uploading {
+            name: file.name.clone(),
+        };
+        vec![VideoEffect::Upload {
+            file,
+            s3_prefix: self.row.key_value(),
+        }]
     }
 
     /// The upload finished.
     pub fn upload_result(&mut self, result: Result<String, StoreError>) -> Vec<VideoEffect> {
-        let UploadState::Uploading { name } = std::mem::take(&mut self.upload) else { return Vec::new() };
+        let UploadState::Uploading { name } = std::mem::take(&mut self.upload) else {
+            return Vec::new();
+        };
         match result {
             Ok(url) => {
                 let filename = url.rsplit('/').next().unwrap_or(&url).to_owned();
@@ -356,7 +409,11 @@ impl VideoDialog {
                 } else {
                     Text::Raw(error.message)
                 });
-                if self.row.provider() == Provider::S3 || error.fallback { vec![VideoEffect::RefreshStorage] } else { Vec::new() }
+                if self.row.provider() == Provider::S3 || error.fallback {
+                    vec![VideoEffect::RefreshStorage]
+                } else {
+                    Vec::new()
+                }
             }
         }
     }
@@ -400,7 +457,10 @@ impl VideoDialog {
         self.selected = None;
         self.status = Some(Text::key("status.searching"));
         self.status_error = false;
-        vec![VideoEffect::Search { generation: self.generation, query }]
+        vec![VideoEffect::Search {
+            generation: self.generation,
+            query,
+        }]
     }
 
     /// Results arrived.
@@ -421,7 +481,10 @@ impl VideoDialog {
                 self.status = Some(if self.results.is_empty() {
                     Text::key("status.no_videos_found")
                 } else {
-                    Text::with("status.found_videos", &[("count", &self.results.len().to_string())])
+                    Text::with(
+                        "status.found_videos",
+                        &[("count", &self.results.len().to_string())],
+                    )
                 });
             }
             Err(error) => {
@@ -497,14 +560,29 @@ impl VideoDialog {
             .thumbnail
             .clone()
             .filter(|t| !t.is_empty())
-            .or_else(|| video.id.as_ref().map(|id| format!("https://img.youtube.com/vi/{id}/mqdefault.jpg")))
+            .or_else(|| {
+                video
+                    .id
+                    .as_ref()
+                    .map(|id| format!("https://img.youtube.com/vi/{id}/mqdefault.jpg"))
+            })
     }
 
     /// Click / Enter on a result: insert immediately and close.
     pub fn choose_result(&mut self, index: usize) -> Vec<VideoEffect> {
-        let Some(video) = self.results.get(index) else { return Vec::new() };
-        let Some(id) = video.id.clone().filter(|id| !id.is_empty()) else { return Vec::new() };
-        let title = video.title.clone().filter(|t| !t.is_empty()).unwrap_or_else(|| markup::YOUTUBE_SEARCH_FALLBACK_TITLE.to_owned());
-        vec![VideoEffect::Insert(MediaInsert::Block(markup::youtube_embed(&id, Some(&title), self.hugo)))]
+        let Some(video) = self.results.get(index) else {
+            return Vec::new();
+        };
+        let Some(id) = video.id.clone().filter(|id| !id.is_empty()) else {
+            return Vec::new();
+        };
+        let title = video
+            .title
+            .clone()
+            .filter(|t| !t.is_empty())
+            .unwrap_or_else(|| markup::YOUTUBE_SEARCH_FALLBACK_TITLE.to_owned());
+        vec![VideoEffect::Insert(MediaInsert::Block(
+            markup::youtube_embed(&id, Some(&title), self.hugo),
+        ))]
     }
 }

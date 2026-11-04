@@ -10,7 +10,12 @@ use frankmd_testkit::{assert_cases, decode_js, golden};
 fn js_url_utils() {
     let g = golden("js_url_utils");
     assert_cases("js_url_utils", &g.cases, |c| {
-        let arg = decode_js(c.input.as_array().and_then(|a| a.first()).unwrap_or(&Value::Null));
+        let arg = decode_js(
+            c.input
+                .as_array()
+                .and_then(|a| a.first())
+                .unwrap_or(&Value::Null),
+        );
         let arg = arg.as_str();
         let got = match c.func.as_deref() {
             Some("encodePath") => Value::String(encode_path(arg)),
@@ -18,6 +23,10 @@ fn js_url_utils() {
             other => return Err(format!("unknown fn {other:?}")),
         };
         let want = decode_js(&c.expected);
-        if got == want { Ok(()) } else { Err(format!("input {arg:?}: expected {want}, got {got}")) }
+        if got == want {
+            Ok(())
+        } else {
+            Err(format!("input {arg:?}: expected {want}, got {got}"))
+        }
     });
 }

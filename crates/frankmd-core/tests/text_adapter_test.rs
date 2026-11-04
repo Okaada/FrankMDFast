@@ -9,8 +9,8 @@ use std::rc::Rc;
 
 use fake_editor::{Call, FakeEditor};
 use frankmd_core::text::insertion::{
-    CursorInfo, CursorPosition, EditorSurface, InputEvent, Selection, TextareaAdapter, get_cursor_info,
-    get_cursor_position, get_editor_content, get_editor_selection,
+    CursorInfo, CursorPosition, EditorSurface, InputEvent, Selection, TextareaAdapter,
+    get_cursor_info, get_cursor_position, get_editor_content, get_editor_selection,
 };
 
 fn adapter(ed: &mut FakeEditor) -> TextareaAdapter<'_> {
@@ -18,7 +18,11 @@ fn adapter(ed: &mut FakeEditor) -> TextareaAdapter<'_> {
 }
 
 fn sel(from: usize, to: usize, text: &str) -> Selection {
-    Selection { from, to, text: text.to_owned() }
+    Selection {
+        from,
+        to,
+        text: text.to_owned(),
+    }
 }
 
 // ---- createTextareaAdapter ----------------------------------------------------
@@ -59,14 +63,20 @@ fn adapter_value_setter() {
 // port: test/javascript/lib/codemirror_adapter.test.js:41 "creates adapter with selectionStart getter"
 #[test]
 fn adapter_selection_start_getter() {
-    let mut ed = FakeEditor { selection: sel(5, 10, "hello"), ..FakeEditor::default() };
+    let mut ed = FakeEditor {
+        selection: sel(5, 10, "hello"),
+        ..FakeEditor::default()
+    };
     assert_eq!(adapter(&mut ed).selection_start(), 5);
 }
 
 // port: test/javascript/lib/codemirror_adapter.test.js:51 "creates adapter with selectionEnd getter"
 #[test]
 fn adapter_selection_end_getter() {
-    let mut ed = FakeEditor { selection: sel(5, 10, "hello"), ..FakeEditor::default() };
+    let mut ed = FakeEditor {
+        selection: sel(5, 10, "hello"),
+        ..FakeEditor::default()
+    };
     assert_eq!(adapter(&mut ed).selection_end(), 10);
 }
 
@@ -130,13 +140,19 @@ fn adapter_ignores_dispatch_without_handler() {
 #[test]
 fn content_from_controller() {
     let ed = FakeEditor::with_text("controller content");
-    assert_eq!(get_editor_content(Some(&ed as &dyn EditorSurface), None), "controller content");
+    assert_eq!(
+        get_editor_content(Some(&ed as &dyn EditorSurface), None),
+        "controller content"
+    );
 }
 
 // port: test/javascript/lib/codemirror_adapter.test.js:132 "returns content from fallback textarea when controller is null"
 #[test]
 fn content_from_fallback_textarea() {
-    assert_eq!(get_editor_content(None, Some("textarea content")), "textarea content");
+    assert_eq!(
+        get_editor_content(None, Some("textarea content")),
+        "textarea content"
+    );
 }
 
 // port: test/javascript/lib/codemirror_adapter.test.js:137 "returns empty string when both are null"
@@ -149,7 +165,10 @@ fn content_empty_when_both_missing() {
 #[test]
 fn content_prefers_controller_over_fallback() {
     let ed = FakeEditor::with_text("controller content");
-    assert_eq!(get_editor_content(Some(&ed as &dyn EditorSurface), Some("textarea content")), "controller content");
+    assert_eq!(
+        get_editor_content(Some(&ed as &dyn EditorSurface), Some("textarea content")),
+        "controller content"
+    );
 }
 
 // ---- getEditorSelection ----------------------------------------------------------
@@ -157,8 +176,14 @@ fn content_prefers_controller_over_fallback() {
 // port: test/javascript/lib/codemirror_adapter.test.js:152 "returns selection from controller"
 #[test]
 fn selection_from_controller() {
-    let ed = FakeEditor { selection: sel(10, 20, "selected"), ..FakeEditor::default() };
-    assert_eq!(get_editor_selection(Some(&ed as &dyn EditorSurface)), sel(10, 20, "selected"));
+    let ed = FakeEditor {
+        selection: sel(10, 20, "selected"),
+        ..FakeEditor::default()
+    };
+    assert_eq!(
+        get_editor_selection(Some(&ed as &dyn EditorSurface)),
+        sel(10, 20, "selected")
+    );
 }
 
 // port: test/javascript/lib/codemirror_adapter.test.js:164 "returns default selection when controller is null"
@@ -172,15 +197,29 @@ fn selection_default_without_controller() {
 // port: test/javascript/lib/codemirror_adapter.test.js:170 "returns position from controller"
 #[test]
 fn cursor_position_from_controller() {
-    let pos = CursorPosition { line: 5, column: 10, offset: 45 };
-    let ed = FakeEditor { cursor: pos, ..FakeEditor::default() };
+    let pos = CursorPosition {
+        line: 5,
+        column: 10,
+        offset: 45,
+    };
+    let ed = FakeEditor {
+        cursor: pos,
+        ..FakeEditor::default()
+    };
     assert_eq!(get_cursor_position(Some(&ed as &dyn EditorSurface)), pos);
 }
 
 // port: test/javascript/lib/codemirror_adapter.test.js:182 "returns default position when controller is null"
 #[test]
 fn cursor_position_default_without_controller() {
-    assert_eq!(get_cursor_position(None), CursorPosition { line: 1, column: 1, offset: 0 });
+    assert_eq!(
+        get_cursor_position(None),
+        CursorPosition {
+            line: 1,
+            column: 1,
+            offset: 0
+        }
+    );
 }
 
 // ---- getCursorInfo -------------------------------------------------------------------
@@ -188,13 +227,25 @@ fn cursor_position_default_without_controller() {
 // port: test/javascript/lib/codemirror_adapter.test.js:188 "returns cursor info from controller"
 #[test]
 fn cursor_info_from_controller() {
-    let info = CursorInfo { current_line: 7, total_lines: 100 };
-    let ed = FakeEditor { info, ..FakeEditor::default() };
+    let info = CursorInfo {
+        current_line: 7,
+        total_lines: 100,
+    };
+    let ed = FakeEditor {
+        info,
+        ..FakeEditor::default()
+    };
     assert_eq!(get_cursor_info(Some(&ed as &dyn EditorSurface)), info);
 }
 
 // port: test/javascript/lib/codemirror_adapter.test.js:199 "returns default info when controller is null"
 #[test]
 fn cursor_info_default_without_controller() {
-    assert_eq!(get_cursor_info(None), CursorInfo { current_line: 1, total_lines: 1 });
+    assert_eq!(
+        get_cursor_info(None),
+        CursorInfo {
+            current_line: 1,
+            total_lines: 1
+        }
+    );
 }

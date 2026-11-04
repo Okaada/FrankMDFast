@@ -50,15 +50,31 @@ fn search_finds_matches_and_opens_at_the_line(cx: &mut TestAppContext) {
     let w = shell.window;
     harness::press(cx, w, "ctrl-2 ctrl-shift-f");
     assert_eq!(shell.overlay(cx), Some(OverlayKind::SearchInFiles));
-    assert!(harness::has_focus(cx, w, "search-input") || harness::is_shown(cx, w, "search-overlay"));
+    assert!(
+        harness::has_focus(cx, w, "search-input") || harness::is_shown(cx, w, "search-overlay")
+    );
     harness::type_text(cx, w, "sh.p");
     settle(cx, &shell);
     let status = shell.view.read_with(cx, |s, _| s.content_search().status());
-    assert_eq!(status, SearchStatus::Count { matches: 1, notes: 1, truncated: false });
-    assert!(harness::is_shown(cx, w, "search-result-projects/Launch list.md-3"));
+    assert_eq!(
+        status,
+        SearchStatus::Count {
+            matches: 1,
+            notes: 1,
+            truncated: false
+        }
+    );
+    assert!(harness::is_shown(
+        cx,
+        w,
+        "search-result-projects/Launch list.md-3"
+    ));
     harness::press(cx, w, "enter");
     assert_eq!(shell.overlay(cx), None);
-    assert_eq!(shell.active_note(cx).as_deref(), Some("projects/Launch list.md"));
+    assert_eq!(
+        shell.active_note(cx).as_deref(),
+        Some("projects/Launch list.md")
+    );
     assert_eq!(shell.focus_region(cx), Some(FocusRegion::Editor));
 }
 
@@ -72,15 +88,23 @@ fn search_toggles_change_matching(cx: &mut TestAppContext) {
     settle(cx, &shell);
     click(cx, &shell, "search-regex");
     settle(cx, &shell);
-    assert_eq!(shell.view.read_with(cx, |s, _| s.content_search().status()), SearchStatus::NoMatches);
+    assert_eq!(
+        shell.view.read_with(cx, |s, _| s.content_search().status()),
+        SearchStatus::NoMatches
+    );
     click(cx, &shell, "search-regex");
     click(cx, &shell, "search-case");
-    let input = shell.view.read_with(cx, |s, _| s.content_search().query().to_owned());
+    let input = shell
+        .view
+        .read_with(cx, |s, _| s.content_search().query().to_owned());
     assert_eq!(input, "sh.p");
     harness::press(cx, w, "ctrl-a");
     harness::type_text(cx, w, "INBOX");
     settle(cx, &shell);
-    assert_eq!(shell.view.read_with(cx, |s, _| s.content_search().status()), SearchStatus::NoMatches);
+    assert_eq!(
+        shell.view.read_with(cx, |s, _| s.content_search().status()),
+        SearchStatus::NoMatches
+    );
     click(cx, &shell, "search-case");
     settle(cx, &shell);
     assert!(matches!(
@@ -109,11 +133,18 @@ fn back_and_forward_walk_the_note_history(cx: &mut TestAppContext) {
     click(cx, &shell, "explorer-row-Inbox.md");
     assert_eq!(shell.active_note(cx).as_deref(), Some("Inbox.md"));
     harness::press(cx, w, "ctrl-alt-left");
-    assert_eq!(shell.active_note(cx).as_deref(), Some("blog/2026/Project brief.md"));
+    assert_eq!(
+        shell.active_note(cx).as_deref(),
+        Some("blog/2026/Project brief.md")
+    );
     harness::press(cx, w, "ctrl-alt-right");
     assert_eq!(shell.active_note(cx).as_deref(), Some("Inbox.md"));
     harness::press(cx, w, "ctrl-alt-left ctrl-alt-left");
-    assert_eq!(shell.active_note(cx), None, "past the first note is the empty state");
+    assert_eq!(
+        shell.active_note(cx),
+        None,
+        "past the first note is the empty state"
+    );
     assert!(harness::is_shown(cx, w, "empty-state"));
 }
 
@@ -124,15 +155,28 @@ fn ctrl_tab_switches_to_the_previous_note(cx: &mut TestAppContext) {
     let w = shell.window;
     click(cx, &shell, "explorer-row-Inbox.md");
     harness::press(cx, w, "ctrl-2 ctrl-tab");
-    assert_eq!(shell.overlay(cx), Some(OverlayKind::Dialog("recent-switcher")));
-    assert!(harness::is_shown(cx, w, "recent-switcher-row-blog/2026/Project brief.md"));
+    assert_eq!(
+        shell.overlay(cx),
+        Some(OverlayKind::Dialog("recent-switcher"))
+    );
+    assert!(harness::is_shown(
+        cx,
+        w,
+        "recent-switcher-row-blog/2026/Project brief.md"
+    ));
     harness::press(cx, w, "enter");
     assert_eq!(shell.overlay(cx), None);
-    assert_eq!(shell.active_note(cx).as_deref(), Some("blog/2026/Project brief.md"));
+    assert_eq!(
+        shell.active_note(cx).as_deref(),
+        Some("blog/2026/Project brief.md")
+    );
     // Ctrl+Tab twice wraps back to the current note; Esc cancels.
     harness::press(cx, w, "ctrl-tab ctrl-tab escape");
     assert_eq!(shell.overlay(cx), None);
-    assert_eq!(shell.active_note(cx).as_deref(), Some("blog/2026/Project brief.md"));
+    assert_eq!(
+        shell.active_note(cx).as_deref(),
+        Some("blog/2026/Project brief.md")
+    );
 }
 
 // ---- disk banners (§5.12) ----------------------------------------------------------------
@@ -145,9 +189,20 @@ fn external_change_under_unsaved_edits_raises_the_banner_and_compare(cx: &mut Te
     let w = shell.window;
     harness::press(cx, w, "ctrl-2");
     harness::type_text(cx, w, "local edit ");
-    write_on_disk(&shell, "blog/2026/Project brief.md", "# Changed elsewhere\n");
+    write_on_disk(
+        &shell,
+        "blog/2026/Project brief.md",
+        "# Changed elsewhere\n",
+    );
     let path = RelPath::parse("blog/2026/Project brief.md").unwrap();
-    external(cx, &shell, WatchEvent::VaultChanged { paths: vec![path], removed: vec![] });
+    external(
+        cx,
+        &shell,
+        WatchEvent::VaultChanged {
+            paths: vec![path],
+            removed: vec![],
+        },
+    );
     assert!(shell.banners(cx).contains(&BannerKind::ChangedOnDisk));
     click(cx, &shell, "banner-changed-on-disk-compare");
     assert_eq!(shell.overlay(cx), Some(OverlayKind::Dialog("recovery")));
@@ -165,9 +220,20 @@ fn changed_on_disk_reload_takes_the_file(cx: &mut TestAppContext) {
     let w = shell.window;
     harness::press(cx, w, "ctrl-2");
     harness::type_text(cx, w, "local edit ");
-    write_on_disk(&shell, "blog/2026/Project brief.md", "# Changed elsewhere\n");
+    write_on_disk(
+        &shell,
+        "blog/2026/Project brief.md",
+        "# Changed elsewhere\n",
+    );
     let path = RelPath::parse("blog/2026/Project brief.md").unwrap();
-    external(cx, &shell, WatchEvent::VaultChanged { paths: vec![path], removed: vec![] });
+    external(
+        cx,
+        &shell,
+        WatchEvent::VaultChanged {
+            paths: vec![path],
+            removed: vec![],
+        },
+    );
     click(cx, &shell, "banner-changed-on-disk-reload");
     assert!(!shell.banners(cx).contains(&BannerKind::ChangedOnDisk));
 }
@@ -178,9 +244,20 @@ fn deleted_on_disk_offers_save_again(cx: &mut TestAppContext) {
     let shell = open_shell(cx, WIDE, VaultFixture::sample());
     std::fs::remove_file(shell.root.join("blog/2026/Project brief.md")).unwrap();
     let path = RelPath::parse("blog/2026/Project brief.md").unwrap();
-    external(cx, &shell, WatchEvent::VaultChanged { paths: vec![path.clone()], removed: vec![path] });
+    external(
+        cx,
+        &shell,
+        WatchEvent::VaultChanged {
+            paths: vec![path.clone()],
+            removed: vec![path],
+        },
+    );
     assert!(shell.banners(cx).contains(&BannerKind::DeletedOnDisk));
-    assert!(harness::is_shown(cx, shell.window, "banner-deleted-on-disk-save-again"));
+    assert!(harness::is_shown(
+        cx,
+        shell.window,
+        "banner-deleted-on-disk-save-again"
+    ));
     click(cx, &shell, "banner-deleted-on-disk-close");
     assert_eq!(shell.active_note(cx), None);
 }
@@ -197,8 +274,14 @@ fn sidebar_splitter_resizes_and_persists(cx: &mut TestAppContext) {
     harness::press(cx, w, "right right");
     let after = shell.view.read_with(cx, |s, _| s.sidebar_width());
     assert!((after - before - 32.0).abs() < 0.5, "{before} → {after}");
-    assert!(shell.ui_state_json().contains(&format!("{after}")), "{}", shell.ui_state_json());
-    harness::in_window(cx, w, |window, cx| window.double_click("splitter-sidebar", cx));
+    assert!(
+        shell.ui_state_json().contains(&format!("{after}")),
+        "{}",
+        shell.ui_state_json()
+    );
+    harness::in_window(cx, w, |window, cx| {
+        window.double_click("splitter-sidebar", cx)
+    });
     let reset = shell.view.read_with(cx, |s, _| s.sidebar_width());
     assert!((reset - before).abs() < 0.5);
 }
@@ -212,8 +295,14 @@ fn preview_splitter_is_clamped(cx: &mut TestAppContext) {
     for _ in 0..60 {
         harness::press(cx, w, "right");
     }
-    let (ratio, panes) = shell.view.read_with(cx, |s, _| (s.preview_ratio(), 1280.0 - s.sidebar_width()));
-    assert!(ratio * panes >= 279.0, "preview keeps 280 px: {}", ratio * panes);
+    let (ratio, panes) = shell
+        .view
+        .read_with(cx, |s, _| (s.preview_ratio(), 1280.0 - s.sidebar_width()));
+    assert!(
+        ratio * panes >= 279.0,
+        "preview keeps 280 px: {}",
+        ratio * panes
+    );
 }
 
 // ---- settings: Media / Integrations / Hugo and the scope toggle (§5.16) -------------------
@@ -224,7 +313,11 @@ fn settings_has_media_integrations_and_hugo_rows(cx: &mut TestAppContext) {
     let w = shell.window;
     harness::press(cx, w, "ctrl-2 ctrl-,");
     click(cx, &shell, "settings-category-media");
-    for id in ["setting-row-provider", "setting-row-images_path", "setting-row-s3_secret_key"] {
+    for id in [
+        "setting-row-provider",
+        "setting-row-images_path",
+        "setting-row-s3_secret_key",
+    ] {
         assert!(harness::is_shown(cx, w, id), "{id}");
     }
     click(cx, &shell, "settings-category-integrations");
@@ -232,23 +325,38 @@ fn settings_has_media_integrations_and_hugo_rows(cx: &mut TestAppContext) {
     assert!(harness::is_shown(cx, w, "setting-openai_key-state"));
     click(cx, &shell, "settings-category-hugo");
     click(cx, &shell, "setting-path_style-flat");
-    assert!(std::fs::read_to_string(shell.root.join(".fed")).unwrap().contains("hugo_path_style = flat"));
+    assert!(
+        std::fs::read_to_string(shell.root.join(".fed"))
+            .unwrap()
+            .contains("hugo_path_style = flat")
+    );
 }
 
 // ui-spec §5.16: secrets are never echoed: "Set" + a masked input that starts empty.
 #[gpui_kit::test]
 fn secrets_are_masked_and_replaced_through_an_empty_input(cx: &mut TestAppContext) {
     let shell = open_shell(cx, WIDE, VaultFixture::sample());
-    std::fs::write(shell.root.join(".fed"), "openai_api_key = sk-secret-value\n").unwrap();
+    std::fs::write(
+        shell.root.join(".fed"),
+        "openai_api_key = sk-secret-value\n",
+    )
+    .unwrap();
     external(cx, &shell, WatchEvent::ConfigChanged);
     let w = shell.window;
     harness::press(cx, w, "ctrl-2 ctrl-,");
     click(cx, &shell, "settings-category-integrations");
     click(cx, &shell, "setting-openai_key-change");
     let value = harness::in_window(cx, w, |window, _| {
-        window.find("setting-openai_key").value().unwrap_or_default().to_string()
+        window
+            .find("setting-openai_key")
+            .value()
+            .unwrap_or_default()
+            .to_string()
     });
-    assert!(!value.contains("sk-secret"), "the stored secret is not put in the input: {value:?}");
+    assert!(
+        !value.contains("sk-secret"),
+        "the stored secret is not put in the input: {value:?}"
+    );
     harness::in_window(cx, w, |window, cx| window.click("setting-openai_key", cx));
     harness::type_text(cx, w, "sk-new");
     harness::press(cx, w, "enter");
@@ -269,12 +377,20 @@ fn global_scope_writes_the_global_config(cx: &mut TestAppContext) {
     assert!(global.contains("hugo_path_style"), "{global}");
     // `.fed` may carry the template's commented `# hugo_path_style = …` line, never a value.
     let fed = std::fs::read_to_string(shell.root.join(".fed")).unwrap_or_default();
-    assert!(!fed.lines().any(|l| l.trim_start().starts_with("hugo_path_style")), "{fed}");
+    assert!(
+        !fed.lines()
+            .any(|l| l.trim_start().starts_with("hugo_path_style")),
+        "{fed}"
+    );
 }
 
 // ---- recovery dialog (§5.11) ---------------------------------------------------------------
 
-fn recovery_request(path: &str, file: &str, draft: &str) -> frankmd_workspace::autosave::RecoveryRequest {
+fn recovery_request(
+    path: &str,
+    file: &str,
+    draft: &str,
+) -> frankmd_workspace::autosave::RecoveryRequest {
     frankmd_workspace::autosave::RecoveryRequest {
         path: path.into(),
         server_content: file.into(),
@@ -292,14 +408,24 @@ fn recovery_request(path: &str, file: &str, draft: &str) -> frankmd_workspace::a
 fn recovery_dialog_shows_the_diff_and_keep_both_writes_a_copy(cx: &mut TestAppContext) {
     let shell = open_shell(cx, WIDE, VaultFixture::sample());
     let w = shell.window;
-    let request = recovery_request("blog/2026/Project brief.md", "# Project brief\n\nBody.\n", "# Project brief\n\nNew body.\n");
+    let request = recovery_request(
+        "blog/2026/Project brief.md",
+        "# Project brief\n\nBody.\n",
+        "# Project brief\n\nNew body.\n",
+    );
     let view = shell.view.clone();
-    harness::in_window(cx, w, move |window, cx| view.update(cx, |s, cx| s.open_recovery(request, window, cx)));
+    harness::in_window(cx, w, move |window, cx| {
+        view.update(cx, |s, cx| s.open_recovery(request, window, cx))
+    });
     assert!(harness::is_shown(cx, w, "dialog-recovery"));
     assert!(harness::is_shown(cx, w, "recovery-file"));
     assert!(harness::is_shown(cx, w, "recovery-draft"));
     harness::press(cx, w, "escape");
-    assert_eq!(shell.overlay(cx), Some(OverlayKind::Dialog("recovery")), "Esc does nothing (FE-146)");
+    assert_eq!(
+        shell.overlay(cx),
+        Some(OverlayKind::Dialog("recovery")),
+        "Esc does nothing (FE-146)"
+    );
     click(cx, &shell, "recovery-keep-both");
     assert_eq!(shell.overlay(cx), None);
     let copies: Vec<String> = std::fs::read_dir(shell.root.join("blog/2026"))
@@ -308,7 +434,9 @@ fn recovery_dialog_shows_the_diff_and_keep_both_writes_a_copy(cx: &mut TestAppCo
         .filter(|n| n.starts_with("Project brief (draft "))
         .collect();
     assert_eq!(copies.len(), 1, "{copies:?}");
-    let copy = shell.read_note(&format!("blog/2026/{}", copies[0])).unwrap();
+    let copy = shell
+        .read_note(&format!("blog/2026/{}", copies[0]))
+        .unwrap();
     assert_eq!(copy, "# Project brief\n\nNew body.\n");
 }
 
@@ -320,7 +448,9 @@ fn recovery_diff_is_unified_when_narrow(cx: &mut TestAppContext) {
     harness::resize(cx, w, 860.);
     let request = recovery_request("blog/2026/Project brief.md", "a b c", "a x c");
     let view = shell.view.clone();
-    harness::in_window(cx, w, move |window, cx| view.update(cx, |s, cx| s.open_recovery(request, window, cx)));
+    harness::in_window(cx, w, move |window, cx| {
+        view.update(cx, |s, cx| s.open_recovery(request, window, cx))
+    });
     assert!(harness::is_shown(cx, w, "recovery-unified"));
     click(cx, &shell, "recovery-restore-draft");
     assert_eq!(shell.overlay(cx), None);

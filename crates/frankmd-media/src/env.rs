@@ -30,7 +30,10 @@ pub struct MemorySettings {
 impl MemorySettings {
     /// Wrap a config.
     pub fn new(config: MediaConfig) -> Arc<Self> {
-        Arc::new(Self { config: Mutex::new(config), fail_writes: Mutex::new(false) })
+        Arc::new(Self {
+            config: Mutex::new(config),
+            fail_writes: Mutex::new(false),
+        })
     }
 
     /// Mutate the stored config (stands in for the user editing `.fed`).
@@ -50,11 +53,18 @@ impl MemorySettings {
 
 impl SettingsStore for MemorySettings {
     fn current(&self) -> MediaConfig {
-        self.config.lock().unwrap_or_else(std::sync::PoisonError::into_inner).clone()
+        self.config
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .clone()
     }
 
     fn set_provider_local(&self) -> bool {
-        if *self.fail_writes.lock().unwrap_or_else(std::sync::PoisonError::into_inner) {
+        if *self
+            .fail_writes
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+        {
             return false;
         }
         self.update(|c| c.media_storage_provider = Some("local".to_owned()));
@@ -108,11 +118,21 @@ impl MediaEnv {
         http: frankmd_net::TrustedClient,
         egress: frankmd_net::EgressClient,
     ) -> Self {
-        Self { settings, ctx, http, egress, s3_transport: None, limits: UploadLimits::default() }
+        Self {
+            settings,
+            ctx,
+            http,
+            egress,
+            s3_transport: None,
+            limits: UploadLimits::default(),
+        }
     }
 
     /// S3 client for the given snapshot (honours [`MediaEnv::s3_transport`]).
-    pub fn s3_client(&self, config: &MediaConfig) -> Result<crate::s3::S3Client, crate::s3::S3Error> {
+    pub fn s3_client(
+        &self,
+        config: &MediaConfig,
+    ) -> Result<crate::s3::S3Client, crate::s3::S3Error> {
         let client = crate::s3::S3Client::new(&config.s3, &self.http)?;
         Ok(match &self.s3_transport {
             Some(base) => client.with_transport_base(base.clone()),

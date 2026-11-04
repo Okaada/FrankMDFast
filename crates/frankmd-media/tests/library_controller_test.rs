@@ -31,8 +31,20 @@ async fn index_returns_supported_groups_with_metadata() {
     n.write("images/ignored.svg", "not allowed");
     let (vault, e) = (n.vault(), env(config(n.root()), None));
     let data = Library::new(&vault, &e).list().await.expect("list");
-    assert_eq!(data.images.iter().map(|i| i.name.as_str()).collect::<Vec<_>>(), vec!["Photo.png"]);
-    assert_eq!(data.videos.iter().map(|i| i.name.as_str()).collect::<Vec<_>>(), vec!["clip.mp4"]);
+    assert_eq!(
+        data.images
+            .iter()
+            .map(|i| i.name.as_str())
+            .collect::<Vec<_>>(),
+        vec!["Photo.png"]
+    );
+    assert_eq!(
+        data.videos
+            .iter()
+            .map(|i| i.name.as_str())
+            .collect::<Vec<_>>(),
+        vec!["clip.mp4"]
+    );
     assert_eq!(data.images[0].path, "images/Photo.png");
     assert_eq!(data.images[0].preview_url, "/notes/images/Photo.png");
     assert_eq!(data.images[0].kind, MediaKind::Image);
@@ -54,11 +66,18 @@ async fn index_excludes_symlinked_media() {
 #[test]
 fn usage_returns_distinct_counts_only() {
     let n = Notes::new();
-    n.write("first.md", "![first](images/photo.png)\n[again](images/photo.png)\n[clip](videos/clip.mp4)");
+    n.write(
+        "first.md",
+        "![first](images/photo.png)\n[again](images/photo.png)\n[clip](videos/clip.mp4)",
+    );
     n.write("nested/second.md", "![photo](../images/photo.png)");
     n.write("images/unused.png", "unused");
     let (vault, e) = (n.vault(), env(config(n.root()), None));
-    let c = counts(Library::new(&vault, &e).usage(&MediaUsage::new(n.root()), None).expect("usage"));
+    let c = counts(
+        Library::new(&vault, &e)
+            .usage(&MediaUsage::new(n.root()), None)
+            .expect("usage"),
+    );
     assert_eq!(c.get("images/photo.png"), Some(&2));
     assert_eq!(c.get("videos/clip.mp4"), Some(&1));
     assert!(!c.contains_key("images/unused.png"));
@@ -68,20 +87,35 @@ fn usage_returns_distinct_counts_only() {
 #[test]
 fn usage_returns_note_paths_for_requested_item() {
     let n = Notes::new();
-    n.write("first.md", "![photo](images/photo.png)\n[clip](videos/clip.mp4)");
+    n.write(
+        "first.md",
+        "![photo](images/photo.png)\n[clip](videos/clip.mp4)",
+    );
     n.write("second.md", "![photo](images/photo.png)");
     let (vault, e) = (n.vault(), env(config(n.root()), None));
-    let r = Library::new(&vault, &e).usage(&MediaUsage::new(n.root()), Some("images/photo.png")).expect("usage");
-    assert_eq!(r, UsageResponse::Notes(vec!["first.md".into(), "second.md".into()]));
+    let r = Library::new(&vault, &e)
+        .usage(&MediaUsage::new(n.root()), Some("images/photo.png"))
+        .expect("usage");
+    assert_eq!(
+        r,
+        UsageResponse::Notes(vec!["first.md".into(), "second.md".into()])
+    );
 }
 
 // port: test/controllers/library_controller_test.rb:81 "usage counts repeated references from one note once"
 #[test]
 fn usage_counts_repeated_references_once() {
     let n = Notes::new();
-    n.write("repeated.md", "![first](images/photo.png)\n![second](images/photo.png)");
+    n.write(
+        "repeated.md",
+        "![first](images/photo.png)\n![second](images/photo.png)",
+    );
     let (vault, e) = (n.vault(), env(config(n.root()), None));
-    let c = counts(Library::new(&vault, &e).usage(&MediaUsage::new(n.root()), None).expect("usage"));
+    let c = counts(
+        Library::new(&vault, &e)
+            .usage(&MediaUsage::new(n.root()), None)
+            .expect("usage"),
+    );
     assert_eq!(c, BTreeMap::from([("images/photo.png".to_owned(), 1)]));
 }
 
@@ -109,7 +143,9 @@ fn usage_scan_failure_is_localized_error_without_partial_map() {
     let bad = n.write("bad.md", "![x](images/x.png)");
     let _g = chmod(&bad, 0o000); // ScanError "read failed"
     let (vault, e) = (n.vault(), env(config(n.root()), None));
-    let err = Library::new(&vault, &e).usage(&MediaUsage::new(n.root()), None).expect_err("scan failed");
+    let err = Library::new(&vault, &e)
+        .usage(&MediaUsage::new(n.root()), None)
+        .expect_err("scan failed");
     assert!(matches!(err, LibraryError::UsageScanFailed), "{err:?}");
     assert_eq!(err.i18n_key(), Some("library.usage_scan_failed"));
 }
@@ -125,7 +161,9 @@ fn usage_directory_eacces_is_localized_error() {
     n.write("locked/note.md", "![photo](images/photo.png)");
     let _g = chmod(&n.root().join("locked"), 0o000); // Errno::EACCES while walking
     let (vault, e) = (n.vault(), env(config(n.root()), None));
-    let err = Library::new(&vault, &e).usage(&MediaUsage::new(n.root()), None).expect_err("eacces");
+    let err = Library::new(&vault, &e)
+        .usage(&MediaUsage::new(n.root()), None)
+        .expect_err("eacces");
     assert_eq!(err.i18n_key(), Some("library.usage_scan_failed"));
 }
 
@@ -135,7 +173,10 @@ async fn destroy_removes_a_supported_media_file() {
     let n = Notes::new();
     let p = n.write("images/photo.png", "image");
     let (vault, e) = (n.vault(), env(config(n.root()), None));
-    Library::new(&vault, &e).delete("images/photo.png").await.expect("204");
+    Library::new(&vault, &e)
+        .delete("images/photo.png")
+        .await
+        .expect("204");
     assert!(!p.exists());
 }
 
@@ -152,12 +193,25 @@ async fn destroy_rejects_traversal_unrelated_roots_and_unsupported() {
     let unsupported = n.write("images/readme.md", "note");
     let (vault, e) = (n.vault(), env(config(n.root()), None));
     let lib = Library::new(&vault, &e);
-    let base = outside.file_name().expect("name").to_string_lossy().into_owned();
-    assert!(matches!(lib.delete(&format!("images/../{base}")).await, Err(LibraryError::NotFound)));
+    let base = outside
+        .file_name()
+        .expect("name")
+        .to_string_lossy()
+        .into_owned();
+    assert!(matches!(
+        lib.delete(&format!("images/../{base}")).await,
+        Err(LibraryError::NotFound)
+    ));
     assert!(outside.exists());
-    assert!(matches!(lib.delete("attachments/photo.png").await, Err(LibraryError::NotFound)));
+    assert!(matches!(
+        lib.delete("attachments/photo.png").await,
+        Err(LibraryError::NotFound)
+    ));
     assert!(unrelated.exists());
-    assert!(matches!(lib.delete("images/readme.md").await, Err(LibraryError::NotFound)));
+    assert!(matches!(
+        lib.delete("images/readme.md").await,
+        Err(LibraryError::NotFound)
+    ));
     assert!(unsupported.exists());
     let _ = std::fs::remove_file(outside);
 }
@@ -173,7 +227,10 @@ async fn destroy_reports_filesystem_rejection() {
     n.write("images/protected.png", "image");
     let _g = chmod(&n.root().join("images"), 0o555);
     let (vault, e) = (n.vault(), env(config(n.root()), None));
-    let err = Library::new(&vault, &e).delete("images/protected.png").await.expect_err("422");
+    let err = Library::new(&vault, &e)
+        .delete("images/protected.png")
+        .await
+        .expect_err("422");
     assert!(matches!(err, LibraryError::DeleteFailed), "{err:?}");
     assert_eq!(err.i18n_key(), Some("library.delete_failed"));
 }
@@ -185,11 +242,19 @@ async fn s3_provider_routes_list_delete_and_rename_through_s3_library() {
     Mock::given(method("GET"))
         .and(path_regex("^/bucket/?$")) // mechanical: aws-sdk-s3 (Rust) sends `/bucket/` for path-style ListObjectsV2
         .and(query_param("prefix", "frankmd/"))
-        .respond_with(ResponseTemplate::new(200).set_body_string(list_objects_xml("bucket", &[], None)))
+        .respond_with(ResponseTemplate::new(200).set_body_string(list_objects_xml(
+            "bucket",
+            &[],
+            None,
+        )))
         .expect(1)
         .mount(&server)
         .await;
-    Mock::given(method("HEAD")).and(path("/bucket/frankmd/2026/renamed.png")).respond_with(ResponseTemplate::new(404)).mount(&server).await;
+    Mock::given(method("HEAD"))
+        .and(path("/bucket/frankmd/2026/renamed.png"))
+        .respond_with(ResponseTemplate::new(404))
+        .mount(&server)
+        .await;
     Mock::given(method("PUT"))
         .and(path("/bucket/frankmd/2026/renamed.png"))
         .and(header("x-amz-copy-source", "bucket/frankmd/2026/photo.png"))
@@ -204,13 +269,19 @@ async fn s3_provider_routes_list_delete_and_rename_through_s3_library() {
         .mount(&server)
         .await;
     let n = Notes::new();
-    n.write("images/local.png", "local media must not be listed under s3");
+    n.write(
+        "images/local.png",
+        "local media must not be listed under s3",
+    );
     let (vault, e) = (n.vault(), env(s3_config(n.root()), Some(&server.uri())));
     let lib = Library::new(&vault, &e);
     let listing = lib.list().await.expect("list");
     assert!(listing.images.is_empty() && listing.videos.is_empty());
     lib.delete("frankmd/2026/photo.png").await.expect("204");
-    let renamed = lib.rename("frankmd/2026/photo.png", "renamed.png").await.expect("200");
+    let renamed = lib
+        .rename("frankmd/2026/photo.png", "renamed.png")
+        .await
+        .expect("200");
     assert_eq!(renamed.path, "frankmd/2026/renamed.png");
 }
 
@@ -220,7 +291,10 @@ async fn local_provider_rejects_rename() {
     let n = Notes::new();
     let p = n.write("images/photo.png", "image");
     let (vault, e) = (n.vault(), env(config(n.root()), None));
-    let err = Library::new(&vault, &e).rename("images/photo.png", "renamed.png").await.expect_err("422");
+    let err = Library::new(&vault, &e)
+        .rename("images/photo.png", "renamed.png")
+        .await
+        .expect_err("422");
     assert!(matches!(err, LibraryError::RenameFailed), "{err:?}");
     assert!(p.exists());
     assert!(!n.root().join("images/renamed.png").exists());

@@ -55,13 +55,23 @@ const DOCUMENT: Id = 0;
 
 impl Dom {
     fn new() -> Self {
-        let mut dom = Dom { nodes: Vec::new(), fallback_name: QualName::new(None, ns!(html), local_name!("div")) };
+        let mut dom = Dom {
+            nodes: Vec::new(),
+            fallback_name: QualName::new(None, ns!(html), local_name!("div")),
+        };
         dom.push(Kind::Document);
         dom
     }
 
     fn push(&mut self, kind: Kind) -> Id {
-        self.nodes.push(Node { kind, parent: None, first: None, last: None, prev: None, next: None });
+        self.nodes.push(Node {
+            kind,
+            parent: None,
+            first: None,
+            last: None,
+            prev: None,
+            next: None,
+        });
         self.nodes.len() - 1
     }
 
@@ -117,7 +127,9 @@ impl Dom {
 
     /// Unlink `id` from its parent (no-op when already detached).
     pub(super) fn detach(&mut self, id: Id) {
-        let Node { parent, prev, next, .. } = self.nodes[id];
+        let Node {
+            parent, prev, next, ..
+        } = self.nodes[id];
         let Some(parent) = parent else { return };
         match prev {
             Some(p) => self.nodes[p].next = next,
@@ -151,7 +163,9 @@ impl Dom {
 
     /// Insert `child` (detached first) right before `sibling`.
     pub(super) fn insert_before(&mut self, sibling: Id, child: Id) {
-        let Some(parent) = self.nodes[sibling].parent else { return };
+        let Some(parent) = self.nodes[sibling].parent else {
+            return;
+        };
         self.detach(child);
         let prev = self.nodes[sibling].prev;
         {
@@ -177,12 +191,18 @@ impl Dom {
 
     /// The `<body>` element of the parsed document.
     pub(super) fn body(&self) -> Option<Id> {
-        let html = self.children(DOCUMENT).into_iter().find(|&c| self.is_html_element(c, "html"))?;
-        self.children(html).into_iter().find(|&c| self.is_html_element(c, "body"))
+        let html = self
+            .children(DOCUMENT)
+            .into_iter()
+            .find(|&c| self.is_html_element(c, "html"))?;
+        self.children(html)
+            .into_iter()
+            .find(|&c| self.is_html_element(c, "body"))
     }
 
     fn is_html_element(&self, id: Id, local: &str) -> bool {
-        self.elem(id).is_some_and(|e| e.name.ns == ns!(html) && &*e.name.local == local)
+        self.elem(id)
+            .is_some_and(|e| e.name.ns == ns!(html) && &*e.name.local == local)
     }
 
     /// DOM `textContent` of an element (descendant text, comments excluded).
@@ -206,7 +226,9 @@ impl Dom {
 
     /// True when `id` has an element child (`firstElementChild`).
     pub(super) fn has_element_child(&self, id: Id) -> bool {
-        self.children(id).into_iter().any(|c| matches!(self.nodes[c].kind, Kind::Element(_)))
+        self.children(id)
+            .into_iter()
+            .any(|c| matches!(self.nodes[c].kind, Kind::Element(_)))
     }
 
     /// DOM `innerHTML`: the HTML fragment serialization of `id`'s children.
@@ -216,7 +238,12 @@ impl Dom {
             Close(Id),
         }
         let mut out = String::new();
-        let mut stack: Vec<Step> = self.children(id).into_iter().rev().map(Step::Node).collect();
+        let mut stack: Vec<Step> = self
+            .children(id)
+            .into_iter()
+            .rev()
+            .map(Step::Node)
+            .collect();
         while let Some(step) = stack.pop() {
             let node = match step {
                 Step::Close(e) => {
@@ -231,7 +258,10 @@ impl Dom {
             };
             match &self.nodes[node].kind {
                 Kind::Text(text) => {
-                    if self.nodes[node].parent.is_some_and(|p| self.is_raw_text_parent(p)) {
+                    if self.nodes[node]
+                        .parent
+                        .is_some_and(|p| self.is_raw_text_parent(p))
+                    {
                         out.push_str(text);
                     } else {
                         escape_into(&mut out, text, false);
@@ -269,7 +299,10 @@ impl Dom {
     fn is_raw_text_parent(&self, id: Id) -> bool {
         self.elem(id).is_some_and(|e| {
             e.name.ns == ns!(html)
-                && matches!(&*e.name.local, "style" | "script" | "xmp" | "iframe" | "noembed" | "noframes" | "plaintext")
+                && matches!(
+                    &*e.name.local,
+                    "style" | "script" | "xmp" | "iframe" | "noembed" | "noframes" | "plaintext"
+                )
         })
     }
 }
@@ -285,8 +318,24 @@ pub(super) fn attr_name(attr: &Attribute) -> Cow<'_, str> {
 fn is_void(local: &LocalName) -> bool {
     matches!(
         &**local,
-        "area" | "base" | "basefont" | "bgsound" | "br" | "col" | "embed" | "frame" | "hr" | "img" | "input"
-            | "keygen" | "link" | "meta" | "param" | "source" | "track" | "wbr"
+        "area"
+            | "base"
+            | "basefont"
+            | "bgsound"
+            | "br"
+            | "col"
+            | "embed"
+            | "frame"
+            | "hr"
+            | "img"
+            | "input"
+            | "keygen"
+            | "link"
+            | "meta"
+            | "param"
+            | "source"
+            | "track"
+            | "wbr"
     )
 }
 
@@ -309,7 +358,10 @@ fn escape_into(out: &mut String, text: &str, attribute: bool) {
 /// "text/html")` does (scripting disabled, so `<noscript>` content is markup).
 pub(super) fn parse_document(html: &str) -> Dom {
     let opts = ParseOpts {
-        tree_builder: TreeBuilderOpts { scripting_enabled: false, ..Default::default() },
+        tree_builder: TreeBuilderOpts {
+            scripting_enabled: false,
+            ..Default::default()
+        },
         ..Default::default()
     };
     html5ever::parse_document(Sink(RefCell::new(Dom::new())), opts).one(html)
@@ -393,7 +445,13 @@ impl TreeSink for Sink {
         }
     }
 
-    fn append_doctype_to_document(&self, _name: StrTendril, _public_id: StrTendril, _system_id: StrTendril) {}
+    fn append_doctype_to_document(
+        &self,
+        _name: StrTendril,
+        _public_id: StrTendril,
+        _system_id: StrTendril,
+    ) {
+    }
 
     fn get_template_contents(&self, target: &Id) -> Id {
         *target
@@ -445,7 +503,10 @@ impl TreeSink for Sink {
     }
 
     fn is_mathml_annotation_xml_integration_point(&self, handle: &Id) -> bool {
-        self.0.borrow().elem(*handle).is_some_and(|e| e.annotation_xml_integration_point)
+        self.0
+            .borrow()
+            .elem(*handle)
+            .is_some_and(|e| e.annotation_xml_integration_point)
     }
 }
 

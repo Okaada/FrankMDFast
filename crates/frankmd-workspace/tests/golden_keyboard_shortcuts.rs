@@ -24,7 +24,11 @@ const FIXTURE: &str = "js_keyboard_shortcuts";
 fn event(v: &Value) -> KeyEvent {
     let b = |k: &str| v.get(k).and_then(Value::as_bool).unwrap_or(false);
     KeyEvent {
-        key: v.get("key").and_then(Value::as_str).unwrap_or("").to_owned(),
+        key: v
+            .get("key")
+            .and_then(Value::as_str)
+            .unwrap_or("")
+            .to_owned(),
         ctrl: b("ctrlKey"),
         shift: b("shiftKey"),
         alt: b("altKey"),
@@ -90,16 +94,28 @@ fn table(v: &Value) -> ShortcutMap {
 fn overrides(v: &Value) -> Vec<(String, Option<Shortcut>)> {
     match v.as_object() {
         None => Vec::new(), // undefined → {}
-        Some(o) => ordered_keys(o).into_iter().map(|k| (k.clone(), shortcut(&o[&k]))).collect(),
+        Some(o) => ordered_keys(o)
+            .into_iter()
+            .map(|k| (k.clone(), shortcut(&o[&k])))
+            .collect(),
     }
 }
 
 fn entries_json(m: &ShortcutMap) -> Value {
-    Value::Array(m.entries().iter().map(|(a, s)| json!([a, shortcut_json(s)])).collect())
+    Value::Array(
+        m.entries()
+            .iter()
+            .map(|(a, s)| json!([a, shortcut_json(s)]))
+            .collect(),
+    )
 }
 
 fn check_eq(got: Value, want: &Value) -> Result<(), String> {
-    if &got == want { Ok(()) } else { Err(format!("got {got}, want {want}")) }
+    if &got == want {
+        Ok(())
+    } else {
+        Err(format!("got {got}, want {want}"))
+    }
 }
 
 fn run(case: &Case) -> Result<(), String> {
@@ -107,19 +123,28 @@ fn run(case: &Case) -> Result<(), String> {
     let want = decode_js(&case.expected);
     let arg = |i: usize| input.get(i).cloned().unwrap_or(Value::Null);
     match case.func.as_deref().unwrap() {
-        "DEFAULT_SHORTCUTS" => check_eq(entries_json(&ShortcutMap::defaults()), &want).and_then(|()| {
-            // The const table itself must match too.
-            let c = ShortcutMap::from_entries(DEFAULT_SHORTCUTS.iter().cloned());
-            check_eq(entries_json(&c), &want)
-        }),
-        // JS: SHORTCUTS === DEFAULT_SHORTCUTS. Rust has a single table.
-        "SHORTCUTS" => check_eq(json!(ShortcutMap::defaults().entries().len() == DEFAULT_SHORTCUTS.len()), &want),
-        "matchShortcut" => {
-            check_eq(json!(match_shortcut(&event(&arg(0)), shortcut(&arg(1)).as_ref())), &want)
+        "DEFAULT_SHORTCUTS" => {
+            check_eq(entries_json(&ShortcutMap::defaults()), &want).and_then(|()| {
+                // The const table itself must match too.
+                let c = ShortcutMap::from_entries(DEFAULT_SHORTCUTS.iter().cloned());
+                check_eq(entries_json(&c), &want)
+            })
         }
+        // JS: SHORTCUTS === DEFAULT_SHORTCUTS. Rust has a single table.
+        "SHORTCUTS" => check_eq(
+            json!(ShortcutMap::defaults().entries().len() == DEFAULT_SHORTCUTS.len()),
+            &want,
+        ),
+        "matchShortcut" => check_eq(
+            json!(match_shortcut(&event(&arg(0)), shortcut(&arg(1)).as_ref())),
+            &want,
+        ),
         "formatShortcut" => {
             let mac = arg(1).as_bool().unwrap_or(false);
-            check_eq(json!(format_shortcut(shortcut(&arg(0)).as_ref(), mac)), &want)
+            check_eq(
+                json!(format_shortcut(shortcut(&arg(0)).as_ref(), mac)),
+                &want,
+            )
         }
         "findMatchingAction" => {
             let m = table(&arg(1));
@@ -128,7 +153,9 @@ fn run(case: &Case) -> Result<(), String> {
         "createKeyHandler" => {
             let d = table(&arg(1)).dispatch(&event(&arg(0)));
             let got = match d {
-                Some(d) => json!({"actions": [d.action], "preventDefaultCalls": u8::from(d.prevent_default)}),
+                Some(d) => {
+                    json!({"actions": [d.action], "preventDefaultCalls": u8::from(d.prevent_default)})
+                }
                 None => json!({"actions": [], "preventDefaultCalls": 0}),
             };
             check_eq(got, &want)
@@ -139,25 +166,43 @@ fn run(case: &Case) -> Result<(), String> {
                 check_eq(entries_json(&merged), &want)
             } else {
                 // Recorded as a plain object: order-insensitive comparison.
-                let got: Map<String, Value> =
-                    merged.entries().iter().map(|(a, s)| (a.clone(), shortcut_json(s))).collect();
+                let got: Map<String, Value> = merged
+                    .entries()
+                    .iter()
+                    .map(|(a, s)| (a.clone(), shortcut_json(s)))
+                    .collect();
                 check_eq(Value::Object(got), &want)
             }
         }
         "getShortcutForAction" => {
             let m = table(&arg(0));
             let action = arg(1);
-            check_eq(m.get(action.as_str().unwrap()).map_or(Value::Null, shortcut_json), &want)
+            check_eq(
+                m.get(action.as_str().unwrap())
+                    .map_or(Value::Null, shortcut_json),
+                &want,
+            )
         }
         "isMacOS" => {
             let nav = &input["navigator"];
             let info = nav.as_object().map(|o| NavigatorInfo {
-                user_agent_data_platform: o.get("userAgentData").filter(|v| v.is_object()).map(|d| {
-                    d.get("platform").and_then(Value::as_str).unwrap_or("").to_owned()
-                }),
-                user_agent: o.get("userAgent").and_then(Value::as_str).map(str::to_owned),
+                user_agent_data_platform: o.get("userAgentData").filter(|v| v.is_object()).map(
+                    |d| {
+                        d.get("platform")
+                            .and_then(Value::as_str)
+                            .unwrap_or("")
+                            .to_owned()
+                    },
+                ),
+                user_agent: o
+                    .get("userAgent")
+                    .and_then(Value::as_str)
+                    .map(str::to_owned),
             });
-            check_eq(json!(Platform::from_navigator(info.as_ref()).is_macos()), &want)
+            check_eq(
+                json!(Platform::from_navigator(info.as_ref()).is_macos()),
+                &want,
+            )
         }
         other => Err(format!("unhandled fn {other}")),
     }
@@ -196,11 +241,22 @@ golden_fn!(golden_is_macos, "isMacOS");
 fn golden_every_case_is_wired() {
     let g = golden(FIXTURE);
     let known = [
-        "DEFAULT_SHORTCUTS", "SHORTCUTS", "matchShortcut", "formatShortcut", "findMatchingAction",
-        "createKeyHandler", "mergeShortcuts", "getShortcutForAction", "isMacOS",
+        "DEFAULT_SHORTCUTS",
+        "SHORTCUTS",
+        "matchShortcut",
+        "formatShortcut",
+        "findMatchingAction",
+        "createKeyHandler",
+        "mergeShortcuts",
+        "getShortcutForAction",
+        "isMacOS",
     ];
     for c in &g.cases {
-        assert!(known.contains(&c.func.as_deref().unwrap_or("")), "unwired case {}", c.name);
+        assert!(
+            known.contains(&c.func.as_deref().unwrap_or("")),
+            "unwired case {}",
+            c.name
+        );
     }
     assert_eq!(g.cases.iter().filter(|c| is_prototype_quirk(c)).count(), 2);
 }

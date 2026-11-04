@@ -12,7 +12,9 @@ use frankmd_core::DocId;
 use frankmd_core::guard::is_large_deletion;
 
 use super::{AutosaveSession, ContentLossState, PendingRecovery};
-use crate::autosave::{AutosaveEffect, RecoveryRequest, RecoveryResolution, RecoverySource, SaveStatus};
+use crate::autosave::{
+    AutosaveEffect, RecoveryRequest, RecoveryResolution, RecoverySource, SaveStatus,
+};
 use crate::draft_storage::{DraftBackend, LegacyBackup};
 use crate::drafts::draft_subject;
 
@@ -97,7 +99,10 @@ impl<B: DraftBackend> AutosaveSession<B> {
         let Some(doc) = self.current_doc() else {
             return;
         };
-        if let Some(backup) = self.drafts.backup_check(&draft_subject(doc), server_content) {
+        if let Some(backup) = self
+            .drafts
+            .backup_check(&draft_subject(doc), server_content)
+        {
             self.open_backup_recovery(doc, server_content, backup, None);
         }
     }
@@ -116,7 +121,12 @@ impl<B: DraftBackend> AutosaveSession<B> {
                     self.show_draft_storage_error();
                     return;
                 }
-                Ok(read) if read.draft.as_ref().is_some_and(|d| d.draft_revision != revision) => {
+                Ok(read)
+                    if read
+                        .draft
+                        .as_ref()
+                        .is_some_and(|d| d.draft_revision != revision) =>
+                {
                     // The local draft changed while the dialog was open.
                     self.show_draft_storage_error();
                     return;
@@ -146,7 +156,8 @@ impl<B: DraftBackend> AutosaveSession<B> {
                 };
                 self.pending_recovery = None;
                 let content = content.to_owned();
-                self.effects.push(AutosaveEffect::SetEditorText(content.clone()));
+                self.effects
+                    .push(AutosaveEffect::SetEditorText(content.clone()));
                 self.set_editor_text(&content);
                 self.draft_writes.remove(&doc);
                 self.has_unsaved_changes = true;
@@ -179,13 +190,18 @@ impl<B: DraftBackend> AutosaveSession<B> {
     }
 
     fn remove_selected_backup(&mut self, doc: Option<DocId>, resolution: &RecoveryResolution) {
-        let (Some(doc), Some(content), Some(timestamp)) =
-            (doc, resolution.backup_content.as_deref(), resolution.backup_timestamp)
-        else {
+        let (Some(doc), Some(content), Some(timestamp)) = (
+            doc,
+            resolution.backup_content.as_deref(),
+            resolution.backup_timestamp,
+        ) else {
             return;
         };
         if timestamp.is_finite()
-            && self.drafts.remove_backup_if_snapshot(&draft_subject(doc), content, timestamp).is_err()
+            && self
+                .drafts
+                .remove_backup_if_snapshot(&draft_subject(doc), content, timestamp)
+                .is_err()
         {
             self.show_draft_storage_error();
         }
@@ -262,7 +278,8 @@ impl<B: DraftBackend> AutosaveSession<B> {
     }
 
     fn content_loss_is_current(&self) -> bool {
-        self.content_loss.doc == self.current_doc() && self.content_loss.base_revision == self.base_revision
+        self.content_loss.doc == self.current_doc()
+            && self.content_loss.base_revision == self.base_revision
     }
 
     /// `showContentLossWarning()`.
@@ -309,7 +326,10 @@ impl<B: DraftBackend> AutosaveSession<B> {
         {
             let path = self.current_file().unwrap_or_default().to_owned();
             self.set_editor_text(&baseline);
-            self.effects.push(AutosaveEffect::LoadEditorText { content: baseline, path });
+            self.effects.push(AutosaveEffect::LoadEditorText {
+                content: baseline,
+                path,
+            });
         }
         let content = self.editor_text.clone();
         self.check_content_restored(&content);

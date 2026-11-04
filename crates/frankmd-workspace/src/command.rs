@@ -214,6 +214,9 @@ pub struct UserError {
 impl UserError {
     /// An error without interpolation values.
     pub fn new(key: &'static str) -> Self {
-        Self { key, args: Vec::new() }
+        Self {
+            key,
+            args: Vec::new(),
+        }
     }
 }

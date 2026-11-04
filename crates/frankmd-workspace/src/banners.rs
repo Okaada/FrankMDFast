@@ -55,7 +55,11 @@ impl BannerKind {
     /// Element id of one of its buttons (`banner-<kind>-<button>`), where
     /// `button` is the last segment of the button's i18n key, kebab-cased.
     pub fn button_id(self, button_key: &str) -> String {
-        let name = button_key.rsplit('.').next().unwrap_or(button_key).replace('_', "-");
+        let name = button_key
+            .rsplit('.')
+            .next()
+            .unwrap_or(button_key)
+            .replace('_', "-");
         format!("banner-{}-{name}", self.slug())
     }
 
@@ -105,7 +109,11 @@ impl BannerStack {
 
     /// Raise or clear.
     pub fn set(&mut self, kind: BannerKind, raised: bool) {
-        if raised { self.raise(kind) } else { self.clear(kind) }
+        if raised {
+            self.raise(kind)
+        } else {
+            self.clear(kind)
+        }
     }
 
     /// The user dismissed `kind`; [`BannerKind::StorageFallback`] then never
@@ -132,11 +140,23 @@ impl BannerStack {
         match kind {
             BannerKind::VaultUnreachable => vec!["banners.offline.retry"],
             BannerKind::ReadOnly => vec![],
-            BannerKind::ChangedOnDisk => vec!["banners.changed_on_disk.reload", "banners.changed_on_disk.compare"],
-            BannerKind::DeletedOnDisk => vec!["banners.deleted_on_disk.save_again", "banners.deleted_on_disk.close"],
-            BannerKind::ContentLoss => vec!["banners.content_loss.undo", "banners.content_loss.save_anyway"],
+            BannerKind::ChangedOnDisk => vec![
+                "banners.changed_on_disk.reload",
+                "banners.changed_on_disk.compare",
+            ],
+            BannerKind::DeletedOnDisk => vec![
+                "banners.deleted_on_disk.save_again",
+                "banners.deleted_on_disk.close",
+            ],
+            BannerKind::ContentLoss => vec![
+                "banners.content_loss.undo",
+                "banners.content_loss.save_anyway",
+            ],
             BannerKind::DraftStorageFailed => vec!["banners.draft_storage.details"],
-            BannerKind::StorageFallback => vec!["banners.storage_fallback.settings", "banners.storage_fallback.dismiss"],
+            BannerKind::StorageFallback => vec![
+                "banners.storage_fallback.settings",
+                "banners.storage_fallback.dismiss",
+            ],
         }
     }
 }

@@ -22,7 +22,10 @@ fn get_translations(fed: Option<&str>, env_locale: Option<&str>) -> Json {
 }
 
 fn s<'a>(v: &'a Json, path: &str) -> &'a str {
-    path.split('.').fold(v, |n, seg| &n[seg]).as_str().unwrap_or_else(|| panic!("{path} is not a string"))
+    path.split('.')
+        .fold(v, |n, seg| &n[seg])
+        .as_str()
+        .unwrap_or_else(|| panic!("{path} is not a string"))
 }
 
 const ALL: [&str; 7] = ["en", "pt-BR", "pt-PT", "es", "he", "ja", "ko"];
@@ -33,7 +36,9 @@ fn default_locale_is_en_with_sections() {
     let data = get_translations(None, None);
     assert_eq!(data["locale"], "en");
     let tr = &data["translations"];
-    for section in ["common", "dialogs", "status", "errors", "success", "editor", "sidebar", "library"] {
+    for section in [
+        "common", "dialogs", "status", "errors", "success", "editor", "sidebar", "library",
+    ] {
         assert!(tr.get(section).is_some(), "missing section {section}");
     }
 }
@@ -99,14 +104,20 @@ fn ja_via_env() {
 // port: test/controllers/translations_controller_test.rb:126 "locale can be set via config file when ENV not set"
 #[test]
 fn locale_from_fed() {
-    assert_eq!(get_translations(Some("locale = es\n"), None)["locale"], "es");
+    assert_eq!(
+        get_translations(Some("locale = es\n"), None)["locale"],
+        "es"
+    );
 }
 
 // port: test/controllers/translations_controller_test.rb:137 "locale can be saved via config endpoint"
 #[test]
 fn locale_saved_via_config_reads_back() {
     // Write half (PATCH /config writes `locale = ja`) is ported with the config store tests.
-    assert_eq!(get_translations(Some("locale = ja\n"), None)["locale"], "ja");
+    assert_eq!(
+        get_translations(Some("locale = ja\n"), None)["locale"],
+        "ja"
+    );
 }
 
 // port: test/controllers/translations_controller_test.rb:152 "locale persists across requests after config save"
@@ -122,9 +133,15 @@ fn locale_persists_across_requests() {
 fn common_complete_in_all_locales() {
     for locale in ALL {
         let data = get_translations(None, Some(locale));
-        for key in ["cancel", "apply", "save", "create", "delete", "rename", "close", "search", "insert", "edit", "ok"] {
+        for key in [
+            "cancel", "apply", "save", "create", "delete", "rename", "close", "search", "insert",
+            "edit", "ok",
+        ] {
             let v = &data["translations"]["common"][key];
-            assert!(v.as_str().is_some_and(|v| !v.is_empty()), "Locale {locale} is missing or has empty common.{key}");
+            assert!(
+                v.as_str().is_some_and(|v| !v.is_empty()),
+                "Locale {locale} is missing or has empty common.{key}"
+            );
         }
     }
 }
@@ -134,9 +151,19 @@ fn common_complete_in_all_locales() {
 fn status_complete_in_all_locales() {
     for locale in ALL {
         let data = get_translations(None, Some(locale));
-        for key in ["saved", "unsaved", "error_saving", "error_loading", "searching", "no_matches"] {
+        for key in [
+            "saved",
+            "unsaved",
+            "error_saving",
+            "error_loading",
+            "searching",
+            "no_matches",
+        ] {
             let v = &data["translations"]["status"][key];
-            assert!(v.as_str().is_some_and(|v| !v.is_empty()), "Locale {locale} is missing or has empty status.{key}");
+            assert!(
+                v.as_str().is_some_and(|v| !v.is_empty()),
+                "Locale {locale} is missing or has empty status.{key}"
+            );
         }
     }
 }
@@ -148,7 +175,10 @@ fn errors_complete_in_all_locales() {
         let data = get_translations(None, Some(locale));
         for key in ["note_not_found", "folder_not_found", "file_not_found"] {
             let v = &data["translations"]["errors"][key];
-            assert!(v.as_str().is_some_and(|v| !v.is_empty()), "Locale {locale} is missing or has empty errors.{key}");
+            assert!(
+                v.as_str().is_some_and(|v| !v.is_empty()),
+                "Locale {locale} is missing or has empty errors.{key}"
+            );
         }
     }
 }
@@ -225,20 +255,31 @@ fn issue_187_dialog_copy_in_all_locales() {
         let tr = &data["translations"];
         for path in required_paths {
             let v = path.split('.').fold(tr, |n, seg| &n[seg]);
-            assert!(v.as_str().is_some_and(|v| !v.is_empty()), "Locale {locale} is missing {path}");
+            assert!(
+                v.as_str().is_some_and(|v| !v.is_empty()),
+                "Locale {locale} is missing {path}"
+            );
         }
         let youtube_hint = s(tr, "dialogs.video.url_hint_youtube");
         let file_hint = s(tr, "dialogs.video.url_hint_file");
-        assert!(youtube_hint.starts_with("http://") || youtube_hint.starts_with("https://"),
-            "Locale {locale} should start the YouTube hint with its URL example");
-        assert!(file_hint.starts_with('/'), "Locale {locale} should start the video file hint with its path example");
+        assert!(
+            youtube_hint.starts_with("http://") || youtube_hint.starts_with("https://"),
+            "Locale {locale} should start the YouTube hint with its URL example"
+        );
+        assert!(
+            file_hint.starts_with('/'),
+            "Locale {locale} should start the video file hint with its path example"
+        );
     }
 }
 
 // port: test/controllers/translations_controller_test.rb:310 "invalid locale falls back to default"
 #[test]
 fn invalid_locale_falls_back_to_en() {
-    assert_eq!(get_translations(None, Some("invalid_locale"))["locale"], "en");
+    assert_eq!(
+        get_translations(None, Some("invalid_locale"))["locale"],
+        "en"
+    );
 }
 
 // port: test/controllers/translations_controller_test.rb:322 "completed Spanish entries remain localized in the endpoint"
@@ -275,19 +316,28 @@ fn english_tree_unchanged() {
 // port: test/controllers/translations_controller_test.rb:361 "config file takes precedence over ENV variable"
 #[test]
 fn fed_beats_env() {
-    assert_eq!(get_translations(Some("locale = ja\n"), Some("es"))["locale"], "ja");
+    assert_eq!(
+        get_translations(Some("locale = ja\n"), Some("es"))["locale"],
+        "ja"
+    );
 }
 
 // port: test/controllers/translations_controller_test.rb:376 "ENV variable is used as fallback when config file has no locale"
 #[test]
 fn env_used_when_fed_has_no_locale() {
-    assert_eq!(get_translations(Some("theme = dark\n"), Some("es"))["locale"], "es");
+    assert_eq!(
+        get_translations(Some("theme = dark\n"), Some("es"))["locale"],
+        "es"
+    );
 }
 
 // port: test/controllers/translations_controller_test.rb:389 "empty ENV FRANKMD_LOCALE does not override config file locale"
 #[test]
 fn empty_env_does_not_override_fed() {
-    assert_eq!(get_translations(Some("locale = pt-BR\n"), Some(""))["locale"], "pt-BR");
+    assert_eq!(
+        get_translations(Some("locale = pt-BR\n"), Some(""))["locale"],
+        "pt-BR"
+    );
     // and an empty ENV alone is ignored (→ en)
     assert_eq!(resolve_locale(None, None), Locale::En);
 }
@@ -296,14 +346,30 @@ fn empty_env_does_not_override_fed() {
 #[test]
 fn updating_locale_reads_back_latest() {
     // Write half (single `locale = ja` line, no `locale = en` left) is ported with the config store tests.
-    assert_eq!(get_translations(Some("locale = ja\n"), None)["locale"], "ja");
+    assert_eq!(
+        get_translations(Some("locale = ja\n"), None)["locale"],
+        "ja"
+    );
 }
 
 // port: test/controllers/translations_controller_test.rb:423 "translations include all sections needed by JavaScript"
 #[test]
 fn all_js_sections_present() {
     let data = get_translations(None, None);
-    for section in ["common", "dialogs", "status", "errors", "success", "editor", "sidebar", "preview", "context_menu"] {
-        assert!(data["translations"].get(section).is_some(), "Missing section: {section}");
+    for section in [
+        "common",
+        "dialogs",
+        "status",
+        "errors",
+        "success",
+        "editor",
+        "sidebar",
+        "preview",
+        "context_menu",
+    ] {
+        assert!(
+            data["translations"].get(section).is_some(),
+            "Missing section: {section}"
+        );
     }
 }

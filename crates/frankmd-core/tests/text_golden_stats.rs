@@ -31,7 +31,11 @@ fn golden_calculate_stats() {
             "byteSize": s.byte_size,
             "readTimeMinutes": s.read_time_minutes,
         });
-        if got == c.expected { Ok(()) } else { Err(format!("got {got}, want {}", c.expected)) }
+        if got == c.expected {
+            Ok(())
+        } else {
+            Err(format!("got {got}, want {}", c.expected))
+        }
     });
 }
 
@@ -41,7 +45,11 @@ fn golden_format_read_time() {
     assert_cases(FIXTURE, g.cases_for("formatReadTime"), |c| {
         let minutes = arg(&c.input, 0).as_f64().unwrap();
         let got = format_read_time(minutes);
-        if got == c.expected.as_str().unwrap() { Ok(()) } else { Err(format!("got {got:?}, want {}", c.expected)) }
+        if got == c.expected.as_str().unwrap() {
+            Ok(())
+        } else {
+            Err(format!("got {got:?}, want {}", c.expected))
+        }
     });
 }
 
@@ -65,7 +73,11 @@ fn golden_format_file_size() {
             want = format!("{num} {unit}");
         }
         let got = format_file_size(bytes);
-        if got == want { Ok(()) } else { Err(format!("got {got:?}, want {want:?}")) }
+        if got == want {
+            Ok(())
+        } else {
+            Err(format!("got {got:?}, want {want:?}"))
+        }
     });
     assert_eq!(skipped.get(), 3, "fractional/negative formatFileSize cases");
 }

@@ -14,7 +14,11 @@ async fn mock_api(status: u16, body: &str) -> MockServer {
     let server = MockServer::start().await;
     Mock::given(method("GET"))
         .and(path("/youtube/v3/search"))
-        .respond_with(ResponseTemplate::new(status).set_body_string(body).insert_header("content-type", "application/json"))
+        .respond_with(
+            ResponseTemplate::new(status)
+                .set_body_string(body)
+                .insert_header("content-type", "application/json"),
+        )
         .mount(&server)
         .await;
     server
@@ -35,16 +39,28 @@ fn config_enabled_with_key() {
 // port: test/controllers/youtube_controller_test.rb:33 "search returns error when no API key"
 #[tokio::test]
 async fn search_without_key_is_not_configured() {
-    let err = YoutubeSearch::new(http()).search(&bare_config(), "test").await.expect_err("503");
-    assert_eq!(err, SearchError::NotConfigured("errors.youtube_not_configured"));
+    let err = YoutubeSearch::new(http())
+        .search(&bare_config(), "test")
+        .await
+        .expect_err("503");
+    assert_eq!(
+        err,
+        SearchError::NotConfigured("errors.youtube_not_configured")
+    );
 }
 
 // port: test/controllers/youtube_controller_test.rb:43 "search returns error when query is blank"
 #[tokio::test]
 async fn search_blank_query_is_required() {
-    let err = YoutubeSearch::new(http()).search(&youtube_config("k"), "").await.expect_err("400");
+    let err = YoutubeSearch::new(http())
+        .search(&youtube_config("k"), "")
+        .await
+        .expect_err("400");
     assert_eq!(err, SearchError::QueryRequired);
-    let err = YoutubeSearch::new(http()).search(&youtube_config("k"), "   ").await.expect_err("400");
+    let err = YoutubeSearch::new(http())
+        .search(&youtube_config("k"), "   ")
+        .await
+        .expect_err("400");
     assert_eq!(err.i18n_key(), "errors.query_required");
 }
 
@@ -61,15 +77,24 @@ async fn search_returns_videos() {
     assert_eq!(v.id.as_deref(), Some("abc123"));
     assert_eq!(v.title.as_deref(), Some("Test Video Title"));
     assert_eq!(v.channel.as_deref(), Some("Test Channel"));
-    assert_eq!(v.thumbnail.as_deref(), Some("https://i.ytimg.com/vi/abc123/mqdefault.jpg"));
+    assert_eq!(
+        v.thumbnail.as_deref(),
+        Some("https://i.ytimg.com/vi/abc123/mqdefault.jpg")
+    );
 }
 
 // port: test/controllers/youtube_controller_test.rb:116 "search falls back to default thumbnail when medium is missing"
 #[tokio::test]
 async fn search_falls_back_to_default_thumbnail() {
     let server = mock_api(200, &data("youtube_search.json")).await;
-    let r = YoutubeSearch::with_base(http(), server.uri()).search(&youtube_config("k"), "test").await.expect("results");
-    assert_eq!(r.videos[1].thumbnail.as_deref(), Some("https://i.ytimg.com/vi/def456/default.jpg"));
+    let r = YoutubeSearch::with_base(http(), server.uri())
+        .search(&youtube_config("k"), "test")
+        .await
+        .expect("results");
+    assert_eq!(
+        r.videos[1].thumbnail.as_deref(),
+        Some("https://i.ytimg.com/vi/def456/default.jpg")
+    );
 }
 
 // skipped (P): test/controllers/youtube_controller_test.rb:125 "HTML search results use the thumbnail error action without inline handlers"
@@ -99,7 +124,10 @@ async fn search_passes_query_params() {
 #[tokio::test]
 async fn search_api_error_is_empty_with_error() {
     let server = mock_api(403, r#"{"error": {"message": "quotaExceeded"}}"#).await;
-    let r = YoutubeSearch::with_base(http(), server.uri()).search(&youtube_config("k"), "test").await.expect("200");
+    let r = YoutubeSearch::with_base(http(), server.uri())
+        .search(&youtube_config("k"), "test")
+        .await
+        .expect("200");
     assert!(r.videos.is_empty());
     assert!(r.error.as_deref().is_some_and(|e| !e.is_empty()));
 }
@@ -108,6 +136,9 @@ async fn search_api_error_is_empty_with_error() {
 #[tokio::test]
 async fn search_empty_items() {
     let server = mock_api(200, r#"{"items": []}"#).await;
-    let r = YoutubeSearch::with_base(http(), server.uri()).search(&youtube_config("k"), "obscure query").await.expect("200");
+    let r = YoutubeSearch::with_base(http(), server.uri())
+        .search(&youtube_config("k"), "obscure query")
+        .await
+        .expect("200");
     assert!(r.videos.is_empty());
 }

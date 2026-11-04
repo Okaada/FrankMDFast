@@ -2,7 +2,13 @@
 //!
 //! Test-only code may touch the filesystem directly (setting up vaults,
 //! simulating external writers, chmod), hence the lint opt-out.
-#![allow(dead_code, unreachable_pub, clippy::disallowed_methods, clippy::unwrap_used, clippy::missing_panics_doc)]
+#![allow(
+    dead_code,
+    unreachable_pub,
+    clippy::disallowed_methods,
+    clippy::unwrap_used,
+    clippy::missing_panics_doc
+)]
 
 use frankmd_config::{ConfigStore, EnvSnapshot, Key, ResolvedConfig, Value};
 use frankmd_fs::Vault;
@@ -30,7 +36,12 @@ pub fn env_json(v: &J, root: &str) -> EnvSnapshot {
         .as_object()
         .map(|o| {
             o.iter()
-                .map(|(k, v)| (k.clone(), v.as_str().unwrap_or_default().replace("<ROOT>", root)))
+                .map(|(k, v)| {
+                    (
+                        k.clone(),
+                        v.as_str().unwrap_or_default().replace("<ROOT>", root),
+                    )
+                })
                 .collect()
         })
         .unwrap_or_default();
@@ -48,7 +59,11 @@ pub fn opt_json(v: Option<&Value>) -> J {
 }
 
 pub fn pairs_json(vals: &[(Key, Option<Value>)]) -> J {
-    J::Object(vals.iter().map(|(k, v)| (k.name().to_owned(), opt_json(v.as_ref()))).collect())
+    J::Object(
+        vals.iter()
+            .map(|(k, v)| (k.name().to_owned(), opt_json(v.as_ref())))
+            .collect(),
+    )
 }
 
 pub fn file_values_json(rc: &ResolvedConfig) -> J {
@@ -56,7 +71,12 @@ pub fn file_values_json(rc: &ResolvedConfig) -> J {
 }
 
 pub fn resolved_json(rc: &ResolvedConfig) -> J {
-    J::Object(Key::ALL.iter().map(|k| (k.name().to_owned(), opt_json(rc.get(*k).value.as_ref()))).collect())
+    J::Object(
+        Key::ALL
+            .iter()
+            .map(|k| (k.name().to_owned(), opt_json(rc.get(*k).value.as_ref())))
+            .collect(),
+    )
 }
 
 /// `get(key)` as JSON.
@@ -120,7 +140,11 @@ impl TestVault {
     pub fn from_spec(spec: &J) -> Self {
         let notes = TempTree::from_spec(spec);
         let root = notes.path().to_path_buf();
-        Self { notes, state: tempfile::tempdir().unwrap(), root }
+        Self {
+            notes,
+            state: tempfile::tempdir().unwrap(),
+            root,
+        }
     }
 
     /// Notes root with `.fed` = `text`.
@@ -173,11 +197,16 @@ impl TestVault {
 
     /// Permission bits of `<root>/<rel>` (no symlink follow).
     pub fn mode(&self, rel: &str) -> u32 {
-        std::fs::symlink_metadata(self.root.join(rel)).unwrap().permissions().mode() & 0o777
+        std::fs::symlink_metadata(self.root.join(rel))
+            .unwrap()
+            .permissions()
+            .mode()
+            & 0o777
     }
 
     pub fn chmod(&self, rel: &str, mode: u32) {
-        std::fs::set_permissions(self.root.join(rel), std::fs::Permissions::from_mode(mode)).unwrap();
+        std::fs::set_permissions(self.root.join(rel), std::fs::Permissions::from_mode(mode))
+            .unwrap();
     }
 
     /// Snapshot of the notes temp dir (relative to the temp root, not `root`).
@@ -218,7 +247,11 @@ pub fn chmod(path: &Path, mode: u32) {
 
 /// Lines of `text`, stripped, blanks dropped (`content.lines.map(&:strip).reject(&:empty?)`).
 pub fn nonblank_lines(text: &str) -> Vec<String> {
-    text.lines().map(str::trim).filter(|l| !l.is_empty()).map(str::to_owned).collect()
+    text.lines()
+        .map(str::trim)
+        .filter(|l| !l.is_empty())
+        .map(str::to_owned)
+        .collect()
 }
 
 /// Minimal RFC 4648 base64 decoder for the two binary fixtures.
@@ -244,7 +277,11 @@ pub fn base64_decode(s: &str) -> Vec<u8> {
 pub fn expand_template(v: &J) -> J {
     match v {
         J::String(s) if s == "<TEMPLATE>" => J::String(template_golden()),
-        J::Object(o) => J::Object(o.iter().map(|(k, v)| (k.clone(), expand_template(v))).collect()),
+        J::Object(o) => J::Object(
+            o.iter()
+                .map(|(k, v)| (k.clone(), expand_template(v)))
+                .collect(),
+        ),
         other => other.clone(),
     }
 }

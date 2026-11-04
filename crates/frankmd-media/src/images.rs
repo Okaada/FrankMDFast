@@ -19,8 +19,8 @@ use crate::upload_storage::{self as us, Upload};
 use crate::{MediaKind, UploadOrigin};
 
 pub use crate::server_folder::{
-    Dimensions, MAX_RESULTS, SUPPORTED_EXTENSIONS, ServerImage, clamp_limit, clamp_offset, count, delete, enabled,
-    find_image, image_dimensions, list,
+    Dimensions, MAX_RESULTS, SUPPORTED_EXTENSIONS, ServerImage, clamp_limit, clamp_offset, count,
+    delete, enabled, find_image, image_dimensions, list,
 };
 /// `MAX_EXTERNAL_IMAGE_BYTES` = 25 MiB.
 pub const MAX_EXTERNAL_IMAGE_BYTES: u64 = 25 * 1024 * 1024;
@@ -64,9 +64,18 @@ pub fn resize_arg(ratio: &Param) -> &'static str {
 /// [`resize_arg`], encode JPEG q95, strip metadata, name `<stem>.jpg`.
 /// Any decode/encode failure returns the original bytes,
 /// `content_type_for(source_name)` and `original_name` (no error).
-pub fn resize_and_compress(bytes: &[u8], source_name: &str, original_name: Option<&str>, ratio: &Param) -> Resized {
-    let original_name = original_name.map_or_else(|| basename(source_name).to_owned(), str::to_owned);
-    let percent: u32 = resize_arg(ratio).trim_end_matches('%').parse().unwrap_or(50);
+pub fn resize_and_compress(
+    bytes: &[u8],
+    source_name: &str,
+    original_name: Option<&str>,
+    ratio: &Param,
+) -> Resized {
+    let original_name =
+        original_name.map_or_else(|| basename(source_name).to_owned(), str::to_owned);
+    let percent: u32 = resize_arg(ratio)
+        .trim_end_matches('%')
+        .parse()
+        .unwrap_or(50);
     match reencode_jpeg(bytes, percent) {
         Some(jpeg) => Resized {
             bytes: jpeg,
@@ -153,10 +162,18 @@ pub async fn upload_file(
     };
     let config = env.settings.current();
     let provider = us::provider(&config, upload_to_s3)?;
-    let mut req = UploadRequest::new(UploadOrigin::Picker, MediaKind::Image, file.original_filename, file.bytes);
+    let mut req = UploadRequest::new(
+        UploadOrigin::Picker,
+        MediaKind::Image,
+        file.original_filename,
+        file.bytes,
+    );
     req.resize = resize;
     req.s3_key = s3_key.map(str::to_owned);
-    Ok(store_media(env, &config, provider, req).await?.url().to_owned())
+    Ok(store_media(env, &config, provider, req)
+        .await?
+        .url()
+        .to_owned())
 }
 
 /// `upload_base64_data(data, mime_type:, filename:, upload_to_s3:, s3_prefix:)`:
@@ -178,7 +195,9 @@ pub async fn upload_base64_data(
     let bytes = base64::engine::general_purpose::STANDARD
         .decode(data)
         .map_err(|_| MediaError::Invalid("Invalid base64 data: invalid base64".to_owned()))?;
-    let mime_type = mime_type.filter(|m| !m.trim().is_empty()).unwrap_or("image/png");
+    let mime_type = mime_type
+        .filter(|m| !m.trim().is_empty())
+        .unwrap_or("image/png");
     let extension = extension_for_content_type(Some(mime_type)).unwrap_or(".jpg");
     let mut filename = match filename.filter(|f| !f.trim().is_empty()) {
         Some(name) => name.to_owned(),
@@ -191,7 +210,10 @@ pub async fn upload_base64_data(
     // [QUIRK] the S3 content type follows the mime-derived extension, not the filename.
     req.type_name = format!("upload{extension}");
     req.s3_prefix = s3_prefix.map(str::to_owned);
-    Ok(store_media(env, &config, provider, req).await?.url().to_owned())
+    Ok(store_media(env, &config, provider, req)
+        .await?
+        .url()
+        .to_owned())
 }
 
 /// `save_to_notes_directory(temp, original_filename, resize:)`: writes
@@ -204,9 +226,16 @@ pub fn save_to_notes_directory(
     resize: Option<f64>,
 ) -> Result<String, MediaError> {
     let config = env.settings.current();
-    let mut req = UploadRequest::new(UploadOrigin::Picker, MediaKind::Image, original_filename, bytes.to_vec());
+    let mut req = UploadRequest::new(
+        UploadOrigin::Picker,
+        MediaKind::Image,
+        original_filename,
+        bytes.to_vec(),
+    );
     req.resize = resize;
-    Ok(crate::pipeline::store_media_local(env, &config, req)?.url().to_owned())
+    Ok(crate::pipeline::store_media_local(env, &config, req)?
+        .url()
+        .to_owned())
 }
 
 /// `upload_to_s3(path, resize:, custom_key:)` (legacy `/images/upload_to_s3`):
@@ -226,11 +255,17 @@ pub async fn upload_to_s3(
     let provider = us::provider(&config, &Param::Bool(true))?;
     let path = find_image(&config, rel).ok_or(MediaError::NotFound)?;
     let bytes = read_file(&path)?;
-    let name = path.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default();
+    let name = path
+        .file_name()
+        .map(|n| n.to_string_lossy().into_owned())
+        .unwrap_or_default();
     let mut req = UploadRequest::new(UploadOrigin::Picker, MediaKind::Image, name, bytes);
     req.resize = resize;
     req.s3_key = custom_key.map(str::to_owned);
-    Ok(store_media(env, &config, provider, req).await?.url().to_owned())
+    Ok(store_media(env, &config, provider, req)
+        .await?
+        .url()
+        .to_owned())
 }
 
 /// `download_and_upload_to_s3(url, resize:, custom_prefix:)` (legacy
@@ -255,18 +290,29 @@ pub async fn download_and_upload_to_s3(
     if name.trim().is_empty() || name == "_" || !has_word_extension(&name) {
         name = format!("{}{extension}", env.ctx.random.hex(8));
     }
-    let mut req = UploadRequest::new(UploadOrigin::UrlImport, MediaKind::Image, name, fetched.bytes);
+    let mut req = UploadRequest::new(
+        UploadOrigin::UrlImport,
+        MediaKind::Image,
+        name,
+        fetched.bytes,
+    );
     req.resize = resize;
     req.s3_prefix = custom_prefix.map(str::to_owned);
     // security: the object's Content-Type follows the validated name, never the
     // remote server's header (the original stored that header verbatim).
-    Ok(store_media(env, &config, provider, req).await?.url().to_owned())
+    Ok(store_media(env, &config, provider, req)
+        .await?
+        .url()
+        .to_owned())
 }
 
 /// `fetch_external_image(url)`: through [`MediaEnv::egress`] (EgressPolicy on
 /// every hop, ≤ 5 redirects, 25 MiB cap on Content-Length and stream, 30 s
 /// overall deadline). Missing `Content-Type` defaults to `image/jpeg`.
-pub async fn fetch_external_image(env: &MediaEnv, url: &str) -> Result<frankmd_net::Fetched, MediaError> {
+pub async fn fetch_external_image(
+    env: &MediaEnv,
+    url: &str,
+) -> Result<frankmd_net::Fetched, MediaError> {
     let mut fetched = env.egress.fetch(url).await?;
     if fetched.content_type.as_deref().is_none_or(|c| c.is_empty()) {
         fetched.content_type = Some("image/jpeg".to_owned());
@@ -280,8 +326,14 @@ const JPEG_QUALITY: u8 = 95;
 /// Decode, scale to `percent` (never below 1 px), re-encode as baseline JPEG.
 /// Re-encoding drops every metadata block (`-strip`). `None` on any failure.
 fn reencode_jpeg(bytes: &[u8], percent: u32) -> Option<Vec<u8>> {
-    let img = image::ImageReader::new(Cursor::new(bytes)).with_guessed_format().ok()?.decode().ok()?;
-    let scale = |v: u32| ((u64::from(v) * u64::from(percent) + 50) / 100).clamp(1, u64::from(u32::MAX)) as u32;
+    let img = image::ImageReader::new(Cursor::new(bytes))
+        .with_guessed_format()
+        .ok()?
+        .decode()
+        .ok()?;
+    let scale = |v: u32| {
+        ((u64::from(v) * u64::from(percent) + 50) / 100).clamp(1, u64::from(u32::MAX)) as u32
+    };
     let (w, h) = (scale(img.width()), scale(img.height()));
     let img = if (w, h) == (img.width(), img.height()) {
         img
@@ -318,7 +370,12 @@ fn ruby_str_to_f(s: &str) -> f64 {
     let mut end = 0;
     let digits = |from: usize| {
         let mut i = from;
-        while i < bytes.len() && (bytes[i].is_ascii_digit() || (bytes[i] == b'_' && i > from && bytes.get(i + 1).is_some_and(u8::is_ascii_digit))) {
+        while i < bytes.len()
+            && (bytes[i].is_ascii_digit()
+                || (bytes[i] == b'_'
+                    && i > from
+                    && bytes.get(i + 1).is_some_and(u8::is_ascii_digit)))
+        {
             i += 1;
         }
         i

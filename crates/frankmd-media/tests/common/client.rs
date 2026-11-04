@@ -1,5 +1,10 @@
 //! Helpers for the media-client ports (search, YouTube, picker sources).
-#![allow(dead_code, unreachable_pub, clippy::disallowed_methods, clippy::unwrap_used)]
+#![allow(
+    dead_code,
+    unreachable_pub,
+    clippy::disallowed_methods,
+    clippy::unwrap_used
+)]
 
 use std::path::PathBuf;
 
@@ -7,7 +12,9 @@ use frankmd_media::config::MediaConfig;
 
 /// `crates/frankmd-media/tests/data/<name>` contents.
 pub fn data(name: &str) -> String {
-    let p = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/data").join(name);
+    let p = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("tests/data")
+        .join(name);
     std::fs::read_to_string(&p).unwrap_or_else(|e| panic!("read {}: {e}", p.display()))
 }
 

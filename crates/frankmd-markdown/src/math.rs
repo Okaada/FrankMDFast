@@ -29,7 +29,11 @@ pub struct MathPolicy {
 
 impl MathPolicy {
     /// FrankMD's options.
-    pub const FRANKMD: MathPolicy = MathPolicy { trust: false, throw_on_error: false, max_expand: 1000 };
+    pub const FRANKMD: MathPolicy = MathPolicy {
+        trust: false,
+        throw_on_error: false,
+        max_expand: 1000,
+    };
 }
 
 /// Why a TeX snippet does not render cleanly.
@@ -45,8 +49,15 @@ pub enum MathError {
 
 /// Commands KaTeX refuses under `trust: false`: each renders as red text
 /// (its arguments are swallowed) instead of executing.
-const UNTRUSTED_COMMANDS: [&str; 7] =
-    [r"\href", r"\url", r"\htmlClass", r"\htmlId", r"\htmlStyle", r"\htmlData", r"\includegraphics"];
+const UNTRUSTED_COMMANDS: [&str; 7] = [
+    r"\href",
+    r"\url",
+    r"\htmlClass",
+    r"\htmlId",
+    r"\htmlStyle",
+    r"\htmlData",
+    r"\includegraphics",
+];
 
 /// Upper bound on re-parses while neutralizing undefined commands.
 const MAX_REPARSES: usize = 64;
@@ -69,19 +80,27 @@ pub fn validate(tex: &str, _style: MathStyle) -> Result<(), MathError> {
     for _ in 0..MAX_REPARSES {
         let mut parser = ratex_parser::Parser::new(tex);
         for name in &undefined {
-            parser
-                .gullet
-                .set_macro(name.clone(), ratex_parser::macro_expander::MacroDefinition::Tokens { tokens: Vec::new(), num_args: 0 });
+            parser.gullet.set_macro(
+                name.clone(),
+                ratex_parser::macro_expander::MacroDefinition::Tokens {
+                    tokens: Vec::new(),
+                    num_args: 0,
+                },
+            );
         }
         match parser.parse() {
             Ok(_) => return unsupported_in(tex, &undefined),
             Err(err) => match err.message.strip_prefix(UNDEFINED_PREFIX) {
-                Some(name) if !undefined.iter().any(|u| u == name) => undefined.push(name.to_owned()),
+                Some(name) if !undefined.iter().any(|u| u == name) => {
+                    undefined.push(name.to_owned())
+                }
                 _ => return Err(MathError::Parse(err.message)),
             },
         }
     }
-    Err(MathError::Parse("too many undefined control sequences".to_owned()))
+    Err(MathError::Parse(
+        "too many undefined control sequences".to_owned(),
+    ))
 }
 
 /// The verdict for TeX that parsed: unknown (`undefined`) and untrusted
@@ -91,7 +110,11 @@ fn unsupported_in(tex: &str, undefined: &[String]) -> Result<(), MathError> {
         .filter(|w| UNTRUSTED_COMMANDS.contains(w) || undefined.iter().any(|u| u == w))
         .map(str::to_owned)
         .collect();
-    if found.is_empty() { Ok(()) } else { Err(MathError::Unsupported(found)) }
+    if found.is_empty() {
+        Ok(())
+    } else {
+        Err(MathError::Unsupported(found))
+    }
 }
 
 /// Control words (`\name`, letters only) in source order. Control symbols

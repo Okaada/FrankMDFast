@@ -17,7 +17,12 @@ pub enum FocusRegion {
 }
 
 /// Reading order.
-const ORDER: [FocusRegion; 4] = [FocusRegion::Sidebar, FocusRegion::Editor, FocusRegion::Preview, FocusRegion::StatusLine];
+const ORDER: [FocusRegion; 4] = [
+    FocusRegion::Sidebar,
+    FocusRegion::Editor,
+    FocusRegion::Preview,
+    FocusRegion::StatusLine,
+];
 
 impl FocusRegion {
     /// Whether the region can take focus in `arrangement`. The status line
@@ -46,7 +51,13 @@ impl FocusRegion {
         let start = ORDER.iter().position(|r| *r == self).unwrap_or(0);
         let len = ORDER.len();
         (1..=len)
-            .map(|offset| if forward { (start + offset) % len } else { (start + len - offset) % len })
+            .map(|offset| {
+                if forward {
+                    (start + offset) % len
+                } else {
+                    (start + len - offset) % len
+                }
+            })
             .map(|i| ORDER[i])
             .find(|region| region.is_visible(arrangement, ex_line))
             .unwrap_or(self)

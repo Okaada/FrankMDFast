@@ -6,7 +6,11 @@ use frankmd_testkit::{assert_cases, decode_js, golden};
 
 fn date_arg(v: &frankmd_testkit::serde_json::Value) -> Result<jiff::civil::Date, String> {
     let s = decode_js(v);
-    let ts: jiff::Timestamp = s.as_str().ok_or("date arg")?.parse().map_err(|e| format!("{e}"))?;
+    let ts: jiff::Timestamp = s
+        .as_str()
+        .ok_or("date arg")?
+        .parse()
+        .map_err(|e| format!("{e}"))?;
     Ok(ts.to_zoned(jiff::tz::TimeZone::UTC).date())
 }
 
@@ -24,6 +28,10 @@ fn js_s3_key() {
             other => return Err(format!("unknown fn {other:?}")),
         };
         let want = decode_js(&c.expected);
-        if want.as_str() == Some(got.as_str()) { Ok(()) } else { Err(format!("expected {want}, got {got:?}")) }
+        if want.as_str() == Some(got.as_str()) {
+            Ok(())
+        } else {
+            Err(format!("expected {want}, got {got:?}"))
+        }
     });
 }

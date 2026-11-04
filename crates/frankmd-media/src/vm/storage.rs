@@ -28,7 +28,11 @@ pub enum Provider {
 impl Provider {
     /// From the `.fed` value (`s3` → S3, anything else → Local).
     pub fn from_setting(value: Option<&str>) -> Self {
-        if value == Some("s3") { Self::S3 } else { Self::Local }
+        if value == Some("s3") {
+            Self::S3
+        } else {
+            Self::Local
+        }
     }
 
     /// The `.fed` value.
@@ -81,7 +85,14 @@ pub struct MediaStorageState {
 impl MediaStorageState {
     /// From the persisted provider and whether S3 is configured.
     pub fn new(provider: Provider, s3_available: bool) -> Self {
-        Self { acknowledged: provider, pending: None, s3_available, error: None, fallback_announced: false, waiting: 0 }
+        Self {
+            acknowledged: provider,
+            pending: None,
+            s3_available,
+            error: None,
+            fallback_announced: false,
+            waiting: 0,
+        }
     }
 
     /// The acknowledged provider (what every control shows).
@@ -135,21 +146,30 @@ impl MediaStorageState {
     pub fn ack(&mut self, result: Result<(Provider, bool), Option<String>>) -> AckOutcome {
         let released = std::mem::take(&mut self.waiting);
         if self.pending.take().is_none() {
-            return AckOutcome { saved: false, released };
+            return AckOutcome {
+                saved: false,
+                released,
+            };
         }
         match result {
             Ok((provider, s3_available)) => {
                 self.acknowledged = provider;
                 self.s3_available = s3_available;
                 self.error = None;
-                AckOutcome { saved: true, released }
+                AckOutcome {
+                    saved: true,
+                    released,
+                }
             }
             Err(cause) => {
                 self.error = Some(match cause {
                     Some(cause) if !cause.is_empty() => Text::Raw(cause),
                     _ => Text::key("media_storage.save_failed"),
                 });
-                AckOutcome { saved: false, released }
+                AckOutcome {
+                    saved: false,
+                    released,
+                }
             }
         }
     }
@@ -232,7 +252,11 @@ impl Default for StorageRow {
 impl StorageRow {
     /// A row on `provider` (the global setting).
     pub fn new(provider: Provider, s3_available: bool) -> Self {
-        let provider = if s3_available { provider } else { Provider::Local };
+        let provider = if s3_available {
+            provider
+        } else {
+            Provider::Local
+        };
         Self {
             provider,
             s3_available,
@@ -252,7 +276,11 @@ impl StorageRow {
 
     /// Follow the acknowledged global provider. Leaving S3 resets the resize.
     pub fn set_provider(&mut self, provider: Provider) {
-        let provider = if provider == Provider::S3 && !self.s3_available { Provider::Local } else { provider };
+        let provider = if provider == Provider::S3 && !self.s3_available {
+            Provider::Local
+        } else {
+            provider
+        };
         if self.provider == Provider::S3 && provider != Provider::S3 {
             self.resize = DEFAULT_RESIZE;
         }
@@ -381,6 +409,10 @@ impl StorageRow {
         self.key_dirty = false;
         self.resize = DEFAULT_RESIZE;
         self.save_copy = false;
-        self.provider = if self.s3_available { global } else { Provider::Local };
+        self.provider = if self.s3_available {
+            global
+        } else {
+            Provider::Local
+        };
     }
 }

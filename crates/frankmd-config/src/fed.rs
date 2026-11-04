@@ -59,7 +59,10 @@ pub fn raw_entries(text: &str) -> Vec<RawEntry> {
             }
             let (name, rest) = split_key_line(line)?;
             let key = Key::from_name(&name)?;
-            Some(RawEntry { key, raw: unquote(ruby_strip(rest)).to_owned() })
+            Some(RawEntry {
+                key,
+                raw: unquote(ruby_strip(rest)).to_owned(),
+            })
         })
         .collect()
 }
@@ -92,20 +95,26 @@ fn split_key_line(line: &str) -> Option<(String, &str)> {
     if end == 0 {
         return None;
     }
-    let rest = line[end..].trim_start_matches(is_regex_space).strip_prefix('=')?;
+    let rest = line[end..]
+        .trim_start_matches(is_regex_space)
+        .strip_prefix('=')?;
     Some((line[..end].to_ascii_lowercase(), rest))
 }
 
 /// The key of a `#`-commented assignment (`^#\s*([a-z0-9_]+)\s*=`/i).
 fn commented_key(stripped: &str) -> Option<String> {
-    let rest = stripped.strip_prefix('#')?.trim_start_matches(is_regex_space);
+    let rest = stripped
+        .strip_prefix('#')?
+        .trim_start_matches(is_regex_space);
     split_key_line(rest).map(|(k, _)| k)
 }
 
 /// **[COMPAT]** quote removal: one pass for `"…"`, then one for `'…'`; a lone
 /// quote character becomes empty.
 fn unquote(value: &str) -> &str {
-    let strip = |v: &'_ str, q: char| -> Option<usize> { (v.starts_with(q) && v.ends_with(q)).then_some(v.len()) };
+    let strip = |v: &'_ str, q: char| -> Option<usize> {
+        (v.starts_with(q) && v.ends_with(q)).then_some(v.len())
+    };
     let mut v = value;
     for q in ['"', '\''] {
         if let Some(len) = strip(v, q) {
@@ -129,7 +138,12 @@ pub fn apply_changes(text: &str, changes: &[(Key, String)]) -> String {
             None => ordered.push((*key, line)),
         }
     }
-    let change_for = |name: &str| ordered.iter().find(|(k, _)| k.name() == name).map(|(k, l)| (*k, *l));
+    let change_for = |name: &str| {
+        ordered
+            .iter()
+            .find(|(k, _)| k.name() == name)
+            .map(|(k, l)| (*k, *l))
+    };
 
     let mut lines: Vec<&str> = Vec::new();
     let mut written: Vec<Key> = Vec::new();
@@ -172,15 +186,24 @@ pub fn apply_changes(text: &str, changes: &[(Key, String)]) -> String {
 /// [`Key::AI_UPGRADE_MARKERS`].
 pub fn needs_ai_section(text: &str) -> bool {
     !ruby_lines(text).map(chomp).any(|line| {
-        line.contains("# AI/LLM") || Key::AI_UPGRADE_MARKERS.iter().any(|k| mentions_key(line, k.name()))
+        line.contains("# AI/LLM")
+            || Key::AI_UPGRADE_MARKERS
+                .iter()
+                .any(|k| mentions_key(line, k.name()))
     })
 }
 
 /// `/^#?\s*KEY\s*=/i` (not anchored to a word boundary after `#?\s*`).
 fn mentions_key(line: &str, key: &str) -> bool {
-    let rest = line.strip_prefix('#').unwrap_or(line).trim_start_matches(is_regex_space);
-    rest.get(..key.len()).is_some_and(|head| head.eq_ignore_ascii_case(key))
-        && rest[key.len()..].trim_start_matches(is_regex_space).starts_with('=')
+    let rest = line
+        .strip_prefix('#')
+        .unwrap_or(line)
+        .trim_start_matches(is_regex_space);
+    rest.get(..key.len())
+        .is_some_and(|head| head.eq_ignore_ascii_case(key))
+        && rest[key.len()..]
+            .trim_start_matches(is_regex_space)
+            .starts_with('=')
 }
 
 /// **[COMPAT]** `upgrade_config_file`: `Some(new text)` when
@@ -192,7 +215,10 @@ pub fn upgrade_ai_section(text: &str) -> Option<String> {
         return None;
     }
     let mut lines: Vec<&str> = ruby_lines(text).map(chomp).collect();
-    if lines.last().is_some_and(|last| present_str(ruby_strip(last))) {
+    if lines
+        .last()
+        .is_some_and(|last| present_str(ruby_strip(last)))
+    {
         lines.push("");
     }
     lines.extend_from_slice(ai_section_lines());
@@ -226,7 +252,10 @@ pub fn ai_section_lines() -> &'static [&'static str] {
 pub fn template() -> &'static str {
     static TEMPLATE: OnceLock<String> = OnceLock::new();
     TEMPLATE.get_or_init(|| {
-        let lines: Vec<&str> = TEMPLATE_SECTIONS.iter().flat_map(|s| s.lines.iter().copied()).collect();
+        let lines: Vec<&str> = TEMPLATE_SECTIONS
+            .iter()
+            .flat_map(|s| s.lines.iter().copied())
+            .collect();
         let mut out = lines.join("\n");
         out.push('\n');
         out
@@ -277,12 +306,7 @@ static TEMPLATE_SECTIONS: [TemplateSection; 9] = [
     },
     TemplateSection {
         marker: "# Local Images",
-        lines: &[
-            "",
-            "# Local Images",
-            "",
-            "# images_path = /path/to/images",
-        ],
+        lines: &["", "# Local Images", "", "# images_path = /path/to/images"],
     },
     TemplateSection {
         marker: "# Media Uploads",

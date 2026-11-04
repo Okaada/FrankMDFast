@@ -33,7 +33,10 @@ pub struct Upload {
 impl Upload {
     /// Build.
     pub fn new(original_filename: impl Into<String>, bytes: impl Into<Vec<u8>>) -> Self {
-        Self { original_filename: original_filename.into(), bytes: bytes.into() }
+        Self {
+            original_filename: original_filename.into(),
+            bytes: bytes.into(),
+        }
     }
 }
 
@@ -59,9 +62,15 @@ pub fn provider(config: &MediaConfig, legacy_s3: &Param) -> Result<StorageProvid
     let provider = match selected {
         Some("local") => StorageProvider::Local,
         Some("s3") => StorageProvider::S3,
-        _ => return Err(MediaError::Rejected("Unknown media storage provider".to_owned())),
+        _ => {
+            return Err(MediaError::Rejected(
+                "Unknown media storage provider".to_owned(),
+            ));
+        }
     };
-    if !legacy_s3.is_nil() && legacy_s3.rails_boolean_cast() != Some(provider == StorageProvider::S3) {
+    if !legacy_s3.is_nil()
+        && legacy_s3.rails_boolean_cast() != Some(provider == StorageProvider::S3)
+    {
         return Err(MediaError::Rejected(
             "Upload destination conflicts with the active media storage provider".to_owned(),
         ));
@@ -113,7 +122,11 @@ pub fn invalid_s3_configuration_error(error: &S3Error) -> bool {
 /// `validate_filename!` / `validate_extension!`: `File.extname(name).downcase`
 /// must be in the configured list. Returns the normalized extension; else
 /// `Rejected("<.ext|no extension> is not an accepted <kind> type. Accepted: .a, .b")`.
-pub fn validate_filename(config: &MediaConfig, filename: &str, kind: UploadKind) -> Result<String, MediaError> {
+pub fn validate_filename(
+    config: &MediaConfig,
+    filename: &str,
+    kind: UploadKind,
+) -> Result<String, MediaError> {
     let extension = ruby_extname(filename).to_lowercase();
     let (allowed, word) = match kind {
         UploadKind::Image => (&config.image_upload_extensions, "image"),
@@ -122,15 +135,24 @@ pub fn validate_filename(config: &MediaConfig, filename: &str, kind: UploadKind)
     if allowed.contains(&extension) {
         return Ok(extension);
     }
-    let shown = if extension.trim().is_empty() { "no extension" } else { extension.as_str() };
-    Err(MediaError::Rejected(format!("{shown} is not an accepted {word} type. Accepted: {}", allowed.join(", "))))
+    let shown = if extension.trim().is_empty() {
+        "no extension"
+    } else {
+        extension.as_str()
+    };
+    Err(MediaError::Rejected(format!(
+        "{shown} is not an accepted {word} type. Accepted: {}",
+        allowed.join(", ")
+    )))
 }
 
 /// `enforce_size!` / `enforce_bytes!`: `None` (unknown size) passes; above
 /// `max` → `Rejected(TOO_LARGE_MESSAGE)`. (Ruby accepted negative sizes.)
 pub fn enforce_bytes(size: Option<i64>, max: u64) -> Result<(), MediaError> {
     match size {
-        Some(size) if size > 0 && size.unsigned_abs() > max => Err(MediaError::Rejected(TOO_LARGE_MESSAGE.to_owned())),
+        Some(size) if size > 0 && size.unsigned_abs() > max => {
+            Err(MediaError::Rejected(TOO_LARGE_MESSAGE.to_owned()))
+        }
         _ => Ok(()),
     }
 }
@@ -142,13 +164,23 @@ pub const fn max_base64_encoded_bytes() -> u64 {
 
 /// `enforce_base64_size!`: encoded length above `max` → `Rejected(TOO_LARGE_MESSAGE)`.
 pub fn enforce_base64_size(size: u64, max: u64) -> Result<(), MediaError> {
-    if size > max { Err(MediaError::Rejected(TOO_LARGE_MESSAGE.to_owned())) } else { Ok(()) }
+    if size > max {
+        Err(MediaError::Rejected(TOO_LARGE_MESSAGE.to_owned()))
+    } else {
+        Ok(())
+    }
 }
 
 /// `SANITIZE_RE` replacement (`nil` → `""`).
 pub fn sanitize_filename(name: &str) -> String {
     name.chars()
-        .map(|c| if c.is_ascii_alphanumeric() || matches!(c, '.' | '_' | '-') { c } else { '_' })
+        .map(|c| {
+            if c.is_ascii_alphanumeric() || matches!(c, '.' | '_' | '-') {
+                c
+            } else {
+                '_'
+            }
+        })
         .collect()
 }
 
@@ -157,7 +189,11 @@ pub fn sanitize_filename(name: &str) -> String {
 pub fn dest_filename(ctx: &MediaCtx, original_filename: Option<&str>) -> String {
     let now = ctx.clock.now();
     let safe = sanitize_filename(original_filename.unwrap_or_default());
-    format!("{}_{}_{safe}", now.strftime("%Y%m%d_%H%M%S"), ctx.random.hex(4))
+    format!(
+        "{}_{}_{safe}",
+        now.strftime("%Y%m%d_%H%M%S"),
+        ctx.random.hex(4)
+    )
 }
 
 /// `sanitize_s3_key`: split on `/`, drop empty/`.`/`..` segments, sanitize
@@ -179,7 +215,11 @@ pub fn unique_s3_key(ctx: &MediaCtx, key: &str, original_filename: Option<&str>)
     if extension.trim().is_empty() {
         extension = ruby_extname(original_filename.unwrap_or_default());
     }
-    let base = if !extension.trim().is_empty() { key.strip_suffix(extension).unwrap_or(key) } else { key };
+    let base = if !extension.trim().is_empty() {
+        key.strip_suffix(extension).unwrap_or(key)
+    } else {
+        key
+    };
     format!("{base}-{}{extension}", ctx.random.hex(8))
 }
 
@@ -222,8 +262,17 @@ pub fn s3_region(config: &MediaConfig) -> String {
 /// `<endpoint without trailing />/<bucket>/<key>`; endpoint virtual-host →
 /// `<scheme>://<bucket>.<host>[:<non-default port>]/<key>` (endpoint path dropped).
 pub fn s3_url(config: &MediaConfig, bucket: &str, region: &str, key: &str) -> String {
-    let encoded = key.split('/').map(erb_url_encode).collect::<Vec<_>>().join("/");
-    let Some(endpoint) = config.s3.endpoint.as_deref().filter(|e| !e.trim().is_empty()) else {
+    let encoded = key
+        .split('/')
+        .map(erb_url_encode)
+        .collect::<Vec<_>>()
+        .join("/");
+    let Some(endpoint) = config
+        .s3
+        .endpoint
+        .as_deref()
+        .filter(|e| !e.trim().is_empty())
+    else {
         return format!("https://{bucket}.s3.{region}.amazonaws.com/{encoded}");
     };
     let base = endpoint.strip_suffix('/').unwrap_or(endpoint);
@@ -233,7 +282,11 @@ pub fn s3_url(config: &MediaConfig, bucket: &str, region: &str, key: &str) -> St
     match url::Url::parse(base) {
         Ok(uri) => {
             let port = uri.port().map(|p| format!(":{p}")).unwrap_or_default();
-            format!("{}://{bucket}.{}{port}/{encoded}", uri.scheme(), uri.host_str().unwrap_or_default())
+            format!(
+                "{}://{bucket}.{}{port}/{encoded}",
+                uri.scheme(),
+                uri.host_str().unwrap_or_default()
+            )
         }
         // Unreachable for a configured provider (`s3_configured` validated the endpoint).
         Err(_) => format!("{base}/{bucket}/{encoded}"),
@@ -254,7 +307,11 @@ pub fn ruby_basename_without_ext(path: &str) -> &str {
     let trimmed = path.trim_end_matches('/');
     let base = trimmed.rsplit('/').next().unwrap_or(trimmed);
     let ext = ruby_extname(base);
-    if ext.is_empty() { base } else { &base[..base.len() - ext.len()] }
+    if ext.is_empty() {
+        base
+    } else {
+        &base[..base.len() - ext.len()]
+    }
 }
 
 /// `ERB::Util.url_encode`: percent-encode everything but `[A-Za-z0-9_.~-]`.

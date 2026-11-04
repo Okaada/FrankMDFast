@@ -19,7 +19,13 @@ const NEVER: &str = r"[^\x{0}-\x{10FFFF}]";
 pub(super) fn translate(src: &str) -> Result<String, String> {
     let chars: Vec<char> = src.chars().collect();
     let (group_count, has_named) = prescan(&chars);
-    let mut parser = Parser { chars, pos: 0, out: String::new(), group_count, has_named };
+    let mut parser = Parser {
+        chars,
+        pos: 0,
+        out: String::new(),
+        group_count,
+        has_named,
+    };
     parser.disjunction()?;
     if parser.pos < parser.chars.len() {
         // `disjunction` only stops early at a `)` with no open group.
@@ -40,7 +46,9 @@ fn prescan(chars: &[char]) -> (usize, bool) {
             '(' if !in_class => {
                 if chars.get(i + 1) != Some(&'?') {
                     count += 1;
-                } else if chars.get(i + 2) == Some(&'<') && !matches!(chars.get(i + 3), Some('=' | '!')) {
+                } else if chars.get(i + 2) == Some(&'<')
+                    && !matches!(chars.get(i + 3), Some('=' | '!'))
+                {
                     count += 1;
                     named = true;
                 }
@@ -110,7 +118,9 @@ impl Parser {
 
     /// One assertion or atom. Returns whether a quantifier may follow.
     fn term(&mut self) -> Result<bool, String> {
-        let Some(c) = self.peek() else { return Ok(false) };
+        let Some(c) = self.peek() else {
+            return Ok(false);
+        };
         self.pos += 1;
         match c {
             '^' | '$' => {
@@ -200,9 +210,18 @@ impl Parser {
         while let Some(c) = self.peek() {
             self.pos += 1;
             if c == '>' {
-                let valid = name.chars().next().is_some_and(|f| f.is_alphabetic() || f == '_' || f == '$')
-                    && name.chars().all(|c| c.is_alphanumeric() || c == '_' || c == '$');
-                return if valid { Ok(name) } else { Err("Invalid capture group name".into()) };
+                let valid = name
+                    .chars()
+                    .next()
+                    .is_some_and(|f| f.is_alphabetic() || f == '_' || f == '$')
+                    && name
+                        .chars()
+                        .all(|c| c.is_alphanumeric() || c == '_' || c == '$');
+                return if valid {
+                    Ok(name)
+                } else {
+                    Err("Invalid capture group name".into())
+                };
             }
             name.push(c);
         }
@@ -222,7 +241,11 @@ impl Parser {
             Some(min) if self.eat('}') => Some((min, Some(min))),
             Some(min) if self.eat(',') => {
                 let max = self.digits();
-                if self.eat('}') { Some((min, max)) } else { None }
+                if self.eat('}') {
+                    Some((min, max))
+                } else {
+                    None
+                }
             }
             Some(_) => None,
         };
@@ -231,7 +254,9 @@ impl Parser {
                 self.pos = start;
                 Ok(None)
             }
-            Some((min, Some(max))) if max < min => Err("numbers out of order in {} quantifier".into()),
+            Some((min, Some(max))) if max < min => {
+                Err("numbers out of order in {} quantifier".into())
+            }
             some => Ok(some),
         }
     }
@@ -274,7 +299,9 @@ impl Parser {
 
     /// After `\` outside a class (`\b`/`\B` are handled by `term`).
     fn atom_escape(&mut self) -> Result<(), String> {
-        let Some(c) = self.peek() else { return Err(r"\ at end of pattern".into()) };
+        let Some(c) = self.peek() else {
+            return Err(r"\ at end of pattern".into());
+        };
         self.pos += 1;
         match c {
             '1'..='9' => {
@@ -293,7 +320,9 @@ impl Parser {
                 if !self.eat('<') {
                     return Err("Invalid named reference".into());
                 }
-                let name = self.group_name().map_err(|_| "Invalid named reference".to_owned())?;
+                let name = self
+                    .group_name()
+                    .map_err(|_| "Invalid named reference".to_owned())?;
                 let _ = write!(self.out, r"\k<{name}>");
             }
             _ => match self.common_escape(c, false) {
@@ -313,7 +342,9 @@ impl Parser {
     fn legacy_octal_or_digit(&mut self) -> char {
         let first = self.peek().unwrap_or('0');
         self.pos += 1;
-        let Some(mut value) = first.to_digit(8) else { return first };
+        let Some(mut value) = first.to_digit(8) else {
+            return first;
+        };
         for _ in 0..2 {
             match self.peek().and_then(|c| c.to_digit(8)) {
                 Some(d) if value * 8 + d <= 0o377 => {
@@ -346,7 +377,10 @@ impl Parser {
                 ClassAtom::Char(self.legacy_octal_or_digit())
             }
             'c' => match self.peek() {
-                Some(l) if l.is_ascii_alphabetic() || (in_class && (l.is_ascii_digit() || l == '_')) => {
+                Some(l)
+                    if l.is_ascii_alphabetic()
+                        || (in_class && (l.is_ascii_digit() || l == '_')) =>
+                {
                     self.pos += 1;
                     ClassAtom::Char(char::from_u32(u32::from(l) % 32).unwrap_or('\0'))
                 }
@@ -369,8 +403,13 @@ impl Parser {
     /// After `\u`: four hex digits (a surrogate pair `👋` combines;
     /// a lone surrogate can never match a Rust string), else a literal `u`.
     fn unicode_escape(&mut self) -> ClassAtom {
-        let Some(unit) = self.hex(4) else { return ClassAtom::Char('u') };
-        if (0xD800..0xDC00).contains(&unit) && self.peek() == Some('\\') && self.peek_at(1) == Some('u') {
+        let Some(unit) = self.hex(4) else {
+            return ClassAtom::Char('u');
+        };
+        if (0xD800..0xDC00).contains(&unit)
+            && self.peek() == Some('\\')
+            && self.peek_at(1) == Some('u')
+        {
             let save = self.pos;
             self.pos += 2;
             match self.hex(4) {
@@ -444,12 +483,16 @@ impl Parser {
     }
 
     fn class_atom(&mut self) -> Result<ClassAtom, String> {
-        let Some(c) = self.peek() else { return Err("Unterminated character class".into()) };
+        let Some(c) = self.peek() else {
+            return Err("Unterminated character class".into());
+        };
         self.pos += 1;
         if c != '\\' {
             return Ok(ClassAtom::Char(c));
         }
-        let Some(e) = self.peek() else { return Err(r"\ at end of pattern".into()) };
+        let Some(e) = self.peek() else {
+            return Err(r"\ at end of pattern".into());
+        };
         self.pos += 1;
         Ok(match e {
             'b' => ClassAtom::Char('\u{08}'),

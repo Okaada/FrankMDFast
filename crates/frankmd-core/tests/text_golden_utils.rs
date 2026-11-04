@@ -39,7 +39,11 @@ impl Drop for Skips {
 }
 
 fn eq<T: std::fmt::Debug + PartialEq>(got: T, want: T, case: &Case) -> Result<(), String> {
-    if got == want { Ok(()) } else { Err(format!("input={} got={got:?} want={want:?}", case.input)) }
+    if got == want {
+        Ok(())
+    } else {
+        Err(format!("input={} got={got:?} want={want:?}", case.input))
+    }
 }
 
 fn expected(case: &Case) -> Value {
@@ -97,8 +101,14 @@ fn golden_text_utils() {
                 eq(got, expected(case).as_str().unwrap().to_owned(), case)
             }
             "isSafeImageUrl" => {
-                let Some(url) = a0.as_str() else { return skips.skip() };
-                eq(utils::is_safe_image_url(url), expected(case).as_bool().unwrap(), case)
+                let Some(url) = a0.as_str() else {
+                    return skips.skip();
+                };
+                eq(
+                    utils::is_safe_image_url(url),
+                    expected(case).as_bool().unwrap(),
+                    case,
+                )
             }
             "fuzzyScore" => {
                 let got = utils::fuzzy_score(&arg_str(&case.input, 0), &arg_str(&case.input, 1));
@@ -164,7 +174,12 @@ fn golden_markdown_utils() {
 fn to_table(v: &Value) -> Option<table::TableData> {
     v.as_array()?
         .iter()
-        .map(|row| row.as_array()?.iter().map(|c| c.as_str().map(str::to_owned)).collect())
+        .map(|row| {
+            row.as_array()?
+                .iter()
+                .map(|c| c.as_str().map(str::to_owned))
+                .collect()
+        })
         .collect()
 }
 
@@ -196,8 +211,16 @@ fn golden_table_utils() {
         }
         if f == "generateMarkdownTable" {
             // JS null/undefined -> no data.
-            let data = if a0.is_null() { Vec::new() } else { to_table(&a0).unwrap() };
-            return eq(table::generate_markdown_table(&data), want.as_str().unwrap().to_owned(), case);
+            let data = if a0.is_null() {
+                Vec::new()
+            } else {
+                to_table(&a0).unwrap()
+            };
+            return eq(
+                table::generate_markdown_table(&data),
+                want.as_str().unwrap().to_owned(),
+                case,
+            );
         }
         let data = to_table(&a0).unwrap();
         // Sparse-array / negative-index results are JS artifacts with no Rust equivalent.
@@ -210,15 +233,28 @@ fn golden_table_utils() {
                 else {
                     return skips.skip();
                 };
-                if f == "swapColumns" { table::swap_columns(&data, a, b) } else { table::swap_rows(&data, a, b) }
+                if f == "swapColumns" {
+                    table::swap_columns(&data, a, b)
+                } else {
+                    table::swap_rows(&data, a, b)
+                }
             }
             "deleteColumn" | "deleteRow" => {
-                let Some(i) = usize_arg(&case.input, 1) else { return skips.skip() };
-                if f == "deleteColumn" { table::delete_column(&data, i) } else { table::delete_row(&data, i) }
+                let Some(i) = usize_arg(&case.input, 1) else {
+                    return skips.skip();
+                };
+                if f == "deleteColumn" {
+                    table::delete_column(&data, i)
+                } else {
+                    table::delete_row(&data, i)
+                }
             }
             "addColumn" => {
                 let header = arg(&case.input, 1);
-                table::add_column(&data, header.as_str().unwrap_or(table::DEFAULT_COLUMN_HEADER))
+                table::add_column(
+                    &data,
+                    header.as_str().unwrap_or(table::DEFAULT_COLUMN_HEADER),
+                )
             }
             "addRow" => table::add_row(&data),
             other => return Err(format!("unknown fn {other}")),
@@ -262,7 +298,11 @@ fn golden_indent_utils() {
                 } else {
                     indent_value(&decode_js(raw))
                 };
-                eq(indent::parse_indent_setting(value.as_ref()).to_owned(), want, case)
+                eq(
+                    indent::parse_indent_setting(value.as_ref()).to_owned(),
+                    want,
+                    case,
+                )
             }
             "indentLines" => eq(
                 indent::indent_lines(&arg_str(&case.input, 0), &arg_str(&case.input, 1)),

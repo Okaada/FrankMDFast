@@ -12,8 +12,8 @@ use std::time::Instant;
 
 use frankmd_config::store::ConfigStore;
 use frankmd_config::{EnvSnapshot, Key, Value};
-use frankmd_core::tree::{FileType, TreeNode};
 use frankmd_core::Clock;
+use frankmd_core::tree::{FileType, TreeNode};
 use frankmd_fs::Vault;
 use frankmd_i18n::Locale;
 use frankmd_theme::OmarchyPaths;
@@ -972,9 +972,6 @@ impl Shell {
     // ----- overlays ---------------------------------------------------------------
 
     // ----- commands -----------------------------------------------------------------
-
 }
 
-impl Shell {
-
-}
+impl Shell {}

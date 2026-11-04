@@ -119,8 +119,14 @@ impl Vault {
     /// `images_path` picture folder): same containment and no-clobber
     /// semantics, but locks are taken only under `state_dir`, so no app file
     /// is ever created inside the user's folder (no Rails instance shares it).
-    pub fn open_foreign(root: impl Into<PathBuf>, state_dir: impl Into<PathBuf>) -> Result<Self, FsError> {
-        Ok(Self { private_locks: true, ..Self::open(root, state_dir)? })
+    pub fn open_foreign(
+        root: impl Into<PathBuf>,
+        state_dir: impl Into<PathBuf>,
+    ) -> Result<Self, FsError> {
+        Ok(Self {
+            private_locks: true,
+            ..Self::open(root, state_dir)?
+        })
     }
 
     /// Notes root as given.
@@ -493,8 +499,9 @@ impl Vault {
             }
         }
         match &self.trash {
-            TrashBackend::System => trash::delete(&path.abs)
-                .map_err(|e| FsError::Io(io::Error::other(format!("could not move to trash: {e}")))),
+            TrashBackend::System => trash::delete(&path.abs).map_err(|e| {
+                FsError::Io(io::Error::other(format!("could not move to trash: {e}")))
+            }),
             TrashBackend::Directory(dir) => {
                 fs::create_dir_all(dir)?;
                 let name = path

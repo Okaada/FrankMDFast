@@ -26,7 +26,11 @@ pub struct CursorPosition {
 
 impl Default for CursorPosition {
     fn default() -> Self {
-        Self { line: 1, column: 1, offset: 0 }
+        Self {
+            line: 1,
+            column: 1,
+            offset: 0,
+        }
     }
 }
 
@@ -41,6 +45,9 @@ pub struct CursorInfo {
 
 impl Default for CursorInfo {
     fn default() -> Self {
-        Self { current_line: 1, total_lines: 1 }
+        Self {
+            current_line: 1,
+            total_lines: 1,
+        }
     }
 }

@@ -1,5 +1,11 @@
 //! Shared helpers for frankmd-theme tests (filesystem setup is test-only).
-#![allow(dead_code, unreachable_pub, clippy::disallowed_methods, clippy::unwrap_used, clippy::missing_panics_doc)]
+#![allow(
+    dead_code,
+    unreachable_pub,
+    clippy::disallowed_methods,
+    clippy::unwrap_used,
+    clippy::missing_panics_doc
+)]
 
 use frankmd_theme::{Rgb, contrast_ratio};
 use serde_json::Value as J;
@@ -16,7 +22,11 @@ pub fn approx(got: f64, want: f64) -> bool {
 }
 
 pub fn eq(what: &str, got: &J, want: &J) -> Result<(), String> {
-    if got == want { Ok(()) } else { Err(format!("{what}:\n    got  {got}\n    want {want}")) }
+    if got == want {
+        Ok(())
+    } else {
+        Err(format!("{what}:\n    got  {got}\n    want {want}"))
+    }
 }
 
 /// FrankMD's own test helper (`assert_syntax_contrast`): every syntax role ≥ 4.5 vs code-bg.
@@ -55,7 +65,9 @@ pub struct OmarchyHome {
 
 impl OmarchyHome {
     pub fn new() -> Self {
-        Self { dir: tempfile::tempdir().unwrap() }
+        Self {
+            dir: tempfile::tempdir().unwrap(),
+        }
     }
     pub fn home(&self) -> &Path {
         self.dir.path()
@@ -75,7 +87,10 @@ impl OmarchyHome {
                 J::Null => std::fs::create_dir_all(&path).unwrap(),
                 J::String(s) => std::fs::write(&path, s).unwrap(),
                 J::Object(o) if o.contains_key("symlink") => {
-                    let target = o["symlink"].as_str().unwrap().replace("<THEMES>", &self.themes().to_string_lossy());
+                    let target = o["symlink"]
+                        .as_str()
+                        .unwrap()
+                        .replace("<THEMES>", &self.themes().to_string_lossy());
                     std::os::unix::fs::symlink(target, &path).unwrap();
                 }
                 J::Object(o) if o.contains_key("base64") => {

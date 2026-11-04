@@ -64,7 +64,11 @@ impl Shell {
 
     /// Linking notes of the open note (empty while computing or none).
     pub fn backlink_paths(&self) -> Vec<String> {
-        self.backlinks.items.iter().map(|b| b.path.clone()).collect()
+        self.backlinks
+            .items
+            .iter()
+            .map(|b| b.path.clone())
+            .collect()
     }
 
     /// `width`: docked width; `None` fills the parent (the narrow drawer).

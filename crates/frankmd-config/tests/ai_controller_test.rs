@@ -26,7 +26,11 @@ fn ai_config(env: EnvSnapshot) -> AiConfig {
         enabled: rc.feature_available(Feature::Ai),
         provider: rc.effective_ai_provider().map(AiProviderId::as_str),
         model: rc.effective_ai_model(),
-        available: rc.ai_providers_available().into_iter().map(AiProviderId::as_str).collect(),
+        available: rc
+            .ai_providers_available()
+            .into_iter()
+            .map(AiProviderId::as_str)
+            .collect(),
     }
 }
 
@@ -115,7 +119,10 @@ fn config_respects_ai_provider_override() {
 // port: test/controllers/ai_controller_test.rb:134 "config respects ai_model override"
 #[test]
 fn config_respects_ai_model_override() {
-    let c = ai_config(env(&[("OPENAI_API_KEY", "sk-test"), ("AI_MODEL", "gpt-4-turbo")]));
+    let c = ai_config(env(&[
+        ("OPENAI_API_KEY", "sk-test"),
+        ("AI_MODEL", "gpt-4-turbo"),
+    ]));
     assert_eq!(c.model.as_deref(), Some("gpt-4-turbo"));
 }
 
@@ -133,13 +140,21 @@ const IMAGE_MODEL: &str = "google/gemini-3.1-flash-image-preview";
 fn image_config_returns_enabled_false_when_no_openrouter_key() {
     let rc = TestVault::new().open_empty_env().current();
     assert!(rc.image_generation_key().is_none());
-    assert_eq!(get_str(&rc, Key::ImageGenerationModel).as_deref(), Some(IMAGE_MODEL));
+    assert_eq!(
+        get_str(&rc, Key::ImageGenerationModel).as_deref(),
+        Some(IMAGE_MODEL)
+    );
 }
 
 // port: test/controllers/ai_controller_test.rb:196 "image_config returns enabled true when OpenRouter key is set"
 #[test]
 fn image_config_returns_enabled_true_when_openrouter_key_is_set() {
-    let rc = TestVault::new().open(env(&[("OPENROUTER_API_KEY", "sk-or-test-key")])).current();
+    let rc = TestVault::new()
+        .open(env(&[("OPENROUTER_API_KEY", "sk-or-test-key")]))
+        .current();
     assert!(rc.image_generation_key().is_some());
-    assert_eq!(get_str(&rc, Key::ImageGenerationModel).as_deref(), Some(IMAGE_MODEL));
+    assert_eq!(
+        get_str(&rc, Key::ImageGenerationModel).as_deref(),
+        Some(IMAGE_MODEL)
+    );
 }

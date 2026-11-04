@@ -38,7 +38,9 @@ impl Shell {
             Some(OverlayKind::Palette(_)) => self.palette_cancel(cx),
             Some(OverlayKind::Dialog("recent-switcher")) => self.switcher.cancel(),
             Some(OverlayKind::Dialog(super::file_dialogs::NEW_NOTE)) => self.files.new_note = None,
-            Some(OverlayKind::Dialog(super::file_dialogs::NEW_FOLDER)) => self.files.new_folder = None,
+            Some(OverlayKind::Dialog(super::file_dialogs::NEW_FOLDER)) => {
+                self.files.new_folder = None
+            }
             Some(OverlayKind::Dialog(super::file_dialogs::MOVE)) => self.files.move_form = None,
             Some(OverlayKind::Dialog(super::file_dialogs::DELETE)) => self.files.delete = None,
             _ => {}
@@ -61,7 +63,10 @@ impl Shell {
             cx.notify();
             return;
         }
-        if self.overlays.is_open(&OverlayKind::Dialog("recent-switcher")) {
+        if self
+            .overlays
+            .is_open(&OverlayKind::Dialog("recent-switcher"))
+        {
             self.switcher.cancel();
         }
         if let Some(kind) = self.overlays.current() {

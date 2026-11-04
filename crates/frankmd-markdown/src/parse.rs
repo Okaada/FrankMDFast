@@ -29,7 +29,10 @@ impl fmt::Debug for RenderOptions {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("RenderOptions")
             .field("highlight_budget", &self.highlight_budget)
-            .field("highlighter", &self.highlighter.as_ref().map(|_| "dyn CodeHighlighter"))
+            .field(
+                "highlighter",
+                &self.highlighter.as_ref().map(|_| "dyn CodeHighlighter"),
+            )
             .finish()
     }
 }
@@ -191,13 +194,18 @@ pub mod ext {
     fn scan(re: &Regex, src: &str) -> Option<(usize, Vec<Option<String>>)> {
         let cap = rules::exec(re, src)?;
         let len = cap.get(0)?.end();
-        let groups = (1..cap.len()).map(|i| cap.get(i).map(|m| m.as_str().to_owned())).collect();
+        let groups = (1..cap.len())
+            .map(|i| cap.get(i).map(|m| m.as_str().to_owned()))
+            .collect();
         Some((len, groups))
     }
 
     fn scan_text(re: &Regex, src: &str) -> Option<Scanned<String>> {
         let (raw_len, mut g) = scan(re, src)?;
-        Some(Scanned { raw_len, value: g.swap_remove(0).unwrap_or_default() })
+        Some(Scanned {
+            raw_len,
+            value: g.swap_remove(0).unwrap_or_default(),
+        })
     }
 
     static SUPERSCRIPT: LazyLock<Regex> = LazyLock::new(|| rules::js(r"^\^([^\^]+)\^", ""));
@@ -207,7 +215,8 @@ pub mod ext {
     static ICON: LazyLock<Regex> = LazyLock::new(|| rules::js(r"^:ph-([a-z0-9-]+):", ""));
     static WIKILINK: LazyLock<Regex> =
         LazyLock::new(|| rules::js(r"^\[\[([^\]|]+)(?:\|([^\]]+))?\]\]", ""));
-    static MATH_BLOCK: LazyLock<Regex> = LazyLock::new(|| rules::js(r"^\$\$([\s\S]+?)\$\$(?:\n+|$)", ""));
+    static MATH_BLOCK: LazyLock<Regex> =
+        LazyLock::new(|| rules::js(r"^\$\$([\s\S]+?)\$\$(?:\n+|$)", ""));
     static MATH_INLINE: LazyLock<Regex> =
         LazyLock::new(|| rules::js(r"^\$(?!\$)(?!\s)((?:\\.|[^\\$])+?)(?<!\s)\$(?!\d)", ""));
 
@@ -242,7 +251,10 @@ pub mod ext {
         }
         let s = scan_text(&EMOJI, src)?;
         let emoji = frankmd_core::emoji::lookup(&s.value)?;
-        Some(Scanned { raw_len: s.raw_len, value: emoji })
+        Some(Scanned {
+            raw_len: s.raw_len,
+            value: emoji,
+        })
     }
 
     /// `:ph-([a-z0-9-]+):` for a known Phosphor icon.
@@ -254,7 +266,11 @@ pub mod ext {
         let glyph = frankmd_core::emoji::icons::lookup(&s.value)?;
         Some(Scanned {
             raw_len: s.raw_len,
-            value: IconTok { name: s.value, path: glyph.path.to_owned(), view_box: glyph.view_box.to_owned() },
+            value: IconTok {
+                name: s.value,
+                path: glyph.path.to_owned(),
+                view_box: glyph.view_box.to_owned(),
+            },
         })
     }
 
@@ -265,8 +281,14 @@ pub mod ext {
         }
         let (raw_len, g) = scan(&WIKILINK, src)?;
         let target = js_trim(g[0].as_deref().unwrap_or("")).to_owned();
-        let display = g[1].as_deref().filter(|d| !d.is_empty()).map(|d| js_trim(d).to_owned());
-        Some(Scanned { raw_len, value: WikiTok { target, display } })
+        let display = g[1]
+            .as_deref()
+            .filter(|d| !d.is_empty())
+            .map(|d| js_trim(d).to_owned());
+        Some(Scanned {
+            raw_len,
+            value: WikiTok { target, display },
+        })
     }
 
     /// `^\$\$([\s\S]+?)\$\$(?:\n+|$)` with non-blank content → trimmed TeX.
@@ -276,7 +298,10 @@ pub mod ext {
         }
         let s = scan_text(&MATH_BLOCK, src)?;
         let tex = js_trim(&s.value);
-        (!tex.is_empty()).then(|| Scanned { raw_len: s.raw_len, value: tex.to_owned() })
+        (!tex.is_empty()).then(|| Scanned {
+            raw_len: s.raw_len,
+            value: tex.to_owned(),
+        })
     }
 
     /// `^\$(?!\$)(?!\s)((?:\\.|[^\\$])+?)(?<!\s)\$(?!\d)` → TeX (escapes kept).

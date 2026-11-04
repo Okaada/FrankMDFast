@@ -32,11 +32,26 @@ pub enum HclStyle {
     Punctuation,
 }
 
-
 /// Block keywords (`KEYWORDS`).
 const KEYWORDS: [&str; 18] = [
-    "check", "connection", "data", "dynamic", "else", "for", "if", "import", "in", "locals",
-    "module", "output", "provider", "provisioner", "removed", "resource", "terraform", "variable",
+    "check",
+    "connection",
+    "data",
+    "dynamic",
+    "else",
+    "for",
+    "if",
+    "import",
+    "in",
+    "locals",
+    "module",
+    "output",
+    "provider",
+    "provisioner",
+    "removed",
+    "resource",
+    "terraform",
+    "variable",
 ];
 
 /// Multi-char operators first, then single chars (the JS alternation order).
@@ -111,8 +126,14 @@ impl Stream<'_> {
 fn is_js_space(c: char) -> bool {
     matches!(
         c,
-        '\t' | '\n' | '\u{0B}' | '\u{0C}' | '\r' | ' ' | '\u{A0}' | '\u{1680}' | '\u{2000}'..='\u{200A}'
-            | '\u{2028}' | '\u{2029}' | '\u{202F}' | '\u{205F}' | '\u{3000}' | '\u{FEFF}'
+        '\t' | '\n' | '\u{0B}' | '\u{0C}' | '\r' | ' ' | '\u{A0}' | '\u{1680}' | '\u{2000}'
+            ..='\u{200A}'
+                | '\u{2028}'
+                | '\u{2029}'
+                | '\u{202F}'
+                | '\u{205F}'
+                | '\u{3000}'
+                | '\u{FEFF}'
     )
 }
 
@@ -143,7 +164,8 @@ fn token(stream: &mut Stream<'_>, state: &mut HclState) -> Option<HclStyle> {
 
     let rest = stream.rest();
     // `/^#.*$/` and `/^\/\/.*$/`: only when no line terminator follows.
-    if (rest.starts_with('#') || rest.starts_with("//")) && !rest.chars().any(is_js_line_terminator) {
+    if (rest.starts_with('#') || rest.starts_with("//")) && !rest.chars().any(is_js_line_terminator)
+    {
         stream.skip_to_end();
         return Some(HclStyle::Comment);
     }
@@ -153,7 +175,11 @@ fn token(stream: &mut Stream<'_>, state: &mut HclState) -> Option<HclStyle> {
     }
 
     if let Some(len) = match_heredoc(rest) {
-        let marker_start = if rest.as_bytes().get(2) == Some(&b'-') { 3 } else { 2 };
+        let marker_start = if rest.as_bytes().get(2) == Some(&b'-') {
+            3
+        } else {
+            2
+        };
         state.heredoc_marker = Some(rest[marker_start..len].to_owned());
         stream.pos += len;
         return Some(HclStyle::String);
@@ -255,7 +281,10 @@ fn match_identifier(s: &str) -> Option<usize> {
     if !(first.is_ascii_alphabetic() || first == '_') {
         return None;
     }
-    let tail = s[1..].chars().take_while(|&c| is_word(c) || c == '-').count();
+    let tail = s[1..]
+        .chars()
+        .take_while(|&c| is_word(c) || c == '-')
+        .count();
     Some(1 + tail)
 }
 
@@ -294,9 +323,18 @@ fn match_number(s: &str) -> Option<usize> {
     let digit_ = |c: u8| c.is_ascii_digit() || c == b'_';
     if b.len() >= 3 && b[0] == b'0' {
         let (ok, cont): (ByteClass, ByteClass) = match b[1] {
-            b'x' | b'X' => (|c| c.is_ascii_hexdigit(), |c| c.is_ascii_hexdigit() || c == b'_'),
-            b'b' | b'B' => (|c| c == b'0' || c == b'1', |c| c == b'0' || c == b'1' || c == b'_'),
-            b'o' | b'O' => (|c| (b'0'..=b'7').contains(&c), |c| (b'0'..=b'7').contains(&c) || c == b'_'),
+            b'x' | b'X' => (
+                |c| c.is_ascii_hexdigit(),
+                |c| c.is_ascii_hexdigit() || c == b'_',
+            ),
+            b'b' | b'B' => (
+                |c| c == b'0' || c == b'1',
+                |c| c == b'0' || c == b'1' || c == b'_',
+            ),
+            b'o' | b'O' => (
+                |c| (b'0'..=b'7').contains(&c),
+                |c| (b'0'..=b'7').contains(&c) || c == b'_',
+            ),
             _ => (|_| false, |_| false),
         };
         if ok(b[2]) {

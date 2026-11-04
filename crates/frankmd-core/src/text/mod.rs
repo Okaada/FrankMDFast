@@ -79,12 +79,18 @@ pub(crate) fn last_newline_at_or_before(text: &str, from: usize) -> Option<usize
     if bytes.is_empty() {
         return None;
     }
-    bytes[..=from.min(bytes.len() - 1)].iter().rposition(|&b| b == b'\n')
+    bytes[..=from.min(bytes.len() - 1)]
+        .iter()
+        .rposition(|&b| b == b'\n')
 }
 
 /// JS `text.indexOf("\n", from)`: the first newline at or after `from`.
 pub(crate) fn first_newline_from(text: &str, from: usize) -> Option<usize> {
-    text.as_bytes().get(from..)?.iter().position(|&b| b == b'\n').map(|i| i + from)
+    text.as_bytes()
+        .get(from..)?
+        .iter()
+        .position(|&b| b == b'\n')
+        .map(|i| i + from)
 }
 
 pub mod aligned_table;

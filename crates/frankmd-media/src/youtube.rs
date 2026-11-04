@@ -50,7 +50,10 @@ impl YoutubeSearch {
 
     /// Injected base URL (tests).
     pub fn with_base(http: frankmd_net::TrustedClient, base: impl Into<String>) -> Self {
-        Self { http, base: base.into() }
+        Self {
+            http,
+            base: base.into(),
+        }
     }
 
     /// `GET /youtube/search?q=`: strip, blank → [`SearchError::QueryRequired`];
@@ -74,15 +77,30 @@ impl YoutubeSearch {
             ("maxResults", &max),
             ("key", key),
         ]);
-        let url = format!("{}/youtube/v3/search?{query_string}", self.base.trim_end_matches('/'));
-        let response = self.http.reqwest().get(url).send().await.map_err(|_| SearchError::Failed)?;
+        let url = format!(
+            "{}/youtube/v3/search?{query_string}",
+            self.base.trim_end_matches('/')
+        );
+        let response = self
+            .http
+            .reqwest()
+            .get(url)
+            .send()
+            .await
+            .map_err(|_| SearchError::Failed)?;
         if !response.status().is_success() {
-            return Ok(VideoResults { videos: Vec::new(), error: Some("YouTube API error".into()) });
+            return Ok(VideoResults {
+                videos: Vec::new(),
+                error: Some("YouTube API error".into()),
+            });
         }
         let body = response.text().await.map_err(|_| SearchError::Failed)?;
-        let data: serde_json::Value = serde_json::from_str(&body).map_err(|_| SearchError::Failed)?;
+        let data: serde_json::Value =
+            serde_json::from_str(&body).map_err(|_| SearchError::Failed)?;
         let text = |item: &serde_json::Value, pointer: &str| {
-            item.pointer(pointer).and_then(serde_json::Value::as_str).map(str::to_owned)
+            item.pointer(pointer)
+                .and_then(serde_json::Value::as_str)
+                .map(str::to_owned)
         };
         let videos = data
             .get("items")
@@ -100,6 +118,9 @@ impl YoutubeSearch {
                     .collect()
             })
             .unwrap_or_default();
-        Ok(VideoResults { videos, error: None })
+        Ok(VideoResults {
+            videos,
+            error: None,
+        })
     }
 }

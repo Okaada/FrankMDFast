@@ -27,7 +27,11 @@ fn encode(ops: &[DiffOp]) -> Value {
 }
 
 fn check_eq(got: Value, want: &Value) -> Result<(), String> {
-    if &got == want { Ok(()) } else { Err(format!("got {got}, want {want}")) }
+    if &got == want {
+        Ok(())
+    } else {
+        Err(format!("got {got}, want {want}"))
+    }
 }
 
 #[test]
@@ -55,7 +59,12 @@ fn golden_lcs_word_diff() {
     let g = golden(FIXTURE);
     assert_cases(FIXTURE, g.cases_for("lcsWordDiff"), |c| {
         let toks = |i: usize| -> Vec<String> {
-            arg(&c.input, i).as_array().unwrap().iter().map(|v| v.as_str().unwrap().to_owned()).collect()
+            arg(&c.input, i)
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|v| v.as_str().unwrap().to_owned())
+                .collect()
         };
         let (old, new) = (toks(0), toks(1));
         let old: Vec<&str> = old.iter().map(String::as_str).collect();

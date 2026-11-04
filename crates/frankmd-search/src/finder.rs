@@ -30,7 +30,11 @@ pub fn rank(query: &str, candidates: &[String], recent: &[String], limit: usize)
         return ordered
             .into_iter()
             .take(limit)
-            .map(|path| Ranked { path: path.clone(), score: 0, indices: Vec::new() })
+            .map(|path| Ranked {
+                path: path.clone(),
+                score: 0,
+                indices: Vec::new(),
+            })
             .collect();
     }
 
@@ -39,7 +43,11 @@ pub fn rank(query: &str, candidates: &[String], recent: &[String], limit: usize)
         .filter_map(|path| {
             let lower = path.to_lowercase();
             let score = fuzzy_score(&lower, &query);
-            (score > 0).then(|| Ranked { path: path.clone(), score, indices: matched_indices(&lower, &query) })
+            (score > 0).then(|| Ranked {
+                path: path.clone(),
+                score,
+                indices: matched_indices(&lower, &query),
+            })
         })
         .collect();
     scored.sort_by_key(|r| std::cmp::Reverse(r.score));

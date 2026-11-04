@@ -5,7 +5,11 @@
 //! has the shape `{source, frankmd_sha, generator, notes, cases: [{name, fn?, input, expected}]}`.
 //!
 //! This crate is a dev-dependency only; it may touch the filesystem freely.
-#![allow(clippy::disallowed_methods, clippy::unwrap_used, clippy::missing_panics_doc)]
+#![allow(
+    clippy::disallowed_methods,
+    clippy::unwrap_used,
+    clippy::missing_panics_doc
+)]
 
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
@@ -60,13 +64,18 @@ pub struct Golden {
 impl Golden {
     /// Cases recorded for one function (`fn` field).
     pub fn cases_for<'a>(&'a self, func: &'a str) -> impl Iterator<Item = &'a Case> + 'a {
-        self.cases.iter().filter(move |c| c.func.as_deref() == Some(func))
+        self.cases
+            .iter()
+            .filter(move |c| c.func.as_deref() == Some(func))
     }
 }
 
 /// Repository root (two levels above this crate).
 pub fn repo_root() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR")).join("../..").canonicalize().unwrap()
+    Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../..")
+        .canonicalize()
+        .unwrap()
 }
 
 /// Absolute path of a file under `tests/fixtures/golden/`.
@@ -77,7 +86,8 @@ pub fn golden_path(rel: &str) -> PathBuf {
 /// Load `tests/fixtures/golden/<name>.json`.
 pub fn golden(name: &str) -> Golden {
     let path = golden_path(&format!("{name}.json"));
-    let text = std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("read {}: {e}", path.display()));
+    let text =
+        std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("read {}: {e}", path.display()));
     serde_json::from_str(&text).unwrap_or_else(|e| panic!("parse {}: {e}", path.display()))
 }
 
@@ -135,7 +145,9 @@ pub struct TempTree {
 impl TempTree {
     /// Empty temp dir.
     pub fn empty() -> Self {
-        Self { dir: tempfile::tempdir().unwrap() }
+        Self {
+            dir: tempfile::tempdir().unwrap(),
+        }
     }
 
     /// Materialize a tree spec (a JSON object, or `null` for empty).
@@ -189,7 +201,10 @@ impl TempTree {
 }
 
 fn walk(root: &Path, dir: &Path, out: &mut BTreeMap<String, Value>) {
-    let mut entries: Vec<_> = std::fs::read_dir(dir).unwrap().map(|e| e.unwrap()).collect();
+    let mut entries: Vec<_> = std::fs::read_dir(dir)
+        .unwrap()
+        .map(|e| e.unwrap())
+        .collect();
     entries.sort_by_key(std::fs::DirEntry::file_name);
     for e in entries {
         let p = e.path();
@@ -197,13 +212,19 @@ fn walk(root: &Path, dir: &Path, out: &mut BTreeMap<String, Value>) {
         let ft = e.file_type().unwrap();
         if ft.is_symlink() {
             let target = std::fs::read_link(&p).unwrap();
-            out.insert(rel, serde_json::json!({"symlink": target.to_string_lossy()}));
+            out.insert(
+                rel,
+                serde_json::json!({"symlink": target.to_string_lossy()}),
+            );
         } else if ft.is_dir() {
             out.insert(format!("{rel}/"), Value::Null);
             walk(root, &p, out);
         } else {
             let bytes = std::fs::read(&p).unwrap();
-            out.insert(rel, Value::String(String::from_utf8_lossy(&bytes).into_owned()));
+            out.insert(
+                rel,
+                Value::String(String::from_utf8_lossy(&bytes).into_owned()),
+            );
         }
     }
 }
@@ -218,14 +239,20 @@ pub fn decode_js(v: &Value) -> Value {
                 "$undefined" => Value::Null,
                 "$number" | "$date" | "$regexp" => inner.clone(),
                 "$utf16" => {
-                    let units: Vec<u16> =
-                        inner.as_array().unwrap().iter().map(|u| u.as_u64().unwrap() as u16).collect();
+                    let units: Vec<u16> = inner
+                        .as_array()
+                        .unwrap()
+                        .iter()
+                        .map(|u| u.as_u64().unwrap() as u16)
+                        .collect();
                     Value::String(String::from_utf16_lossy(&units))
                 }
                 _ => Value::Object(o.iter().map(|(k, v)| (k.clone(), decode_js(v))).collect()),
             }
         }
-        Value::Object(o) => Value::Object(o.iter().map(|(k, v)| (k.clone(), decode_js(v))).collect()),
+        Value::Object(o) => {
+            Value::Object(o.iter().map(|(k, v)| (k.clone(), decode_js(v))).collect())
+        }
         Value::Array(a) => Value::Array(a.iter().map(decode_js).collect()),
         other => other.clone(),
     }

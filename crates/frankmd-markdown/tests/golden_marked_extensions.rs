@@ -16,7 +16,9 @@
 mod common;
 
 use common::*;
-use frankmd_markdown::html::{inlines_to_html, render_inline, render_math_block, sanitize, to_html};
+use frankmd_markdown::html::{
+    inlines_to_html, render_inline, render_math_block, sanitize, to_html,
+};
 use frankmd_markdown::ir::Inline;
 use frankmd_markdown::parse::ext::{self, Extension, Level};
 use frankmd_markdown::{RenderOptions, parse_inline, render_body};
@@ -45,9 +47,14 @@ fn split_fn(case: &Case) -> (Extension, &str) {
     (ext_of(e), m)
 }
 
-fn cases_with_suffix<'a>(g: &'a frankmd_testkit::Golden, suffix: &'a str) -> impl Iterator<Item = &'a Case> + 'a {
+fn cases_with_suffix<'a>(
+    g: &'a frankmd_testkit::Golden,
+    suffix: &'a str,
+) -> impl Iterator<Item = &'a Case> + 'a {
     g.cases.iter().filter(move |c| {
-        c.func.as_deref().is_some_and(|f| f.ends_with(suffix) && f.contains("Extension."))
+        c.func
+            .as_deref()
+            .is_some_and(|f| f.ends_with(suffix) && f.contains("Extension."))
             && !is_known_divergence(FIXTURE, &c.name)
     })
 }
@@ -61,7 +68,11 @@ fn golden_all_extensions_order() {
             .map(|e| json!({"name": e.name(), "level": if e.level() == Level::Block { "block" } else { "inline" }}))
             .collect();
         let got = Value::Array(got);
-        if got == expected(case) { Ok(()) } else { Err(format!("got {got}")) }
+        if got == expected(case) {
+            Ok(())
+        } else {
+            Err(format!("got {got}"))
+        }
     });
 }
 
@@ -77,7 +88,11 @@ fn golden_extension_start() {
             v if v.as_i64() == Some(-1) => None,
             v => Some(v.as_u64().unwrap() as usize),
         };
-        if got == want { Ok(()) } else { Err(format!("got {got:?}, expected {want:?}")) }
+        if got == want {
+            Ok(())
+        } else {
+            Err(format!("got {got:?}, expected {want:?}"))
+        }
     });
 }
 
@@ -113,7 +128,11 @@ fn golden_extension_tokenizer() {
         let (e, _) = split_fn(case);
         let got = scan_json(e, &arg_str(case, 0));
         let want = expected(case);
-        if got == want { Ok(()) } else { Err(format!("got {got}, expected {want}")) }
+        if got == want {
+            Ok(())
+        } else {
+            Err(format!("got {got}, expected {want}"))
+        }
     });
 }
 
@@ -131,17 +150,29 @@ fn golden_extension_renderer() {
                 Extension::Subscript => Inline::Subscript(s("text")),
                 Extension::Highlight => Inline::Highlight(s("text")),
                 Extension::MathInline => Inline::Math(s("text")),
-                Extension::Emoji => Inline::Emoji { shortcode: String::new(), emoji: s("emoji") },
-                Extension::Icon => Inline::Icon { name: String::new(), path: s("path"), view_box: s("viewBox") },
-                Extension::Wikilink => {
-                    Inline::WikiLink { target: s("target"), label: tok["displayText"].as_str().map(str::to_owned) }
-                }
+                Extension::Emoji => Inline::Emoji {
+                    shortcode: String::new(),
+                    emoji: s("emoji"),
+                },
+                Extension::Icon => Inline::Icon {
+                    name: String::new(),
+                    path: s("path"),
+                    view_box: s("viewBox"),
+                },
+                Extension::Wikilink => Inline::WikiLink {
+                    target: s("target"),
+                    label: tok["displayText"].as_str().map(str::to_owned),
+                },
                 Extension::MathBlock => unreachable!(),
             }),
         };
         let want = expected(case);
         let want = want.as_str().unwrap();
-        if got == want { Ok(()) } else { Err(format!("got {got:?}, expected {want:?}")) }
+        if got == want {
+            Ok(())
+        } else {
+            Err(format!("got {got:?}, expected {want:?}"))
+        }
     });
 }
 
@@ -155,7 +186,9 @@ fn golden_marked_parse() {
     // `sanitizeHtml(marked.parse(md))` (markdown_line_mapper.js
     // `return sanitizeHtml(result)`), so the oracle is the sanitized fixture.
     // That also lets the 18 raw-HTML inputs be compared instead of skipped.
-    let cases = g.cases_for("marked.parse").filter(|c| !is_known_divergence(FIXTURE, &c.name));
+    let cases = g
+        .cases_for("marked.parse")
+        .filter(|c| !is_known_divergence(FIXTURE, &c.name));
     assert_cases(FIXTURE, cases, |case| {
         let doc = render_body(&arg_str(case, 0), 0, &RenderOptions::default());
         let want = expected(case);

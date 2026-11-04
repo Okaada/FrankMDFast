@@ -59,7 +59,10 @@ pub struct InlineInsert {
 
 impl Default for InlineInsert {
     fn default() -> Self {
-        Self { replace_selection: true, replace: None }
+        Self {
+            replace_selection: true,
+            replace: None,
+        }
     }
 }
 
@@ -156,8 +159,16 @@ pub fn insert_image(
     };
     let before = js_substring(&text, 0, from);
     let after = js_substring(&text, to, text.len());
-    let newline_before = if !before.is_empty() && !before.ends_with('\n') { "\n" } else { "" };
-    let newline_after = if !after.is_empty() && !after.starts_with('\n') { "\n" } else { "" };
+    let newline_before = if !before.is_empty() && !before.ends_with('\n') {
+        "\n"
+    } else {
+        ""
+    };
+    let newline_after = if !after.is_empty() && !after.starts_with('\n') {
+        "\n"
+    } else {
+        ""
+    };
     let insert = [newline_before, markdown, newline_after].concat();
     editor.replace_range(&insert, from, to);
     let cursor = from + insert.len();
@@ -166,7 +177,11 @@ pub fn insert_image(
 }
 
 /// Insert or replace a table (delegates to [`insert_block_content`]).
-pub fn insert_table(editor: Option<&mut dyn EditorSurface>, markdown: &str, opts: &BlockInsert) -> usize {
+pub fn insert_table(
+    editor: Option<&mut dyn EditorSurface>,
+    markdown: &str,
+    opts: &BlockInsert,
+) -> usize {
     insert_block_content(editor, markdown, opts)
 }
 
@@ -178,12 +193,19 @@ pub fn insert_code_block(
     language: &str,
     opts: &BlockInsert,
 ) -> usize {
-    let opts = BlockInsert { cursor_offset: Some(3 + language.len() + 1), ..opts.clone() };
+    let opts = BlockInsert {
+        cursor_offset: Some(3 + language.len() + 1),
+        ..opts.clone()
+    };
     insert_block_content(editor, code_block, &opts)
 }
 
 /// Insert a video embed (delegates to [`insert_block_content`]).
-pub fn insert_video_embed(editor: Option<&mut dyn EditorSurface>, embed: &str, opts: &BlockInsert) -> usize {
+pub fn insert_video_embed(
+    editor: Option<&mut dyn EditorSurface>,
+    embed: &str,
+    opts: &BlockInsert,
+) -> usize {
     insert_block_content(editor, embed, opts)
 }
 
@@ -216,7 +238,10 @@ impl std::fmt::Debug for TextareaAdapter<'_> {
 impl<'a> TextareaAdapter<'a> {
     /// `None` when there is no editor (JS returns `null`).
     pub fn new(editor: Option<&'a mut dyn EditorSurface>) -> Option<Self> {
-        editor.map(|editor| Self { editor, input_handler: None })
+        editor.map(|editor| Self {
+            editor,
+            input_handler: None,
+        })
     }
     /// Document text (`adapter.value`).
     pub fn value(&self) -> String {
@@ -278,7 +303,9 @@ pub fn get_editor_selection(editor: Option<&dyn EditorSurface>) -> Selection {
 
 /// Editor cursor position, else `{line 1, column 1, offset 0}`.
 pub fn get_cursor_position(editor: Option<&dyn EditorSurface>) -> CursorPosition {
-    editor.map(EditorSurface::cursor_position).unwrap_or_default()
+    editor
+        .map(EditorSurface::cursor_position)
+        .unwrap_or_default()
 }
 
 /// Editor cursor info, else `{current_line 1, total_lines 1}`.

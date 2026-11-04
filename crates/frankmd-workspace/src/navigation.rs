@@ -127,7 +127,11 @@ impl RecentSwitcher {
         if self.mru.is_empty() {
             return;
         }
-        self.active = Some(if forward { 1.min(self.mru.len() - 1) } else { self.mru.len() - 1 });
+        self.active = Some(if forward {
+            1.min(self.mru.len() - 1)
+        } else {
+            self.mru.len() - 1
+        });
     }
 
     /// Move the selection (wrapping); starts the switcher if inactive.
@@ -135,7 +139,13 @@ impl RecentSwitcher {
         let n = self.mru.len();
         match self.active {
             None => self.start(forward),
-            Some(i) => self.active = Some(if forward { (i + 1) % n } else { (i + n - 1) % n }),
+            Some(i) => {
+                self.active = Some(if forward {
+                    (i + 1) % n
+                } else {
+                    (i + n - 1) % n
+                })
+            }
         }
     }
 

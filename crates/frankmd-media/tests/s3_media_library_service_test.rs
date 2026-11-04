@@ -29,7 +29,11 @@ async fn lists_supported_objects_below_prefix_across_pages() {
         .and(query_param_is_missing("continuation-token"))
         .respond_with(ResponseTemplate::new(200).set_body_string(list_objects_xml(
             "bucket",
-            &[("frankmd/2026/photo.png", 12), ("foreign/photo.png", 9), ("frankmd/readme.txt", 5)],
+            &[
+                ("frankmd/2026/photo.png", 12),
+                ("foreign/photo.png", 9),
+                ("frankmd/readme.txt", 5),
+            ],
             Some("next"),
         )))
         .expect(1)
@@ -39,27 +43,59 @@ async fn lists_supported_objects_below_prefix_across_pages() {
         .and(path_regex("^/bucket/?$")) // mechanical: aws-sdk-s3 (Rust) sends `/bucket/` for path-style ListObjectsV2
         .and(query_param("prefix", "frankmd/"))
         .and(query_param("continuation-token", "next"))
-        .respond_with(ResponseTemplate::new(200).set_body_string(list_objects_xml("bucket", &[("frankmd/2026/clip.mp4", 20)], None)))
+        .respond_with(ResponseTemplate::new(200).set_body_string(list_objects_xml(
+            "bucket",
+            &[("frankmd/2026/clip.mp4", 20)],
+            None,
+        )))
         .expect(1)
         .mount(&server)
         .await;
     let (_n, lib) = service(&server).await;
     let result = lib.list().await.expect("list");
-    assert_eq!(result.images.iter().map(|i| i.path.as_str()).collect::<Vec<_>>(), vec!["frankmd/2026/photo.png"]);
-    assert_eq!(result.videos.iter().map(|i| i.path.as_str()).collect::<Vec<_>>(), vec!["frankmd/2026/clip.mp4"]);
+    assert_eq!(
+        result
+            .images
+            .iter()
+            .map(|i| i.path.as_str())
+            .collect::<Vec<_>>(),
+        vec!["frankmd/2026/photo.png"]
+    );
+    assert_eq!(
+        result
+            .videos
+            .iter()
+            .map(|i| i.path.as_str())
+            .collect::<Vec<_>>(),
+        vec!["frankmd/2026/clip.mp4"]
+    );
     // provider "s3" ⇔ s3_url present
-    let url = result.images[0].s3_url.as_deref().expect("provider s3 item has url");
-    assert_eq!(url, "https://bucket.s3.us-east-1.amazonaws.com/frankmd/2026/photo.png");
+    let url = result.images[0]
+        .s3_url
+        .as_deref()
+        .expect("provider s3 item has url");
+    assert_eq!(
+        url,
+        "https://bucket.s3.us-east-1.amazonaws.com/frankmd/2026/photo.png"
+    );
 }
 
 // port: test/services/s3_media_library_service_test.rb:37 "delete rejects foreign and unsupported keys without calling S3"
 #[tokio::test]
 async fn delete_rejects_foreign_and_unsupported_keys_without_calling_s3() {
     let server = MockServer::start().await;
-    Mock::given(method("DELETE")).respond_with(ResponseTemplate::new(204)).expect(0).mount(&server).await;
+    Mock::given(method("DELETE"))
+        .respond_with(ResponseTemplate::new(204))
+        .expect(0)
+        .mount(&server)
+        .await;
     let (_n, lib) = service(&server).await;
     assert!(!lib.delete("foreign/photo.png").await.expect("no error"));
-    assert!(!lib.delete("frankmd/../../photo.png").await.expect("no error"));
+    assert!(
+        !lib.delete("frankmd/../../photo.png")
+            .await
+            .expect("no error")
+    );
     assert!(!lib.delete("frankmd/readme.txt").await.expect("no error"));
     assert_eq!(server.received_requests().await.map(|r| r.len()), Some(0));
 }
@@ -104,12 +140,21 @@ async fn rename_copies_to_free_sibling_then_deletes_source() {
         .mount(&server)
         .await;
     let (_n, lib) = service(&server).await;
-    let renamed = lib.rename("frankmd/2026/photo.png", "renamed.png").await.expect("rename").expect("renamed");
+    let renamed = lib
+        .rename("frankmd/2026/photo.png", "renamed.png")
+        .await
+        .expect("rename")
+        .expect("renamed");
     assert_eq!(renamed.path, "frankmd/2026/renamed.png");
     assert_eq!(renamed.name, "renamed.png");
     // in sequence: HEAD, PUT (copy), DELETE
-    let order: Vec<String> =
-        server.received_requests().await.unwrap_or_default().iter().map(|r| r.method.to_string()).collect();
+    let order: Vec<String> = server
+        .received_requests()
+        .await
+        .unwrap_or_default()
+        .iter()
+        .map(|r| r.method.to_string())
+        .collect();
     assert_eq!(order, vec!["HEAD", "PUT", "DELETE"]);
 }
 
@@ -117,8 +162,16 @@ async fn rename_copies_to_free_sibling_then_deletes_source() {
 #[tokio::test]
 async fn rename_rejects_traversal_unsupported_and_collisions_without_mutation() {
     let server = MockServer::start().await;
-    Mock::given(method("PUT")).respond_with(ResponseTemplate::new(200)).expect(0).mount(&server).await;
-    Mock::given(method("DELETE")).respond_with(ResponseTemplate::new(204)).expect(0).mount(&server).await;
+    Mock::given(method("PUT"))
+        .respond_with(ResponseTemplate::new(200))
+        .expect(0)
+        .mount(&server)
+        .await;
+    Mock::given(method("DELETE"))
+        .respond_with(ResponseTemplate::new(204))
+        .expect(0)
+        .mount(&server)
+        .await;
     Mock::given(method("HEAD"))
         .and(path("/bucket/frankmd/2026/existing.png"))
         .respond_with(ResponseTemplate::new(200))
@@ -126,9 +179,29 @@ async fn rename_rejects_traversal_unsupported_and_collisions_without_mutation() 
         .mount(&server)
         .await;
     let (_n, lib) = service(&server).await;
-    assert_eq!(lib.rename("frankmd/2026/photo.png", "../outside.png").await.expect("ok"), None);
-    assert_eq!(lib.rename("frankmd/2026/photo.png", "readme.txt").await.expect("ok"), None);
+    assert_eq!(
+        lib.rename("frankmd/2026/photo.png", "../outside.png")
+            .await
+            .expect("ok"),
+        None
+    );
+    assert_eq!(
+        lib.rename("frankmd/2026/photo.png", "readme.txt")
+            .await
+            .expect("ok"),
+        None
+    );
     let long = format!("{}.png", "a".repeat(1_100));
-    assert_eq!(lib.rename("frankmd/2026/photo.png", &long).await.expect("ok"), None);
-    assert_eq!(lib.rename("frankmd/2026/photo.png", "existing.png").await.expect("ok"), None);
+    assert_eq!(
+        lib.rename("frankmd/2026/photo.png", &long)
+            .await
+            .expect("ok"),
+        None
+    );
+    assert_eq!(
+        lib.rename("frankmd/2026/photo.png", "existing.png")
+            .await
+            .expect("ok"),
+        None
+    );
 }

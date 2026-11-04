@@ -3,7 +3,11 @@
 use frankmd_workspace::code_block::*;
 
 fn insert(markdown: &str, cursor_offset: usize) -> CodeBlockOutcome {
-    CodeBlockOutcome::Insert { markdown: markdown.into(), cursor_offset, mode: CodeBlockMode::Insert }
+    CodeBlockOutcome::Insert {
+        markdown: markdown.into(),
+        cursor_offset,
+        mode: CodeBlockMode::Insert,
+    }
 }
 
 // adapts: code_dialog_controller.test.js:54 "initializes code state"
@@ -38,15 +42,22 @@ fn caret_in_fence_is_update_mode() {
     assert_eq!(f.language(), "javascript");
     assert_eq!(f.content().trim_end(), "const x = 1;");
     assert_eq!(f.primary_label_key(), "dialogs.code.update_code");
-    assert_eq!(CodeBlockForm::from_document(text, 2).mode(), &CodeBlockMode::Insert);
+    assert_eq!(
+        CodeBlockForm::from_document(text, 2).mode(),
+        &CodeBlockMode::Insert
+    );
 }
 
 #[test]
 fn unchanged_edit_round_trips() {
     let text = "a\n```rust\nfn main() {}\n```\nb";
     let mut f = CodeBlockForm::from_document(text, 8);
-    let CodeBlockMode::Update(range) = f.mode().clone() else { panic!() };
-    let CodeBlockOutcome::Insert { markdown, .. } = f.confirm() else { panic!() };
+    let CodeBlockMode::Update(range) = f.mode().clone() else {
+        panic!()
+    };
+    let CodeBlockOutcome::Insert { markdown, .. } = f.confirm() else {
+        panic!()
+    };
     assert_eq!(&text[range], markdown);
 }
 
@@ -130,7 +141,10 @@ fn unknown_language_warns() {
     let out = f.confirm();
     assert_eq!(
         out,
-        CodeBlockOutcome::UnknownLanguage { typed: "pyhton".into(), did_you_mean: Some("python") }
+        CodeBlockOutcome::UnknownLanguage {
+            typed: "pyhton".into(),
+            did_you_mean: Some("python")
+        }
     );
     assert_eq!(f.warning(), Some(&out));
     f.set_language("python");
@@ -141,11 +155,29 @@ fn unknown_language_warns() {
 fn unknown_without_close_match() {
     let mut f = CodeBlockForm::new_insert();
     f.set_language("zzzzzzzz");
-    assert!(matches!(f.confirm(), CodeBlockOutcome::UnknownLanguage { did_you_mean: None, .. }));
+    assert!(matches!(
+        f.confirm(),
+        CodeBlockOutcome::UnknownLanguage {
+            did_you_mean: None,
+            ..
+        }
+    ));
     f.set_language("rubyx");
-    assert!(matches!(f.confirm(), CodeBlockOutcome::UnknownLanguage { did_you_mean: Some("ruby"), .. }));
+    assert!(matches!(
+        f.confirm(),
+        CodeBlockOutcome::UnknownLanguage {
+            did_you_mean: Some("ruby"),
+            ..
+        }
+    ));
     f.set_language("jav");
-    assert!(matches!(f.confirm(), CodeBlockOutcome::UnknownLanguage { did_you_mean: Some("javascript"), .. }));
+    assert!(matches!(
+        f.confirm(),
+        CodeBlockOutcome::UnknownLanguage {
+            did_you_mean: Some("javascript"),
+            ..
+        }
+    ));
 }
 
 // adapts: code_dialog_controller.test.js:289 "does not insert when confirmation is cancelled"
@@ -159,7 +191,10 @@ fn warning_choices() {
         f
     };
     assert!(mk().warning().is_some());
-    assert_eq!(mk().use_suggested(), Some(insert("```python\ncode\n```", 10)));
+    assert_eq!(
+        mk().use_suggested(),
+        Some(insert("```python\ncode\n```", 10))
+    );
     let mut f = mk();
     assert_eq!(f.keep_typed(), Some(insert("```pyhton\ncode\n```", 10)));
     assert!(f.warning().is_none());

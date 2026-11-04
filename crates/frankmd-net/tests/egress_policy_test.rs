@@ -44,7 +44,10 @@ fn rejects_a_url_with_no_host() {
 // port: test/services/egress_policy_test.rb:19 "rejects a host that does not resolve"
 #[test]
 fn rejects_a_host_that_does_not_resolve() {
-    blocked_message(checked_target("https://does-not-exist.invalid/x.png", &FixedResolver(vec![])));
+    blocked_message(checked_target(
+        "https://does-not-exist.invalid/x.png",
+        &FixedResolver(vec![]),
+    ));
 }
 
 // port: test/services/egress_policy_test.rb:29 "blocks the cloud metadata address"
@@ -56,7 +59,16 @@ fn blocks_the_cloud_metadata_address() {
 // port: test/services/egress_policy_test.rb:33 "blocks loopback, private and link-local addresses"
 #[test]
 fn blocks_loopback_private_and_link_local_addresses() {
-    for addr in ["127.0.0.1", "10.0.0.5", "172.16.0.1", "192.168.1.10", "169.254.1.1", "::1", "fc00::1", "fe80::1"] {
+    for addr in [
+        "127.0.0.1",
+        "10.0.0.5",
+        "172.16.0.1",
+        "192.168.1.10",
+        "169.254.1.1",
+        "::1",
+        "fc00::1",
+        "fe80::1",
+    ] {
         assert!(is_blocked(ip(addr)), "{addr} should be blocked");
     }
 }
@@ -64,9 +76,16 @@ fn blocks_loopback_private_and_link_local_addresses() {
 // port: test/services/egress_policy_test.rb:39 "blocks reserved, unspecified and multicast ranges"
 #[test]
 fn blocks_reserved_unspecified_and_multicast_ranges() {
-    for addr in
-        ["0.0.0.0", "100.64.0.1", "192.0.2.1", "198.18.0.1", "203.0.113.1", "240.0.0.1", "224.0.0.1", "ff02::1"]
-    {
+    for addr in [
+        "0.0.0.0",
+        "100.64.0.1",
+        "192.0.2.1",
+        "198.18.0.1",
+        "203.0.113.1",
+        "240.0.0.1",
+        "224.0.0.1",
+        "ff02::1",
+    ] {
         assert!(is_blocked(ip(addr)), "{addr} should be blocked");
     }
 }
@@ -109,7 +128,8 @@ fn rejects_when_any_resolved_address_is_non_public() {
 #[test]
 fn returns_the_uri_and_the_resolved_ip_for_a_public_host() {
     let resolver = StaticResolver::new().with("example.com", &[ip("93.184.216.34")]);
-    let (uri, addr) = checked_target("https://example.com/image.png", &resolver).expect("public host");
+    let (uri, addr) =
+        checked_target("https://example.com/image.png", &resolver).expect("public host");
     assert_eq!(uri.host_str(), Some("example.com"));
     assert_eq!(uri.path(), "/image.png");
     assert_eq!(addr.to_string(), "93.184.216.34");

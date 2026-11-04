@@ -28,8 +28,10 @@ fn requests(f: &Fixture, cx: &mut TestAppContext) -> Rc<RefCell<Vec<EditorReques
     let log: Rc<RefCell<Vec<EditorRequest>>> = Rc::default();
     let sink = Rc::clone(&log);
     cx.update(|cx| {
-        cx.subscribe(&f.pane, move |_, ev: &EditorRequest, _| sink.borrow_mut().push(ev.clone()))
-            .detach()
+        cx.subscribe(&f.pane, move |_, ev: &EditorRequest, _| {
+            sink.borrow_mut().push(ev.clone())
+        })
+        .detach()
     });
     log
 }
@@ -88,7 +90,10 @@ fn slash_table_opens_the_table_editor_and_replaces_the_query(cx: &mut TestAppCon
     f.press(cx, "ctrl-enter");
     assert!(!f.is_shown(cx, "dialog-table"));
     let text = f.text(cx);
-    assert!(text.starts_with("Before\n\n| Header 1 | Header 2 | Header 3 |\n| -------- |"), "{text:?}");
+    assert!(
+        text.starts_with("Before\n\n| Header 1 | Header 2 | Header 3 |\n| -------- |"),
+        "{text:?}"
+    );
     assert!(!text.contains("/table"));
 }
 
@@ -250,7 +255,10 @@ fn emoji_picker_tabs_and_escape(cx: &mut TestAppContext) {
     f.press(cx, "ctrl-tab");
     f.press(cx, "enter");
     let text = f.text(cx);
-    assert!(!text.is_empty() && !text.starts_with(':'), "an emoticon is raw text: {text:?}");
+    assert!(
+        !text.is_empty() && !text.starts_with(':'),
+        "an emoticon is raw text: {text:?}"
+    );
     f.press(cx, "ctrl-shift-e");
     f.press(cx, "escape");
     assert!(!f.is_shown(cx, "emoji-picker"));
@@ -266,7 +274,10 @@ fn slash_emoji_replaces_the_query(cx: &mut TestAppContext) {
     assert!(f.is_shown(cx, "emoji-picker"));
     f.press(cx, "enter");
     let text = f.text(cx);
-    assert!(text.starts_with("a :") && !text.contains("/emoji"), "{text:?}");
+    assert!(
+        text.starts_with("a :") && !text.contains("/emoji"),
+        "{text:?}"
+    );
 }
 
 // ----- links ------------------------------------------------------------------------------------------
@@ -275,7 +286,9 @@ fn slash_emoji_replaces_the_query(cx: &mut TestAppContext) {
 #[gpui_kit::test]
 fn wikilink_completion_inserts_the_note_path(cx: &mut TestAppContext) {
     let f = open(cx, "", EditorSettings::default());
-    f.pane.update(cx, |p, _| p.set_vault_notes(vec!["notes/My Note.md".into(), "other.md".into()]));
+    f.pane.update(cx, |p, _| {
+        p.set_vault_notes(vec!["notes/My Note.md".into(), "other.md".into()])
+    });
     f.type_text(cx, "see [[my");
     assert!(f.is_shown(cx, "wikilink-completion"));
     f.press(cx, "enter");
@@ -286,7 +299,9 @@ fn wikilink_completion_inserts_the_note_path(cx: &mut TestAppContext) {
 #[gpui_kit::test]
 fn ctrl_k_offers_the_clipboard_url(cx: &mut TestAppContext) {
     let f = open(cx, "word", EditorSettings::default());
-    cx.update(|cx| cx.write_to_clipboard(ClipboardItem::new_string("https://example.com/x".into())));
+    cx.update(|cx| {
+        cx.write_to_clipboard(ClipboardItem::new_string("https://example.com/x".into()))
+    });
     f.select(cx, 0..4);
     f.press(cx, "ctrl-k");
     assert!(f.is_shown(cx, "link-completion"));
@@ -303,7 +318,11 @@ fn ctrl_k_offers_the_clipboard_url(cx: &mut TestAppContext) {
 // ui-spec §6.2 "Context action": links go to the shell.
 #[gpui_kit::test]
 fn context_action_on_links_requests_the_shell(cx: &mut TestAppContext) {
-    let f = open(cx, "a [doc](https://x.dev) [[Note]] ![p](p.png)", EditorSettings::default());
+    let f = open(
+        cx,
+        "a [doc](https://x.dev) [[Note]] ![p](p.png)",
+        EditorSettings::default(),
+    );
     let log = requests(&f, cx);
     f.select(cx, 4..4);
     f.press(cx, "ctrl-.");
@@ -325,7 +344,9 @@ fn context_action_on_links_requests_the_shell(cx: &mut TestAppContext) {
 #[gpui_kit::test]
 fn non_markdown_files_get_no_slash_menu_or_dialogs(cx: &mut TestAppContext) {
     let f = open(cx, "", EditorSettings::default());
-    f.pane.update(cx, |p, cx| p.set_note_context(Some(".fed".into()), false, cx));
+    f.pane.update(cx, |p, cx| {
+        p.set_note_context(Some(".fed".into()), false, cx)
+    });
     f.type_text(cx, "/");
     assert!(!f.is_shown(cx, "slash-menu"));
     run(&f, cx, "insert.table");

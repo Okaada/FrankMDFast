@@ -85,7 +85,9 @@ pub fn acquire_private(name: &str, kind: LockKind, dir: &Path) -> Result<LockGua
 fn open_shared(path: &Path, kind: LockKind) -> Option<sys::Handle> {
     match open_checked(path, true) {
         Ok(handle) => Some(handle),
-        Err(e) if matches!(crate::errno::of(&e), Some(EACCES | EROFS)) && kind == LockKind::Shared => {
+        Err(e)
+            if matches!(crate::errno::of(&e), Some(EACCES | EROFS)) && kind == LockKind::Shared =>
+        {
             open_checked(path, false).ok()
         }
         Err(_) => None,
@@ -120,12 +122,19 @@ mod sys {
         } else {
             (OFlags::RDONLY, Mode::empty())
         };
-        Ok(rustix::fs::open(path, flags | OFlags::NOFOLLOW | OFlags::CLOEXEC, mode)?)
+        Ok(rustix::fs::open(
+            path,
+            flags | OFlags::NOFOLLOW | OFlags::CLOEXEC,
+            mode,
+        )?)
     }
 
     pub(super) fn create_private_dir(dir: &Path) -> io::Result<()> {
         use std::os::unix::fs::DirBuilderExt;
-        std::fs::DirBuilder::new().recursive(true).mode(0o700).create(dir)
+        std::fs::DirBuilder::new()
+            .recursive(true)
+            .mode(0o700)
+            .create(dir)
     }
 
     pub(super) fn lock(handle: &Handle, kind: LockKind) -> io::Result<()> {

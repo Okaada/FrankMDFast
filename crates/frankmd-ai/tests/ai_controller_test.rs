@@ -9,7 +9,10 @@ mod common;
 use std::collections::HashMap;
 
 use common::*;
-use frankmd_ai::{AiError, AiRequestError, NoReferenceImages, NoteSource, fix_grammar_note, generate_image_request};
+use frankmd_ai::{
+    AiError, AiRequestError, NoReferenceImages, NoteSource, fix_grammar_note,
+    generate_image_request,
+};
 use frankmd_config::AiProviderId;
 
 #[derive(Debug, Default)]
@@ -22,7 +25,12 @@ impl NoteSource for Notes {
 }
 
 fn notes(entries: &[(&str, &str)]) -> Notes {
-    Notes(entries.iter().map(|(k, v)| ((*k).to_owned(), (*v).to_owned())).collect())
+    Notes(
+        entries
+            .iter()
+            .map(|(k, v)| ((*k).to_owned(), (*v).to_owned()))
+            .collect(),
+    )
 }
 
 // port: test/controllers/ai_controller_test.rb:34 "config returns enabled false when no API keys"
@@ -86,12 +94,20 @@ fn config_ollama() {
 fn config_priority_with_multiple() {
     let info = service(
         None,
-        &[("OLLAMA_API_BASE", "http://localhost:11434"), ("OPENAI_API_KEY", "sk-test"), ("ANTHROPIC_API_KEY", "sk-ant-test")],
+        &[
+            ("OLLAMA_API_BASE", "http://localhost:11434"),
+            ("OPENAI_API_KEY", "sk-test"),
+            ("ANTHROPIC_API_KEY", "sk-ant-test"),
+        ],
     )
     .provider_info();
     assert_eq!(info.provider, Some(AiProviderId::Openai)); // Highest priority
     assert_eq!(info.available_providers.len(), 3);
-    for p in [AiProviderId::Ollama, AiProviderId::Openai, AiProviderId::Anthropic] {
+    for p in [
+        AiProviderId::Ollama,
+        AiProviderId::Openai,
+        AiProviderId::Anthropic,
+    ] {
         assert!(info.available_providers.contains(&p), "{p:?}");
     }
 }
@@ -101,7 +117,11 @@ fn config_priority_with_multiple() {
 fn config_ai_provider_override() {
     let info = service(
         None,
-        &[("OLLAMA_API_BASE", "http://localhost:11434"), ("OPENAI_API_KEY", "sk-test"), ("AI_PROVIDER", "openai")],
+        &[
+            ("OLLAMA_API_BASE", "http://localhost:11434"),
+            ("OPENAI_API_KEY", "sk-test"),
+            ("AI_PROVIDER", "openai"),
+        ],
     )
     .provider_info();
     assert_eq!(info.provider, Some(AiProviderId::Openai));
@@ -110,14 +130,20 @@ fn config_ai_provider_override() {
 // port: test/controllers/ai_controller_test.rb:134 "config respects ai_model override"
 #[test]
 fn config_ai_model_override() {
-    let info = service(None, &[("OPENAI_API_KEY", "sk-test"), ("AI_MODEL", "gpt-4-turbo")]).provider_info();
+    let info = service(
+        None,
+        &[("OPENAI_API_KEY", "sk-test"), ("AI_MODEL", "gpt-4-turbo")],
+    )
+    .provider_info();
     assert_eq!(info.model.as_deref(), Some("gpt-4-turbo"));
 }
 
 // port: test/controllers/ai_controller_test.rb:146 "fix_grammar returns error when path is blank"
 #[tokio::test]
 async fn fix_grammar_blank_path() {
-    let err = fix_grammar_note(&service(None, &[]), &notes(&[]), "").await.expect_err("blank");
+    let err = fix_grammar_note(&service(None, &[]), &notes(&[]), "")
+        .await
+        .expect_err("blank");
     // en: "No file path provided"
     assert_eq!(err, AiRequestError::BadRequest("errors.no_file_provided"));
 }
@@ -125,14 +151,18 @@ async fn fix_grammar_blank_path() {
 // port: test/controllers/ai_controller_test.rb:154 "fix_grammar returns error when note not found"
 #[tokio::test]
 async fn fix_grammar_note_not_found() {
-    let err = fix_grammar_note(&service(None, &[]), &notes(&[]), "nonexistent.md").await.expect_err("404");
+    let err = fix_grammar_note(&service(None, &[]), &notes(&[]), "nonexistent.md")
+        .await
+        .expect_err("404");
     assert_eq!(err, AiRequestError::NotFound("errors.note_not_found"));
 }
 
 // port: test/controllers/ai_controller_test.rb:162 "fix_grammar returns error when note is empty"
 #[tokio::test]
 async fn fix_grammar_empty_note() {
-    let err = fix_grammar_note(&service(None, &[]), &notes(&[("empty.md", "")]), "empty.md").await.expect_err("empty");
+    let err = fix_grammar_note(&service(None, &[]), &notes(&[("empty.md", "")]), "empty.md")
+        .await
+        .expect_err("empty");
     // en: "Note is empty"
     assert_eq!(err, AiRequestError::BadRequest("errors.note_is_empty"));
 }
@@ -141,9 +171,13 @@ async fn fix_grammar_empty_note() {
 #[tokio::test]
 async fn fix_grammar_not_configured() {
     // Validation runs before any network call: no provider → 422 "AI not configured".
-    let err = fix_grammar_note(&service(None, &[]), &notes(&[("test.md", "Hello world")]), "test.md")
-        .await
-        .expect_err("not configured");
+    let err = fix_grammar_note(
+        &service(None, &[]),
+        &notes(&[("test.md", "Hello world")]),
+        "test.md",
+    )
+    .await
+    .expect_err("not configured");
     assert_eq!(err, AiRequestError::Service(AiError::NotConfigured));
     assert!(err.to_string().contains("not configured"));
 }
@@ -167,7 +201,9 @@ fn image_config_enabled() {
 // port: test/controllers/ai_controller_test.rb:208 "generate_image returns error when prompt is blank"
 #[tokio::test]
 async fn generate_image_blank_prompt() {
-    let err = generate_image_request(&service(None, &[]), "", None, &NoReferenceImages).await.expect_err("blank");
+    let err = generate_image_request(&service(None, &[]), "", None, &NoReferenceImages)
+        .await
+        .expect_err("blank");
     // en: "No prompt provided"
     assert_eq!(err, AiRequestError::BadRequest("errors.no_prompt_provided"));
 }
@@ -175,7 +211,9 @@ async fn generate_image_blank_prompt() {
 // port: test/controllers/ai_controller_test.rb:216 "generate_image returns error when not configured"
 #[tokio::test]
 async fn generate_image_not_configured() {
-    let err = generate_image_request(&service(None, &[]), "A sunset", None, &NoReferenceImages).await.expect_err("nc");
+    let err = generate_image_request(&service(None, &[]), "A sunset", None, &NoReferenceImages)
+        .await
+        .expect_err("nc");
     assert_eq!(err, AiRequestError::Service(AiError::ImageNotConfigured));
     assert!(err.to_string().contains("not configured"));
 }

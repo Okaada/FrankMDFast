@@ -22,12 +22,16 @@ use frankmd_media::error::MediaError;
 use frankmd_media::images;
 use frankmd_media::s3::S3Error;
 use frankmd_media::upload_storage::{self as us, Upload, UploadKind};
-use frankmd_media::{video, StorageProvider};
-use frankmd_testkit::serde_json::{json, Value};
-use frankmd_testkit::{assert_cases, golden, Case, Golden, TempTree};
+use frankmd_media::{StorageProvider, video};
+use frankmd_testkit::serde_json::{Value, json};
+use frankmd_testkit::{Case, Golden, TempTree, assert_cases, golden};
 use uploads::*;
 
-const LIBRARY_FNS: [&str; 3] = ["MediaLibraryService#list", "MediaLibraryService#delete", "ImageLibraryService#list"];
+const LIBRARY_FNS: [&str; 3] = [
+    "MediaLibraryService#list",
+    "MediaLibraryService#delete",
+    "ImageLibraryService#list",
+];
 
 fn fixture() -> Golden {
     golden("media")
@@ -42,7 +46,11 @@ fn run(func: &str, check: impl FnMut(&Case) -> Result<(), String>) {
 fn config_for(input: &Value, root: &Path) -> MediaConfig {
     let env: Vec<(String, String)> = input["env"]
         .as_object()
-        .map(|m| m.iter().map(|(k, v)| (k.clone(), v.as_str().unwrap_or_default().to_owned())).collect())
+        .map(|m| {
+            m.iter()
+                .map(|(k, v)| (k.clone(), v.as_str().unwrap_or_default().to_owned()))
+                .collect()
+        })
         .unwrap_or_default();
     let resolved = ResolvedConfig::new(input["fed"].as_str(), EnvSnapshot::from_pairs(env));
     MediaConfig::from_resolved(&resolved, root)
@@ -59,14 +67,22 @@ fn check_rejected<T: std::fmt::Debug + PartialEq>(
     ok: impl FnOnce(&T) -> Result<(), String>,
 ) -> Result<(), String> {
     match (got, expected.get("error")) {
-        (Err(MediaError::Rejected(m)), Some(_)) if Some(m.as_str()) == expected["message"].as_str() => Ok(()),
+        (Err(MediaError::Rejected(m)), Some(_))
+            if Some(m.as_str()) == expected["message"].as_str() =>
+        {
+            Ok(())
+        }
         (Ok(v), None) => ok(&v),
         (got, _) => Err(format!("got {got:?}, expected {expected}")),
     }
 }
 
 fn eq<T: PartialEq + std::fmt::Debug>(got: T, want: T) -> Result<(), String> {
-    if got == want { Ok(()) } else { Err(format!("got {got:?}, expected {want:?}")) }
+    if got == want {
+        Ok(())
+    } else {
+        Err(format!("got {got:?}, expected {want:?}"))
+    }
 }
 
 /// `{url}` / `{error}` result shape.
@@ -144,17 +160,34 @@ fn with_sample_bytes(expected: &Value, bytes: &[u8]) -> Value {
 }
 
 /// The placeholder content of a recorded success is now refused, with no file written.
-fn check_placeholder_rejected(got: Result<String, MediaError>, root: &Path, kind: frankmd_media::MediaKind) -> Result<(), String> {
+fn check_placeholder_rejected(
+    got: Result<String, MediaError>,
+    root: &Path,
+    kind: frankmd_media::MediaKind,
+) -> Result<(), String> {
     let want = frankmd_media::sniff::rejection_message(kind);
     match got {
         Err(MediaError::Rejected(m)) if m == want => {}
-        other => return Err(format!("security: placeholder bytes must be rejected, got {other:?}")),
+        other => {
+            return Err(format!(
+                "security: placeholder bytes must be rejected, got {other:?}"
+            ));
+        }
     }
-    eq(media_tree(root).into_iter().filter(|(_, v)| v.is_some()).count(), 0)
+    eq(
+        media_tree(root)
+            .into_iter()
+            .filter(|(_, v)| v.is_some())
+            .count(),
+        0,
+    )
 }
 
 fn rt() -> tokio::runtime::Runtime {
-    tokio::runtime::Builder::new_current_thread().enable_all().build().unwrap()
+    tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .unwrap()
 }
 
 #[test]
@@ -189,7 +222,11 @@ fn every_case_is_wired() {
     ];
     for c in &g.cases {
         let f = c.func.as_deref().unwrap_or_default();
-        assert!(wired.contains(&f) || LIBRARY_FNS.contains(&f), "unwired golden fn {f} ({})", c.name);
+        assert!(
+            wired.contains(&f) || LIBRARY_FNS.contains(&f),
+            "unwired golden fn {f} ({})",
+            c.name
+        );
     }
 }
 
@@ -208,12 +245,22 @@ fn config_upload_extensions() {
 
 #[test]
 fn images_clamp_limit() {
-    run("ImagesService.clamp_limit", |c| eq(json!(images::clamp_limit(&param(&c.input["value"]))), c.expected.clone()));
+    run("ImagesService.clamp_limit", |c| {
+        eq(
+            json!(images::clamp_limit(&param(&c.input["value"]))),
+            c.expected.clone(),
+        )
+    });
 }
 
 #[test]
 fn images_clamp_offset() {
-    run("ImagesService.clamp_offset", |c| eq(json!(images::clamp_offset(&param(&c.input["value"]))), c.expected.clone()));
+    run("ImagesService.clamp_offset", |c| {
+        eq(
+            json!(images::clamp_offset(&param(&c.input["value"]))),
+            c.expected.clone(),
+        )
+    });
 }
 
 #[test]
@@ -239,7 +286,10 @@ fn images_constants() {
 #[test]
 fn images_content_type_for() {
     run("ImagesService.content_type_for", |c| {
-        eq(images::content_type_for(c.input["path"].as_str().unwrap()), c.expected.as_str().unwrap())
+        eq(
+            images::content_type_for(c.input["path"].as_str().unwrap()),
+            c.expected.as_str().unwrap(),
+        )
     });
 }
 
@@ -248,7 +298,11 @@ fn images_extension_for_content_type() {
     run("ImagesService.extension_for_content_type", |c| {
         let got = images::extension_for_content_type(opt_str(&c.input["content_type"]));
         // NoMethodError in Ruby (nil / "" input) ⇔ None.
-        let want = if c.expects_error() { None } else { c.expected.as_str() };
+        let want = if c.expects_error() {
+            None
+        } else {
+            c.expected.as_str()
+        };
         eq(got, want)
     });
 }
@@ -256,7 +310,10 @@ fn images_extension_for_content_type() {
 #[test]
 fn images_imagemagick_resize_arg() {
     run("ImagesService.imagemagick_resize_arg", |c| {
-        eq(images::resize_arg(&param(&c.input["ratio"])), c.expected.as_str().unwrap())
+        eq(
+            images::resize_arg(&param(&c.input["ratio"])),
+            c.expected.as_str().unwrap(),
+        )
     });
 }
 
@@ -299,9 +356,20 @@ fn images_upload_file() {
         let resize = images::parse_resize_ratio(&param(&c.input["resize"]));
         let upload = |content: Option<Vec<u8>>| {
             let file = c.input["original_filename"].as_str().map(|n| {
-                Upload::new(n, content.clone().unwrap_or_else(|| c.input["content"].as_str().unwrap_or_default().into()))
+                Upload::new(
+                    n,
+                    content
+                        .clone()
+                        .unwrap_or_else(|| c.input["content"].as_str().unwrap_or_default().into()),
+                )
             });
-            rt.block_on(images::upload_file(&env, file, resize, &param(&c.input["upload_to_s3"]), None))
+            rt.block_on(images::upload_file(
+                &env,
+                file,
+                resize,
+                &param(&c.input["upload_to_s3"]),
+                None,
+            ))
         };
         // security: see `security_sample`.
         if let Some(sample) = security_sample(&c.expected) {
@@ -317,8 +385,10 @@ fn images_upload_file() {
 #[test]
 fn media_service_video_mime_types() {
     run("MediaService.VIDEO_MIME_TYPES", |c| {
-        let got: frankmd_testkit::serde_json::Map<String, Value> =
-            video::VIDEO_MIME_TYPES.iter().map(|(k, v)| ((*k).to_owned(), json!(v))).collect();
+        let got: frankmd_testkit::serde_json::Map<String, Value> = video::VIDEO_MIME_TYPES
+            .iter()
+            .map(|(k, v)| ((*k).to_owned(), json!(v)))
+            .collect();
         eq(Value::Object(got), c.expected.clone())
     });
 }
@@ -332,9 +402,22 @@ fn media_service_save_upload() {
         env.ctx = ctx_from_pinned(&c.input);
         let upload = |content: Option<Vec<u8>>| {
             let file = c.input["original_filename"].as_str().map(|n| {
-                Upload::new(n, content.clone().unwrap_or_else(|| c.input["content"].as_str().unwrap_or("fake video bytes").into()))
+                Upload::new(
+                    n,
+                    content.clone().unwrap_or_else(|| {
+                        c.input["content"]
+                            .as_str()
+                            .unwrap_or("fake video bytes")
+                            .into()
+                    }),
+                )
             });
-            rt.block_on(video::save_upload(&env, file, &param(&c.input["upload_to_s3"]), None))
+            rt.block_on(video::save_upload(
+                &env,
+                file,
+                &param(&c.input["upload_to_s3"]),
+                None,
+            ))
         };
         // security: see `security_sample`.
         if let Some(sample) = security_sample(&c.expected) {
@@ -350,7 +433,10 @@ fn media_service_save_upload() {
 #[test]
 fn upload_storage_dest_filename() {
     run("UploadStorage.dest_filename", |c| {
-        let got = us::dest_filename(&ctx_from_pinned(&c.input), opt_str(&c.input["original_filename"]));
+        let got = us::dest_filename(
+            &ctx_from_pinned(&c.input),
+            opt_str(&c.input["original_filename"]),
+        );
         eq(got.as_str(), c.expected.as_str().unwrap())
     });
 }
@@ -363,14 +449,22 @@ fn size_input(v: &Value) -> Option<i64> {
 fn upload_storage_enforce_base64_size() {
     run("UploadStorage.enforce_base64_size!", |c| {
         let size = c.input["size"].as_u64().unwrap();
-        check_rejected(us::enforce_base64_size(size, us::max_base64_encoded_bytes()), &c.expected, |_| Ok(()))
+        check_rejected(
+            us::enforce_base64_size(size, us::max_base64_encoded_bytes()),
+            &c.expected,
+            |_| Ok(()),
+        )
     });
 }
 
 #[test]
 fn upload_storage_enforce_bytes() {
     run("UploadStorage.enforce_bytes!", |c| {
-        check_rejected(us::enforce_bytes(size_input(&c.input["size"]), us::MAX_UPLOAD_BYTES), &c.expected, |_| Ok(()))
+        check_rejected(
+            us::enforce_bytes(size_input(&c.input["size"]), us::MAX_UPLOAD_BYTES),
+            &c.expected,
+            |_| Ok(()),
+        )
     });
 }
 
@@ -384,7 +478,11 @@ fn upload_storage_enforce_size() {
             "no size method" | "size nil" => None,
             other => return Err(format!("unknown object {other}")),
         };
-        check_rejected(us::enforce_bytes(size, us::MAX_UPLOAD_BYTES), &c.expected, |_| Ok(()))
+        check_rejected(
+            us::enforce_bytes(size, us::MAX_UPLOAD_BYTES),
+            &c.expected,
+            |_| Ok(()),
+        )
     });
 }
 
@@ -394,12 +492,18 @@ fn upload_storage_invalid_s3_configuration_error() {
         let class = c.input["error_class"].as_str().unwrap();
         let err = match (class, c.input["code"].as_str()) {
             ("Aws::Errors::InvalidRegionError", _) => S3Error::InvalidRegion,
-            (_, Some(code)) => S3Error::Service { code: code.into(), status: 400 },
+            (_, Some(code)) => S3Error::Service {
+                code: code.into(),
+                status: 400,
+            },
             ("Timeout::Error", None) => S3Error::Network("timeout".into()),
             ("Seahorse::Client::NetworkingError", None) => S3Error::Network("networking".into()),
             other => return Err(format!("unmapped {other:?}")),
         };
-        eq(json!(us::invalid_s3_configuration_error(&err)), c.expected.clone())
+        eq(
+            json!(us::invalid_s3_configuration_error(&err)),
+            c.expected.clone(),
+        )
     });
 }
 
@@ -415,13 +519,17 @@ fn upload_storage_provider() {
     let t = TempTree::empty();
     run("UploadStorage.provider", |c| {
         let cfg = config_for(&c.input, t.path());
-        check_rejected(us::provider(&cfg, &param(&c.input["legacy_s3"])), &c.expected, |p| {
-            let name = match p {
-                StorageProvider::Local => "local",
-                StorageProvider::S3 => "s3",
-            };
-            eq(name, c.expected.as_str().unwrap_or_default())
-        })
+        check_rejected(
+            us::provider(&cfg, &param(&c.input["legacy_s3"])),
+            &c.expected,
+            |p| {
+                let name = match p {
+                    StorageProvider::Local => "local",
+                    StorageProvider::S3 => "s3",
+                };
+                eq(name, c.expected.as_str().unwrap_or_default())
+            },
+        )
     });
 }
 
@@ -429,7 +537,10 @@ fn upload_storage_provider() {
 fn upload_storage_s3_configured() {
     let t = TempTree::empty();
     run("UploadStorage.s3_configured?", |c| {
-        eq(json!(us::s3_configured(&config_for(&c.input, t.path()))), c.expected.clone())
+        eq(
+            json!(us::s3_configured(&config_for(&c.input, t.path()))),
+            c.expected.clone(),
+        )
     });
 }
 
@@ -450,7 +561,10 @@ fn upload_storage_s3_key() {
 fn upload_storage_s3_region() {
     let t = TempTree::empty();
     run("UploadStorage.s3_region", |c| {
-        eq(us::s3_region(&config_for(&c.input, t.path())).as_str(), c.expected.as_str().unwrap())
+        eq(
+            us::s3_region(&config_for(&c.input, t.path())).as_str(),
+            c.expected.as_str().unwrap(),
+        )
     });
 }
 
@@ -460,7 +574,12 @@ fn upload_storage_s3_url() {
     run("UploadStorage.s3_url", |c| {
         let cfg = config_for(&c.input, t.path());
         let i = &c.input;
-        let got = us::s3_url(&cfg, i["bucket"].as_str().unwrap(), i["region"].as_str().unwrap(), i["key"].as_str().unwrap());
+        let got = us::s3_url(
+            &cfg,
+            i["bucket"].as_str().unwrap(),
+            i["region"].as_str().unwrap(),
+            i["key"].as_str().unwrap(),
+        );
         eq(got.as_str(), c.expected.as_str().unwrap())
     });
 }
@@ -474,15 +593,21 @@ fn upload_storage_sanitize_s3_key() {
             Value::Number(n) => Some(n.to_string()),
             v => v.as_str().map(str::to_owned),
         };
-        eq(us::sanitize_s3_key(value.as_deref()).as_str(), c.expected.as_str().unwrap())
+        eq(
+            us::sanitize_s3_key(value.as_deref()).as_str(),
+            c.expected.as_str().unwrap(),
+        )
     });
 }
 
 #[test]
 fn upload_storage_unique_s3_key() {
     run("UploadStorage.unique_s3_key", |c| {
-        let got =
-            us::unique_s3_key(&ctx_from_pinned(&c.input), c.input["key"].as_str().unwrap(), opt_str(&c.input["original_filename"]));
+        let got = us::unique_s3_key(
+            &ctx_from_pinned(&c.input),
+            c.input["key"].as_str().unwrap(),
+            opt_str(&c.input["original_filename"]),
+        );
         eq(got.as_str(), c.expected.as_str().unwrap())
     });
 }
@@ -498,8 +623,10 @@ fn upload_storage_validate_filename() {
             other => return Err(format!("unmapped {other:?}")),
         };
         let filename = c.input["filename"].as_str().unwrap_or_default();
-        check_rejected(us::validate_filename(&cfg, filename, kind), &c.expected, |ext| {
-            eq(ext.as_str(), c.expected.as_str().unwrap_or_default())
-        })
+        check_rejected(
+            us::validate_filename(&cfg, filename, kind),
+            &c.expected,
+            |ext| eq(ext.as_str(), c.expected.as_str().unwrap_or_default()),
+        )
     });
 }

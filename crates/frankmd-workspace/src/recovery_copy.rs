@@ -7,16 +7,30 @@ use frankmd_core::RelPath;
 /// `attempt` 1 is the plain name; later attempts add ` 2`, ` 3`, … before
 /// `.md` so an existing file is never overwritten. `None` for an invalid
 /// timestamp or a path that can't hold a sibling.
-pub fn copy_path(note: &RelPath, backup_ms: f64, zone: &jiff::tz::TimeZone, attempt: u32) -> Option<RelPath> {
+pub fn copy_path(
+    note: &RelPath,
+    backup_ms: f64,
+    zone: &jiff::tz::TimeZone,
+    attempt: u32,
+) -> Option<RelPath> {
     if !backup_ms.is_finite() {
         return None;
     }
     #[allow(clippy::cast_possible_truncation)]
-    let at = jiff::Timestamp::from_millisecond(backup_ms as i64).ok()?.to_zoned(zone.clone());
+    let at = jiff::Timestamp::from_millisecond(backup_ms as i64)
+        .ok()?
+        .to_zoned(zone.clone());
     let name = note.file_name()?;
     let stem = name.strip_suffix(".md").unwrap_or(name);
-    let suffix = if attempt <= 1 { String::new() } else { format!(" {attempt}") };
-    let file = format!("{stem} (draft {}){suffix}.md", at.strftime("%Y-%m-%d %H-%M"));
+    let suffix = if attempt <= 1 {
+        String::new()
+    } else {
+        format!(" {attempt}")
+    };
+    let file = format!(
+        "{stem} (draft {}){suffix}.md",
+        at.strftime("%Y-%m-%d %H-%M")
+    );
     let full = match note.parent().filter(|p| !p.is_root()) {
         Some(parent) => format!("{}/{file}", parent.as_str()),
         None => file,

@@ -22,7 +22,12 @@ fn env() -> Env {
     let vault = Vault::open(root.path(), state.path())
         .unwrap()
         .with_trash(TrashBackend::Directory(bin.path().join("trash")));
-    Env { root, _state: state, bin, vault }
+    Env {
+        root,
+        _state: state,
+        bin,
+        vault,
+    }
 }
 
 fn trashed(e: &Env, name: &str) -> std::path::PathBuf {
@@ -54,7 +59,10 @@ fn non_empty_folder_is_trashed() {
     fs::write(e.root.path().join("dir/sub/y.md"), "y").unwrap();
     NotesService::new(&e.vault).trash("dir", None).unwrap();
     assert!(!e.root.path().join("dir").exists());
-    assert_eq!(fs::read_to_string(trashed(&e, "dir/sub/y.md")).unwrap(), "y");
+    assert_eq!(
+        fs::read_to_string(trashed(&e, "dir/sub/y.md")).unwrap(),
+        "y"
+    );
     assert_eq!(fs::read_to_string(trashed(&e, "dir/x.md")).unwrap(), "x");
 }
 
@@ -88,7 +96,9 @@ fn revision_mismatch_keeps_the_file() {
 #[test]
 fn missing_path_is_not_found() {
     let e = env();
-    let err = NotesService::new(&e.vault).trash("nope.md", None).unwrap_err();
+    let err = NotesService::new(&e.vault)
+        .trash("nope.md", None)
+        .unwrap_err();
     assert!(matches!(err, FsError::NotFound(_)), "{err:?}");
 }
 
@@ -122,7 +132,12 @@ fn symlink_moves_only_the_link() {
     std::os::unix::fs::symlink(&target, e.root.path().join("link.md")).unwrap();
     NotesService::new(&e.vault).trash("link.md", None).unwrap();
     assert!(fs::symlink_metadata(e.root.path().join("link.md")).is_err());
-    assert!(fs::symlink_metadata(trashed(&e, "link.md")).unwrap().file_type().is_symlink());
+    assert!(
+        fs::symlink_metadata(trashed(&e, "link.md"))
+            .unwrap()
+            .file_type()
+            .is_symlink()
+    );
     assert_eq!(fs::read_to_string(&target).unwrap(), "secret");
 }
 
@@ -133,8 +148,12 @@ fn recents_entry_is_removed() {
     fs::write(e.root.path().join("b.md"), "y").unwrap();
     let store = common::FedRecentStore::new(e.root.path());
     let recents = RecentFilesService::new(&e.vault, &store as &dyn RecentStore);
-    recents.record(Some("a.md"), jiff::Timestamp::now()).unwrap();
-    recents.record(Some("b.md"), jiff::Timestamp::now()).unwrap();
+    recents
+        .record(Some("a.md"), jiff::Timestamp::now())
+        .unwrap();
+    recents
+        .record(Some("b.md"), jiff::Timestamp::now())
+        .unwrap();
     NotesService::new(&e.vault)
         .with_recents(&store as &dyn RecentStore)
         .trash("a.md", None)

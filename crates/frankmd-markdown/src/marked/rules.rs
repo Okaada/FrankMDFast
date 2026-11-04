@@ -71,7 +71,10 @@ fn translate(src: &str) -> String {
 }
 
 fn rest_starts_with(chars: &std::iter::Peekable<std::str::Chars<'_>>, prefix: &str) -> bool {
-    chars.clone().take(prefix.chars().count()).eq(prefix.chars())
+    chars
+        .clone()
+        .take(prefix.chars().count())
+        .eq(prefix.chars())
 }
 
 /// Compile a JS regex source (`flags` may contain `i`).
@@ -88,7 +91,9 @@ pub(crate) fn js(src: &str, flags: &str) -> Regex {
 
 /// `regex.exec(src)` for a `^`-anchored rule.
 pub(crate) fn exec<'t>(re: &Regex, src: &'t str) -> Option<Captures<'t, str>> {
-    re.captures_input(fancy_regex::RegexInput::new(src).anchored(true)).ok().flatten()
+    re.captures_input(fancy_regex::RegexInput::new(src).anchored(true))
+        .ok()
+        .flatten()
 }
 
 /// `regex.exec(src)` for an unanchored rule (first match anywhere).
@@ -97,7 +102,11 @@ pub(crate) fn search<'t>(re: &Regex, src: &'t str) -> Option<Captures<'t, str>> 
 }
 
 /// Global-flag `exec` from `last_index`.
-pub(crate) fn exec_from<'t>(re: &Regex, src: &'t str, last_index: usize) -> Option<Captures<'t, str>> {
+pub(crate) fn exec_from<'t>(
+    re: &Regex,
+    src: &'t str,
+    last_index: usize,
+) -> Option<Captures<'t, str>> {
     if last_index > src.len() {
         return None;
     }
@@ -203,7 +212,11 @@ pub(crate) fn paragraph_stop() -> Regex {
 
 /// marked's normal-grammar paragraph body (no table interrupt), carets removed.
 fn paragraph_body(with_table: bool) -> String {
-    let table = if with_table { format!("|{}", table_body()) } else { String::new() };
+    let table = if with_table {
+        format!("|{}", table_body())
+    } else {
+        String::new()
+    };
     format!(
         r"([^\n]+(?:\n(?!{hr}|{heading}| {{0,3}}>|{fences}|{list}|{html}{table}| +\n)[^\n]+)*)",
         hr = HR_BODY,
@@ -220,7 +233,10 @@ fn paragraph_body(with_table: bool) -> String {
 
 #[cfg(test)]
 rule!(NEWLINE, r"^(?:[ \t]*(?:\n|$))+");
-rule!(BLOCK_CODE, r"^((?: {4}| {0,3}\t)[^\n]+(?:\n(?:[ \t]*(?:\n|$))*)?)+");
+rule!(
+    BLOCK_CODE,
+    r"^((?: {4}| {0,3}\t)[^\n]+(?:\n(?:[ \t]*(?:\n|$))*)?)+"
+);
 #[cfg(test)]
 rule!(
     FENCES,
@@ -229,7 +245,9 @@ rule!(
 rule!(HR, format!("^{HR_BODY}"));
 rule!(HEADING, r"^ {0,3}(#{1,6})(?=\s|$)(.*)(?:\n+|$)");
 rule!(LHEADING, {
-    let interrupts = format!(r"{BULLET} |(?: {{4}}| {{0,3}}\t)| {{0,3}}(?:`{{3,}}|~{{3,}})| {{0,3}}>| {{0,3}}#{{1,6}}| {{0,3}}<[^\n>]+>\n");
+    let interrupts = format!(
+        r"{BULLET} |(?: {{4}}| {{0,3}}\t)| {{0,3}}(?:`{{3,}}|~{{3,}})| {{0,3}}>| {{0,3}}#{{1,6}}| {{0,3}}<[^\n>]+>\n"
+    );
     format!(r"^(?!{interrupts})((?:.|\n(?!\s*?\n|{interrupts}))+?)\n {{0,3}}(=+|-+) *(?:\n+|$)")
 });
 #[cfg(test)]
@@ -250,7 +268,10 @@ rule!(
     ),
     "i"
 );
-rule!(BLOCKQUOTE, format!(r"^( {{0,3}}> ?({}|[^\n]*)(?:\n|$))+", paragraph_body(false)));
+rule!(
+    BLOCKQUOTE,
+    format!(r"^( {{0,3}}> ?({}|[^\n]*)(?:\n|$))+", paragraph_body(false))
+);
 #[cfg(test)]
 rule!(TABLE, format!("^{}", table_body()));
 
@@ -273,10 +294,17 @@ rule!(TABLE_ROW_BLANK_LINE, r"\n[ \t]*$");
 /// `other.listItemRegex(bull)` (compiled once per bullet pattern).
 pub(crate) fn list_item_regex(bull: &str) -> Arc<Regex> {
     static CACHE: LazyLock<Mutex<HashMap<String, Arc<Regex>>>> = LazyLock::new(Mutex::default);
-    let mut cache = CACHE.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+    let mut cache = CACHE
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner);
     cache
         .entry(bull.to_owned())
-        .or_insert_with(|| Arc::new(js(&format!(r"^( {{0,3}}{bull})((?:[\t ][^\n]*)?(?:\n|$))"), "")))
+        .or_insert_with(|| {
+            Arc::new(js(
+                &format!(r"^( {{0,3}}{bull})((?:[\t ][^\n]*)?(?:\n|$))"),
+                "",
+            ))
+        })
         .clone()
 }
 
@@ -293,25 +321,35 @@ impl ItemBreakers {
     /// The breakers for a list item with content `indent` (only `min(3,
     /// indent - 1)` matters, so there are four distinct sets, compiled once).
     pub(crate) fn get(indent: usize) -> &'static ItemBreakers {
-        static SETS: LazyLock<[ItemBreakers; 4]> = LazyLock::new(|| std::array::from_fn(ItemBreakers::new));
+        static SETS: LazyLock<[ItemBreakers; 4]> =
+            LazyLock::new(|| std::array::from_fn(ItemBreakers::new));
         &SETS[indent.saturating_sub(1).min(3)]
     }
 
     /// Whether `line` ends the item: a fence, heading, HTML block, next
     /// bullet or rule (each regex only runs when its first char can match).
     pub(crate) fn breaks(&self, line: &str) -> bool {
-        let Some(c) = line.trim_start_matches(' ').chars().next() else { return false };
+        let Some(c) = line.trim_start_matches(' ').chars().next() else {
+            return false;
+        };
         (matches!(c, '`' | '~') && exec(&self.fences, line).is_some())
             || (c == '#' && exec(&self.heading, line).is_some())
             || (c == '<' && exec(&self.html, line).is_some())
-            || ((matches!(c, '*' | '+' | '-') || c.is_ascii_digit()) && exec(&self.next_bullet, line).is_some())
+            || ((matches!(c, '*' | '+' | '-') || c.is_ascii_digit())
+                && exec(&self.next_bullet, line).is_some())
             || (matches!(c, '-' | '_' | '*') && exec(&self.hr, line).is_some())
     }
 
     fn new(n: usize) -> Self {
         Self {
-            next_bullet: js(&format!(r"^ {{0,{n}}}(?:[*+-]|\d{{1,9}}[.)])((?:[ \t][^\n]*)?(?:\n|$))"), ""),
-            hr: js(&format!(r"^ {{0,{n}}}((?:- *){{3,}}|(?:_ *){{3,}}|(?:\* *){{3,}})(?:\n+|$)"), ""),
+            next_bullet: js(
+                &format!(r"^ {{0,{n}}}(?:[*+-]|\d{{1,9}}[.)])((?:[ \t][^\n]*)?(?:\n|$))"),
+                "",
+            ),
+            hr: js(
+                &format!(r"^ {{0,{n}}}((?:- *){{3,}}|(?:_ *){{3,}}|(?:\* *){{3,}})(?:\n+|$)"),
+                "",
+            ),
             fences: js(&format!(r"^ {{0,{n}}}(?:```|~~~)"), ""),
             heading: js(&format!(r"^ {{0,{n}}}#"), ""),
             html: js(&format!(r"^ {{0,{n}}}<(?:[a-z].*>|!--)"), "i"),
@@ -332,7 +370,10 @@ rule!(
     r"^([`~]+|[^`~])(?:(?= *\n)|(?=[a-zA-Z0-9.!#$%&'*+\/=?_`{\|}~-]+@)|[\s\S]*?(?:(?=[\\<!\[`*~_]| *\n|https?:\/\/|ftp:\/\/|www\.|$)|[^ ](?= *\n)|[^a-zA-Z0-9.!#$%&'*+\/=?_`{\|}~-](?=[a-zA-Z0-9.!#$%&'*+\/=?_`{\|}~-]+@)))"
 );
 rule!(PUNCTUATION, format!(r"^((?![*_]){PUNCT_SPACE})"));
-rule!(BLOCK_SKIP, r"\[[^\[\]]*?\]\((?:\\.|[^\\\(\)]|\((?:\\.|[^\\\(\)])*\))*\)|`[^`]*?`|<[^<>]*?>");
+rule!(
+    BLOCK_SKIP,
+    r"\[[^\[\]]*?\]\((?:\\.|[^\\\(\)]|\((?:\\.|[^\\\(\)])*\))*\)|`[^`]*?`|<[^<>]*?>"
+);
 rule!(
     EM_STRONG_LDELIM,
     format!(r"^(?:\*+(?:((?!\*){PUNCT_GFM})|[^\s*]))|^_+(?:((?!_){PUNCT_GFM})|([^\s_]))")
@@ -371,7 +412,10 @@ rule!(
         r#"^!?\[({INLINE_LABEL})\]\(\s*(<(?:\\.|[^\n<>\\])+>|[^\s\x00-\x1f]*)(?:\s+("(?:\\"?|[^"\\])*"|'(?:\\'?|[^'\\])*'|\((?:\\\)?|[^)\\])*\)))?\s*\)"#
     )
 );
-rule!(REFLINK, format!(r"^!?\[({INLINE_LABEL})\]\[({BLOCK_LABEL})\]"));
+rule!(
+    REFLINK,
+    format!(r"^!?\[({INLINE_LABEL})\]\[({BLOCK_LABEL})\]")
+);
 rule!(NOLINK, format!(r"^!?\[({BLOCK_LABEL})\](?:\[\])?"));
 rule!(
     REFLINK_SEARCH,
@@ -382,8 +426,14 @@ rule!(
     r"^((?:ftp|https?):\/\/|www\.)(?:[a-zA-Z0-9\-]+\.?)+[^\s<]*|^[A-Za-z0-9._+-]+(@)[a-zA-Z0-9\-_]+(?:\.[a-zA-Z0-9\-_]*[a-zA-Z0-9])+(?![-_])",
     "i"
 );
-rule!(BACKPEDAL, r#"(?:[^?!.,:;*_'"~()&]+|\([^)]*\)|&(?![a-zA-Z0-9]+;$)|[?!.,:;*_'"~)]+(?!$))+"#);
-rule!(DEL, r"^(~~?)(?=[^\s~])((?:\\.|[^\\])*?(?:\\.|[^\s~\\]))\1(?=[^~]|$)");
+rule!(
+    BACKPEDAL,
+    r#"(?:[^?!.,:;*_'"~()&]+|\([^)]*\)|&(?![a-zA-Z0-9]+;$)|[?!.,:;*_'"~)]+(?!$))+"#
+);
+rule!(
+    DEL,
+    r"^(~~?)(?=[^\s~])((?:\\.|[^\\])*?(?:\\.|[^\s~\\]))\1(?=[^~]|$)"
+);
 rule!(UNICODE_ALNUM, r"[\p{L}\p{N}]");
 rule!(START_A_TAG, r"^<a ", "i");
 rule!(END_A_TAG, r"^</a>", "i");
@@ -402,10 +452,32 @@ mod tests {
     #[test]
     fn every_rule_compiles() {
         for re in [
-            &BLOCK_CODE, &HR, &HEADING, &LHEADING, &DEF, &LIST, &HTML,
-            &BLOCKQUOTE, &ESCAPE, &CODESPAN, &BR, &PUNCTUATION, &BLOCK_SKIP,
-            &EM_STRONG_LDELIM, &EM_STRONG_RDELIM_AST, &EM_STRONG_RDELIM_UND, &ANY_PUNCTUATION, &AUTOLINK, &TAG,
-            &LINK, &REFLINK, &NOLINK, &REFLINK_SEARCH, &URL, &BACKPEDAL, &DEL,
+            &BLOCK_CODE,
+            &HR,
+            &HEADING,
+            &LHEADING,
+            &DEF,
+            &LIST,
+            &HTML,
+            &BLOCKQUOTE,
+            &ESCAPE,
+            &CODESPAN,
+            &BR,
+            &PUNCTUATION,
+            &BLOCK_SKIP,
+            &EM_STRONG_LDELIM,
+            &EM_STRONG_RDELIM_AST,
+            &EM_STRONG_RDELIM_UND,
+            &ANY_PUNCTUATION,
+            &AUTOLINK,
+            &TAG,
+            &LINK,
+            &REFLINK,
+            &NOLINK,
+            &REFLINK_SEARCH,
+            &URL,
+            &BACKPEDAL,
+            &DEL,
         ] {
             LazyLock::force(re);
         }

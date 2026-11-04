@@ -6,14 +6,24 @@ use frankmd_i18n::{Locale, Node, locale_tree, translation_failures};
 #[test]
 fn all_supported_locales_cover_every_english_translation_leaf() {
     // LOCALES = available_locales - en, sorted.
-    let mut others: Vec<Locale> = Locale::ALL.into_iter().filter(|l| *l != Locale::En).collect();
+    let mut others: Vec<Locale> = Locale::ALL
+        .into_iter()
+        .filter(|l| *l != Locale::En)
+        .collect();
     others.sort_by_key(|l| l.code());
     let english = locale_tree(Locale::En).expect("en.yml");
-    let trees: Vec<(Locale, Node)> = others.iter().map(|l| (*l, locale_tree(*l).expect("locale yaml"))).collect();
+    let trees: Vec<(Locale, Node)> = others
+        .iter()
+        .map(|l| (*l, locale_tree(*l).expect("locale yaml")))
+        .collect();
     let refs: Vec<(&str, &Node)> = trees.iter().map(|(l, t)| (l.code(), t)).collect();
     let failures = translation_failures(&english, &refs);
     let details: Vec<String> = failures.iter().map(|f| format!("  - {f}")).collect();
-    assert!(failures.is_empty(), "Missing or invalid locale translations:\n{}", details.join("\n"));
+    assert!(
+        failures.is_empty(),
+        "Missing or invalid locale translations:\n{}",
+        details.join("\n")
+    );
 }
 
 // port: test/services/translation_coverage_test.rb:20 "reports every nested missing, blank, and non-string translation"

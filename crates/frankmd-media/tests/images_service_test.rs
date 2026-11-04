@@ -58,7 +58,12 @@ fn names(list: &[images::ServerImage]) -> Vec<String> {
 }
 
 fn list_default(c: &MediaConfig) -> Vec<images::ServerImage> {
-    images::list(c, None, &Param::Int(images::MAX_RESULTS as i64), &Param::Int(0))
+    images::list(
+        c,
+        None,
+        &Param::Int(images::MAX_RESULTS as i64),
+        &Param::Int(0),
+    )
 }
 
 // port: test/services/images_service_test.rb:36 "enabled? returns true when path is set"
@@ -107,7 +112,13 @@ fn list_returns_images_sorted_by_most_recent() {
 #[test]
 fn list_only_returns_supported_image_extensions() {
     let f = Fixture::new();
-    for n in ["image.jpg", "image.png", "image.gif", "document.txt", "script.js"] {
+    for n in [
+        "image.jpg",
+        "image.png",
+        "image.gif",
+        "document.txt",
+        "script.js",
+    ] {
         f.image(n, b"fake image data", 0);
     }
     let n = names(&list_default(&f.config()));
@@ -150,7 +161,10 @@ fn list_clamps_an_oversized_limit_to_100() {
     for i in 0..5 {
         f.image(&format!("image_{i}.jpg"), b"x", 0);
     }
-    assert_eq!(images::list(&f.config(), None, &Param::Int(1000), &Param::Int(0)).len(), 5);
+    assert_eq!(
+        images::list(&f.config(), None, &Param::Int(1000), &Param::Int(0)).len(),
+        5
+    );
     assert_eq!(images::clamp_limit(&Param::Int(1000)), 100);
 }
 
@@ -170,7 +184,12 @@ fn list_clamps_a_negative_offset_to_0() {
 fn list_coerces_garbage_limit_and_offset_instead_of_raising() {
     let f = Fixture::new();
     f.image("image.jpg", b"x", 0);
-    let list = images::list(&f.config(), None, &Param::str("not a number"), &Param::str("also not a number"));
+    let list = images::list(
+        &f.config(),
+        None,
+        &Param::str("not a number"),
+        &Param::str("also not a number"),
+    );
     assert_eq!(list.len(), 1);
 }
 
@@ -218,7 +237,12 @@ fn list_filters_by_search_term() {
     for n in ["cat.jpg", "dog.png", "category.gif"] {
         f.image(n, b"x", 0);
     }
-    let n = names(&images::list(&f.config(), Some("cat"), &Param::Int(10), &Param::Int(0)));
+    let n = names(&images::list(
+        &f.config(),
+        Some("cat"),
+        &Param::Int(10),
+        &Param::Int(0),
+    ));
     assert!(n.contains(&"cat.jpg".into()));
     assert!(n.contains(&"category.gif".into()));
     assert!(!n.contains(&"dog.png".into()));
@@ -229,7 +253,12 @@ fn list_filters_by_search_term() {
 fn list_search_is_case_insensitive() {
     let f = Fixture::new();
     f.image("MyPhoto.JPG", b"x", 0);
-    let list = images::list(&f.config(), Some("myphoto"), &Param::Int(10), &Param::Int(0));
+    let list = images::list(
+        &f.config(),
+        Some("myphoto"),
+        &Param::Int(10),
+        &Param::Int(0),
+    );
     assert_eq!(list.len(), 1);
     assert_eq!(list[0].name, "MyPhoto.JPG");
 }
@@ -240,7 +269,10 @@ fn list_includes_images_in_subdirectories() {
     let f = Fixture::new();
     f.image("root.jpg", b"x", 0);
     f.image("subfolder/nested.png", b"x", 0);
-    let paths: Vec<String> = list_default(&f.config()).into_iter().map(|i| i.path).collect();
+    let paths: Vec<String> = list_default(&f.config())
+        .into_iter()
+        .map(|i| i.path)
+        .collect();
     assert!(paths.contains(&"root.jpg".into()));
     assert!(paths.contains(&"subfolder/nested.png".into()));
 }
@@ -264,8 +296,10 @@ fn delete_leaves_no_app_files_in_images_path() {
     f.image("keep.jpg", b"x", 0);
     let root = f.config().images_path.unwrap();
     assert!(images::delete(&f.config(), "gone.jpg"));
-    let mut left: Vec<String> =
-        std::fs::read_dir(&root).unwrap().map(|e| e.unwrap().file_name().to_string_lossy().into_owned()).collect();
+    let mut left: Vec<String> = std::fs::read_dir(&root)
+        .unwrap()
+        .map(|e| e.unwrap().file_name().to_string_lossy().into_owned())
+        .collect();
     left.sort();
     assert_eq!(left, vec!["keep.jpg".to_owned()]);
 }
@@ -291,7 +325,10 @@ fn delete_refuses_path_traversal_and_leaves_the_target_untouched() {
     let f = Fixture::new();
     let outside = write(f.notes.path(), "delete_traversal.txt", b"keep me");
     assert!(!images::delete(&f.config(), "../delete_traversal.txt"));
-    assert!(outside.exists(), "traversal must not delete files outside the images dir");
+    assert!(
+        outside.exists(),
+        "traversal must not delete files outside the images dir"
+    );
 }
 
 // port: test/services/images_service_test.rb:220 "delete refuses non-image files inside the images dir"
@@ -317,13 +354,19 @@ fn find_image_returns_full_path_for_existing_image() {
 // port: test/services/images_service_test.rb:236 "find_image returns nil for non-existent image"
 #[test]
 fn find_image_returns_nil_for_non_existent_image() {
-    assert_eq!(images::find_image(&Fixture::new().config(), "nonexistent.jpg"), None);
+    assert_eq!(
+        images::find_image(&Fixture::new().config(), "nonexistent.jpg"),
+        None
+    );
 }
 
 // port: test/services/images_service_test.rb:241 "find_image prevents path traversal"
 #[test]
 fn find_image_prevents_path_traversal() {
-    assert_eq!(images::find_image(&Fixture::new().config(), "../../../etc/passwd"), None);
+    assert_eq!(
+        images::find_image(&Fixture::new().config(), "../../../etc/passwd"),
+        None
+    );
 }
 
 // port: test/services/images_service_test.rb:246 "find_image works with subdirectories"
@@ -349,7 +392,10 @@ fn find_image_rejects_non_media_files() {
 
 fn images_dir_files(notes: &Path) -> Vec<String> {
     std::fs::read_dir(notes.join("images"))
-        .map(|rd| rd.map(|e| e.unwrap().file_name().to_string_lossy().into_owned()).collect())
+        .map(|rd| {
+            rd.map(|e| e.unwrap().file_name().to_string_lossy().into_owned())
+                .collect()
+        })
         .unwrap_or_default()
 }
 
@@ -358,9 +404,16 @@ fn images_dir_files(notes: &Path) -> Vec<String> {
 async fn upload_base64_data_saves_base64_image_to_notes_directory() {
     let f = Fixture::new();
     let env = f.env();
-    let url = images::upload_base64_data(&env, &b64(&PNG_1X1), Some("image/png"), Some("test_ai.png"), &nil(), None)
-        .await
-        .unwrap();
+    let url = images::upload_base64_data(
+        &env,
+        &b64(&PNG_1X1),
+        Some("image/png"),
+        Some("test_ai.png"),
+        &nil(),
+        None,
+    )
+    .await
+    .unwrap();
     assert!(url.starts_with("images/"));
     assert!(url.contains("test_ai"));
     assert_eq!(std::fs::read(f.notes.path().join(&url)).unwrap(), PNG_1X1);
@@ -370,9 +423,16 @@ async fn upload_base64_data_saves_base64_image_to_notes_directory() {
 #[tokio::test]
 async fn upload_base64_data_returns_error_for_invalid_base64() {
     let f = Fixture::new();
-    let err = images::upload_base64_data(&f.env(), "not valid base64!!!", Some("image/png"), None, &nil(), None)
-        .await
-        .unwrap_err();
+    let err = images::upload_base64_data(
+        &f.env(),
+        "not valid base64!!!",
+        Some("image/png"),
+        None,
+        &nil(),
+        None,
+    )
+    .await
+    .unwrap_err();
     assert!(err.to_string().contains("Invalid base64"), "{err}");
 }
 
@@ -384,9 +444,10 @@ async fn upload_base64_data_rejects_oversized_encoded_input_before_decoding() {
     env.limits.max_base64_encoded_bytes = 10;
     // 11 x "a" is not valid strict base64 either: getting "too large" (not
     // "Invalid base64") proves the cap is checked before decoding.
-    let err = images::upload_base64_data(&env, &"a".repeat(11), None, Some("large.png"), &nil(), None)
-        .await
-        .unwrap_err();
+    let err =
+        images::upload_base64_data(&env, &"a".repeat(11), None, Some("large.png"), &nil(), None)
+            .await
+            .unwrap_err();
     assert!(err.to_string().contains("too large"), "{err}");
 }
 
@@ -395,11 +456,22 @@ async fn upload_base64_data_rejects_oversized_encoded_input_before_decoding() {
 async fn upload_base64_data_rejects_an_svg_mime_type() {
     let f = Fixture::new();
     let svg = b64(b"<svg xmlns='http://www.w3.org/2000/svg'><script>alert(1)</script></svg>");
-    let err = images::upload_base64_data(&f.env(), &svg, Some("image/svg+xml"), Some("xss_1234.svg"), &nil(), None)
-        .await
-        .unwrap_err();
+    let err = images::upload_base64_data(
+        &f.env(),
+        &svg,
+        Some("image/svg+xml"),
+        Some("xss_1234.svg"),
+        &nil(),
+        None,
+    )
+    .await
+    .unwrap_err();
     assert!(err.to_string().contains("not an accepted"), "{err}");
-    assert!(images_dir_files(f.notes.path()).iter().all(|n| !n.ends_with("xss_1234.svg")));
+    assert!(
+        images_dir_files(f.notes.path())
+            .iter()
+            .all(|n| !n.ends_with("xss_1234.svg"))
+    );
 }
 
 // port: test/services/images_service_test.rb:316 "upload_base64_data rejects an html filename (stored-XSS vector)"
@@ -407,20 +479,38 @@ async fn upload_base64_data_rejects_an_svg_mime_type() {
 async fn upload_base64_data_rejects_an_html_filename() {
     let f = Fixture::new();
     let data = b64(b"<html><script>alert(1)</script></html>");
-    let err = images::upload_base64_data(&f.env(), &data, Some("image/png"), Some("evil_1234.html"), &nil(), None)
-        .await
-        .unwrap_err();
+    let err = images::upload_base64_data(
+        &f.env(),
+        &data,
+        Some("image/png"),
+        Some("evil_1234.html"),
+        &nil(),
+        None,
+    )
+    .await
+    .unwrap_err();
     assert!(err.to_string().contains("not an accepted"), "{err}");
-    assert!(images_dir_files(f.notes.path()).iter().all(|n| !n.ends_with(".html")));
+    assert!(
+        images_dir_files(f.notes.path())
+            .iter()
+            .all(|n| !n.ends_with(".html"))
+    );
 }
 
 // port: test/services/images_service_test.rb:329 "upload_base64_data generates filename when not provided"
 #[tokio::test]
 async fn upload_base64_data_generates_filename_when_not_provided() {
     let f = Fixture::new();
-    let url = images::upload_base64_data(&f.env(), &b64(&PNG_1X1), Some("image/png"), None, &nil(), None)
-        .await
-        .unwrap();
+    let url = images::upload_base64_data(
+        &f.env(),
+        &b64(&PNG_1X1),
+        Some("image/png"),
+        None,
+        &nil(),
+        None,
+    )
+    .await
+    .unwrap();
     assert!(url.contains("ai_generated_"));
 }
 
@@ -443,7 +533,13 @@ fn get_image_dimensions_returns_width_and_height() {
     let p = f.image("real.png", &PNG_1X1, 0);
     // The original only asserted the keys exist (ImageMagick may be missing);
     // the `image` crate always decodes this PNG, so assert the values.
-    assert_eq!(images::image_dimensions(&p), Dimensions { width: Some(1), height: Some(1) });
+    assert_eq!(
+        images::image_dimensions(&p),
+        Dimensions {
+            width: Some(1),
+            height: Some(1)
+        }
+    );
 }
 
 // port: test/services/images_service_test.rb:388 "get_image_dimensions returns nil for invalid file"
@@ -457,13 +553,21 @@ fn get_image_dimensions_returns_nil_for_invalid_file() {
 // port: test/services/images_service_test.rb:397 "get_image_dimensions handles non-existent file"
 #[test]
 fn get_image_dimensions_handles_non_existent_file() {
-    assert_eq!(images::image_dimensions(Path::new("/nonexistent/file.png")), Dimensions::default());
+    assert_eq!(
+        images::image_dimensions(Path::new("/nonexistent/file.png")),
+        Dimensions::default()
+    );
 }
 
 // port: test/services/images_service_test.rb:406 "resize_and_compress returns content and changes filename to jpg"
 #[test]
 fn resize_and_compress_returns_content_and_changes_filename_to_jpg() {
-    let r = images::resize_and_compress(&PNG_1X1, "source.png", Some("source.png"), &Param::Float(1.0));
+    let r = images::resize_and_compress(
+        &PNG_1X1,
+        "source.png",
+        Some("source.png"),
+        &Param::Float(1.0),
+    );
     assert!(!r.bytes.is_empty());
     assert!(!r.filename.is_empty());
     assert!(["image/jpeg", "image/png"].contains(&r.content_type.as_str()));
@@ -478,7 +582,12 @@ fn resize_and_compress_returns_content_and_changes_filename_to_jpg() {
 #[test]
 fn resize_and_compress_falls_back_to_the_original_file_on_failure() {
     let broken = b"\x89PNG\r\n\x1a\nnot really a png".to_vec();
-    let r = images::resize_and_compress(&broken, "source.png", Some("source.png"), &Param::Float(0.5));
+    let r = images::resize_and_compress(
+        &broken,
+        "source.png",
+        Some("source.png"),
+        &Param::Float(0.5),
+    );
     assert_eq!(r.bytes, broken);
     assert_eq!(r.content_type, "image/png");
     assert_eq!(r.filename, "source.png");
@@ -529,7 +638,10 @@ fn content_type_for_returns_correct_mime_types() {
     assert_eq!(images::content_type_for("test.webp"), "image/webp");
     assert_eq!(images::content_type_for("test.svg"), "image/svg+xml");
     assert_eq!(images::content_type_for("test.bmp"), "image/bmp");
-    assert_eq!(images::content_type_for("test.unknown"), "application/octet-stream");
+    assert_eq!(
+        images::content_type_for("test.unknown"),
+        "application/octet-stream"
+    );
 }
 
 // port: test/services/images_service_test.rb:504 "extension_for_content_type returns correct extensions"
@@ -548,5 +660,8 @@ fn extension_for_content_type_returns_correct_extensions() {
 // port: test/services/images_service_test.rb:514 "extension_for_content_type handles content-type with charset"
 #[test]
 fn extension_for_content_type_handles_content_type_with_charset() {
-    assert_eq!(images::extension_for_content_type(Some("image/png; charset=utf-8")), Some(".png"));
+    assert_eq!(
+        images::extension_for_content_type(Some("image/png; charset=utf-8")),
+        Some(".png")
+    );
 }

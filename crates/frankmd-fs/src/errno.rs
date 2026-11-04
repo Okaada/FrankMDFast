@@ -123,21 +123,21 @@ impl std::error::Error for Posix {}
 #[cfg(not(unix))]
 fn from_win32(code: i32) -> i32 {
     match code {
-        1 | 50 => EOPNOTSUPP,         // ERROR_INVALID_FUNCTION, ERROR_NOT_SUPPORTED
-        2 | 3 | 123 => ENOENT,        // FILE/PATH_NOT_FOUND, INVALID_NAME
-        5 => EACCES,                  // ERROR_ACCESS_DENIED
-        17 => EXDEV,                  // ERROR_NOT_SAME_DEVICE
-        19 => EROFS,                  // ERROR_WRITE_PROTECT
-        32 | 33 => EBUSY,             // SHARING / LOCK_VIOLATION
-        80 | 183 => EEXIST,           // FILE_EXISTS, ALREADY_EXISTS
-        87 => EINVAL,                 // ERROR_INVALID_PARAMETER
-        112 => ENOSPC,                // ERROR_DISK_FULL
-        145 => ENOTEMPTY,             // ERROR_DIR_NOT_EMPTY
-        206 => ENAMETOOLONG,          // ERROR_FILENAME_EXCED_RANGE
-        267 => ENOTDIR,               // ERROR_DIRECTORY
-        1142 => EMLINK,               // ERROR_TOO_MANY_LINKS
-        1314 => EPERM,                // ERROR_PRIVILEGE_NOT_HELD
-        1921 => ELOOP,                // ERROR_CANT_RESOLVE_FILENAME
+        1 | 50 => EOPNOTSUPP,  // ERROR_INVALID_FUNCTION, ERROR_NOT_SUPPORTED
+        2 | 3 | 123 => ENOENT, // FILE/PATH_NOT_FOUND, INVALID_NAME
+        5 => EACCES,           // ERROR_ACCESS_DENIED
+        17 => EXDEV,           // ERROR_NOT_SAME_DEVICE
+        19 => EROFS,           // ERROR_WRITE_PROTECT
+        32 | 33 => EBUSY,      // SHARING / LOCK_VIOLATION
+        80 | 183 => EEXIST,    // FILE_EXISTS, ALREADY_EXISTS
+        87 => EINVAL,          // ERROR_INVALID_PARAMETER
+        112 => ENOSPC,         // ERROR_DISK_FULL
+        145 => ENOTEMPTY,      // ERROR_DIR_NOT_EMPTY
+        206 => ENAMETOOLONG,   // ERROR_FILENAME_EXCED_RANGE
+        267 => ENOTDIR,        // ERROR_DIRECTORY
+        1142 => EMLINK,        // ERROR_TOO_MANY_LINKS
+        1314 => EPERM,         // ERROR_PRIVILEGE_NOT_HELD
+        1921 => ELOOP,         // ERROR_CANT_RESOLVE_FILENAME
         other => 10_000 + other,
     }
 }

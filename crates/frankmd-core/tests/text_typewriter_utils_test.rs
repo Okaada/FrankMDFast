@@ -1,7 +1,8 @@
 //! Port of test/javascript/lib/typewriter_utils.test.js.
 
 use frankmd_core::text::typewriter::{
-    DEFAULT_TARGET_RATIO, calculate_typewriter_scroll, calculate_typewriter_sync_ratio, get_typewriter_sync_data,
+    DEFAULT_TARGET_RATIO, calculate_typewriter_scroll, calculate_typewriter_sync_ratio,
+    get_typewriter_sync_data,
 };
 
 fn scroll(y: f64, h: f64) -> f64 {

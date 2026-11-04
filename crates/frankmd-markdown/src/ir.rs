@@ -40,28 +40,58 @@ pub struct RenderDoc {
 #[allow(missing_docs)]
 pub enum Block {
     /// `#`..`######` (and setext). `anchor` is the heading id slug.
-    Heading { level: u8, inlines: Vec<Inline>, anchor: String, span: SourceSpan },
+    Heading {
+        level: u8,
+        inlines: Vec<Inline>,
+        anchor: String,
+        span: SourceSpan,
+    },
     /// Paragraph.
-    Paragraph { inlines: Vec<Inline>, span: SourceSpan },
+    Paragraph {
+        inlines: Vec<Inline>,
+        span: SourceSpan,
+    },
     /// Fenced or indented code. `lang` is the first word of the info string
     /// exactly as written (marked emits `class="language-<lang>"`); resolve it
     /// with [`crate::highlight::language_for_fence`]. `lines` are
     /// pre-highlighted within the render budget (HP-017), plain otherwise.
-    Code { lang: Option<String>, lines: Arc<Vec<HighlightedLine>>, span: SourceSpan },
+    Code {
+        lang: Option<String>,
+        lines: Arc<Vec<HighlightedLine>>,
+        span: SourceSpan,
+    },
     /// `$$...$$` display math (FrankMD `mathBlock` extension). `tex` is trimmed.
     Math { tex: String, span: SourceSpan },
     /// Blockquote / GFM alert.
-    Quote { alert: Option<AlertKind>, children: Vec<Block>, span: SourceSpan },
+    Quote {
+        alert: Option<AlertKind>,
+        children: Vec<Block>,
+        span: SourceSpan,
+    },
     /// Ordered (`Some(start)`) or unordered (`None`) list. `loose` lists wrap
     /// item paragraphs in `<p>` (marked's loose/tight distinction).
-    List { ordered: Option<u64>, loose: bool, items: Vec<ListItem>, span: SourceSpan },
+    List {
+        ordered: Option<u64>,
+        loose: bool,
+        items: Vec<ListItem>,
+        span: SourceSpan,
+    },
     /// GFM table.
-    Table { align: Vec<Align>, header: Vec<Vec<Inline>>, rows: Vec<Vec<Vec<Inline>>>, span: SourceSpan },
+    Table {
+        align: Vec<Align>,
+        header: Vec<Vec<Inline>>,
+        rows: Vec<Vec<Vec<Inline>>>,
+        span: SourceSpan,
+    },
     /// `---`.
     Rule { span: SourceSpan },
     /// YouTube (and future allowlisted) embeds rendered as thumbnail cards.
     /// `html` is the note's raw `<iframe>` for HTML export.
-    Embed { embed: crate::embed::Embed, html: String, span: SourceSpan },
+    Embed {
+        embed: crate::embed::Embed,
+        html: String,
+        span: SourceSpan,
+    },
     /// Raw HTML block **as written in the note** (untrusted). HTML export
     /// sanitizes the assembled document with [`crate::html::sanitize`] like
     /// FrankMD (raw HTML can wrap later markdown, e.g. `<details>`); a native
@@ -117,17 +147,35 @@ pub enum Inline {
     /// `==text==` → `<mark>`; content is literal text.
     Highlight(String),
     /// `:shortcode:` resolved through `frankmd_core::emoji::lookup`.
-    Emoji { shortcode: String, emoji: String },
+    Emoji {
+        shortcode: String,
+        emoji: String,
+    },
     /// `:ph-name:` Phosphor icon (inline SVG path data).
-    Icon { name: String, path: String, view_box: String },
+    Icon {
+        name: String,
+        path: String,
+        view_box: String,
+    },
     /// `url` is `None` when the href failed the URL allowlist (DOMPurify
     /// drops the attribute and keeps the text).
-    Link { url: Option<SafeUrl>, title: Option<String>, children: Vec<Inline> },
+    Link {
+        url: Option<SafeUrl>,
+        title: Option<String>,
+        children: Vec<Inline>,
+    },
     /// `[[target]]` / `[[target|label]]`, both trimmed. Display text is
     /// `label` or the basename of `target`.
-    WikiLink { target: String, label: Option<String> },
+    WikiLink {
+        target: String,
+        label: Option<String>,
+    },
     /// `src` is `None` when the URL failed the allowlist.
-    Image { src: Option<SafeUrl>, alt: String, title: Option<String> },
+    Image {
+        src: Option<SafeUrl>,
+        alt: String,
+        title: Option<String>,
+    },
     /// Raw inline HTML as written (untrusted, see [`Block::Html`]).
     Html(String),
     FootnoteRef(String),
@@ -172,8 +220,19 @@ pub struct HighlightedLine {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[allow(missing_docs)]
 pub enum TokenClass {
-    Keyword, Function, Operator, String, Number, Constant, Comment, Type, Property,
-    Identifier, Punctuation, Invalid, Plain,
+    Keyword,
+    Function,
+    Operator,
+    String,
+    Number,
+    Constant,
+    Comment,
+    Type,
+    Property,
+    Identifier,
+    Punctuation,
+    Invalid,
+    Plain,
 }
 
 /// A token's role plus the `tok-definition` modifier (rendered bold).
@@ -188,12 +247,23 @@ pub struct TokenStyle {
 /// Table column alignment.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[allow(missing_docs)]
-pub enum Align { None, Left, Center, Right }
+pub enum Align {
+    None,
+    Left,
+    Center,
+    Right,
+}
 
 /// GFM alert kinds.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[allow(missing_docs)]
-pub enum AlertKind { Note, Tip, Important, Warning, Caution }
+pub enum AlertKind {
+    Note,
+    Tip,
+    Important,
+    Warning,
+    Caution,
+}
 
 /// Footnote definition.
 #[derive(Debug, Clone)]

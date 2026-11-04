@@ -16,7 +16,9 @@ use frankmd_ai::{AiRequestError, NoteSource};
 use gpui_kit::component::button::{Button, ButtonVariants as _};
 use gpui_kit::component::input::{InputEvent, Textarea, TextareaState};
 use gpui_kit::component::theme::Theme;
-use gpui_kit::component::{ActiveTheme as _, Disableable as _, Selectable as _, Sizable as _, h_flex, v_flex};
+use gpui_kit::component::{
+    ActiveTheme as _, Disableable as _, Selectable as _, Sizable as _, h_flex, v_flex,
+};
 use gpui_kit::prelude::FluentBuilder as _;
 use gpui_kit::*;
 
@@ -131,11 +133,13 @@ impl GrammarDialog {
     /// Build; AI availability is read once in the background (FE-439).
     pub fn new(services: Arc<MediaServices>, window: &mut Window, cx: &mut Context<Self>) -> Self {
         let edit = cx.new(|cx| TextareaState::new(window, cx));
-        let subs = vec![cx.subscribe_in(&edit, window, |this, input, ev: &InputEvent, _, cx| {
-            if matches!(ev, InputEvent::Change) && !this.syncing {
-                this.state.set_edited(&input.read(cx).value());
-            }
-        })];
+        let subs = vec![
+            cx.subscribe_in(&edit, window, |this, input, ev: &InputEvent, _, cx| {
+                if matches!(ev, InputEvent::Change) && !this.syncing {
+                    this.state.set_edited(&input.read(cx).value());
+                }
+            }),
+        ];
         let mut dialog = Self {
             services,
             state: GrammarState::default(),
@@ -156,7 +160,9 @@ impl GrammarDialog {
     /// Re-read the AI configuration (e.g. after `.fed` changed).
     pub fn reload_config(&mut self, cx: &mut Context<Self>) {
         let services = Arc::clone(&self.services);
-        let work = cx.background_executor().spawn(async move { services.ai().provider_info() });
+        let work = cx
+            .background_executor()
+            .spawn(async move { services.ai().provider_info() });
         self.config = Some(cx.spawn(async move |this, cx| {
             let info = work.await;
             this.update(cx, |this, cx| {
@@ -185,7 +191,13 @@ impl GrammarDialog {
     }
 
     /// Ctrl+Shift+G: check `path` whose editor text is `text`.
-    pub fn start(&mut self, path: Option<String>, text: String, window: &mut Window, cx: &mut Context<Self>) {
+    pub fn start(
+        &mut self,
+        path: Option<String>,
+        text: String,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
         self.text = text;
         match self.state.start(path.as_deref(), &self.text) {
             Ok(effects) => self.run(effects, window, cx),
@@ -196,7 +208,10 @@ impl GrammarDialog {
             }
             Err(error) => {
                 if let Some(key) = error.key() {
-                    cx.emit(GrammarEvent::Status { text: t(cx, key), error: true });
+                    cx.emit(GrammarEvent::Status {
+                        text: t(cx, key),
+                        error: true,
+                    });
                 }
             }
         }
@@ -215,7 +230,11 @@ impl GrammarDialog {
                 GrammarEffect::FlushAutosave => cx.emit(GrammarEvent::FlushAutosave),
                 GrammarEffect::SetReadOnly(on) => cx.emit(GrammarEvent::SetReadOnly(on)),
                 GrammarEffect::ShowBanner { provider, model } => {
-                    let text = i18n::t_args(cx, "media_dialogs.grammar_checking", &[("provider", &provider), ("model", &model)]);
+                    let text = i18n::t_args(
+                        cx,
+                        "media_dialogs.grammar_checking",
+                        &[("provider", &provider), ("model", &model)],
+                    );
                     cx.emit(GrammarEvent::Banner(Some(text)));
                 }
                 GrammarEffect::HideBanner => cx.emit(GrammarEvent::Banner(None)),
@@ -235,7 +254,11 @@ impl GrammarDialog {
 
     fn request(&mut self, id: u64, path: String, cx: &mut Context<Self>) {
         let services = Arc::clone(&self.services);
-        let note = EditorNote { vault: services.vault.clone(), path: path.clone(), text: self.text.clone() };
+        let note = EditorNote {
+            vault: services.vault.clone(),
+            path: path.clone(),
+            text: self.text.clone(),
+        };
         let (abort, work) = spawn_net(cx, async move {
             let service = services.ai();
             frankmd_ai::fix_grammar_note(&service, &note, &path).await
@@ -274,7 +297,11 @@ impl GrammarDialog {
     }
 
     fn sync_edit(&mut self, window: &mut Window, cx: &mut Context<Self>) {
-        let text = self.state.edited().map(str::to_owned).unwrap_or_else(|| self.state.merged_text());
+        let text = self
+            .state
+            .edited()
+            .map(str::to_owned)
+            .unwrap_or_else(|| self.state.merged_text());
         self.syncing = true;
         self.edit.update(cx, |s, cx| s.set_value(text, window, cx));
         self.syncing = false;
@@ -340,18 +367,31 @@ impl Render for GrammarDialog {
         }
         let theme = cx.theme().clone();
         let viewport = window.viewport_size();
-        let badge = self.state.result().map(|r| format!("{}: {}", r.provider, r.model));
+        let badge = self
+            .state
+            .result()
+            .map(|r| format!("{}: {}", r.provider, r.model));
         let body: AnyElement = if let Some(error) = self.state.error() {
             v_flex()
                 .gap_2()
                 .p_4()
-                .child(div().id("grammar-error").test_support().text_color(theme.danger).child(error.to_owned()))
-                .child(Button::new("grammar-retry").small().label(t(cx, "media_dialogs.retry")).on_click(cx.listener(
-                    |this, _, window, cx| this.retry(window, cx),
-                )))
+                .child(
+                    div()
+                        .id("grammar-error")
+                        .test_support()
+                        .text_color(theme.danger)
+                        .child(error.to_owned()),
+                )
+                .child(
+                    Button::new("grammar-retry")
+                        .small()
+                        .label(t(cx, "media_dialogs.retry"))
+                        .on_click(cx.listener(|this, _, window, cx| this.retry(window, cx))),
+                )
                 .into_any_element()
         } else if self.state.result().is_some() {
-            self.render_diff(&theme, viewport.width, cx).into_any_element()
+            self.render_diff(&theme, viewport.width, cx)
+                .into_any_element()
         } else {
             self.render_setup(&theme, cx).into_any_element()
         };
@@ -388,12 +428,32 @@ impl Render for GrammarDialog {
                     .gap_2()
                     .border_b_1()
                     .border_color(theme.border)
-                    .child(div().text_sm().font_weight(FontWeight::SEMIBOLD).child(t(cx, "dialogs.ai_diff.title")))
+                    .child(
+                        div()
+                            .text_sm()
+                            .font_weight(FontWeight::SEMIBOLD)
+                            .child(t(cx, "dialogs.ai_diff.title")),
+                    )
                     .when_some(badge, |el, badge| {
-                        el.child(div().id("grammar-badge").test_support().px_2().rounded_sm().text_xs().bg(theme.secondary).child(badge))
+                        el.child(
+                            div()
+                                .id("grammar-badge")
+                                .test_support()
+                                .px_2()
+                                .rounded_sm()
+                                .text_xs()
+                                .bg(theme.secondary)
+                                .child(badge),
+                        )
                     })
                     .child(div().flex_1())
-                    .child(Button::new("grammar-close").ghost().xsmall().label("×").on_click(cx.listener(|this, _, _, cx| this.close(cx)))),
+                    .child(
+                        Button::new("grammar-close")
+                            .ghost()
+                            .xsmall()
+                            .label("×")
+                            .on_click(cx.listener(|this, _, _, cx| this.close(cx))),
+                    ),
             )
             .child(div().flex_1().min_h_0().child(body))
             .child(
@@ -404,12 +464,19 @@ impl Render for GrammarDialog {
                     .justify_end()
                     .border_t_1()
                     .border_color(theme.border)
-                    .child(Button::new("grammar-cancel").label(t(cx, "common.cancel")).on_click(cx.listener(|this, _, _, cx| this.close(cx))))
+                    .child(
+                        Button::new("grammar-cancel")
+                            .label(t(cx, "common.cancel"))
+                            .on_click(cx.listener(|this, _, _, cx| this.close(cx))),
+                    )
                     .child(
                         Button::new("grammar-apply")
                             .primary()
                             .disabled(!has_result)
-                            .label(format!("{}  Ctrl+↵", t(cx, "dialogs.ai_diff.accept_changes")))
+                            .label(format!(
+                                "{}  Ctrl+↵",
+                                t(cx, "dialogs.ai_diff.accept_changes")
+                            ))
                             .on_click(cx.listener(|this, _, _, cx| this.apply(cx))),
                     ),
             )
@@ -420,12 +487,43 @@ impl Render for GrammarDialog {
 impl GrammarDialog {
     fn render_setup(&self, theme: &Theme, cx: &mut Context<Self>) -> impl IntoElement + use<> {
         let cards: [(&str, &[&str]); 6] = [
-            ("dialogs.ai_diff.ollama_title", &["ollama_api_base = http://localhost:11434", "ollama_model = llama3.2", "Run: ollama pull llama3.2"]),
-            ("dialogs.ai_diff.openrouter_title", &["openrouter_api_key = sk-or-...", "openrouter_model = openai/gpt-4o-mini"]),
-            ("dialogs.ai_diff.anthropic_title", &["anthropic_api_key = sk-ant-...", "anthropic_model = claude-sonnet-4-20250514"]),
-            ("dialogs.ai_diff.gemini_title", &["gemini_api_key = ...", "gemini_model = gemini-2.0-flash"]),
-            ("dialogs.ai_diff.openai_title", &["openai_api_key = sk-...", "openai_model = gpt-4o-mini"]),
-            ("dialogs.ai_diff.provider_selection", &["ai_provider = anthropic", "ai_model = claude-sonnet-4-20250514"]),
+            (
+                "dialogs.ai_diff.ollama_title",
+                &[
+                    "ollama_api_base = http://localhost:11434",
+                    "ollama_model = llama3.2",
+                    "Run: ollama pull llama3.2",
+                ],
+            ),
+            (
+                "dialogs.ai_diff.openrouter_title",
+                &[
+                    "openrouter_api_key = sk-or-...",
+                    "openrouter_model = openai/gpt-4o-mini",
+                ],
+            ),
+            (
+                "dialogs.ai_diff.anthropic_title",
+                &[
+                    "anthropic_api_key = sk-ant-...",
+                    "anthropic_model = claude-sonnet-4-20250514",
+                ],
+            ),
+            (
+                "dialogs.ai_diff.gemini_title",
+                &["gemini_api_key = ...", "gemini_model = gemini-2.0-flash"],
+            ),
+            (
+                "dialogs.ai_diff.openai_title",
+                &["openai_api_key = sk-...", "openai_model = gpt-4o-mini"],
+            ),
+            (
+                "dialogs.ai_diff.provider_selection",
+                &[
+                    "ai_provider = anthropic",
+                    "ai_model = claude-sonnet-4-20250514",
+                ],
+            ),
         ];
         v_flex()
             .id("grammar-setup")
@@ -434,24 +532,58 @@ impl GrammarDialog {
             .gap_2()
             .overflow_y_scroll()
             .size_full()
-            .child(div().font_weight(FontWeight::SEMIBOLD).child(t(cx, "media_dialogs.grammar_needs_provider")))
-            .child(div().text_sm().text_color(theme.muted_foreground).child(t(cx, "dialogs.ai_diff.config_description")))
-            .child(div().text_sm().text_color(theme.muted_foreground).child(t(cx, "dialogs.ai_diff.priority_note")))
-            .child(div().grid().grid_cols(2).gap_2().children(cards.iter().map(|(title, lines)| {
-                v_flex()
-                    .p_2()
-                    .gap_1()
-                    .rounded(theme.radius)
-                    .bg(theme.secondary)
-                    .child(div().text_sm().font_weight(FontWeight::SEMIBOLD).child(t(cx, title)))
-                    .children(lines.iter().map(|line| div().text_xs().font_family(theme.mono_font_family.clone()).child(*line)))
-            })))
-            .child(Button::new("grammar-open-settings").small().label(t(cx, "media_dialogs.open_settings")).on_click(cx.listener(
-                |_, _, _, cx| cx.emit(GrammarEvent::OpenSettings),
+            .child(
+                div()
+                    .font_weight(FontWeight::SEMIBOLD)
+                    .child(t(cx, "media_dialogs.grammar_needs_provider")),
+            )
+            .child(
+                div()
+                    .text_sm()
+                    .text_color(theme.muted_foreground)
+                    .child(t(cx, "dialogs.ai_diff.config_description")),
+            )
+            .child(
+                div()
+                    .text_sm()
+                    .text_color(theme.muted_foreground)
+                    .child(t(cx, "dialogs.ai_diff.priority_note")),
+            )
+            .child(div().grid().grid_cols(2).gap_2().children(cards.iter().map(
+                |(title, lines)| {
+                    v_flex()
+                        .p_2()
+                        .gap_1()
+                        .rounded(theme.radius)
+                        .bg(theme.secondary)
+                        .child(
+                            div()
+                                .text_sm()
+                                .font_weight(FontWeight::SEMIBOLD)
+                                .child(t(cx, title)),
+                        )
+                        .children(lines.iter().map(|line| {
+                            div()
+                                .text_xs()
+                                .font_family(theme.mono_font_family.clone())
+                                .child(*line)
+                        }))
+                },
             )))
+            .child(
+                Button::new("grammar-open-settings")
+                    .small()
+                    .label(t(cx, "media_dialogs.open_settings"))
+                    .on_click(cx.listener(|_, _, _, cx| cx.emit(GrammarEvent::OpenSettings))),
+            )
     }
 
-    fn render_diff(&self, theme: &Theme, width: Pixels, cx: &mut Context<Self>) -> impl IntoElement + use<> {
+    fn render_diff(
+        &self,
+        theme: &Theme,
+        width: Pixels,
+        cx: &mut Context<Self>,
+    ) -> impl IntoElement + use<> {
         let (left, left_hl, right, right_hl) = diff_texts(&self.state, theme);
         let (current, total) = self.state.counter();
         let focused = self.state.focused();
@@ -464,19 +596,51 @@ impl GrammarDialog {
                 .min_w_0()
                 .min_h_0()
                 .gap_1()
-                .child(div().text_xs().text_color(theme.muted_foreground).child(title))
-                .child(div().id(id).test_support().flex_1().min_h_0().p_2().rounded(theme.radius).bg(theme.secondary).overflow_y_scroll().child(body))
+                .child(
+                    div()
+                        .text_xs()
+                        .text_color(theme.muted_foreground)
+                        .child(title),
+                )
+                .child(
+                    div()
+                        .id(id)
+                        .test_support()
+                        .flex_1()
+                        .min_h_0()
+                        .p_2()
+                        .rounded(theme.radius)
+                        .bg(theme.secondary)
+                        .overflow_y_scroll()
+                        .child(body),
+                )
         };
-        let left_el = div().font_family(mono.clone()).text_sm().child(StyledText::new(left).with_highlights(left_hl)).into_any_element();
+        let left_el = div()
+            .font_family(mono.clone())
+            .text_sm()
+            .child(StyledText::new(left).with_highlights(left_hl))
+            .into_any_element();
         let right_el = if edit_mode {
             Textarea::new(&self.edit).h_full().into_any_element()
         } else {
-            div().font_family(mono.clone()).text_sm().child(StyledText::new(right).with_highlights(right_hl)).into_any_element()
+            div()
+                .font_family(mono.clone())
+                .text_sm()
+                .child(StyledText::new(right).with_highlights(right_hl))
+                .into_any_element()
         };
-        let original_title: SharedString =
-            format!("{} {}", t(cx, "dialogs.ai_diff.original"), t(cx, "dialogs.ai_diff.deletions_hint")).into();
-        let corrected_title: SharedString =
-            format!("{} {}", t(cx, "dialogs.ai_diff.corrected"), t(cx, "dialogs.ai_diff.additions_hint")).into();
+        let original_title: SharedString = format!(
+            "{} {}",
+            t(cx, "dialogs.ai_diff.original"),
+            t(cx, "dialogs.ai_diff.deletions_hint")
+        )
+        .into();
+        let corrected_title: SharedString = format!(
+            "{} {}",
+            t(cx, "dialogs.ai_diff.corrected"),
+            t(cx, "dialogs.ai_diff.additions_hint")
+        )
+        .into();
         let hunks = self.state.hunks().to_vec();
         v_flex()
             .size_full()
@@ -489,7 +653,10 @@ impl GrammarDialog {
                     .child(div().text_sm().child(i18n::t_args(
                         cx,
                         "media_dialogs.change_counter",
-                        &[("current", &current.to_string()), ("total", &total.to_string())],
+                        &[
+                            ("current", &current.to_string()),
+                            ("total", &total.to_string()),
+                        ],
                     )))
                     .child(div().flex_1())
                     .child(
@@ -497,7 +664,9 @@ impl GrammarDialog {
                             .xsmall()
                             .selected(edit_mode)
                             .label(t(cx, self.state.toggle_label_key()))
-                            .on_click(cx.listener(|this, _, window, cx| this.toggle_edit(window, cx))),
+                            .on_click(
+                                cx.listener(|this, _, window, cx| this.toggle_edit(window, cx)),
+                            ),
                     ),
             )
             .child(
@@ -542,11 +711,18 @@ impl GrammarDialog {
                                     this.state.focus(i);
                                     cx.notify();
                                 }))
-                                .child(div().flex_1().text_xs().font_family(mono.clone()).truncate().child(format!(
-                                    "{} → {}",
-                                    hunk.deleted.trim(),
-                                    hunk.inserted.trim()
-                                )))
+                                .child(
+                                    div()
+                                        .flex_1()
+                                        .text_xs()
+                                        .font_family(mono.clone())
+                                        .truncate()
+                                        .child(format!(
+                                            "{} → {}",
+                                            hunk.deleted.trim(),
+                                            hunk.inserted.trim()
+                                        )),
+                                )
                                 .child(
                                     Button::new(SharedString::from(format!("grammar-accept-{i}")))
                                         .xsmall()
@@ -582,11 +758,17 @@ fn diff_texts(state: &GrammarState, theme: &Theme) -> (String, Highlights, Strin
     let deleted = HighlightStyle {
         color: Some(theme.danger),
         background_color: Some(theme.danger.opacity(0.2)),
-        strikethrough: Some(StrikethroughStyle { thickness: px(1.), color: Some(theme.danger) }),
+        strikethrough: Some(StrikethroughStyle {
+            thickness: px(1.),
+            color: Some(theme.danger),
+        }),
         ..HighlightStyle::default()
     };
-    let inserted =
-        HighlightStyle { color: Some(theme.success), background_color: Some(theme.success.opacity(0.2)), ..HighlightStyle::default() };
+    let inserted = HighlightStyle {
+        color: Some(theme.success),
+        background_color: Some(theme.success.opacity(0.2)),
+        ..HighlightStyle::default()
+    };
     let (mut left, mut right) = (String::new(), String::new());
     let (mut lh, mut rh) = (Vec::new(), Vec::new());
     for segment in state.segments() {
@@ -596,7 +778,9 @@ fn diff_texts(state: &GrammarState, theme: &Theme) -> (String, Highlights, Strin
                 right.push_str(text);
             }
             Segment::Change(i) => {
-                let Some(hunk) = state.hunks().get(*i) else { continue };
+                let Some(hunk) = state.hunks().get(*i) else {
+                    continue;
+                };
                 let start = left.len();
                 left.push_str(&hunk.deleted);
                 if left.len() > start {

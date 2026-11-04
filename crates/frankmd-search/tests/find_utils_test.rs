@@ -2,11 +2,15 @@
 #![allow(clippy::unwrap_used)]
 
 use frankmd_search::find::{
-    Direction, FindOptions, escape_regex_chars, find_all_matches, find_closest_match_index, replace_matches,
-    validate_regex,
+    Direction, FindOptions, escape_regex_chars, find_all_matches, find_closest_match_index,
+    replace_matches, validate_regex,
 };
 
-const REGEX: FindOptions = FindOptions { case_sensitive: false, use_regex: true, whole_word: false };
+const REGEX: FindOptions = FindOptions {
+    case_sensitive: false,
+    use_regex: true,
+    whole_word: false,
+};
 
 // port: test/javascript/lib/find_utils.test.js:11 "escapes regex special characters"
 #[test]
@@ -37,7 +41,15 @@ fn finds_literal_matches() {
 // port: test/javascript/lib/find_utils.test.js:31 "respects case sensitivity"
 #[test]
 fn respects_case_sensitivity() {
-    let m = find_all_matches("Hello hello", "hello", FindOptions { case_sensitive: true, use_regex: false, whole_word: false });
+    let m = find_all_matches(
+        "Hello hello",
+        "hello",
+        FindOptions {
+            case_sensitive: true,
+            use_regex: false,
+            whole_word: false,
+        },
+    );
     assert_eq!(m.len(), 1);
     assert_eq!(m[0].text, "hello");
 }
@@ -52,7 +64,10 @@ fn supports_regex_matches() {
 #[test]
 fn captures_regex_groups() {
     let m = find_all_matches("abc123", r"(abc)(\d+)", REGEX);
-    assert_eq!(m[0].groups, vec![Some("abc".to_owned()), Some("123".to_owned())]);
+    assert_eq!(
+        m[0].groups,
+        vec![Some("abc".to_owned()), Some("123".to_owned())]
+    );
 }
 
 // port: test/javascript/lib/find_utils.test.js:49 "replaces literal matches"
@@ -76,25 +91,37 @@ fn b_matches() -> Vec<frankmd_search::find::Match> {
 // port: test/javascript/lib/find_utils.test.js:65 "finds next match from position"
 #[test]
 fn finds_next_match_from_position() {
-    assert_eq!(find_closest_match_index(&b_matches(), 0, Direction::Next), Some(0));
+    assert_eq!(
+        find_closest_match_index(&b_matches(), 0, Direction::Next),
+        Some(0)
+    );
 }
 
 // port: test/javascript/lib/find_utils.test.js:69 "wraps when reaching end"
 #[test]
 fn wraps_when_reaching_end() {
-    assert_eq!(find_closest_match_index(&b_matches(), 10, Direction::Next), Some(0));
+    assert_eq!(
+        find_closest_match_index(&b_matches(), 10, Direction::Next),
+        Some(0)
+    );
 }
 
 // port: test/javascript/lib/find_utils.test.js:73 "finds previous match from position"
 #[test]
 fn finds_previous_match_from_position() {
-    assert_eq!(find_closest_match_index(&b_matches(), 5, Direction::Previous), Some(0));
+    assert_eq!(
+        find_closest_match_index(&b_matches(), 5, Direction::Previous),
+        Some(0)
+    );
 }
 
 // port: test/javascript/lib/find_utils.test.js:77 "wraps when going before start"
 #[test]
 fn wraps_when_going_before_start() {
-    assert_eq!(find_closest_match_index(&b_matches(), 0, Direction::Previous), Some(1));
+    assert_eq!(
+        find_closest_match_index(&b_matches(), 0, Direction::Previous),
+        Some(1)
+    );
 }
 
 // port: test/javascript/lib/find_utils.test.js:83 "returns valid for proper regex"

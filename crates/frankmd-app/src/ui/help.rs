@@ -4,7 +4,11 @@ use super::prelude::*;
 use gpui_kit::*;
 
 impl Shell {
-    pub(super) fn render_help(&mut self, theme: &Theme, cx: &mut Context<Self>) -> impl IntoElement + use<> {
+    pub(super) fn render_help(
+        &mut self,
+        theme: &Theme,
+        cx: &mut Context<Self>,
+    ) -> impl IntoElement + use<> {
         let this = cx.entity().downgrade();
         let tab = self.help_tab;
         let tabs = [

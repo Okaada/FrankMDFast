@@ -40,7 +40,14 @@ pub struct Fault {
 
 impl Fault {
     pub fn throw(method: Method) -> Self {
-        Self { method, key: None, prefix: None, mode: FaultMode::Throw, message: None, times: None }
+        Self {
+            method,
+            key: None,
+            prefix: None,
+            mode: FaultMode::Throw,
+            message: None,
+            times: None,
+        }
     }
     pub fn on_key(mut self, key: &str) -> Self {
         self.key = Some(key.to_owned());
@@ -89,10 +96,19 @@ impl MemoryBackend {
         Self::default()
     }
     pub fn seeded(entries: &[(&str, &str)]) -> Self {
-        Self { entries: entries.iter().map(|(k, v)| ((*k).to_owned(), (*v).to_owned())).collect(), ..Self::default() }
+        Self {
+            entries: entries
+                .iter()
+                .map(|(k, v)| ((*k).to_owned(), (*v).to_owned()))
+                .collect(),
+            ..Self::default()
+        }
     }
     pub fn raw(&self, key: &str) -> Option<&str> {
-        self.entries.iter().find(|(k, _)| k == key).map(|(_, v)| v.as_str())
+        self.entries
+            .iter()
+            .find(|(k, _)| k == key)
+            .map(|(_, v)| v.as_str())
     }
     pub fn put_raw(&mut self, key: &str, value: &str) {
         if let Some(e) = self.entries.iter_mut().find(|(k, _)| k == key) {
@@ -112,7 +128,9 @@ impl MemoryBackend {
         let idx = faults.iter().position(|f| {
             f.method == method
                 && f.key.as_deref().is_none_or(|k| Some(k) == key)
-                && f.prefix.as_deref().is_none_or(|p| key.is_some_and(|k| k.starts_with(p)))
+                && f.prefix
+                    .as_deref()
+                    .is_none_or(|p| key.is_some_and(|k| k.starts_with(p)))
         })?;
         let hit = faults[idx].clone();
         if let Some(t) = faults[idx].times.as_mut() {
@@ -124,13 +142,21 @@ impl MemoryBackend {
         Some(hit)
     }
     fn err(f: &Fault) -> BackendError {
-        BackendError::new(f.message.clone().unwrap_or_else(|| f.default_message().to_owned()))
+        BackendError::new(
+            f.message
+                .clone()
+                .unwrap_or_else(|| f.default_message().to_owned()),
+        )
     }
 }
 
 impl DraftBackend for MemoryBackend {
     fn available(&self) -> Result<(), BackendError> {
-        if self.provider_fails { Err(BackendError::new("localStorage unavailable")) } else { Ok(()) }
+        if self.provider_fails {
+            Err(BackendError::new("localStorage unavailable"))
+        } else {
+            Ok(())
+        }
     }
     fn len(&self) -> Result<usize, BackendError> {
         if let Some(f) = self.fault(Method::Length, None) {
@@ -212,7 +238,10 @@ pub type Session = AutosaveSession<MemoryBackend>;
 
 /// An autosave session with default **[COMPAT]** timings plus a fake clock.
 pub fn session() -> (Session, FakeClock) {
-    (AutosaveSession::new(drafts(), AutosaveConfig::default()), FakeClock::default())
+    (
+        AutosaveSession::new(drafts(), AutosaveConfig::default()),
+        FakeClock::default(),
+    )
 }
 
 /// `clock.now()` shorthand.

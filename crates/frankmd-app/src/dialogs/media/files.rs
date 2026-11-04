@@ -60,8 +60,13 @@ pub fn read_bytes(file: &LocalFile) -> Result<Vec<u8>, String> {
     if let Some(bytes) = &file.bytes {
         return Ok(bytes.as_ref().clone());
     }
-    let path = file.path.as_ref().ok_or_else(|| "No file provided".to_owned())?;
-    let size = std::fs::metadata(path).map_err(|_| "Upload failed".to_owned())?.len();
+    let path = file
+        .path
+        .as_ref()
+        .ok_or_else(|| "No file provided".to_owned())?;
+    let size = std::fs::metadata(path)
+        .map_err(|_| "Upload failed".to_owned())?
+        .len();
     if size > MAX_READ_BYTES {
         return Err(frankmd_media::upload_storage::TOO_LARGE_MESSAGE.to_owned());
     }
@@ -89,9 +94,11 @@ pub fn pasted_image(mime: &str, bytes: Vec<u8>, now_ms: u64) -> LocalFile {
 /// The first image on the GPUI clipboard, if any (paste handling, FE-358).
 pub fn clipboard_image(item: &gpui_kit::ClipboardItem, now_ms: u64) -> Option<LocalFile> {
     item.entries().iter().find_map(|entry| match entry {
-        gpui_kit::ClipboardEntry::Image(image) => {
-            Some(pasted_image(image.format.mime_type(), image.bytes().to_vec(), now_ms))
-        }
+        gpui_kit::ClipboardEntry::Image(image) => Some(pasted_image(
+            image.format.mime_type(),
+            image.bytes().to_vec(),
+            now_ms,
+        )),
         _ => None,
     })
 }

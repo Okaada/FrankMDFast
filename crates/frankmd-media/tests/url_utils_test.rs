@@ -9,7 +9,10 @@ fn yt(s: &str) -> Option<String> {
 // port: test/javascript/url_utils.test.js:8 "encodes path segments"
 #[test]
 fn encodes_path_segments() {
-    assert_eq!(encode_path(Some("hello world/test file.md")), "hello%20world/test%20file.md");
+    assert_eq!(
+        encode_path(Some("hello world/test file.md")),
+        "hello%20world/test%20file.md"
+    );
 }
 
 // port: test/javascript/url_utils.test.js:12 "preserves forward slashes"
@@ -41,31 +44,46 @@ fn handles_deeply_nested_paths() {
 // port: test/javascript/url_utils.test.js:31 "encodes unicode characters"
 #[test]
 fn encodes_unicode_characters() {
-    assert_eq!(encode_path(Some("café/résumé.md")), "caf%C3%A9/r%C3%A9sum%C3%A9.md");
+    assert_eq!(
+        encode_path(Some("café/résumé.md")),
+        "caf%C3%A9/r%C3%A9sum%C3%A9.md"
+    );
 }
 
 // port: test/javascript/url_utils.test.js:37 "extracts ID from standard watch URL"
 #[test]
 fn extracts_id_from_watch_url() {
-    assert_eq!(yt("https://www.youtube.com/watch?v=dQw4w9WgXcQ").as_deref(), Some("dQw4w9WgXcQ"));
+    assert_eq!(
+        yt("https://www.youtube.com/watch?v=dQw4w9WgXcQ").as_deref(),
+        Some("dQw4w9WgXcQ")
+    );
 }
 
 // port: test/javascript/url_utils.test.js:42 "extracts ID from short URL"
 #[test]
 fn extracts_id_from_short_url() {
-    assert_eq!(yt("https://youtu.be/dQw4w9WgXcQ").as_deref(), Some("dQw4w9WgXcQ"));
+    assert_eq!(
+        yt("https://youtu.be/dQw4w9WgXcQ").as_deref(),
+        Some("dQw4w9WgXcQ")
+    );
 }
 
 // port: test/javascript/url_utils.test.js:47 "extracts ID from embed URL"
 #[test]
 fn extracts_id_from_embed_url() {
-    assert_eq!(yt("https://www.youtube.com/embed/dQw4w9WgXcQ").as_deref(), Some("dQw4w9WgXcQ"));
+    assert_eq!(
+        yt("https://www.youtube.com/embed/dQw4w9WgXcQ").as_deref(),
+        Some("dQw4w9WgXcQ")
+    );
 }
 
 // port: test/javascript/url_utils.test.js:52 "extracts ID from v/ URL"
 #[test]
 fn extracts_id_from_v_url() {
-    assert_eq!(yt("https://www.youtube.com/v/dQw4w9WgXcQ").as_deref(), Some("dQw4w9WgXcQ"));
+    assert_eq!(
+        yt("https://www.youtube.com/v/dQw4w9WgXcQ").as_deref(),
+        Some("dQw4w9WgXcQ")
+    );
 }
 
 // port: test/javascript/url_utils.test.js:57 "returns the ID if just passed an ID"
@@ -96,11 +114,17 @@ fn none_for_empty_input() {
 // port: test/javascript/url_utils.test.js:75 "handles URL with additional parameters"
 #[test]
 fn handles_additional_parameters() {
-    assert_eq!(yt("https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=30s").as_deref(), Some("dQw4w9WgXcQ"));
+    assert_eq!(
+        yt("https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=30s").as_deref(),
+        Some("dQw4w9WgXcQ")
+    );
 }
 
 // port: test/javascript/url_utils.test.js:80 "handles URL without www"
 #[test]
 fn handles_url_without_www() {
-    assert_eq!(yt("https://youtube.com/watch?v=dQw4w9WgXcQ").as_deref(), Some("dQw4w9WgXcQ"));
+    assert_eq!(
+        yt("https://youtube.com/watch?v=dQw4w9WgXcQ").as_deref(),
+        Some("dQw4w9WgXcQ")
+    );
 }

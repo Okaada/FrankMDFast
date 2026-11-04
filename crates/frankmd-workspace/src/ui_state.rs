@@ -49,7 +49,11 @@ impl Default for UiState {
 impl UiState {
     /// Clamp a sidebar width to its bounds.
     pub fn clamp_sidebar(width: f32) -> f32 {
-        if width.is_finite() { width.clamp(SIDEBAR_MIN, SIDEBAR_MAX) } else { SIDEBAR_WIDTH }
+        if width.is_finite() {
+            width.clamp(SIDEBAR_MIN, SIDEBAR_MAX)
+        } else {
+            SIDEBAR_WIDTH
+        }
     }
 
     /// The preview share that keeps both panes at their minimum widths
@@ -89,7 +93,10 @@ impl UiStateStore {
         if !state.preview_ratio.is_finite() || !(0.05..=0.95).contains(&state.preview_ratio) {
             state.preview_ratio = PREVIEW_RATIO_DEFAULT;
         }
-        Self { file: Some(file), state }
+        Self {
+            file: Some(file),
+            state,
+        }
     }
 
     /// Current values.
@@ -124,7 +131,11 @@ impl UiStateStore {
             return;
         };
         if let Ok(bytes) = serde_json::to_vec_pretty(&self.state) {
-            let _ = frankmd_fs::atomic::atomic_replace(file, &bytes, frankmd_fs::atomic::ModePolicy::Fixed(0o600));
+            let _ = frankmd_fs::atomic::atomic_replace(
+                file,
+                &bytes,
+                frankmd_fs::atomic::ModePolicy::Fixed(0o600),
+            );
         }
     }
 }
@@ -163,6 +174,9 @@ mod tests {
     fn ratio_respects_pane_minimums() {
         assert!((UiState::clamp_ratio(0.9, 1000.0, 320.0, 280.0) - 0.68).abs() < 1e-4);
         assert!((UiState::clamp_ratio(0.1, 1000.0, 320.0, 280.0) - 0.28).abs() < 1e-4);
-        assert!((UiState::clamp_ratio(f32::NAN, 1000.0, 320.0, 280.0) - PREVIEW_RATIO_DEFAULT).abs() < 1e-4);
+        assert!(
+            (UiState::clamp_ratio(f32::NAN, 1000.0, 320.0, 280.0) - PREVIEW_RATIO_DEFAULT).abs()
+                < 1e-4
+        );
     }
 }

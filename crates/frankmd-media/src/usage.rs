@@ -18,12 +18,12 @@ pub const MEDIA_ROOTS: [&str; 2] = ["images", "videos"];
 /// `MAX_CACHED_ROOTS` (process-wide LRU of indexes in the original).
 pub const MAX_CACHED_ROOTS: usize = 8;
 /// `MARKDOWN_DESTINATION` (Onigmo source, `/m`).
-pub const MARKDOWN_DESTINATION: &str = r"(?<!\\)\[(?:\\.|[^\]\r\n])*\]\([ \t]*(?:<([^>\r\n]*)>|((?:\\.|[^)\s])+))";
+pub const MARKDOWN_DESTINATION: &str =
+    r"(?<!\\)\[(?:\\.|[^\]\r\n])*\]\([ \t]*(?:<([^>\r\n]*)>|((?:\\.|[^)\s])+))";
 /// `REFERENCE_DEFINITION` (Onigmo source).
 pub const REFERENCE_DEFINITION: &str = r"\A {0,3}\[([^\]\r\n]+)\]:[ \t]*(?:<([^>\r\n]*)>|([^\s]+))";
 /// `REFERENCE_USE` (Onigmo source).
-pub const REFERENCE_USE: &str =
-    r"(?<!\\)!\[((?:\\.|[^\]\r\n])*)\](?:\[([^\]\r\n]*)\])?|(?<![\\!])\[((?:\\.|[^\]\r\n])*)\](?:\[([^\]\r\n]*)\])?";
+pub const REFERENCE_USE: &str = r"(?<!\\)!\[((?:\\.|[^\]\r\n])*)\](?:\[([^\]\r\n]*)\])?|(?<![\\!])\[((?:\\.|[^\]\r\n])*)\](?:\[([^\]\r\n]*)\])?";
 /// `HTML_SOURCE` (Onigmo source, `/im`).
 pub const HTML_SOURCE: &str = r#"<(?:img|video|audio|source|track|embed|object)\b[^>]*?\s+src\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))"#;
 
@@ -47,7 +47,11 @@ pub struct MediaUsage {
 impl MediaUsage {
     /// `MediaUsageService.new(base_path:)`.
     pub fn new(base: impl Into<PathBuf>) -> Self {
-        Self { base: base.into(), cache: std::sync::Mutex::new(None), builds: std::sync::atomic::AtomicUsize::new(0) }
+        Self {
+            base: base.into(),
+            cache: std::sync::Mutex::new(None),
+            builds: std::sync::atomic::AtomicUsize::new(0),
+        }
     }
 
     /// `build_index`: scans visible, non-symlinked `.md` notes (dot dirs skipped);
@@ -55,7 +59,8 @@ impl MediaUsage {
     /// Any read failure → [`MediaError::Scan`] (`"Could not read Markdown note …"` /
     /// `"Could not inspect Markdown notes: …"`), never a partial index.
     pub fn build_index(&self) -> Result<Arc<UsageIndex>, MediaError> {
-        let inspect = |e: std::io::Error| MediaError::Scan(format!("Could not inspect Markdown notes: {e}"));
+        let inspect =
+            |e: std::io::Error| MediaError::Scan(format!("Could not inspect Markdown notes: {e}"));
         let mut files = Vec::new();
         collect_markdown_files(&self.base, &mut files).map_err(inspect)?;
         let fingerprint = self.fingerprint(&files).map_err(inspect)?;
@@ -90,17 +95,22 @@ impl MediaUsage {
     }
 
     fn relative(&self, file: &Path) -> String {
-        file.strip_prefix(&self.base).unwrap_or(file).to_string_lossy().into_owned()
+        file.strip_prefix(&self.base)
+            .unwrap_or(file)
+            .to_string_lossy()
+            .into_owned()
     }
 
     /// `build_index_from(files)`.
     fn build_index_from(&self, files: &[PathBuf]) -> Result<UsageIndex, MediaError> {
-        self.builds.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+        self.builds
+            .fetch_add(1, std::sync::atomic::Ordering::SeqCst);
         let mut usage: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
         for file in files {
             let note_path = self.relative(file);
-            let bytes = std::fs::read(file)
-                .map_err(|e| MediaError::Scan(format!("Could not read Markdown note {note_path}: {e}")))?;
+            let bytes = std::fs::read(file).map_err(|e| {
+                MediaError::Scan(format!("Could not read Markdown note {note_path}: {e}"))
+            })?;
             let content = String::from_utf8_lossy(&bytes);
             for reference in references_in(&content) {
                 if let Some(media) = canonical_media_path(&reference, &note_path) {
@@ -108,7 +118,10 @@ impl MediaUsage {
                 }
             }
         }
-        Ok(usage.into_iter().map(|(media, notes)| (media, notes.into_iter().collect())).collect())
+        Ok(usage
+            .into_iter()
+            .map(|(media, notes)| (media, notes.into_iter().collect()))
+            .collect())
     }
 }
 
@@ -132,7 +145,9 @@ fn collect_markdown_files(directory: &Path, out: &mut Vec<PathBuf>) -> std::io::
         let path = entry.path();
         if file_type.is_dir() {
             collect_markdown_files(&path, out)?;
-        } else if file_type.is_file() && crate::server_folder::extname(&entry.file_name().to_string_lossy()) == ".md" {
+        } else if file_type.is_file()
+            && crate::server_folder::extname(&entry.file_name().to_string_lossy()) == ".md"
+        {
             out.push(path);
         }
     }
@@ -145,7 +160,8 @@ fn regex(source: &str) -> Regex {
     Regex::new(source).expect("valid media usage regex")
 }
 
-static MARKDOWN_DESTINATION_RE: LazyLock<Regex> = LazyLock::new(|| regex(&format!("(?s){MARKDOWN_DESTINATION}")));
+static MARKDOWN_DESTINATION_RE: LazyLock<Regex> =
+    LazyLock::new(|| regex(&format!("(?s){MARKDOWN_DESTINATION}")));
 static REFERENCE_DEFINITION_RE: LazyLock<Regex> = LazyLock::new(|| regex(REFERENCE_DEFINITION));
 static REFERENCE_USE_RE: LazyLock<Regex> = LazyLock::new(|| regex(REFERENCE_USE));
 static HTML_SOURCE_RE: LazyLock<Regex> = LazyLock::new(|| regex(&format!("(?is){HTML_SOURCE}")));
@@ -157,7 +173,8 @@ static INLINE_CODE: LazyLock<Regex> = LazyLock::new(|| regex(r"(?s)(?<!\\)(`+).*
 /// Onigmo `[[:punct:]]` on UTF-8 strings: Unicode punctuation plus the ASCII symbols.
 static ESCAPED_PUNCT: LazyLock<Regex> = LazyLock::new(|| regex(r"\\(\p{P}|[$+<=>^`|~])"));
 static SPACES: LazyLock<Regex> = LazyLock::new(|| regex(r"\s+"));
-static SCHEME_OR_NETWORK: LazyLock<Regex> = LazyLock::new(|| regex(r"(?i)\A(?:[a-z][a-z0-9+.-]*:|//)"));
+static SCHEME_OR_NETWORK: LazyLock<Regex> =
+    LazyLock::new(|| regex(r"(?i)\A(?:[a-z][a-z0-9+.-]*:|//)"));
 
 /// Ruby `String#lines`: split after each `\n`, keeping it.
 fn lines(content: &str) -> impl Iterator<Item = &str> {
@@ -166,7 +183,9 @@ fn lines(content: &str) -> impl Iterator<Item = &str> {
 
 /// `mask_line`: every char but `\r`/`\n` becomes a space.
 fn mask(text: &str) -> String {
-    text.chars().map(|c| if c == '\r' || c == '\n' { c } else { ' ' }).collect()
+    text.chars()
+        .map(|c| if c == '\r' || c == '\n' { c } else { ' ' })
+        .collect()
 }
 
 /// `gsub(re) { mask }` (fancy-regex errors such as backtrack limits leave text as is).
@@ -236,9 +255,13 @@ fn unescape_html(text: &str) -> String {
 fn numeric_reference(entity: &str) -> Option<char> {
     let digits = entity.strip_prefix('#')?;
     let code = match digits.strip_prefix(['x', 'X']) {
-        Some(hex) if !hex.is_empty() && hex.chars().all(|c| c.is_ascii_hexdigit()) => u32::from_str_radix(hex, 16).ok()?,
+        Some(hex) if !hex.is_empty() && hex.chars().all(|c| c.is_ascii_hexdigit()) => {
+            u32::from_str_radix(hex, 16).ok()?
+        }
         Some(_) => return None,
-        None if !digits.is_empty() && digits.chars().all(|c| c.is_ascii_digit()) => digits.parse().ok()?,
+        None if !digits.is_empty() && digits.chars().all(|c| c.is_ascii_digit()) => {
+            digits.parse().ok()?
+        }
         None => return None,
     };
     char::from_u32(code)
@@ -252,14 +275,23 @@ pub fn references_in(content: &str) -> Vec<String> {
     let mut out: Vec<String> = MARKDOWN_DESTINATION_RE
         .captures_iter(&source)
         .flatten()
-        .filter_map(|caps| caps.get(1).or_else(|| caps.get(2)).map(|m| m.as_str().to_owned()))
+        .filter_map(|caps| {
+            caps.get(1)
+                .or_else(|| caps.get(2))
+                .map(|m| m.as_str().to_owned())
+        })
         .collect();
     out.extend(reference_destinations(&source, &definitions));
     out.extend(
         HTML_SOURCE_RE
             .captures_iter(&source)
             .flatten()
-            .filter_map(|caps| caps.get(1).or_else(|| caps.get(2)).or_else(|| caps.get(3)).map(|m| m.as_str().to_owned())),
+            .filter_map(|caps| {
+                caps.get(1)
+                    .or_else(|| caps.get(2))
+                    .or_else(|| caps.get(3))
+                    .map(|m| m.as_str().to_owned())
+            }),
     );
     out
 }
@@ -274,7 +306,9 @@ fn extract_reference_definitions(content: &str) -> (BTreeMap<String, String>, St
             Some(caps) => {
                 let label = normalize_reference_label(caps.get(1).map_or("", |m| m.as_str()));
                 if let Some(dest) = caps.get(2).or_else(|| caps.get(3)) {
-                    definitions.entry(label).or_insert_with(|| dest.as_str().to_owned());
+                    definitions
+                        .entry(label)
+                        .or_insert_with(|| dest.as_str().to_owned());
                 }
                 rest.push_str(&mask(line));
             }
@@ -289,16 +323,27 @@ fn reference_destinations(content: &str, definitions: &BTreeMap<String, String>)
     let mut out = Vec::new();
     let mut cursor = 0;
     while cursor <= content.len() {
-        let Some(caps) = REFERENCE_USE_RE.captures_from_pos(content, cursor).ok().flatten() else {
+        let Some(caps) = REFERENCE_USE_RE
+            .captures_from_pos(content, cursor)
+            .ok()
+            .flatten()
+        else {
             break;
         };
         let Some(whole) = caps.get(0) else {
             break;
         };
         cursor = next_char_boundary(content, whole.start());
-        let first = caps.get(1).or_else(|| caps.get(3)).map_or("", |m| m.as_str());
+        let first = caps
+            .get(1)
+            .or_else(|| caps.get(3))
+            .map_or("", |m| m.as_str());
         let second = caps.get(2).or_else(|| caps.get(4)).map(|m| m.as_str());
-        if second.is_none() && FOLLOWED_BY_PAREN.is_match(&content[whole.end()..]).unwrap_or(false) {
+        if second.is_none()
+            && FOLLOWED_BY_PAREN
+                .is_match(&content[whole.end()..])
+                .unwrap_or(false)
+        {
             continue;
         }
         let label = match second {
@@ -313,7 +358,10 @@ fn reference_destinations(content: &str, definitions: &BTreeMap<String, String>)
 }
 
 fn next_char_boundary(text: &str, at: usize) -> usize {
-    text[at..].chars().next().map_or(text.len() + 1, |c| at + c.len_utf8())
+    text[at..]
+        .chars()
+        .next()
+        .map_or(text.len() + 1, |c| at + c.len_utf8())
 }
 
 /// `markdown_without_code(content)`: blank out fenced blocks, inline code
@@ -323,7 +371,12 @@ pub fn markdown_without_code(content: &str) -> String {
     let mut without_fences = String::with_capacity(content.len());
     for line in lines(content) {
         if let Some(open) = &fence {
-            let closing = FENCE_CLOSE.captures(line).ok().flatten().and_then(|c| c.get(1)).map(|m| m.as_str().to_owned());
+            let closing = FENCE_CLOSE
+                .captures(line)
+                .ok()
+                .flatten()
+                .and_then(|c| c.get(1))
+                .map(|m| m.as_str().to_owned());
             if let Some(close) = closing
                 && close.chars().next() == open.chars().next()
                 && close.chars().count() >= open.chars().count()
@@ -331,7 +384,12 @@ pub fn markdown_without_code(content: &str) -> String {
                 fence = None;
             }
             without_fences.push_str(&mask(line));
-        } else if let Some(marker) = FENCE_OPEN.captures(line).ok().flatten().and_then(|c| c.get(1)) {
+        } else if let Some(marker) = FENCE_OPEN
+            .captures(line)
+            .ok()
+            .flatten()
+            .and_then(|c| c.get(1))
+        {
             fence = Some(marker.as_str().to_owned());
             without_fences.push_str(&mask(line));
         } else {
@@ -401,7 +459,9 @@ pub fn canonical_media_path(reference: &str, note_path: &str) -> Option<String> 
             _ => segments.push(segment),
         }
     }
-    let rooted = segments.first().is_some_and(|first| MEDIA_ROOTS.contains(&first.as_str()));
+    let rooted = segments
+        .first()
+        .is_some_and(|first| MEDIA_ROOTS.contains(&first.as_str()));
     (rooted && segments.len() > 1).then(|| segments.join("/"))
 }
 
@@ -413,7 +473,10 @@ fn percent_decode(segment: &str) -> String {
     while i < bytes.len() {
         let hex = |b: u8| char::from(b).to_digit(16);
         if bytes[i] == b'%'
-            && let (Some(Some(hi)), Some(Some(lo))) = (bytes.get(i + 1).map(|b| hex(*b)), bytes.get(i + 2).map(|b| hex(*b)))
+            && let (Some(Some(hi)), Some(Some(lo))) = (
+                bytes.get(i + 1).map(|b| hex(*b)),
+                bytes.get(i + 2).map(|b| hex(*b)),
+            )
         {
             out.push((hi * 16 + lo) as u8);
             i += 3;
@@ -447,7 +510,12 @@ fn stat_fingerprint(meta: &std::fs::Metadata) -> Vec<u8> {
     for n in [meta.dev(), meta.ino(), meta.size()] {
         out.extend_from_slice(&n.to_le_bytes());
     }
-    for n in [meta.mtime(), meta.mtime_nsec(), meta.ctime(), meta.ctime_nsec()] {
+    for n in [
+        meta.mtime(),
+        meta.mtime_nsec(),
+        meta.ctime(),
+        meta.ctime_nsec(),
+    ] {
         out.extend_from_slice(&n.to_le_bytes());
     }
     out

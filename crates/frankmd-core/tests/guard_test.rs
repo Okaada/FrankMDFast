@@ -19,14 +19,20 @@ fn small_deletion_is_ok() {
 // port: test/javascript/controllers/autosave_controller.test.js:155 "shows warning for large deletion (> 20% AND > 50 chars)"
 #[test]
 fn large_deletion_warns_with_removed_count() {
-    assert_eq!(check_deletion(Some(&x(300)), ""), DeletionVerdict::LargeDeletion { removed_chars: 300 });
+    assert_eq!(
+        check_deletion(Some(&x(300)), ""),
+        DeletionVerdict::LargeDeletion { removed_chars: 300 }
+    );
 }
 
 // port: test/javascript/controllers/autosave_controller.test.js:185 "no warning when _lastSavedContent is null (fresh file)"
 #[test]
 fn no_baseline_never_warns() {
     assert!(!is_large_deletion(None, ""));
-    assert!(!is_large_deletion(Some(""), ""), "empty baseline short-circuits");
+    assert!(
+        !is_large_deletion(Some(""), ""),
+        "empty baseline short-circuits"
+    );
 }
 
 // contract: both thresholds are required and strict
@@ -51,7 +57,10 @@ fn thresholds_are_strict_and_both_required() {
 fn lengths_are_utf16_code_units() {
     // 40 emoji = 80 UTF-16 units (160 UTF-8 bytes). Deleting all of them loses 80 > 50.
     let emoji = "😀".repeat(40);
-    assert_eq!(check_deletion(Some(&emoji), ""), DeletionVerdict::LargeDeletion { removed_chars: 80 });
+    assert_eq!(
+        check_deletion(Some(&emoji), ""),
+        DeletionVerdict::LargeDeletion { removed_chars: 80 }
+    );
     // 30 'é' = 30 units (60 bytes): losing all is only 30 → ok (a byte count would say 60).
     assert!(!is_large_deletion(Some(&"é".repeat(30)), ""));
 }

@@ -32,6 +32,11 @@ fn returns_a_syntax_highlighting_extension() {
     let rules = markdown_highlights();
     assert!(!rules.is_empty());
     for r in rules {
-        assert!(frankmd_theme::COLOR_KEYS.contains(&r.color), "{} uses unknown token {}", r.tag, r.color);
+        assert!(
+            frankmd_theme::COLOR_KEYS.contains(&r.color),
+            "{} uses unknown token {}",
+            r.tag,
+            r.color
+        );
     }
 }
