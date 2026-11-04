@@ -1,7 +1,7 @@
 //! Adapted UI tests: command palette, quick open, empty state, keymap table.
 //!
-//! See docs/testing/ui-test-plan.md. `keymap_has_no_duplicate_chords_per_context`
-//! runs today (pure data); the rest panic with `todo!()` until implemented.
+//! See docs/testing/ui-test-plan.md. The keymap is generated from the command
+//! registry; level-b tests drive the real shell headlessly.
 #![allow(missing_docs, clippy::unwrap_used)]
 
 extern crate gpui_kit as gpui;
@@ -31,7 +31,10 @@ fn keymap_has_no_duplicate_chords_per_context() {
             .iter()
             .map(|k| k.unparse(gpui_kit::OperatingSystem::Linux))
             .collect();
-        let context = binding.predicate().map(|p| p.to_string()).unwrap_or_default();
+        let context = binding
+            .predicate()
+            .map(|p| p.to_string())
+            .unwrap_or_default();
         assert!(
             seen.insert((context.clone(), chord.clone())),
             "duplicate chord {chord:?} in context {context:?}"
@@ -51,10 +54,22 @@ fn palette_hides_unavailable_commands_and_explains_when_only_those_match() {
     assert!(rows.iter().any(|r| r.id == "view.toggle_preview"));
 
     let rows = reg.query("edit table", &no_note, &[]);
-    assert!(rows.iter().all(|r| r.unavailable.is_some()), "only the Unavailable section");
-    assert!(!rows.is_empty(), "reason shown, e.g. 'Open a markdown note first'");
+    assert!(
+        rows.iter().all(|r| r.unavailable.is_some()),
+        "only the Unavailable section"
+    );
+    assert!(
+        !rows.is_empty(),
+        "reason shown, e.g. 'Open a markdown note first'"
+    );
 
-    let in_table = CommandContext { markdown_open: true, caret_in_table: true, vim: false };
+    // mechanical: CommandContext grew fields (note_open, toggles); the rest default.
+    let in_table = CommandContext {
+        markdown_open: true,
+        caret_in_table: true,
+        vim: false,
+        ..Default::default()
+    };
     let rows = reg.query("edit table", &in_table, &[]);
     assert_eq!(rows.first().map(|r| r.unavailable.is_none()), Some(true));
 }
@@ -63,22 +78,40 @@ fn palette_hides_unavailable_commands_and_explains_when_only_those_match() {
 #[test]
 fn palette_shows_toggle_state_and_recent_first() {
     let reg = CommandRegistry::builtin();
-    let cx = CommandContext { markdown_open: true, caret_in_table: false, vim: true };
+    let cx = CommandContext {
+        markdown_open: true,
+        caret_in_table: false,
+        vim: true,
+        ..Default::default()
+    };
     let vim = reg.query("vim mode", &cx, &[]);
     assert_eq!(vim.first().and_then(|r| r.checked), Some(true));
     let rows = reg.query("", &cx, &["view.toggle_zen"]);
     assert_eq!(rows.first().map(|r| r.id), Some("view.toggle_zen"));
-    assert_eq!(rows.first().and_then(|r| r.shortcut.clone()).as_deref(), Some("F11"));
+    assert_eq!(
+        rows.first().and_then(|r| r.shortcut.clone()).as_deref(),
+        Some("F11")
+    );
 }
 
 // §2 "Overlays (one at a time)"; §4.3 "Overlays trap focus and return it to the previous region".
 #[test]
 fn overlay_stack_is_single_and_restores_original_focus() {
     let mut stack = OverlayStack::default();
-    stack.open(OverlayKind::Palette(PaletteMode::Commands), FocusRegion::Editor);
+    stack.open(
+        OverlayKind::Palette(PaletteMode::Commands),
+        FocusRegion::Editor,
+    );
     stack.open(OverlayKind::QuickOpen, FocusRegion::Sidebar);
-    assert_eq!(stack.open.as_ref().map(|(k, _)| k.clone()), Some(OverlayKind::QuickOpen));
-    assert_eq!(stack.close(), Some(FocusRegion::Editor), "focus returns where the user was");
+    assert_eq!(
+        stack.open.as_ref().map(|(k, _)| k.clone()),
+        Some(OverlayKind::QuickOpen)
+    );
+    assert_eq!(
+        stack.close(),
+        Some(FocusRegion::Editor),
+        "focus returns where the user was"
+    );
     assert_eq!(stack.close(), None);
 }
 
@@ -89,9 +122,18 @@ fn overlay_stack_is_single_and_restores_original_focus() {
 #[test]
 fn quick_open_lists_recents_first_and_wraps_selection() {
     let notes = vec![
-        NoteEntry { path: "a.md".into(), mtime: 300 },
-        NoteEntry { path: "b.md".into(), mtime: 200 },
-        NoteEntry { path: "c.md".into(), mtime: 100 },
+        NoteEntry {
+            path: "a.md".into(),
+            mtime: 300,
+        },
+        NoteEntry {
+            path: "b.md".into(),
+            mtime: 200,
+        },
+        NoteEntry {
+            path: "c.md".into(),
+            mtime: 100,
+        },
     ];
     let mut qo = QuickOpenModel::new(notes, vec!["c.md".into()]);
     assert_eq!(qo.rows(), vec!["c.md", "a.md", "b.md"]);
@@ -107,8 +149,14 @@ fn quick_open_lists_recents_first_and_wraps_selection() {
 #[test]
 fn quick_open_matches_paths_and_offers_creation() {
     let notes = vec![
-        NoteEntry { path: "blog/2026/brief.md".into(), mtime: 1 },
-        NoteEntry { path: "inbox.md".into(), mtime: 2 },
+        NoteEntry {
+            path: "blog/2026/brief.md".into(),
+            mtime: 1,
+        },
+        NoteEntry {
+            path: "inbox.md".into(),
+            mtime: 2,
+        },
     ];
     let mut qo = QuickOpenModel::new(notes, vec![]);
     qo.set_query("blog brief");
@@ -126,7 +174,10 @@ fn palette_opens_focused_and_escape_restores_editor_focus(cx: &mut TestAppContex
     let shell = open_shell(cx, WIDE, VaultFixture::sample());
     let w = shell.window;
     harness::press(cx, w, "ctrl-2 ctrl-shift-p");
-    assert_eq!(shell.overlay(cx), Some(OverlayKind::Palette(PaletteMode::Commands)));
+    assert_eq!(
+        shell.overlay(cx),
+        Some(OverlayKind::Palette(PaletteMode::Commands))
+    );
     assert!(harness::has_focus(cx, w, "palette-input"));
     harness::press(cx, w, "escape");
     assert_eq!(shell.overlay(cx), None);
@@ -157,7 +208,10 @@ fn quick_open_filters_and_opens_note(cx: &mut TestAppContext) {
     harness::type_text(cx, w, "launch");
     harness::press(cx, w, "enter");
     assert_eq!(shell.overlay(cx), None);
-    assert_eq!(shell.active_note(cx).as_deref(), Some("projects/Launch list.md"));
+    assert_eq!(
+        shell.active_note(cx).as_deref(),
+        Some("projects/Launch list.md")
+    );
     assert_eq!(shell.focus_region(cx), Some(FocusRegion::Editor));
 }
 
@@ -168,7 +222,10 @@ fn empty_state_docks_quick_open_with_input_focused(cx: &mut TestAppContext) {
     let shell = open_shell(cx, WIDE, VaultFixture::sample_no_note());
     let w = shell.window;
     assert!(harness::is_shown(cx, w, "empty-state"));
-    assert!(harness::has_focus(cx, w, "quick-open-input"), "type immediately after launch");
+    assert!(
+        harness::has_focus(cx, w, "quick-open-input"),
+        "type immediately after launch"
+    );
     assert_eq!(shell.overlay(cx), None, "docked, not an overlay (no scrim)");
     harness::type_text(cx, w, "inbox");
     harness::press(cx, w, "enter");

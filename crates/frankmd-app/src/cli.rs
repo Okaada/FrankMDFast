@@ -1,14 +1,269 @@
-//! Command line (`frankmd open [path]`, headless subcommands later, OM-021).
+//! Command line (`frankmd [path]`, the native `fed [path]`) and single
+//! instance (OM-021).
+//!
+//! `path` may be a notes folder (opens it) or a note (opens its vault: the
+//! configured `NOTES_PATH` when the note is inside it, else the note's
+//! folder, then the note). A second invocation forwards its request to the
+//! running instance over a user-private Unix socket and exits; the primary
+//! focuses the matching window or opens a new one.
 
-use std::path::PathBuf;
+use std::io::{BufRead as _, BufReader, Write as _};
+use std::path::{Path, PathBuf};
 
 /// FrankMD command line.
-#[derive(Debug, clap::Parser)]
-#[command(name = "frankmd", version, about = "Fast Markdown notes and blog editor")]
-pub(crate) struct Cli {
-    /// Notes folder to open (falls back to `NOTES_PATH`, like `fed <path>`).
-    pub(crate) path: Option<PathBuf>,
+#[derive(Debug, Clone, clap::Parser)]
+#[command(
+    name = "frankmd",
+    version,
+    about = "Fast Markdown notes and blog editor"
+)]
+pub struct Cli {
+    /// Notes folder or note to open (falls back to `NOTES_PATH`, like `fed <path>`).
+    pub path: Option<PathBuf>,
     /// Override the UI locale (debugging/testing).
     #[arg(long)]
-    pub(crate) locale: Option<String>,
+    pub locale: Option<String>,
+    /// Always start a new instance (don't forward to a running one).
+    #[arg(long)]
+    pub new_instance: bool,
+}
+
+/// What to open.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Launch {
+    /// Notes root.
+    pub vault_root: PathBuf,
+    /// Note to open, as given (absolute paths are resolved inside the vault later).
+    pub open: Option<String>,
+}
+
+/// Resolve `path` (already absolute or relative to `cwd`) against the
+/// configured notes root (`NOTES_PATH`) and `~/notes` as the last default.
+pub fn resolve_launch(
+    path: Option<&Path>,
+    cwd: &Path,
+    notes_path: Option<&Path>,
+    home: Option<&Path>,
+) -> Launch {
+    let default_root = || {
+        notes_path
+            .map(Path::to_path_buf)
+            .or_else(|| home.map(|h| h.join("notes")))
+            .unwrap_or_else(|| cwd.join("notes"))
+    };
+    let Some(path) = path else {
+        return Launch {
+            vault_root: default_root(),
+            open: None,
+        };
+    };
+    let abs = if path.is_absolute() {
+        path.to_path_buf()
+    } else {
+        cwd.join(path)
+    };
+    let is_note = abs.extension().is_some_and(|e| e == "md") || abs.is_file();
+    if !is_note {
+        return Launch {
+            vault_root: abs,
+            open: None,
+        };
+    }
+    if let Some(root) = notes_path.filter(|root| abs.starts_with(root)) {
+        return Launch {
+            vault_root: root.to_path_buf(),
+            open: Some(abs.display().to_string()),
+        };
+    }
+    let parent = abs.parent().map_or_else(default_root, Path::to_path_buf);
+    Launch {
+        vault_root: parent,
+        open: Some(abs.display().to_string()),
+    }
+}
+
+/// Socket of the primary instance (`$XDG_RUNTIME_DIR/frankmd.sock`).
+pub fn socket_path(runtime_dir: Option<&Path>, state_dir: &Path) -> PathBuf {
+    runtime_dir.map_or_else(
+        || state_dir.join("frankmd.sock"),
+        |d| d.join("frankmd.sock"),
+    )
+}
+
+/// One forwarded request: vault root, then the note (may be empty), newline-separated.
+fn encode(launch: &Launch) -> String {
+    format!(
+        "{}\n{}\n",
+        launch.vault_root.display(),
+        launch.open.as_deref().unwrap_or("")
+    )
+}
+
+fn decode(lines: &[String]) -> Option<Launch> {
+    let root = lines.first().filter(|l| !l.is_empty())?;
+    let open = lines.get(1).filter(|l| !l.is_empty()).cloned();
+    Some(Launch {
+        vault_root: PathBuf::from(root),
+        open,
+    })
+}
+
+/// Hand `launch` to a running instance. `true` when one took it.
+#[cfg(unix)]
+pub fn forward(socket: &Path, launch: &Launch) -> bool {
+    use std::os::unix::net::UnixStream;
+    let Ok(mut stream) = UnixStream::connect(socket) else {
+        return false;
+    };
+    stream.write_all(encode(launch).as_bytes()).is_ok() && stream.flush().is_ok()
+}
+
+/// Not supported off Unix: always start a new instance.
+#[cfg(not(unix))]
+pub fn forward(_socket: &Path, _launch: &Launch) -> bool {
+    false
+}
+
+/// Become the primary instance: accept forwarded requests on a background
+/// thread and pass them to `deliver`. A stale socket file is replaced.
+#[cfg(unix)]
+pub fn listen(socket: &Path, deliver: impl Fn(Launch) + Send + 'static) -> std::io::Result<()> {
+    use std::os::unix::fs::PermissionsExt as _;
+    use std::os::unix::net::UnixListener;
+    if let Some(dir) = socket.parent().filter(|d| !d.exists()) {
+        crate::app_fs::ensure_private_dir(dir)?;
+    }
+    crate::app_fs::remove_stale_socket(socket)?;
+    let listener = UnixListener::bind(socket)?;
+    std::fs::set_permissions(socket, std::fs::Permissions::from_mode(0o600))?;
+    std::thread::Builder::new()
+        .name("frankmd-ipc".into())
+        .spawn(move || {
+            for stream in listener.incoming().flatten() {
+                let lines: Vec<String> = BufReader::new(stream)
+                    .lines()
+                    .take(2)
+                    .map_while(Result::ok)
+                    .collect();
+                if let Some(launch) = decode(&lines) {
+                    deliver(launch);
+                }
+            }
+        })?;
+    Ok(())
+}
+
+/// Not supported off Unix.
+#[cfg(not(unix))]
+pub fn listen(_socket: &Path, _deliver: impl Fn(Launch) + Send + 'static) -> std::io::Result<()> {
+    Ok(())
+}
+
+#[cfg(test)]
+#[allow(clippy::unwrap_used)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn folder_argument_is_the_vault() {
+        let l = resolve_launch(
+            Some(Path::new("blog")),
+            Path::new("/home/u"),
+            None,
+            Some(Path::new("/home/u")),
+        );
+        assert_eq!(
+            l,
+            Launch {
+                vault_root: "/home/u/blog".into(),
+                open: None
+            }
+        );
+    }
+
+    #[test]
+    fn no_argument_uses_notes_path_then_home_notes() {
+        let l = resolve_launch(
+            None,
+            Path::new("/x"),
+            Some(Path::new("/n")),
+            Some(Path::new("/home/u")),
+        );
+        assert_eq!(l.vault_root, PathBuf::from("/n"));
+        let l = resolve_launch(None, Path::new("/x"), None, Some(Path::new("/home/u")));
+        assert_eq!(l.vault_root, PathBuf::from("/home/u/notes"));
+    }
+
+    #[test]
+    fn note_inside_notes_path_opens_in_that_vault() {
+        let l = resolve_launch(
+            Some(Path::new("/n/blog/a.md")),
+            Path::new("/x"),
+            Some(Path::new("/n")),
+            None,
+        );
+        assert_eq!(
+            l,
+            Launch {
+                vault_root: "/n".into(),
+                open: Some("/n/blog/a.md".into())
+            }
+        );
+    }
+
+    #[test]
+    fn note_elsewhere_opens_its_folder() {
+        let l = resolve_launch(
+            Some(Path::new("/tmp/x/a.md")),
+            Path::new("/"),
+            Some(Path::new("/n")),
+            None,
+        );
+        assert_eq!(
+            l,
+            Launch {
+                vault_root: "/tmp/x".into(),
+                open: Some("/tmp/x/a.md".into())
+            }
+        );
+    }
+
+    #[test]
+    fn requests_round_trip() {
+        let l = Launch {
+            vault_root: "/n".into(),
+            open: Some("a.md".into()),
+        };
+        let lines: Vec<String> = encode(&l).lines().map(str::to_owned).collect();
+        assert_eq!(decode(&lines), Some(l));
+        assert_eq!(
+            decode(&["/n".into(), String::new()]),
+            Some(Launch {
+                vault_root: "/n".into(),
+                open: None
+            })
+        );
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn a_second_instance_forwards_to_the_first() {
+        let dir = tempfile::tempdir().unwrap();
+        let socket = dir.path().join("s.sock");
+        let launch = Launch {
+            vault_root: "/n".into(),
+            open: None,
+        };
+        assert!(!forward(&socket, &launch), "nobody listening yet");
+        let (tx, rx) = std::sync::mpsc::channel();
+        listen(&socket, move |l| {
+            let _ = tx.send(l);
+        })
+        .unwrap();
+        assert!(forward(&socket, &launch));
+        assert_eq!(
+            rx.recv_timeout(std::time::Duration::from_secs(5)).unwrap(),
+            launch
+        );
+    }
 }

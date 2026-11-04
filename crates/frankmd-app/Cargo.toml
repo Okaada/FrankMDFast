@@ -7,6 +7,9 @@ rust-version.workspace = true
 license.workspace = true
 publish.workspace = true
 
+[lib]
+path = "src/lib.rs"
+
 [[bin]]
 name = "frankmd"
 path = "src/main.rs"
@@ -27,13 +30,20 @@ frankmd-vim.workspace = true
 frankmd-workspace.workspace = true
 
 gpui-kit.workspace = true
+ratex-parser.workspace = true
+ratex-layout.workspace = true
+ratex-svg = { workspace = true, features = ["embed-fonts"] }
 anyhow.workspace = true
 clap.workspace = true
 tracing.workspace = true
 tracing-subscriber.workspace = true
+jiff.workspace = true
+async-channel.workspace = true
+serde_json.workspace = true
 
 [dev-dependencies]
 gpui-kit = { workspace = true, features = ["test-support"] }
+tempfile.workspace = true
 
 [lints]
 workspace = true

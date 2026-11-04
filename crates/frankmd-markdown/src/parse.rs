@@ -213,21 +213,33 @@ pub mod ext {
 
     /// `^([^^]+)^` → text.
     pub fn scan_superscript(src: &str) -> Option<Scanned<String>> {
+        if !src.starts_with('^') {
+            return None;
+        }
         scan_text(&SUPERSCRIPT, src)
     }
 
     /// `~([^~]+)~(?!~)` → text.
     pub fn scan_subscript(src: &str) -> Option<Scanned<String>> {
+        if !src.starts_with('~') {
+            return None;
+        }
         scan_text(&SUBSCRIPT, src)
     }
 
     /// `==([^=]+)==` → text.
     pub fn scan_highlight(src: &str) -> Option<Scanned<String>> {
+        if !src.starts_with("==") {
+            return None;
+        }
         scan_text(&HIGHLIGHT, src)
     }
 
     /// `:([a-z0-9_+-]+):` for a known shortcode → the emoji (last row wins on duplicates).
     pub fn scan_emoji(src: &str) -> Option<Scanned<&'static str>> {
+        if !src.starts_with(':') {
+            return None;
+        }
         let s = scan_text(&EMOJI, src)?;
         let emoji = frankmd_core::emoji::lookup(&s.value)?;
         Some(Scanned { raw_len: s.raw_len, value: emoji })
@@ -235,6 +247,9 @@ pub mod ext {
 
     /// `:ph-([a-z0-9-]+):` for a known Phosphor icon.
     pub fn scan_icon(src: &str) -> Option<Scanned<IconTok>> {
+        if !src.starts_with(":ph-") {
+            return None;
+        }
         let s = scan_text(&ICON, src)?;
         let glyph = frankmd_core::emoji::icons::lookup(&s.value)?;
         Some(Scanned {
@@ -245,6 +260,9 @@ pub mod ext {
 
     /// `\[\[([^\]|]+)(?:\|([^\]]+))?\]\]`, both parts trimmed.
     pub fn scan_wikilink(src: &str) -> Option<Scanned<WikiTok>> {
+        if !src.starts_with("[[") {
+            return None;
+        }
         let (raw_len, g) = scan(&WIKILINK, src)?;
         let target = js_trim(g[0].as_deref().unwrap_or("")).to_owned();
         let display = g[1].as_deref().filter(|d| !d.is_empty()).map(|d| js_trim(d).to_owned());
@@ -253,6 +271,9 @@ pub mod ext {
 
     /// `^\$\$([\s\S]+?)\$\$(?:\n+|$)` with non-blank content → trimmed TeX.
     pub fn scan_math_block(src: &str) -> Option<Scanned<String>> {
+        if !src.starts_with("$$") {
+            return None;
+        }
         let s = scan_text(&MATH_BLOCK, src)?;
         let tex = js_trim(&s.value);
         (!tex.is_empty()).then(|| Scanned { raw_len: s.raw_len, value: tex.to_owned() })
@@ -260,6 +281,9 @@ pub mod ext {
 
     /// `^\$(?!\$)(?!\s)((?:\\.|[^\\$])+?)(?<!\s)\$(?!\d)` → TeX (escapes kept).
     pub fn scan_math_inline(src: &str) -> Option<Scanned<String>> {
+        if !src.starts_with('$') {
+            return None;
+        }
         scan_text(&MATH_INLINE, src)
     }
 }

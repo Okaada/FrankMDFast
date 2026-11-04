@@ -15,6 +15,7 @@
 //! computation is relative, so the two agree.
 
 mod block;
+mod fast;
 mod inline;
 pub(crate) mod rules;
 pub(crate) mod token;

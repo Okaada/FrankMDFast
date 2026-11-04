@@ -11,7 +11,7 @@ use crate::parse::RenderOptions;
 /// Lower block tokens; `line_offset` is added to every (1-based) line.
 /// `line_map` maps lexer lines to note lines (empty = identity, see `marked::lex`).
 pub(crate) fn blocks(tokens: &[BlockTok], line_map: &[u32], line_offset: u32, opts: &RenderOptions) -> Vec<Block> {
-    let mut cx = Cx { slugs: std::collections::HashSet::new(), line_map, offset: line_offset };
+    let mut cx = Cx { slugs: Slugger::default(), line_map, offset: line_offset };
     let mut out = lower_blocks(tokens, &mut cx);
     apply_highlighting(&mut out, opts);
     out
@@ -20,7 +20,7 @@ pub(crate) fn blocks(tokens: &[BlockTok], line_map: &[u32], line_offset: u32, op
 /// Lowering context.
 struct Cx<'a> {
     /// Heading anchors used so far.
-    slugs: std::collections::HashSet<String>,
+    slugs: Slugger,
     line_map: &'a [u32],
     offset: u32,
 }
@@ -47,7 +47,7 @@ fn lower_block(t: &BlockTok, cx: &mut Cx<'_>) -> Option<Block> {
         }
         BlockKind::Heading { depth, inl } => {
             let inlines = inlines(&inl.tokens);
-            let anchor = unique_slug(&crate::html::plain_text(&inlines), &mut cx.slugs);
+            let anchor = cx.slugs.slug(&crate::html::plain_text(&inlines));
             Block::Heading { level: *depth, inlines, anchor, span }
         }
         BlockKind::Hr => Block::Rule { span },
@@ -305,29 +305,49 @@ fn numeric_char(code: u32) -> char {
     char::from_u32(code).unwrap_or('\u{FFFD}')
 }
 
-/// GitHub-style heading anchor, de-duplicated within the document.
-fn unique_slug(text: &str, seen: &mut std::collections::HashSet<String>) -> String {
-    let mut base = String::new();
-    for c in text.trim().to_lowercase().chars() {
-        if c.is_alphanumeric() || c == '-' || c == '_' {
-            base.push(c);
-        } else if c.is_whitespace() {
-            base.push('-');
+/// GitHub-style heading anchors, de-duplicated within the document: the
+/// first `x` is `x`, then `x-1`, `x-2`… skipping any slug already taken
+/// (e.g. by a heading literally named "x 1").
+#[derive(Debug, Default)]
+struct Slugger {
+    /// Every slug handed out.
+    seen: std::collections::HashSet<String>,
+    /// Per base: the next suffix to try. Suffixes below it are all taken, so
+    /// each heading costs O(1) amortized instead of rescanning from 1.
+    next: std::collections::HashMap<String, usize>,
+}
+
+impl Slugger {
+    fn slug(&mut self, text: &str) -> String {
+        let mut base = String::new();
+        for c in text.trim().to_lowercase().chars() {
+            if c.is_alphanumeric() || c == '-' || c == '_' {
+                base.push(c);
+            } else if c.is_whitespace() {
+                base.push('-');
+            }
         }
+        let mut slug = base.clone();
+        let n = self.next.entry(base.clone()).or_insert(1);
+        while self.seen.contains(&slug) {
+            slug = format!("{base}-{n}");
+            *n += 1;
+        }
+        self.seen.insert(slug.clone());
+        slug
     }
-    let mut slug = base.clone();
-    let mut n = 1;
-    while seen.contains(&slug) {
-        slug = format!("{base}-{n}");
-        n += 1;
-    }
-    seen.insert(slug.clone());
-    slug
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn slugs_dedupe_like_before() {
+        let mut s = Slugger::default();
+        let got: Vec<String> = ["a", "a", "a 1", "a", "b", "a-2", "a"].iter().map(|t| s.slug(t)).collect();
+        assert_eq!(got, ["a", "a-1", "a-1-1", "a-2", "b", "a-2-1", "a-3"]);
+    }
 
     #[test]
     fn entities() {

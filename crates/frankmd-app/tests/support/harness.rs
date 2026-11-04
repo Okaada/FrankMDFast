@@ -9,11 +9,20 @@ use gpui_kit::{
 };
 
 /// Window sizes for the three width classes (ui-spec §4.1).
-pub const WIDE: Size<Pixels> = Size { width: px(1280.), height: px(800.) };
+pub const WIDE: Size<Pixels> = Size {
+    width: px(1280.),
+    height: px(800.),
+};
 /// 720–1099 px.
-pub const MEDIUM: Size<Pixels> = Size { width: px(900.), height: px(800.) };
+pub const MEDIUM: Size<Pixels> = Size {
+    width: px(900.),
+    height: px(800.),
+};
 /// < 720 px.
-pub const NARROW: Size<Pixels> = Size { width: px(640.), height: px(800.) };
+pub const NARROW: Size<Pixels> = Size {
+    width: px(640.),
+    height: px(800.),
+};
 
 /// Opens a window through the production entry point (`gpui_kit::open_window`,
 /// which wraps the view in a Base `Root`) with deterministic bounds.
@@ -23,7 +32,10 @@ pub fn open_window<V: Render>(
     build: impl FnOnce(&mut Window, &mut App) -> Entity<V>,
 ) -> (WindowHandle<Root>, Entity<V>) {
     cx.update(|cx| {
-        let bounds = Bounds { origin: Point::default(), size: window_size };
+        let bounds = Bounds {
+            origin: Point::default(),
+            size: window_size,
+        };
         let (window, content) = gpui_kit::open_window(
             WindowOptions {
                 window_bounds: Some(WindowBounds::Windowed(bounds)),
@@ -66,12 +78,16 @@ pub fn type_text(cx: &mut TestAppContext, handle: AnyWindowHandle, text: &str) {
 
 /// Is an observed element present AND visible in the last frame?
 pub fn is_shown(cx: &mut TestAppContext, handle: AnyWindowHandle, id: &'static str) -> bool {
-    in_window(cx, handle, |window, _| window.try_find(id).is_some_and(|e| e.visible()))
+    in_window(cx, handle, |window, _| {
+        window.try_find(id).is_some_and(|e| e.visible())
+    })
 }
 
 /// Does the observed element report keyboard focus?
 pub fn has_focus(cx: &mut TestAppContext, handle: AnyWindowHandle, id: &'static str) -> bool {
-    in_window(cx, handle, |window, _| window.try_find(id).and_then(|e| e.focused()) == Some(true))
+    in_window(cx, handle, |window, _| {
+        window.try_find(id).and_then(|e| e.focused()) == Some(true)
+    })
 }
 
 /// Resizes and re-renders (hysteresis tests resize in small steps).

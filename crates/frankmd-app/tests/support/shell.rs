@@ -1,17 +1,19 @@
-//! Entry point for level-b tests: the real app shell in a headless window.
+//! Entry point for level-b tests: the real app shell (`frankmd_app::ui::Shell`)
+//! over a temporary vault, in a headless window with the registry keymap.
 //!
-//! STUB. `frankmd-app` is a binary-only crate today, so integration tests can't
-//! reach its views. Requirement for the implementation phase: add
-//! `crates/frankmd-app/src/lib.rs` exposing `ui::Shell::new(window, cx, ShellConfig)`
-//! (vault path, injected clock/env) and `keymap::install(cx)`, keep `main.rs` as
-//! a thin binary over it, then replace the `todo!()`s below with calls into it.
-//!
-//! The window is real (see `harness`); what's stubbed is the root view and its
-//! state accessors. Accessors read the GUI-free view-models (see `vm`) out of
-//! the shell's `WorkspaceModel` entity, so assertions are on state, plus
-//! element ids / focus for wiring (gpui-kit can't assert rendered text).
+//! Accessors read the shell's GUI-free view models (layout, overlays, banners,
+//! status), so assertions are on state, plus element ids / focus for wiring
+//! (gpui-kit can't assert rendered text).
 
-use gpui_kit::{AnyWindowHandle, Pixels, Size, TestAppContext};
+use std::sync::Arc;
+
+use frankmd_app::ui::{Shell as AppShell, ShellConfig};
+use frankmd_config::EnvSnapshot;
+use frankmd_config::store::ConfigStore;
+use frankmd_fs::Vault;
+use frankmd_fs::recent::RecentFilesService;
+use frankmd_fs::service::NotesService;
+use gpui_kit::{AnyWindowHandle, AppContext as _, Entity, Pixels, Size, TestAppContext};
 
 use super::vm::{BannerKind, FocusRegion, LayoutState, OverlayKind, SaveState};
 
@@ -22,7 +24,7 @@ pub struct VaultFixture {
     pub notes: Vec<(&'static str, &'static str)>,
     /// Shared recents (newest first), written to `.fed` `recent_files`.
     pub recents: Vec<&'static str>,
-    /// Note to open at startup (`frankmd open <path>`), if any.
+    /// Note to open at startup (`frankmd <path>`), if any.
     pub open: Option<&'static str>,
 }
 
@@ -43,7 +45,10 @@ impl VaultFixture {
 
     /// Same vault, nothing open (empty state with docked quick open, §5.2).
     pub fn sample_no_note() -> Self {
-        Self { open: None, ..Self::sample() }
+        Self {
+            open: None,
+            ..Self::sample()
+        }
     }
 }
 
@@ -51,43 +56,109 @@ impl VaultFixture {
 pub struct Shell {
     /// The test window.
     pub window: AnyWindowHandle,
+    /// The root view.
+    pub view: Entity<AppShell>,
+    /// Vault root on disk.
+    pub root: std::path::PathBuf,
+    _vault_dir: tempfile::TempDir,
+    _state_dir: tempfile::TempDir,
+}
+
+fn build_vault(
+    fixture: &VaultFixture,
+) -> (tempfile::TempDir, tempfile::TempDir, std::path::PathBuf) {
+    let vault_dir = tempfile::tempdir().expect("vault tempdir");
+    let state_dir = tempfile::tempdir().expect("state tempdir");
+    let root = vault_dir.path().join("notes");
+    let vault = Vault::open(&root, state_dir.path()).expect("open vault");
+    for (path, text) in &fixture.notes {
+        NotesService::new(&vault)
+            .write(path, text.as_bytes())
+            .expect("write note");
+    }
+    let store = ConfigStore::open(vault.clone(), EnvSnapshot::default());
+    let recents = RecentFilesService::new(&vault, &store);
+    // Oldest first, one minute apart, so the newest-first order is unambiguous.
+    let now = jiff::Timestamp::now();
+    for (age, path) in fixture.recents.iter().enumerate().rev() {
+        let minutes = i64::try_from(age).expect("small fixture");
+        let at = now - jiff::SignedDuration::from_mins(minutes);
+        recents.record(Some(path), at).expect("record recent");
+    }
+    (vault_dir, state_dir, root)
 }
 
 /// Opens the app shell on `fixture` at `size`, with the default keymap bound.
-pub fn open_shell(cx: &mut TestAppContext, _size: Size<Pixels>, _fixture: VaultFixture) -> Shell {
+pub fn open_shell(cx: &mut TestAppContext, size: Size<Pixels>, fixture: VaultFixture) -> Shell {
     cx.update(gpui_kit::init);
-    cx.update(|cx| cx.bind_keys(super::actions::default_keymap()));
-    todo!("open frankmd_app::ui::Shell in a headless window via support::harness::open_window")
+    cx.update(frankmd_app::ui::actions::install_keymap);
+    let (vault_dir, state_dir, root) = build_vault(&fixture);
+    let config = ShellConfig {
+        vault_root: root.clone(),
+        state_dir: state_dir.path().join("vault"),
+        env: EnvSnapshot::default(),
+        open: fixture.open.map(str::to_owned),
+        clock: Arc::new(frankmd_core::SystemClock),
+        omarchy: None,
+        watch: false,
+        locale: Some("en".into()),
+    };
+    let (window, view) = super::harness::open_window(cx, size, move |window, cx| {
+        cx.new(|cx| AppShell::new(config, window, cx))
+    });
+    let window: AnyWindowHandle = window.into();
+    cx.run_until_parked();
+    super::harness::in_window(cx, window, |_, _| ());
+    Shell {
+        window,
+        view,
+        root,
+        _vault_dir: vault_dir,
+        _state_dir: state_dir,
+    }
 }
 
 impl Shell {
     /// Layout view-model.
-    pub fn layout(&self, _cx: &mut TestAppContext) -> LayoutState {
-        todo!("read WorkspaceModel → layout")
+    pub fn layout(&self, cx: &mut TestAppContext) -> LayoutState {
+        self.view.read_with(cx, |s, _| s.layout().clone())
     }
     /// Focused region (from the shell's focus handles).
-    pub fn focus_region(&self, _cx: &mut TestAppContext) -> Option<FocusRegion> {
-        todo!("read focused region")
+    pub fn focus_region(&self, cx: &mut TestAppContext) -> Option<FocusRegion> {
+        let view = self.view.clone();
+        super::harness::in_window(cx, self.window, move |window, cx| {
+            view.read(cx).focused_region(window, cx)
+        })
     }
     /// Open overlay.
-    pub fn overlay(&self, _cx: &mut TestAppContext) -> Option<OverlayKind> {
-        todo!("read OverlayStack")
+    pub fn overlay(&self, cx: &mut TestAppContext) -> Option<OverlayKind> {
+        self.view.read_with(cx, |s, _| s.overlay())
     }
     /// Visible banners, top to bottom.
-    pub fn banners(&self, _cx: &mut TestAppContext) -> Vec<BannerKind> {
-        todo!("read BannerStack")
+    pub fn banners(&self, cx: &mut TestAppContext) -> Vec<BannerKind> {
+        self.view.read_with(cx, |s, _| s.banners())
     }
     /// Save-state slot.
-    pub fn save_state(&self, _cx: &mut TestAppContext) -> SaveState {
-        todo!("read status line")
+    pub fn save_state(&self, cx: &mut TestAppContext) -> SaveState {
+        self.view.read_with(cx, |s, _| s.save_state())
     }
     /// Active note path.
-    pub fn active_note(&self, _cx: &mut TestAppContext) -> Option<String> {
-        todo!("read Snapshot.active")
+    pub fn active_note(&self, cx: &mut TestAppContext) -> Option<String> {
+        self.view.read_with(cx, |s, _| s.active_path())
     }
-    /// Test hook: push a workspace condition that raises a banner
-    /// (e.g. vault unreachable, content-loss guard) through the real command path.
-    pub fn simulate(&self, _cx: &mut TestAppContext, _condition: BannerKind) {
-        todo!("send the Command that raises this banner")
+    /// Raise a banner through the shell's banner path (vault probe, storage
+    /// fallback and content-loss conditions all end in it).
+    pub fn simulate(&self, cx: &mut TestAppContext, condition: BannerKind) {
+        self.view.update(cx, |s, cx| s.raise_banner(condition, cx));
+        super::harness::in_window(cx, self.window, |_, _| ());
+    }
+    /// Read a note from disk.
+    pub fn read_note(&self, path: &str) -> Option<String> {
+        let state = tempfile::tempdir().ok()?;
+        let vault = Vault::open(&self.root, state.path()).ok()?;
+        NotesService::new(&vault)
+            .read(path)
+            .ok()
+            .map(|f| String::from_utf8_lossy(&f.bytes).into_owned())
     }
 }

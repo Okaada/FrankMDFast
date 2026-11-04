@@ -158,6 +158,21 @@ fn html_interrupt() -> String {
     format!(r"</?(?:{TAG_NAMES})(?: +|\n|/?>)|<(?:script|pre|style|textarea|!--)")
 }
 
+/// The blocks that end a table's rows (its rows' negative look-ahead), anchored.
+pub(crate) fn table_row_stop() -> Regex {
+    js(
+        &format!(
+            r"^(?: *\n|{hr}|{heading}| {{0,3}}>|(?: {{4}}| {{0,3}}\t)[^\n]|{fences}|{list}|{html})",
+            hr = HR_BODY,
+            heading = heading_interrupt(),
+            fences = fences_interrupt(),
+            list = list_interrupt(),
+            html = html_interrupt(),
+        ),
+        "",
+    )
+}
+
 /// GFM table body (without the leading `^`), also used as a paragraph interrupt.
 fn table_body() -> String {
     format!(
@@ -168,6 +183,21 @@ fn table_body() -> String {
         fences = fences_interrupt(),
         list = list_interrupt(),
         html = html_interrupt(),
+    )
+}
+
+/// The non-table interrupts of a GFM paragraph line, anchored at the line.
+pub(crate) fn paragraph_stop() -> Regex {
+    js(
+        &format!(
+            r"^(?:{hr}|{heading}| {{0,3}}>|{fences}|{list}|{html}| +\n)",
+            hr = HR_BODY,
+            heading = heading_interrupt(),
+            fences = fences_interrupt(),
+            list = list_interrupt(),
+            html = html_interrupt(),
+        ),
+        "",
     )
 }
 
@@ -188,8 +218,10 @@ fn paragraph_body(with_table: bool) -> String {
 // Block grammar (GFM)
 // ---------------------------------------------------------------------------
 
+#[cfg(test)]
 rule!(NEWLINE, r"^(?:[ \t]*(?:\n|$))+");
 rule!(BLOCK_CODE, r"^((?: {4}| {0,3}\t)[^\n]+(?:\n(?:[ \t]*(?:\n|$))*)?)+");
+#[cfg(test)]
 rule!(
     FENCES,
     r"^ {0,3}(`{3,}(?=[^`\n]*(?:\n|$))|~{3,})([^\n]*)(?:\n|$)(?:|([\s\S]*?)(?:\n|$))(?: {0,3}\1[~`]* *(?=\n|$)|$)"
@@ -200,8 +232,8 @@ rule!(LHEADING, {
     let interrupts = format!(r"{BULLET} |(?: {{4}}| {{0,3}}\t)| {{0,3}}(?:`{{3,}}|~{{3,}})| {{0,3}}>| {{0,3}}#{{1,6}}| {{0,3}}<[^\n>]+>\n");
     format!(r"^(?!{interrupts})((?:.|\n(?!\s*?\n|{interrupts}))+?)\n {{0,3}}(=+|-+) *(?:\n+|$)")
 });
+#[cfg(test)]
 rule!(PARAGRAPH, format!("^{}", paragraph_body(true)));
-rule!(BLOCK_TEXT, r"^[^\n]+");
 rule!(
     DEF,
     format!(
@@ -219,6 +251,7 @@ rule!(
     "i"
 );
 rule!(BLOCKQUOTE, format!(r"^( {{0,3}}> ?({}|[^\n]*)(?:\n|$))+", paragraph_body(false)));
+#[cfg(test)]
 rule!(TABLE, format!("^{}", table_body()));
 
 // `other.*` helpers used by the block tokenizers.
@@ -230,7 +263,6 @@ rule!(BLOCKQUOTE_SETEXT, r"\n {0,3}((?:=+|-+) *)(?=\n|$)");
 rule!(LIST_IS_TASK, r"^\[[ xX]\] ");
 rule!(LIST_REPLACE_TASK, r"^\[[ xX]\] +");
 rule!(BLANK_LINE, r"^[ \t]*$");
-rule!(DOUBLE_BLANK_LINE, r"\n[ \t]*\n[ \t]*$");
 rule!(ANY_LINE, r"\n.*\n");
 rule!(TABLE_DELIMITER, r"[:|]");
 rule!(TABLE_ALIGN_RIGHT, r"^ *-+: *$");
@@ -265,6 +297,17 @@ impl ItemBreakers {
         &SETS[indent.saturating_sub(1).min(3)]
     }
 
+    /// Whether `line` ends the item: a fence, heading, HTML block, next
+    /// bullet or rule (each regex only runs when its first char can match).
+    pub(crate) fn breaks(&self, line: &str) -> bool {
+        let Some(c) = line.trim_start_matches(' ').chars().next() else { return false };
+        (matches!(c, '`' | '~') && exec(&self.fences, line).is_some())
+            || (c == '#' && exec(&self.heading, line).is_some())
+            || (c == '<' && exec(&self.html, line).is_some())
+            || ((matches!(c, '*' | '+' | '-') || c.is_ascii_digit()) && exec(&self.next_bullet, line).is_some())
+            || (matches!(c, '-' | '_' | '*') && exec(&self.hr, line).is_some())
+    }
+
     fn new(n: usize) -> Self {
         Self {
             next_bullet: js(&format!(r"^ {{0,{n}}}(?:[*+-]|\d{{1,9}}[.)])((?:[ \t][^\n]*)?(?:\n|$))"), ""),
@@ -283,6 +326,7 @@ impl ItemBreakers {
 rule!(ESCAPE, r##"^\\([!"#$%&'()*+,\-./:;<=>?@\[\]\\^_`{|}~])"##);
 rule!(CODESPAN, r"^(`+)([^`]|[^`][\s\S]*?[^`])\1(?!`)");
 rule!(BR, r"^( *|\\)\n(?!\s*$)");
+#[cfg(test)]
 rule!(
     INLINE_TEXT,
     r"^([`~]+|[^`~])(?:(?= *\n)|(?=[a-zA-Z0-9.!#$%&'*+\/=?_`{\|}~-]+@)|[\s\S]*?(?:(?=[\\<!\[`*~_]| *\n|https?:\/\/|ftp:\/\/|www\.|$)|[^ ](?= *\n)|[^a-zA-Z0-9.!#$%&'*+\/=?_`{\|}~-](?=[a-zA-Z0-9.!#$%&'*+\/=?_`{\|}~-]+@)))"
@@ -358,8 +402,8 @@ mod tests {
     #[test]
     fn every_rule_compiles() {
         for re in [
-            &NEWLINE, &BLOCK_CODE, &FENCES, &HR, &HEADING, &LHEADING, &PARAGRAPH, &BLOCK_TEXT, &DEF, &LIST, &HTML,
-            &BLOCKQUOTE, &TABLE, &ESCAPE, &CODESPAN, &BR, &INLINE_TEXT, &PUNCTUATION, &BLOCK_SKIP,
+            &BLOCK_CODE, &HR, &HEADING, &LHEADING, &DEF, &LIST, &HTML,
+            &BLOCKQUOTE, &ESCAPE, &CODESPAN, &BR, &PUNCTUATION, &BLOCK_SKIP,
             &EM_STRONG_LDELIM, &EM_STRONG_RDELIM_AST, &EM_STRONG_RDELIM_UND, &ANY_PUNCTUATION, &AUTOLINK, &TAG,
             &LINK, &REFLINK, &NOLINK, &REFLINK_SEARCH, &URL, &BACKPEDAL, &DEL,
         ] {

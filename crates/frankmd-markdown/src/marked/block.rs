@@ -1,9 +1,9 @@
 //! Block lexer: `Lexer.blockTokens` and the block tokenizers of
 //! `Tokenizer.ts`, in marked's order.
 
-use super::rules::{self, exec, group, has, search};
+use super::rules::{self, exec, group, search};
 use super::token::{BlockKind, BlockTok, Inl, ListItemTok};
-use super::{LinkDef, Lexer, first_line, js_trim, js_trim_end, newlines, tail};
+use super::{LinkDef, Lexer, fast, first_line, js_trim, js_trim_end, newlines, tail};
 use crate::ir::Align;
 use crate::parse::ext;
 
@@ -28,13 +28,14 @@ impl Lexer {
         let tok = |raw: &str, kind| BlockTok { raw: raw.to_owned(), line, kind };
 
         // extensions (block): FrankMD's mathBlock
+        let pre = Prefilter::new(src);
         if let Some(s) = ext::scan_math_block(src) {
             tokens.push(tok(&src[..s.raw_len], BlockKind::MathBlock { text: s.value }));
             return Some(s.raw_len);
         }
         // space
-        if let Some(cap) = exec(&rules::NEWLINE, src) {
-            let raw = group(&cap, 0);
+        if pre.newline {
+            let raw = &src[..fast::newline(src)];
             if !raw.is_empty() {
                 match tokens.last_mut() {
                     Some(last) if raw.len() == 1 => last.raw.push('\n'),
@@ -44,7 +45,7 @@ impl Lexer {
             }
         }
         // code (indented)
-        if let Some(cap) = exec(&rules::BLOCK_CODE, src) {
+        if let Some(cap) = pre.indented.then(|| exec(&rules::BLOCK_CODE, src)).flatten() {
             let raw = group(&cap, 0);
             let text = remove_code_indent(raw);
             let text = text.trim_end_matches('\n').to_owned();
@@ -61,16 +62,15 @@ impl Lexer {
             return Some(raw.len());
         }
         // fences
-        if let Some(cap) = exec(&rules::FENCES, src) {
-            let raw = group(&cap, 0);
-            let text = indent_code_compensation(raw, group(&cap, 3));
-            let lang = cap.get(2).map(|m| rules::unescape_punctuation(js_trim(m.as_str())));
-            let lang = lang.filter(|l| !l.is_empty());
+        if let Some(f) = pre.lead_is(&['`', '~']).then(|| fast::fences(src)).flatten() {
+            let raw = &src[..f.raw_len];
+            let text = indent_code_compensation(raw, f.body.unwrap_or(""));
+            let lang = Some(rules::unescape_punctuation(js_trim(f.info))).filter(|l| !l.is_empty());
             tokens.push(tok(raw, BlockKind::Code { lang, text }));
             return Some(raw.len());
         }
         // heading
-        if let Some(cap) = exec(&rules::HEADING, src) {
+        if let Some(cap) = pre.lead_is(&['#']).then(|| exec(&rules::HEADING, src)).flatten() {
             let raw = group(&cap, 0);
             let mut text = js_trim(group(&cap, 2));
             if text.ends_with('#') {
@@ -84,31 +84,31 @@ impl Lexer {
             return Some(raw.len());
         }
         // hr
-        if let Some(cap) = exec(&rules::HR, src) {
+        if let Some(cap) = pre.lead_is(&['-', '_', '*']).then(|| exec(&rules::HR, src)).flatten() {
             let raw = group(&cap, 0).trim_end_matches('\n');
             tokens.push(tok(raw, BlockKind::Hr));
             return Some(raw.len());
         }
         // blockquote
-        if let Some(t) = self.blockquote(src, line) {
+        if let Some(t) = pre.lead_is(&['>']).then(|| self.blockquote(src, line)).flatten() {
             let len = t.raw.len();
             tokens.push(t);
             return Some(len);
         }
         // list
-        if let Some(t) = self.list(src, line) {
+        if let Some(t) = pre.list.then(|| self.list(src, line)).flatten() {
             let len = t.raw.len();
             tokens.push(t);
             return Some(len);
         }
         // html
-        if let Some(cap) = exec(&rules::HTML, src) {
+        if let Some(cap) = pre.lead_is(&['<']).then(|| exec(&rules::HTML, src)).flatten() {
             let raw = group(&cap, 0);
             tokens.push(tok(raw, BlockKind::Html { text: raw.to_owned() }));
             return Some(raw.len());
         }
         // def
-        if let Some(cap) = exec(&rules::DEF, src) {
+        if let Some(cap) = pre.lead_is(&['[']).then(|| exec(&rules::DEF, src)).flatten() {
             let raw = group(&cap, 0);
             if let Some(last) = tokens.last_mut()
                 && let BlockKind::Paragraph { inl } | BlockKind::Text { inl } = &mut last.kind
@@ -133,13 +133,13 @@ impl Lexer {
             return Some(raw.len());
         }
         // table (gfm)
-        if let Some(t) = table(src, line) {
+        if let Some(t) = pre.table.then(|| table(src, line)).flatten() {
             let len = t.raw.len();
             tokens.push(t);
             return Some(len);
         }
         // lheading
-        if let Some(cap) = exec(&rules::LHEADING, src) {
+        if let Some(cap) = pre.setext.then(|| exec(&rules::LHEADING, src)).flatten() {
             let raw = group(&cap, 0);
             let depth = if group(&cap, 2).starts_with('=') { 1 } else { 2 };
             tokens.push(tok(raw, BlockKind::Heading { depth, inl: Inl::new(group(&cap, 1)) }));
@@ -158,11 +158,10 @@ impl Lexer {
             }
         }
         if self.top
-            && let Some(cap) = exec(&rules::PARAGRAPH, cut)
+            && let Some(len) = fast::paragraph(cut)
         {
-            let raw = group(&cap, 0);
-            let body = group(&cap, 1);
-            let text = body.strip_suffix('\n').unwrap_or(body);
+            let raw = &cut[..len];
+            let text = raw;
             match tokens.last_mut() {
                 Some(BlockTok { raw: last_raw, kind: BlockKind::Paragraph { inl }, .. }) if *clipped => {
                     last_raw.push('\n');
@@ -176,8 +175,9 @@ impl Lexer {
             return Some(raw.len());
         }
         // text
-        if let Some(cap) = exec(&rules::BLOCK_TEXT, src) {
-            let raw = group(&cap, 0);
+        // text: `^[^\n]+`
+        let raw = first_line(src);
+        if !raw.is_empty() {
             match tokens.last_mut() {
                 Some(BlockTok { raw: last_raw, kind: BlockKind::Text { inl }, .. }) => {
                     last_raw.push('\n');
@@ -285,11 +285,14 @@ impl Lexer {
         let mut ends_with_blank_line = false;
         let mut items: Vec<ListItemTok> = Vec::new();
         let mut list_raw = String::new();
+        // Lines consumed by earlier items (kept incrementally: recounting
+        // `list_raw` per item is quadratic on long lists).
+        let mut item_line = line;
         let mut rest = src;
 
         while !rest.is_empty() {
             let Some(cap) = exec(&item_re, rest) else { break };
-            if exec(&rules::HR, rest).is_some() {
+            if pre_hr(rest) && exec(&rules::HR, rest).is_some() {
                 break;
             }
             let mut raw = group(&cap, 0).to_owned();
@@ -324,12 +327,7 @@ impl Lexer {
                     let raw_line = first_line(rest);
                     next_line = raw_line;
                     let without_tabs = next_line.replace('\t', "    ");
-                    if exec(&br.fences, next_line).is_some()
-                        || exec(&br.heading, next_line).is_some()
-                        || exec(&br.html, next_line).is_some()
-                        || exec(&br.next_bullet, next_line).is_some()
-                        || exec(&br.hr, next_line).is_some()
-                    {
+                    if br.breaks(next_line) {
                         break;
                     }
                     if first_non_space(&without_tabs).is_some_and(|i| i >= indent) || js_trim(next_line).is_empty() {
@@ -361,22 +359,23 @@ impl Lexer {
             if !loose {
                 if ends_with_blank_line {
                     loose = true;
-                } else if search(&rules::DOUBLE_BLANK_LINE, &raw).is_some() {
+                } else if ends_with_double_blank_line(&raw) {
                     ends_with_blank_line = true;
                 }
             }
             let mut task = None;
-            if let Some(t) = exec(&rules::LIST_IS_TASK, &item_contents) {
+            if let Some(t) = item_contents.starts_with('[').then(|| exec(&rules::LIST_IS_TASK, &item_contents)).flatten() {
                 task = Some(group(&t, 0) != "[ ] ");
                 item_contents = rules::LIST_REPLACE_TASK.replace(&item_contents, "").into_owned();
             }
             items.push(ListItemTok {
-                line: line + newlines(&list_raw),
+                line: item_line,
                 raw: raw.clone(),
                 task,
                 text: item_contents,
                 children: Vec::new(),
             });
+            item_line += newlines(&raw);
             list_raw.push_str(&raw);
         }
 
@@ -401,18 +400,72 @@ impl Lexer {
     }
 }
 
+/// Cheap necessary conditions for the block rules, so the regexes (most of
+/// a render's time) only run where they can match. Each flag is a superset
+/// of its rule: when it is false the rule cannot match.
+struct Prefilter {
+    /// First char after at most 3 leading spaces (`None` with 4+ spaces).
+    lead: Option<char>,
+    newline: bool,
+    indented: bool,
+    list: bool,
+    table: bool,
+    setext: bool,
+}
+
+impl Prefilter {
+    fn new(src: &str) -> Self {
+        let spaces = src.len() - src.trim_start_matches(' ').len();
+        let lead = if spaces <= 3 { src[spaces..].chars().next() } else { None };
+        let first = src.as_bytes().first().copied();
+        // A setext heading's text cannot cross an empty line.
+        let region = src.find("\n\n").map_or(src, |i| &src[..i + 1]);
+        let setext = region.split('\n').skip(1).any(|l| {
+            let l = l.trim_start_matches(' ');
+            l.starts_with('=') || l.starts_with('-')
+        });
+        Self {
+            lead,
+            newline: matches!(first, Some(b' ' | b'\t' | b'\n')),
+            indented: matches!(first, Some(b' ' | b'\t')),
+            list: lead.is_some_and(|c| matches!(c, '*' | '+' | '-') || c.is_ascii_digit()),
+            // The delimiter row is all `|`, `:`, `-` and spaces, with a `-`.
+            table: fast::table_second_line(src),
+            setext,
+        }
+    }
+
+    fn lead_is(&self, chars: &[char]) -> bool {
+        self.lead.is_some_and(|c| chars.contains(&c))
+    }
+}
+
+/// Necessary condition for `rules::HR`: `-`, `_` or `*` after at most 3 spaces.
+fn pre_hr(src: &str) -> bool {
+    let t = src.trim_start_matches(' ');
+    src.len() - t.len() <= 3 && t.starts_with(['-', '_', '*'])
+}
+
+/// `/\n[ \t]*\n[ \t]*$/.test(raw)`.
+fn ends_with_double_blank_line(raw: &str) -> bool {
+    let ws: &[char] = &[' ', '\t'];
+    raw.trim_end_matches(ws)
+        .strip_suffix('\n')
+        .is_some_and(|r| r.trim_end_matches(ws).ends_with('\n'))
+}
+
 /// `Tokenizer.table`.
 fn table(src: &str, line: u32) -> Option<BlockTok> {
-    let cap = exec(&rules::TABLE, src)?;
+    let cap = fast::table(src)?;
     // The delimiter row needs a `|` or `:` (otherwise it is a setext heading).
-    search(&rules::TABLE_DELIMITER, group(&cap, 2))?;
-    let headers = split_cells(group(&cap, 1), None);
-    let align_src = group(&cap, 2);
+    search(&rules::TABLE_DELIMITER, cap.align)?;
+    let headers = split_cells(cap.header, None);
+    let align_src = cap.align;
     let align_src = align_src.strip_prefix('|').unwrap_or(align_src);
     let align_src = strip_trailing_pipe(align_src);
     let aligns: Vec<&str> = align_src.split('|').collect();
-    let rows_src = group(&cap, 3);
-    let rows: Vec<String> = if has(&cap, 3) && !js_trim(rows_src).is_empty() {
+    let rows_src = cap.rows.unwrap_or("");
+    let rows: Vec<String> = if !js_trim(rows_src).is_empty() {
         rules::TABLE_ROW_BLANK_LINE.replace(rows_src, "").split('\n').map(str::to_owned).collect()
     } else {
         Vec::new()
@@ -436,7 +489,7 @@ fn table(src: &str, line: u32) -> Option<BlockTok> {
         .collect();
     let header: Vec<Inl> = headers.into_iter().map(Inl::new).collect();
     let rows = rows.iter().map(|r| split_cells(r, Some(header.len())).into_iter().map(Inl::new).collect()).collect();
-    Some(BlockTok { raw: group(&cap, 0).to_owned(), line, kind: BlockKind::Table { align, header, rows } })
+    Some(BlockTok { raw: src[..cap.raw_len].to_owned(), line, kind: BlockKind::Table { align, header, rows } })
 }
 
 /// `other.tableAlignChars` = `/^\||\| *$/g` (the leading `|` is handled by the caller).

@@ -1,9 +1,8 @@
 //! Adapted UI tests: shell layout, width classes, focus cycling, zen mode.
 //!
 //! Executable examples for docs/testing/ui-test-plan.md. Level-a tests target
-//! the proposed GUI-free view-models (`support::vm`, to move into
-//! frankmd-workspace); level-b tests drive the real shell headlessly
-//! (`support::shell`). Both panic with `todo!()` until implemented.
+//! the GUI-free view models of frankmd-workspace (`support::vm`); level-b
+//! tests drive the real shell headlessly (`support::shell`).
 #![allow(missing_docs, clippy::unwrap_used)]
 
 extern crate gpui_kit as gpui;
@@ -23,9 +22,17 @@ use support::vm::{FocusRegion, LayoutState, PreviewMode, SidebarMode, WidthClass
 fn width_class_has_24px_hysteresis() {
     let mut layout = LayoutState::new();
     assert_eq!(layout.on_resize(1280.), WidthClass::Wide);
-    assert_eq!(layout.on_resize(1090.), WidthClass::Wide, "within 24 px below 1100 stays wide");
+    assert_eq!(
+        layout.on_resize(1090.),
+        WidthClass::Wide,
+        "within 24 px below 1100 stays wide"
+    );
     assert_eq!(layout.on_resize(1070.), WidthClass::Medium);
-    assert_eq!(layout.on_resize(1110.), WidthClass::Medium, "within 24 px above 1100 stays medium");
+    assert_eq!(
+        layout.on_resize(1110.),
+        WidthClass::Medium,
+        "within 24 px above 1100 stays medium"
+    );
     assert_eq!(layout.on_resize(1130.), WidthClass::Wide);
     assert_eq!(layout.on_resize(690.), WidthClass::Narrow);
 }
@@ -37,7 +44,11 @@ fn narrow_forces_single_pane_swap() {
     let mut layout = LayoutState::new();
     layout.on_resize(640.);
     let a = layout.arrangement(640.);
-    assert_eq!(a.sidebar, SidebarMode::Hidden, "narrow: sidebar only as drawer when opened");
+    assert_eq!(
+        a.sidebar,
+        SidebarMode::Hidden,
+        "narrow: sidebar only as drawer when opened"
+    );
     assert!(a.editor);
     assert_eq!(a.preview, PreviewMode::Hidden);
     layout.toggle_preview();
@@ -57,7 +68,10 @@ fn media_library_restores_preview_visibility() {
     assert!(!layout.preview_visible);
     layout.toggle_media_library();
     layout.toggle_media_library();
-    assert!(!layout.preview_visible, "preview stays hidden after leaving the library");
+    assert!(
+        !layout.preview_visible,
+        "preview stays hidden after leaving the library"
+    );
 }
 
 // new behaviour, ui-spec §4.2 Zen (no FrankMD original; covers the zen rows of the plan)
@@ -75,7 +89,11 @@ fn zen_hides_chrome_and_combines_with_typewriter() {
     layout.toggle_zen();
     let a = layout.arrangement(1280.);
     assert_eq!(a.sidebar, SidebarMode::Docked);
-    assert_eq!(a.preview, PreviewMode::Split, "zen restores the previous arrangement");
+    assert_eq!(
+        a.preview,
+        PreviewMode::Split,
+        "zen restores the previous arrangement"
+    );
 }
 
 // ---- level a: frankmd_workspace::focus ------------------------------------
@@ -103,8 +121,17 @@ fn f6_cycle_skips_hidden_regions() {
 fn wide_shell_shows_three_regions_and_preview_toggles(cx: &mut TestAppContext) {
     let shell = open_shell(cx, WIDE, VaultFixture::sample());
     let w = shell.window;
-    for id in ["sidebar", "editor-pane", "pane-header", "preview-pane", "status-line"] {
-        assert!(harness::is_shown(cx, w, id), "{id} visible in the wide layout");
+    for id in [
+        "sidebar",
+        "editor-pane",
+        "pane-header",
+        "preview-pane",
+        "status-line",
+    ] {
+        assert!(
+            harness::is_shown(cx, w, id),
+            "{id} visible in the wide layout"
+        );
     }
     harness::press(cx, w, "ctrl-shift-v");
     assert!(!harness::is_shown(cx, w, "preview-pane"));
@@ -122,12 +149,19 @@ fn narrow_sidebar_is_a_drawer_closed_by_escape(cx: &mut TestAppContext) {
     assert!(!harness::is_shown(cx, w, "sidebar"));
     harness::press(cx, w, "ctrl-e");
     assert!(harness::is_shown(cx, w, "sidebar"));
-    assert_eq!(shell.focus_region(cx), Some(FocusRegion::Sidebar), "drawer traps focus");
+    assert_eq!(
+        shell.focus_region(cx),
+        Some(FocusRegion::Sidebar),
+        "drawer traps focus"
+    );
     harness::press(cx, w, "escape");
     assert!(!harness::is_shown(cx, w, "sidebar"));
     assert_eq!(shell.focus_region(cx), Some(FocusRegion::Editor));
     harness::resize(cx, w, 1280.);
-    assert!(harness::is_shown(cx, w, "sidebar"), "docked again at wide width");
+    assert!(
+        harness::is_shown(cx, w, "sidebar"),
+        "docked again at wide width"
+    );
 }
 
 // §4.1 medium: sidebar auto-hides when the preview opens and the editor would drop below 320 px.
@@ -136,13 +170,25 @@ fn medium_width_auto_hides_sidebar_for_preview(cx: &mut TestAppContext) {
     // 248 (sidebar) + 320 (editor min) + 280 (preview min) = 848 > 760.
     let shell = open_shell(cx, MEDIUM, VaultFixture::sample());
     let w = shell.window;
-    assert!(harness::is_shown(cx, w, "sidebar"), "900 px: room for all three");
+    assert!(
+        harness::is_shown(cx, w, "sidebar"),
+        "900 px: room for all three"
+    );
     harness::resize(cx, w, 760.);
     assert!(harness::is_shown(cx, w, "preview-pane"));
-    assert!(!harness::is_shown(cx, w, "sidebar"), "sidebar auto-hides for the preview");
-    assert!(shell.layout(cx).sidebar_visible, "the user's preference is not overwritten");
+    assert!(
+        !harness::is_shown(cx, w, "sidebar"),
+        "sidebar auto-hides for the preview"
+    );
+    assert!(
+        shell.layout(cx).sidebar_visible,
+        "the user's preference is not overwritten"
+    );
     harness::press(cx, w, "ctrl-shift-v");
-    assert!(harness::is_shown(cx, w, "sidebar"), "comes back once the preview closes");
+    assert!(
+        harness::is_shown(cx, w, "sidebar"),
+        "comes back once the preview closes"
+    );
 }
 
 // §4.3: F6 / Shift+F6 cycle, Ctrl+1/2/3 jump; the focused region is observable.
@@ -172,7 +218,10 @@ fn zen_mode_toggles_with_f11_not_escape(cx: &mut TestAppContext) {
     for id in ["sidebar", "preview-pane", "pane-header"] {
         assert!(!harness::is_shown(cx, w, id), "{id} hidden in zen");
     }
-    assert!(harness::is_shown(cx, w, "banner-content-loss"), "banners still show in zen");
+    assert!(
+        harness::is_shown(cx, w, "banner-content-loss"),
+        "banners still show in zen"
+    );
     harness::press(cx, w, "escape");
     assert!(shell.layout(cx).zen, "Esc never leaves zen");
     harness::press(cx, w, "f11");

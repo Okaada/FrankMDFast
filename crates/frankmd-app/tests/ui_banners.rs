@@ -7,7 +7,7 @@ extern crate gpui_kit as gpui;
 
 mod support;
 
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use gpui_kit::TestAppContext;
 use support::harness::{self, WIDE};
@@ -26,7 +26,11 @@ fn banners_stack_in_priority_order() {
     stack.raise(BannerKind::ChangedOnDisk);
     assert_eq!(
         stack.visible(),
-        vec![BannerKind::VaultUnreachable, BannerKind::ChangedOnDisk, BannerKind::ContentLoss]
+        vec![
+            BannerKind::VaultUnreachable,
+            BannerKind::ChangedOnDisk,
+            BannerKind::ContentLoss
+        ]
     );
     stack.clear(BannerKind::VaultUnreachable);
     assert_eq!(stack.visible().first(), Some(&BannerKind::ChangedOnDisk));
@@ -38,21 +42,38 @@ fn banners_stack_in_priority_order() {
 fn content_loss_banner_offers_undo_and_save_anyway() {
     assert_eq!(
         BannerStack::buttons(BannerKind::ContentLoss),
-        vec!["banners.content_loss.undo", "banners.content_loss.save_anyway"]
+        vec![
+            "banners.content_loss.undo",
+            "banners.content_loss.save_anyway"
+        ]
     );
-    assert_eq!(BannerStack::buttons(BannerKind::VaultUnreachable), vec!["banners.offline.retry"]);
+    assert_eq!(
+        BannerStack::buttons(BannerKind::VaultUnreachable),
+        vec!["banners.offline.retry"]
+    );
 }
 
 // changed (§2.1, §3.6): toasts → status-line message slot; 2 s info / 5 s errors, single instance.
 #[test]
 fn status_messages_expire_on_the_injected_clock() {
+    // mechanical: the slot runs on the injected clock's `Instant`s and returns the message.
+    let t0 = Instant::now();
+    let at = |d: Duration| t0 + d;
+    let text = |slot: &MessageSlot, d: Duration| slot.current(at(d)).map(|m| m.text.clone());
     let mut slot = MessageSlot::default();
-    slot.show("Saved", false, Duration::ZERO);
-    assert_eq!(slot.current(Duration::from_millis(1999)).as_deref(), Some("Saved"));
-    assert_eq!(slot.current(Duration::from_secs(2)), None);
-    slot.show("Save failed", true, Duration::from_secs(10));
-    slot.show("Copied", false, Duration::from_secs(11));
-    assert_eq!(slot.current(Duration::from_secs(11)).as_deref(), Some("Copied"), "single instance");
+    slot.show("Saved", false, at(Duration::ZERO));
+    assert_eq!(
+        text(&slot, Duration::from_millis(1999)).as_deref(),
+        Some("Saved")
+    );
+    assert_eq!(text(&slot, Duration::from_secs(2)), None);
+    slot.show("Save failed", true, at(Duration::from_secs(10)));
+    slot.show("Copied", false, at(Duration::from_secs(11)));
+    assert_eq!(
+        text(&slot, Duration::from_secs(11)).as_deref(),
+        Some("Copied"),
+        "single instance"
+    );
 }
 
 // ---- level b: real shell ------------------------------------------------------

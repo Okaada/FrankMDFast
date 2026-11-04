@@ -27,7 +27,10 @@ impl AssetSource for FrankAssets {
         if path == "brand/icon.svg" {
             return Ok(Some(Cow::Borrowed(BRAND_ICON_SVG)));
         }
-        if let Some(name) = path.strip_prefix("icons/ph/").and_then(|p| p.strip_suffix(".svg")) {
+        if let Some(name) = path
+            .strip_prefix("icons/ph/")
+            .and_then(|p| p.strip_suffix(".svg"))
+        {
             return Ok(phosphor_svg(name).map(|s| Cow::Owned(s.into_bytes())));
         }
         gpui_kit::assets::Assets.load(path)
