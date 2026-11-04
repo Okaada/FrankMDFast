@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>frankmd</id>
+  <metadata_license>MIT</metadata_license>
+  <project_license>MIT</project_license>
+  <name>FrankMD</name>
+  <summary>Markdown notes with live preview and AI tools</summary>
+  <description>
+    <p>
+      A native desktop rewrite of FrankMD: a folder of markdown notes with a live preview,
+      Vim mode, Hugo blog support, image and video embedding, and optional AI grammar checks.
+      It reads the same .fed settings file and environment variables as the original.
+    </p>
+  </description>
+  <launchable type="desktop-id">frankmd.desktop</launchable>
+  <url type="homepage">https://github.com/akitaonrails/FrankMDFast</url>
+  <provides>
+    <binary>frankmd</binary>
+  </provides>
+  <content_rating type="oars-1.1"/>
+</component>

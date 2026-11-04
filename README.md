@@ -23,7 +23,34 @@ cargo run -- ~/notes       # open a notes folder (or a single note)
 
 Known gaps: relative line numbers; typed insert-mode text after `cw` takes a second undo; Hebrew
 has no right-to-left layout yet (GPUI has no bidi); settings "Test connection" buttons; secrets
-in the global config file are plain text (0600), with no keyring yet.
+in the global config file are plain text (0600), with no keyring yet. On Windows a second launch
+opens a new window instead of reusing the running app, and the test suite runs on Linux only
+(macOS and Windows CI only check that it builds).
+
+## Releases
+
+Bump `version` in `Cargo.toml`, optionally add `releases/vX.Y.Z.md` (used as the release notes),
+then push the tag `vX.Y.Z`. `.github/workflows/release.yml` builds:
+
+| Platform | Files |
+|---|---|
+| Linux x86_64, aarch64 | `frankmd-X.Y.Z-linux-<arch>.tar.gz`, `FrankMD-X.Y.Z-<arch>.AppImage` |
+| macOS (universal) | `FrankMD-X.Y.Z-macos-universal.dmg` |
+| Windows x86_64 | `frankmd-X.Y.Z-windows-x86_64.zip`, `FrankMD-X.Y.Z-windows-x86_64-setup.exe` |
+| Arch Linux | AUR package `frankmd-bin`, pushed after the GitHub release |
+
+Running the workflow by hand builds everything as artifacts without publishing. Signing,
+notarization and the AUR push are optional and turn on when their secrets exist:
+
+| Secret | Used for |
+|---|---|
+| `AUR_SSH_PRIVATE_KEY` | Pushing `frankmd-bin` to the AUR |
+| `MACOS_CERTIFICATE`, `MACOS_CERTIFICATE_PASSWORD`, `MACOS_SIGNING_IDENTITY` | Developer ID signing (base64 `.p12`) |
+| `APPLE_ID`, `APPLE_APP_PASSWORD`, `APPLE_TEAM_ID` | Notarizing the DMG |
+| `WINDOWS_CERTIFICATE`, `WINDOWS_CERTIFICATE_PASSWORD` | Authenticode signing (base64 `.pfx`) |
+
+Packaging scripts live in `packaging/` and run locally too, e.g.
+`packaging/linux/package.sh 0.1.0 x86_64 target/release/frankmd dist`.
 
 ## How the rewrite is checked against the original
 
@@ -89,7 +116,7 @@ crates/
   frankmd-config     .fed parse/write-back, ENV, resolution
   frankmd-theme      built-in, custom and Omarchy themes
   frankmd-i18n       reads the Rails YAML locales unchanged
-  frankmd-markdown   comrak → IR for the native preview; HTML only as a test oracle
+  frankmd-markdown   marked port → IR for the native preview; HTML only as a test oracle
   frankmd-search     content search (Ruby regex semantics), find/replace
   frankmd-net        the one HTTP client, with egress (SSRF) policy
   frankmd-media      uploads, S3, library, usage, image/video search
@@ -100,6 +127,7 @@ crates/
   frankmd-app        GPUI shell
   frankmd-testkit    test helpers for the recorded outputs
 assets/              reused FrankMD assets
+packaging/           Linux (tarball, AppImage), macOS, Windows and AUR packaging
 tests/fixtures/      recorded outputs from the original
 tools/               generators for fixtures and assets
 ```

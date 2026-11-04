@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=FrankMD
+GenericName=Markdown Editor
+Comment=Markdown notes with live preview and AI tools
+Exec=frankmd %f
+Icon=frankmd
+Terminal=false
+StartupWMClass=frankmd
+Categories=Office;TextEditor;Utility;
+MimeType=text/markdown;text/x-markdown;
+Keywords=markdown;notes;editor;hugo;

@@ -1,0 +1,231 @@
+name: Release
+
+# Push a tag `vX.Y.Z` matching Cargo.toml's version to build every package,
+# publish a GitHub release and update the AUR package. Running it by hand
+# (workflow_dispatch) builds the packages as artifacts without publishing.
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: 0
+  LINUX_DEPS: >-
+    pkg-config libxkbcommon-dev libxkbcommon-x11-dev libxcb1-dev libx11-xcb-dev
+    libwayland-dev libfontconfig-dev libfreetype-dev
+
+jobs:
+  version:
+    name: Version
+    runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Read the version and check it matches the tag
+        id: version
+        run: |
+          version=$(sed -n '/^\[workspace.package\]/,/^\[/s/^version = "\(.*\)"/\1/p' Cargo.toml)
+          if [ -z "$version" ]; then
+            echo "::error::no [workspace.package] version in Cargo.toml"; exit 1
+          fi
+          if [ "$GITHUB_REF_TYPE" = tag ] && [ "$GITHUB_REF_NAME" != "v$version" ]; then
+            echo "::error::tag $GITHUB_REF_NAME does not match Cargo.toml version $version"; exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+  linux:
+    name: Linux ${{ matrix.arch }} (tarball, AppImage)
+    needs: version
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Oldest supported Ubuntu: the binary runs on glibc >= 2.35.
+          - { arch: x86_64, runner: ubuntu-22.04 }
+          - { arch: aarch64, runner: ubuntu-22.04-arm }
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install system libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends $LINUX_DEPS
+
+      - name: Install the pinned toolchain (rust-toolchain.toml)
+        run: rustup toolchain install
+
+      - name: Build
+        run: cargo build --release --locked -p frankmd-app
+
+      - name: Package
+        run: packaging/linux/package.sh "${{ needs.version.outputs.version }}" "${{ matrix.arch }}" target/release/frankmd dist
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: linux-${{ matrix.arch }}
+          path: dist/*
+          if-no-files-found: error
+
+  macos:
+    name: macOS universal (DMG)
+    needs: version
+    runs-on: macos-15
+    env:
+      MACOSX_DEPLOYMENT_TARGET: "11.0"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install the pinned toolchain and both Mac targets
+        run: |
+          rustup toolchain install
+          rustup target add aarch64-apple-darwin x86_64-apple-darwin
+
+      - name: Build
+        run: |
+          cargo build --release --locked -p frankmd-app --target aarch64-apple-darwin
+          cargo build --release --locked -p frankmd-app --target x86_64-apple-darwin
+          lipo -create -output frankmd \
+            target/aarch64-apple-darwin/release/frankmd \
+            target/x86_64-apple-darwin/release/frankmd
+
+      - name: Bundle, sign and notarize
+        env:
+          MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
+          MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
+          MACOS_SIGNING_IDENTITY: ${{ secrets.MACOS_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: packaging/macos/package.sh "${{ needs.version.outputs.version }}" frankmd dist
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: macos
+          path: dist/*
+          if-no-files-found: error
+
+  windows:
+    name: Windows x86_64 (zip, installer)
+    needs: version
+    runs-on: windows-2025
+    env:
+      AWS_LC_SYS_PREBUILT_NASM: 1
+      VERSION: ${{ needs.version.outputs.version }}
+      WINDOWS_CERTIFICATE: ${{ secrets.WINDOWS_CERTIFICATE }}
+      WINDOWS_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install the pinned toolchain (rust-toolchain.toml)
+        run: rustup toolchain install
+
+      - name: Build
+        run: cargo build --release --locked -p frankmd-app
+
+      - name: Sign the executable
+        run: ./packaging/windows/sign.ps1 target/release/frankmd.exe
+
+      - name: Zip
+        run: |
+          New-Item -ItemType Directory -Force dist, stage | Out-Null
+          Copy-Item target/release/frankmd.exe, LICENSE, README.md stage/
+          Compress-Archive -Path stage/* -DestinationPath "dist/frankmd-$env:VERSION-windows-x86_64.zip"
+
+      - name: Installer
+        run: |
+          if (-not (Get-Command iscc -ErrorAction SilentlyContinue)) {
+            $default = "${env:ProgramFiles(x86)}\Inno Setup 6"
+            if (Test-Path "$default\ISCC.exe") { $env:PATH += ";$default" }
+            else { choco install innosetup --no-progress -y; $env:PATH += ";$default" }
+          }
+          iscc "/DAppVersion=$env:VERSION" "/DSourceExe=$PWD\target\release\frankmd.exe" "/DOutputDir=$PWD\dist" packaging/windows/frankmd.iss
+          ./packaging/windows/sign.ps1 "dist/FrankMD-$env:VERSION-windows-x86_64-setup.exe"
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: windows
+          path: dist/*
+          if-no-files-found: error
+
+  publish:
+    name: GitHub release
+    if: github.ref_type == 'tag'
+    needs: [version, linux, macos, windows]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Checksums
+        run: cd dist && sha256sum * > SHA256SUMS && cat SHA256SUMS
+
+      - name: Create the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          notes=(--generate-notes)
+          [ -f "releases/$TAG.md" ] && notes=(--notes-file "releases/$TAG.md")
+          gh release create "$TAG" dist/* --repo "$GITHUB_REPOSITORY" --title "FrankMD ${TAG#v}" "${notes[@]}"
+
+  aur:
+    name: AUR (frankmd-bin)
+    if: github.ref_type == 'tag'
+    needs: [version, publish]
+    runs-on: ubuntu-24.04
+    container: archlinux:base-devel
+    env:
+      AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+    steps:
+      - name: Install git and ssh
+        if: env.AUR_SSH_PRIVATE_KEY != ''
+        run: pacman -Syu --noconfirm --needed git openssh
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: env.AUR_SSH_PRIVATE_KEY != ''
+        with:
+          persist-credentials: false
+
+      - name: Publish
+        if: env.AUR_SSH_PRIVATE_KEY != ''
+        env:
+          VERSION: ${{ needs.version.outputs.version }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          curl -fsSL -o /tmp/SHA256SUMS "https://github.com/$GITHUB_REPOSITORY/releases/download/$TAG/SHA256SUMS"
+          packaging/aur/publish.sh "$VERSION" /tmp/SHA256SUMS
+
+      - name: Skipped
+        if: env.AUR_SSH_PRIVATE_KEY == ''
+        run: echo "::notice::AUR_SSH_PRIVATE_KEY is not set; the AUR package was not updated."
