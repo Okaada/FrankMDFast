@@ -12,14 +12,18 @@
 
 ## Status
 
-Planning and test-porting are done. The business logic is not written yet: the crates expose
-their public API with `todo!()` bodies, and the ported test suite is the acceptance criteria
-for the implementation phase.
+Every domain crate is implemented and passes its ported FrankMD tests and golden cases. The GPUI
+app has the shell, the editor, the native preview and the dialogs (files, media/AI, insert).
+Development happens on the `implementation` branch.
 
 ```
-cargo test --workspace --no-fail-fast   # 44 pass today; the rest fail on todo!()
-cargo run                               # opens a placeholder 3-pane GPUI window
+cargo test --workspace     # 2901 tests
+cargo run -- ~/notes       # open a notes folder (or a single note)
 ```
+
+Known gaps: relative line numbers; typed insert-mode text after `cw` takes a second undo; Hebrew
+has no right-to-left layout yet (GPUI has no bidi); settings "Test connection" buttons; secrets
+in the global config file are plain text (0600), with no keyring yet.
 
 ## How the rewrite is checked against the original
 
