@@ -17,7 +17,11 @@ root=$(cd "$(dirname "$0")/../.." && pwd)
 mkdir -p "$out"
 out=$(cd "$out" && pwd)
 work=$(mktemp -d)
-trap 'rm -rf "$work"; [ -n "${keychain:-}" ] && security delete-keychain "$keychain" || true' EXIT
+cleanup() {
+  if [ -n "${keychain:-}" ]; then security delete-keychain "$keychain" || true; fi
+  rm -rf "$work"
+}
+trap cleanup EXIT
 
 app="$work/FrankMD.app"
 mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources"
@@ -58,7 +62,10 @@ staging="$work/dmg"
 mkdir -p "$staging"
 cp -R "$app" "$staging/"
 ln -s /Applications "$staging/Applications"
-hdiutil create -volname "FrankMD" -srcfolder "$staging" -ov -format UDZO "$dmg"
+# hdiutil's own size estimate for -srcfolder can come up short ("No space
+# left on device"), so size the image explicitly with headroom.
+size_mb=$(( $(du -sm "$staging" | cut -f1) + 40 ))
+hdiutil create -volname "FrankMD" -srcfolder "$staging" -size "${size_mb}m" -ov -format UDZO "$dmg"
 
 if [ -n "${MACOS_CERTIFICATE:-}" ]; then
   codesign --force --timestamp --keychain "$keychain" --sign "$MACOS_SIGNING_IDENTITY" "$dmg"
