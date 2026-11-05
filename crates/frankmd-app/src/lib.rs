@@ -91,36 +91,46 @@ pub fn run() -> anyhow::Result<()> {
     let locale = cli.locale.clone();
     // Resolved before the event loop starts: fc-match is a process spawn.
     let (ui_font, mono_font) = ui::fonts::resolve_system_fonts();
-    gpui_kit::application()
-        .with_assets(assets::FrankAssets)
-        .run(move |cx| {
-            gpui_kit::init(cx);
-            cx.set_global(bridge::theme::SystemFonts {
-                ui: ui_font.map(Into::into),
-                mono: mono_font.map(Into::into),
-            });
-            ui::actions::install_keymap(cx);
-            dialogs::media::init(cx);
-            match frankmd_net::NetRuntime::new() {
-                Ok(rt) => cx.set_global(bridge::tokio::NetRuntimeGlobal(Arc::new(rt))),
-                Err(err) => tracing::error!(%err, "network runtime unavailable"),
-            }
-            cx.activate(true);
-            let ctx = LaunchContext {
-                dirs,
-                env,
-                home,
-                locale,
-            };
-            ctx.open(launch, cx);
-            cx.spawn(async move |cx| {
-                while let Ok(launch) = rx.recv().await {
-                    let ctx = ctx.clone();
-                    cx.update(|cx| ctx.open(launch, cx));
-                }
-            })
-            .detach();
+    let ctx = LaunchContext {
+        dirs,
+        env,
+        home,
+        locale,
+    };
+    // macOS relaunch with every window closed (Dock/Launchpad/Finder click):
+    // reopen the last vault instead of sitting there as a zombie (#3).
+    let reopen = (ctx.clone(), launch.clone());
+    let app = gpui_kit::application().with_assets(assets::FrankAssets);
+    app.on_reopen(move |cx| reopen.0.open(reopen.1.clone(), cx));
+    app.run(move |cx| {
+        gpui_kit::init(cx);
+        cx.set_global(bridge::theme::SystemFonts {
+            ui: ui_font.map(Into::into),
+            mono: mono_font.map(Into::into),
         });
+        ui::actions::install_keymap(cx);
+        dialogs::media::init(cx);
+        match frankmd_net::NetRuntime::new() {
+            Ok(rt) => cx.set_global(bridge::tokio::NetRuntimeGlobal(Arc::new(rt))),
+            Err(err) => tracing::error!(%err, "network runtime unavailable"),
+        }
+        // Without a menu bar macOS has no ⌘Q key equivalent (#4); the
+        // Quit item's ⌘Q comes from the keymap binding above.
+        cx.set_menus(vec![Menu {
+            name: "FrankMDFast".into(),
+            items: vec![MenuItem::action("Quit FrankMDFast", ui::actions::Quit)],
+            disabled: false,
+        }]);
+        cx.activate(true);
+        ctx.open(launch, cx);
+        let ctx = ctx.clone();
+        cx.spawn(async move |cx| {
+            while let Ok(launch) = rx.recv().await {
+                cx.update(|cx| ctx.open(launch, cx));
+            }
+        })
+        .detach();
+    });
     Ok(())
 }
 

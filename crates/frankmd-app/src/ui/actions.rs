@@ -142,7 +142,14 @@ pub fn default_keymap() -> Vec<KeyBinding> {
 
 /// Bind the default keymap globally.
 pub fn install_keymap(cx: &mut App) {
-    cx.bind_keys(default_keymap());
+    let mut bindings = default_keymap();
+    if cfg!(target_os = "macos") {
+        // The registry's `ctrl-q` maps the physical Ctrl key on every OS; on
+        // macOS Quit is ⌘Q. The app menu's key equivalent is derived from
+        // this binding.
+        bindings.push(KeyBinding::new("cmd-q", Quit, Some(CX_WORKSPACE)));
+    }
+    cx.bind_keys(bindings);
 }
 
 #[cfg(test)]
