@@ -2,7 +2,7 @@ name: Release
 
 # Push a tag `vX.Y.Z` matching Cargo.toml's version to build every package,
 # publish a GitHub release and update the AUR package. Running it by hand
-# (workflow_dispatch) builds the packages as artifacts without publishing.
+# (workflow_dispatch) builds the packages as artifacts without publishing (a dry run).
 
 on:
   push:
