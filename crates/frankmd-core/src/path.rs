@@ -40,8 +40,16 @@ impl RelPath {
     /// `.`/`//` collapse, `..` resolves against earlier segments, an absolute
     /// path or a `..` that climbs above the root is [`CoreError::InvalidPath`],
     /// and NUL is rejected. `""` and `"."` give the root.
+    ///
+    /// On Windows a `\` can only be a separator (`\` is reserved in names),
+    /// so `\`-separated input (e.g. stripped from a `\\?\`-prefixed absolute
+    /// path) is accepted and stored `/`-separated like everywhere else.
     pub fn parse(input: &str) -> Result<Self, CoreError> {
         let invalid = || CoreError::InvalidPath(input.to_owned());
+        #[cfg(target_os = "windows")]
+        let owned = input.replace('\\', "/");
+        #[cfg(target_os = "windows")]
+        let input = owned.as_str();
         if input.contains('\0') || input.starts_with('/') {
             return Err(invalid());
         }
@@ -178,12 +186,21 @@ pub fn clean_path(path: &str) -> String {
 /// `candidate == base` or `candidate` under `base + "/"` (separator-anchored, so
 /// `/data/notes-backup` is outside `/data/notes`). Returns the cleaned absolute
 /// candidate. The symlink/realpath half lives in `frankmd_fs::path_safety`.
+///
+/// On Windows the candidate is returned with `\` separators: `base` usually
+/// comes from `canonicalize()` (a verbatim `\\?\` path), and verbatim paths
+/// reject `/` outright (`/` is reserved), so a `/`-joined candidate would fail
+/// every filesystem call with `ERROR_INVALID_NAME`.
 pub fn lexical_contain(base: &str, path: Option<&str>) -> Option<String> {
     let path = path?;
     if path.contains('\0') || base.contains('\0') {
         return None;
     }
+    #[cfg(target_os = "windows")]
+    let path = path.replace('\\', "/");
     let base = clean_path(base);
+    #[cfg(target_os = "windows")]
+    let base = base.replace('/', "\\");
     let joined = if path.starts_with('/') {
         path.to_owned()
     } else if path.is_empty() {
@@ -192,17 +209,27 @@ pub fn lexical_contain(base: &str, path: Option<&str>) -> Option<String> {
         format!("{base}/{path}")
     };
     let candidate = clean_path(&joined);
+    #[cfg(target_os = "windows")]
+    let candidate = candidate.replace('/', "\\");
     is_within(&candidate, &base).then_some(candidate)
 }
 
 /// **[COMPAT]** `PathSafety.within?(path, base)`: `path == base` or `path`
-/// starts with `base + "/"` (both taken as given, no cleaning).
+/// starts with `base` + the platform separator (both taken as given, no
+/// cleaning).
 pub fn is_within(path: &str, base: &str) -> bool {
     path == base
         || path
             .strip_prefix(base)
-            .is_some_and(|rest| rest.starts_with('/'))
+            .is_some_and(|rest| rest.starts_with(SEPARATOR))
 }
+
+/// [`is_within`]'s separator anchor: `/` as in Ruby, `\` on Windows where
+/// [`lexical_contain`] normalizes candidates to platform separators.
+#[cfg(target_os = "windows")]
+const SEPARATOR: char = '\\';
+#[cfg(not(target_os = "windows"))]
+const SEPARATOR: char = '/';
 
 /// **[COMPAT]** `NotesController#reject_config_file`: does this raw request
 /// path name the root `.fed` once lexically cleaned (`./.fed`, `foo/../.fed`,
@@ -211,7 +238,12 @@ pub fn is_within(path: &str, base: &str) -> bool {
 pub fn is_config_file(raw: &str) -> bool {
     // Any absolute base works: the check is lexical and relative to it.
     const BASE: &str = "/notes-root";
-    lexical_contain(BASE, Some(raw)).is_some_and(|p| p == format!("{BASE}/{CONFIG_FILE}"))
+    // The expected value goes through `lexical_contain` too, so both sides
+    // carry the same platform separators.
+    let expected = lexical_contain(BASE, Some(CONFIG_FILE));
+    lexical_contain(BASE, Some(raw))
+        .zip(expected)
+        .is_some_and(|(path, want)| path == want)
 }
 
 /// How the Rails `GET /notes/*path` route classified a raw path
