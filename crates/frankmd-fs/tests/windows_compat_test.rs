@@ -3,19 +3,19 @@
 //! notes root. Before the separator normalization in `frankmd-core`, each of
 //! these calls failed with `ERROR_INVALID_NAME` surfaced as the generic
 //! "Failed to create" / "Not found" errors.
+//!
+//! Self-contained on purpose: the shared `common` fixtures exercise Unix file
+//! modes and symlinks and do not compile on Windows.
 #![cfg(windows)]
 #![allow(clippy::disallowed_methods, clippy::unwrap_used)]
 
-#[allow(missing_docs)]
-mod common;
-
-use common::Sandbox;
-use frankmd_fs::NotesService;
+use frankmd_fs::{NotesService, Vault};
 
 #[test]
 fn create_read_rename_delete_work_from_a_verbatim_root() {
-    let sb = Sandbox::empty();
-    let svc = NotesService::new(&sb.vault());
+    let tmp = tempfile::tempdir().unwrap();
+    let vault = Vault::open(tmp.path(), tmp.path().join("state")).unwrap();
+    let svc = NotesService::new(&vault);
 
     // The reporter's steps: a folder and a note in the notes root.
     svc.create_folder("asdf").unwrap();
