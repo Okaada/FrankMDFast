@@ -14,7 +14,7 @@ use std::path::{Path, PathBuf};
 /// FrankMD command line.
 #[derive(Debug, Clone, clap::Parser)]
 #[command(
-    name = "frankmd",
+    name = "frankmdfast",
     version,
     about = "Fast Markdown notes and blog editor"
 )]
@@ -83,11 +83,11 @@ pub fn resolve_launch(
     }
 }
 
-/// Socket of the primary instance (`$XDG_RUNTIME_DIR/frankmd.sock`).
+/// Socket of the primary instance (`$XDG_RUNTIME_DIR/frankmdfast.sock`).
 pub fn socket_path(runtime_dir: Option<&Path>, state_dir: &Path) -> PathBuf {
     runtime_dir.map_or_else(
-        || state_dir.join("frankmd.sock"),
-        |d| d.join("frankmd.sock"),
+        || state_dir.join("frankmdfast.sock"),
+        |d| d.join("frankmdfast.sock"),
     )
 }
 

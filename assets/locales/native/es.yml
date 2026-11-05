@@ -12,7 +12,7 @@ es:
       reload: "Recargar"
       compare: "Comparar…"
     deleted_on_disk:
-      message: "Esta nota fue eliminada o movida fuera de FrankMD."
+      message: "Esta nota fue eliminada o movida fuera de FrankMDFast."
       save_again: "Guardar de nuevo"
       close: "Cerrar"
     content_loss:
@@ -20,7 +20,7 @@ es:
       undo: "Deshacer"
       save_anyway: "Guardar de todos modos"
     draft_storage:
-      message: "No se pueden escribir borradores en la carpeta de estado de FrankMD."
+      message: "No se pueden escribir borradores en la carpeta de estado de FrankMDFast."
       details: "Detalles"
     storage_fallback:
       message: "S3 ya no está disponible; los nuevos archivos multimedia se guardarán localmente."
@@ -66,7 +66,7 @@ es:
     note_not_found: "No hay ninguna nota llamada %{name}. Ctrl+N la crea."
     theme_following: "Siguiendo el tema de Omarchy: %{theme}"
     theme_sync_failed: "No se pudo leer el tema de Omarchy; se mantienen los colores actuales."
-    watcher_failed: "La vigilancia de archivos se detuvo; los cambios hechos fuera de FrankMD requieren una actualización manual."
+    watcher_failed: "La vigilancia de archivos se detuvo; los cambios hechos fuera de FrankMDFast requieren una actualización manual."
     words:
       one: "1 palabra"
       other: "%{count} palabras"

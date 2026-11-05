@@ -200,7 +200,7 @@ pub(crate) enum Scope {
     /// `.fed` in this vault.
     #[default]
     Vault,
-    /// `~/.config/frankmd/config.toml`.
+    /// `~/.config/frankmdfast/config.toml`.
     Global,
 }
 

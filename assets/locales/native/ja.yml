@@ -12,7 +12,7 @@ ja:
       reload: "再読み込み"
       compare: "比較…"
     deleted_on_disk:
-      message: "このノートは FrankMD の外で削除または移動されました。"
+      message: "このノートは FrankMDFast の外で削除または移動されました。"
       save_again: "再度保存"
       close: "閉じる"
     content_loss:
@@ -20,7 +20,7 @@ ja:
       undo: "元に戻す"
       save_anyway: "そのまま保存"
     draft_storage:
-      message: "FrankMD の状態フォルダに下書きを書き込めません。"
+      message: "FrankMDFast の状態フォルダに下書きを書き込めません。"
       details: "詳細"
     storage_fallback:
       message: "S3 は利用できなくなりました。新しいメディアはローカルに保存されます。"
@@ -66,7 +66,7 @@ ja:
     note_not_found: "%{name} というノートはありません。Ctrl+N で作成できます。"
     theme_following: "Omarchy のテーマに従っています: %{theme}"
     theme_sync_failed: "Omarchy のテーマを読み取れませんでした。現在の色を維持します。"
-    watcher_failed: "ファイル監視が停止しました。FrankMD の外で行った変更は手動で更新する必要があります。"
+    watcher_failed: "ファイル監視が停止しました。FrankMDFast の外で行った変更は手動で更新する必要があります。"
     words:
       one: "1 語"
       other: "%{count} 語"

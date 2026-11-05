@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Push the frankmd-bin AUR package for a published GitHub release.
+# Push the frankmdfast-bin AUR package for a published GitHub release.
 #
 #   packaging/aur/publish.sh <version> <SHA256SUMS file>
 #
@@ -10,11 +10,11 @@ set -euo pipefail
 
 version=$1 sums=$2
 root=$(cd "$(dirname "$0")/../.." && pwd)
-pkg=frankmd-bin
+pkg=frankmdfast-bin
 
 sha_for() { awk -v f="$1" '$2 == f || $2 == "*"f { print $1 }' "$sums"; }
-sha_x86_64=$(sha_for "frankmd-$version-linux-x86_64.tar.gz")
-sha_aarch64=$(sha_for "frankmd-$version-linux-aarch64.tar.gz")
+sha_x86_64=$(sha_for "frankmdfast-$version-linux-x86_64.tar.gz")
+sha_aarch64=$(sha_for "frankmdfast-$version-linux-aarch64.tar.gz")
 if [ -z "$sha_x86_64" ] || [ -z "$sha_aarch64" ]; then
   echo "missing Linux tarball checksums in $sums" >&2
   exit 1

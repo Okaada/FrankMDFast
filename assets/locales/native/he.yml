@@ -12,7 +12,7 @@ he:
       reload: "טען מחדש"
       compare: "השווה…"
     deleted_on_disk:
-      message: "הערה זו נמחקה או הועברה מחוץ ל-FrankMD."
+      message: "הערה זו נמחקה או הועברה מחוץ ל-FrankMDFast."
       save_again: "שמור שוב"
       close: "סגור"
     content_loss:
@@ -20,7 +20,7 @@ he:
       undo: "בטל"
       save_anyway: "שמור בכל זאת"
     draft_storage:
-      message: "לא ניתן לכתוב טיוטות לתיקיית המצב של FrankMD."
+      message: "לא ניתן לכתוב טיוטות לתיקיית המצב של FrankMDFast."
       details: "פרטים"
     storage_fallback:
       message: "S3 אינו זמין עוד; מדיה חדשה תישמר מקומית."
@@ -66,7 +66,7 @@ he:
     note_not_found: "אין הערה בשם %{name}. Ctrl+N יוצר אותה."
     theme_following: "עוקב אחר ערכת הנושא של Omarchy: %{theme}"
     theme_sync_failed: "לא ניתן לקרוא את ערכת הנושא של Omarchy; הצבעים הנוכחיים נשמרים."
-    watcher_failed: "מעקב הקבצים הופסק; שינויים שנעשו מחוץ ל-FrankMD דורשים רענון ידני."
+    watcher_failed: "מעקב הקבצים הופסק; שינויים שנעשו מחוץ ל-FrankMDFast דורשים רענון ידני."
     words:
       one: "מילה אחת"
       other: "%{count} מילים"

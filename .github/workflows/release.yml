@@ -74,7 +74,7 @@ jobs:
         run: cargo build --release --locked -p frankmd-app
 
       - name: Package
-        run: packaging/linux/package.sh "${{ needs.version.outputs.version }}" "${{ matrix.arch }}" target/release/frankmd dist
+        run: packaging/linux/package.sh "${{ needs.version.outputs.version }}" "${{ matrix.arch }}" target/release/frankmdfast dist
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
@@ -102,9 +102,9 @@ jobs:
         run: |
           cargo build --release --locked -p frankmd-app --target aarch64-apple-darwin
           cargo build --release --locked -p frankmd-app --target x86_64-apple-darwin
-          lipo -create -output frankmd \
-            target/aarch64-apple-darwin/release/frankmd \
-            target/x86_64-apple-darwin/release/frankmd
+          lipo -create -output frankmdfast \
+            target/aarch64-apple-darwin/release/frankmdfast \
+            target/x86_64-apple-darwin/release/frankmdfast
 
       - name: Bundle, sign and notarize
         env:
@@ -114,7 +114,7 @@ jobs:
           APPLE_ID: ${{ secrets.APPLE_ID }}
           APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
-        run: packaging/macos/package.sh "${{ needs.version.outputs.version }}" frankmd dist
+        run: packaging/macos/package.sh "${{ needs.version.outputs.version }}" frankmdfast dist
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
@@ -146,13 +146,13 @@ jobs:
         run: cargo build --release --locked -p frankmd-app
 
       - name: Sign the executable
-        run: ./packaging/windows/sign.ps1 target/release/frankmd.exe
+        run: ./packaging/windows/sign.ps1 target/release/frankmdfast.exe
 
       - name: Zip
         run: |
           New-Item -ItemType Directory -Force dist, stage | Out-Null
-          Copy-Item target/release/frankmd.exe, LICENSE, README.md stage/
-          Compress-Archive -Path stage/* -DestinationPath "dist/frankmd-$env:VERSION-windows-x86_64.zip"
+          Copy-Item target/release/frankmdfast.exe, LICENSE, README.md stage/
+          Compress-Archive -Path stage/* -DestinationPath "dist/frankmdfast-$env:VERSION-windows-x86_64.zip"
 
       - name: Installer
         run: |
@@ -161,8 +161,8 @@ jobs:
             if (Test-Path "$default\ISCC.exe") { $env:PATH += ";$default" }
             else { choco install innosetup --no-progress -y; $env:PATH += ";$default" }
           }
-          iscc "/DAppVersion=$env:VERSION" "/DSourceExe=$PWD\target\release\frankmd.exe" "/DOutputDir=$PWD\dist" packaging/windows/frankmd.iss
-          ./packaging/windows/sign.ps1 "dist/FrankMD-$env:VERSION-windows-x86_64-setup.exe"
+          iscc "/DAppVersion=$env:VERSION" "/DSourceExe=$PWD\target\release\frankmdfast.exe" "/DOutputDir=$PWD\dist" packaging/windows/frankmdfast.iss
+          ./packaging/windows/sign.ps1 "dist/FrankMDFast-$env:VERSION-windows-x86_64-setup.exe"
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
@@ -197,10 +197,10 @@ jobs:
         run: |
           notes=(--generate-notes)
           [ -f "releases/$TAG.md" ] && notes=(--notes-file "releases/$TAG.md")
-          gh release create "$TAG" dist/* --repo "$GITHUB_REPOSITORY" --title "FrankMD ${TAG#v}" "${notes[@]}"
+          gh release create "$TAG" dist/* --repo "$GITHUB_REPOSITORY" --title "FrankMDFast ${TAG#v}" "${notes[@]}"
 
   aur:
-    name: AUR (frankmd-bin)
+    name: AUR (frankmdfast-bin)
     if: github.ref_type == 'tag'
     needs: [version, publish]
     runs-on: ubuntu-24.04

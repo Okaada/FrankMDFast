@@ -12,7 +12,7 @@ en:
       reload: "Reload"
       compare: "Compare…"
     deleted_on_disk:
-      message: "This note was deleted or moved outside FrankMD."
+      message: "This note was deleted or moved outside FrankMDFast."
       save_again: "Save again"
       close: "Close"
     content_loss:
@@ -20,7 +20,7 @@ en:
       undo: "Undo"
       save_anyway: "Save anyway"
     draft_storage:
-      message: "Drafts can't be written to the FrankMD state folder."
+      message: "Drafts can't be written to the FrankMDFast state folder."
       details: "Details"
     storage_fallback:
       message: "S3 is no longer available; new media will be stored locally."
@@ -66,7 +66,7 @@ en:
     note_not_found: "No note named %{name}. Ctrl+N creates it."
     theme_following: "Following Omarchy theme: %{theme}"
     theme_sync_failed: "Couldn't read the Omarchy theme; keeping the current colors."
-    watcher_failed: "File watching stopped; changes made outside FrankMD need a manual refresh."
+    watcher_failed: "File watching stopped; changes made outside FrankMDFast need a manual refresh."
     words:
       one: "1 word"
       other: "%{count} words"

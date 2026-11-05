@@ -12,7 +12,7 @@ pt-BR:
       reload: "Recarregar"
       compare: "Comparar…"
     deleted_on_disk:
-      message: "Esta nota foi excluída ou movida fora do FrankMD."
+      message: "Esta nota foi excluída ou movida fora do FrankMDFast."
       save_again: "Salvar novamente"
       close: "Fechar"
     content_loss:
@@ -20,7 +20,7 @@ pt-BR:
       undo: "Desfazer"
       save_anyway: "Salvar mesmo assim"
     draft_storage:
-      message: "Não é possível gravar rascunhos na pasta de estado do FrankMD."
+      message: "Não é possível gravar rascunhos na pasta de estado do FrankMDFast."
       details: "Detalhes"
     storage_fallback:
       message: "O S3 não está mais disponível; as novas mídias serão armazenadas localmente."
@@ -66,7 +66,7 @@ pt-BR:
     note_not_found: "Nenhuma nota chamada %{name}. Ctrl+N a cria."
     theme_following: "Seguindo o tema do Omarchy: %{theme}"
     theme_sync_failed: "Não foi possível ler o tema do Omarchy; mantendo as cores atuais."
-    watcher_failed: "A observação de arquivos parou; alterações feitas fora do FrankMD exigem atualização manual."
+    watcher_failed: "A observação de arquivos parou; alterações feitas fora do FrankMDFast exigem atualização manual."
     words:
       one: "1 palavra"
       other: "%{count} palavras"

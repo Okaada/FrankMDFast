@@ -18,15 +18,15 @@ work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
 
 # --- tarball ---------------------------------------------------------------
-name="frankmd-$version-linux-$arch"
+name="frankmdfast-$version-linux-$arch"
 stage="$work/$name"
-install -Dm755 "$binary" "$stage/bin/frankmd"
-install -Dm644 "$root/packaging/linux/frankmd.desktop" "$stage/share/applications/frankmd.desktop"
-install -Dm644 "$root/packaging/linux/frankmd.metainfo.xml" "$stage/share/metainfo/frankmd.metainfo.xml"
-install -Dm644 "$root/assets/brand/icon.svg" "$stage/share/icons/hicolor/scalable/apps/frankmd.svg"
-install -Dm644 "$root/assets/brand/icon-512.png" "$stage/share/icons/hicolor/512x512/apps/frankmd.png"
-install -Dm644 "$root/assets/brand/favicon-32x32.png" "$stage/share/icons/hicolor/32x32/apps/frankmd.png"
-install -Dm644 "$root/assets/brand/favicon-16x16.png" "$stage/share/icons/hicolor/16x16/apps/frankmd.png"
+install -Dm755 "$binary" "$stage/bin/frankmdfast"
+install -Dm644 "$root/packaging/linux/frankmdfast.desktop" "$stage/share/applications/frankmdfast.desktop"
+install -Dm644 "$root/packaging/linux/frankmdfast.metainfo.xml" "$stage/share/metainfo/frankmdfast.metainfo.xml"
+install -Dm644 "$root/assets/brand/icon.svg" "$stage/share/icons/hicolor/scalable/apps/frankmdfast.svg"
+install -Dm644 "$root/assets/brand/icon-512.png" "$stage/share/icons/hicolor/512x512/apps/frankmdfast.png"
+install -Dm644 "$root/assets/brand/favicon-32x32.png" "$stage/share/icons/hicolor/32x32/apps/frankmdfast.png"
+install -Dm644 "$root/assets/brand/favicon-16x16.png" "$stage/share/icons/hicolor/16x16/apps/frankmdfast.png"
 install -Dm644 "$root/LICENSE" "$stage/LICENSE"
 install -Dm644 "$root/README.md" "$stage/README.md"
 tar -C "$work" -czf "$out/$name.tar.gz" "$name"
@@ -49,16 +49,16 @@ echo "$tool_sha  $tool" | sha256sum -c --quiet
 echo "$runtime_sha  $runtime" | sha256sum -c --quiet
 chmod +x "$tool"
 
-appdir="$work/FrankMD.AppDir"
+appdir="$work/FrankMDFast.AppDir"
 mkdir -p "$appdir/usr"
 cp -a "$stage/bin" "$stage/share" "$appdir/usr/"
-cp "$root/packaging/linux/frankmd.desktop" "$appdir/frankmd.desktop"
-cp "$root/assets/brand/icon-512.png" "$appdir/frankmd.png"
-ln -s frankmd.png "$appdir/.DirIcon"
-ln -s usr/bin/frankmd "$appdir/AppRun"
+cp "$root/packaging/linux/frankmdfast.desktop" "$appdir/frankmdfast.desktop"
+cp "$root/assets/brand/icon-512.png" "$appdir/frankmdfast.png"
+ln -s frankmdfast.png "$appdir/.DirIcon"
+ln -s usr/bin/frankmdfast "$appdir/AppRun"
 
 # Runners have no FUSE: let the tool unpack itself instead of mounting.
 APPIMAGE_EXTRACT_AND_RUN=1 ARCH="$arch" "$tool" --no-appstream \
-  --runtime-file "$runtime" "$appdir" "$out/FrankMD-$version-$arch.AppImage"
+  --runtime-file "$runtime" "$appdir" "$out/FrankMDFast-$version-$arch.AppImage"
 
 ls -l "$out"

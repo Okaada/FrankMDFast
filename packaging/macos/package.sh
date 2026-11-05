@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Build FrankMD.app from a (universal) binary and wrap it in a DMG.
+# Build FrankMDFast.app from a (universal) binary and wrap it in a DMG.
 #
 #   packaging/macos/package.sh <version> <binary> <out-dir>
 #
@@ -23,12 +23,12 @@ cleanup() {
 }
 trap cleanup EXIT
 
-app="$work/FrankMD.app"
+app="$work/FrankMDFast.app"
 mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources"
-install -m755 "$binary" "$app/Contents/MacOS/frankmd"
+install -m755 "$binary" "$app/Contents/MacOS/frankmdfast"
 sed "s/@VERSION@/$version/g" "$root/packaging/macos/Info.plist" > "$app/Contents/Info.plist"
 
-iconset="$work/frankmd.iconset"
+iconset="$work/frankmdfast.iconset"
 mkdir -p "$iconset"
 for size in 16 32 128 256 512; do
   sips -z $size $size "$root/assets/brand/icon-512.png" --out "$iconset/icon_${size}x${size}.png" >/dev/null
@@ -36,7 +36,7 @@ for size in 16 32 128 256 512; do
   [ $double -le 512 ] && sips -z $double $double "$root/assets/brand/icon-512.png" \
     --out "$iconset/icon_${size}x${size}@2x.png" >/dev/null
 done
-iconutil -c icns "$iconset" -o "$app/Contents/Resources/frankmd.icns"
+iconutil -c icns "$iconset" -o "$app/Contents/Resources/frankmdfast.icns"
 
 if [ -n "${MACOS_CERTIFICATE:-}" ]; then
   keychain="$work/signing.keychain-db"
@@ -57,7 +57,7 @@ else
 fi
 codesign --verify --strict "$app"
 
-dmg="$out/FrankMD-$version-macos-universal.dmg"
+dmg="$out/FrankMDFast-$version-macos-universal.dmg"
 staging="$work/dmg"
 mkdir -p "$staging"
 cp -R "$app" "$staging/"
@@ -65,7 +65,7 @@ ln -s /Applications "$staging/Applications"
 # hdiutil's own size estimate for -srcfolder can come up short ("No space
 # left on device"), so size the image explicitly with headroom.
 size_mb=$(( $(du -sm "$staging" | cut -f1) + 40 ))
-hdiutil create -volname "FrankMD" -srcfolder "$staging" -size "${size_mb}m" -ov -format UDZO "$dmg"
+hdiutil create -volname "FrankMDFast" -srcfolder "$staging" -size "${size_mb}m" -ov -format UDZO "$dmg"
 
 if [ -n "${MACOS_CERTIFICATE:-}" ]; then
   codesign --force --timestamp --keychain "$keychain" --sign "$MACOS_SIGNING_IDENTITY" "$dmg"

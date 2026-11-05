@@ -59,7 +59,7 @@ pub struct ShellConfig {
     /// Where deleted items go: `None` = the system Trash (ui-spec §5.13);
     /// tests point it at a temp dir.
     pub trash_dir: Option<PathBuf>,
-    /// Global settings file (`~/.config/frankmd/config.toml`, Settings scope
+    /// Global settings file (`~/.config/frankmdfast/config.toml`, Settings scope
     /// "All vaults"); `None` disables the layer.
     pub global_config: Option<PathBuf>,
     /// App-wide preferences file (UI scale); `None` keeps them in memory.
@@ -865,9 +865,9 @@ impl Shell {
                     .unwrap_or(&path)
                     .trim_end_matches(".md")
                     .to_owned();
-                format!("{name} — FrankMD")
+                format!("{name} — FrankMDFast")
             }
-            None => format!("FrankMD — {}", self.vault_name),
+            None => format!("FrankMDFast — {}", self.vault_name),
         };
         window.set_window_title(&title);
     }

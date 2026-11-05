@@ -53,14 +53,14 @@ use frankmd_config::EnvSnapshot;
 use frankmd_config::dirs::AppDirs;
 use gpui_kit::*;
 
-/// Wayland app_id / X11 WM_CLASS; must match `frankmd.desktop` (OM-006).
-pub const APP_ID: &str = "frankmd";
+/// Wayland app_id / X11 WM_CLASS; must match `frankmdfast.desktop` (OM-006).
+pub const APP_ID: &str = "frankmdfast";
 
 /// Parse the CLI and run the app until the last window closes.
 pub fn run() -> anyhow::Result<()> {
     let cli = cli::Cli::parse();
     init_tracing();
-    tracing::info!(?cli, "starting FrankMD");
+    tracing::info!(?cli, "starting FrankMDFast");
 
     let env = EnvSnapshot::capture();
     let dirs = AppDirs::discover().ok_or_else(|| anyhow::anyhow!("no home directory"))?;

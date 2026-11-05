@@ -12,7 +12,7 @@ ko:
       reload: "다시 불러오기"
       compare: "비교…"
     deleted_on_disk:
-      message: "이 노트가 FrankMD 밖에서 삭제되었거나 이동되었습니다."
+      message: "이 노트가 FrankMDFast 밖에서 삭제되었거나 이동되었습니다."
       save_again: "다시 저장"
       close: "닫기"
     content_loss:
@@ -20,7 +20,7 @@ ko:
       undo: "실행 취소"
       save_anyway: "그래도 저장"
     draft_storage:
-      message: "FrankMD 상태 폴더에 임시 저장본을 쓸 수 없습니다."
+      message: "FrankMDFast 상태 폴더에 임시 저장본을 쓸 수 없습니다."
       details: "자세히"
     storage_fallback:
       message: "S3를 더 이상 사용할 수 없습니다. 새 미디어는 로컬에 저장됩니다."
@@ -66,7 +66,7 @@ ko:
     note_not_found: "%{name}(이)라는 노트가 없습니다. Ctrl+N으로 만들 수 있습니다."
     theme_following: "Omarchy 테마를 따르는 중: %{theme}"
     theme_sync_failed: "Omarchy 테마를 읽을 수 없어 현재 색상을 유지합니다."
-    watcher_failed: "파일 감시가 중지되었습니다. FrankMD 밖에서 변경한 내용은 수동으로 새로 고쳐야 합니다."
+    watcher_failed: "파일 감시가 중지되었습니다. FrankMDFast 밖에서 변경한 내용은 수동으로 새로 고쳐야 합니다."
     words:
       one: "단어 1개"
       other: "단어 %{count}개"

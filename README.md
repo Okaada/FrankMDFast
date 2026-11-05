@@ -20,9 +20,13 @@
 
 ## Install
 
+FrankMDFast is the desktop version of [FrankMD](https://github.com/akitaonrails/FrankMD). Keep using
+FrankMD if you want to reach your notes from a browser or another machine; use FrankMDFast if you only
+need a desktop app. Both work on the same notes folder and `.fed` file. The command is `frankmdfast`.
+
 Download the package for your system from [Releases](https://github.com/akitaonrails/FrankMDFast/releases):
 the AppImage or tarball on Linux, the DMG on macOS, the installer or zip on Windows.
-On Arch Linux: `yay -S frankmd-bin`.
+On Arch Linux: `yay -S frankmdfast-bin`.
 
 ## Status
 
@@ -48,23 +52,23 @@ then push the tag `vX.Y.Z`. `.github/workflows/release.yml` builds:
 
 | Platform | Files |
 |---|---|
-| Linux x86_64, aarch64 | `frankmd-X.Y.Z-linux-<arch>.tar.gz`, `FrankMD-X.Y.Z-<arch>.AppImage` |
-| macOS (universal) | `FrankMD-X.Y.Z-macos-universal.dmg` |
-| Windows x86_64 | `frankmd-X.Y.Z-windows-x86_64.zip`, `FrankMD-X.Y.Z-windows-x86_64-setup.exe` |
-| Arch Linux | AUR package `frankmd-bin`, pushed after the GitHub release |
+| Linux x86_64, aarch64 | `frankmdfast-X.Y.Z-linux-<arch>.tar.gz`, `FrankMDFast-X.Y.Z-<arch>.AppImage` |
+| macOS (universal) | `FrankMDFast-X.Y.Z-macos-universal.dmg` |
+| Windows x86_64 | `frankmdfast-X.Y.Z-windows-x86_64.zip`, `FrankMDFast-X.Y.Z-windows-x86_64-setup.exe` |
+| Arch Linux | AUR package `frankmdfast-bin`, pushed after the GitHub release |
 
 Running the workflow by hand builds everything as artifacts without publishing. Signing,
 notarization and the AUR push are optional and turn on when their secrets exist:
 
 | Secret | Used for |
 |---|---|
-| `AUR_SSH_PRIVATE_KEY` | Pushing `frankmd-bin` to the AUR |
+| `AUR_SSH_PRIVATE_KEY` | Pushing `frankmdfast-bin` to the AUR |
 | `MACOS_CERTIFICATE`, `MACOS_CERTIFICATE_PASSWORD`, `MACOS_SIGNING_IDENTITY` | Developer ID signing (base64 `.p12`) |
 | `APPLE_ID`, `APPLE_APP_PASSWORD`, `APPLE_TEAM_ID` | Notarizing the DMG |
 | `WINDOWS_CERTIFICATE`, `WINDOWS_CERTIFICATE_PASSWORD` | Authenticode signing (base64 `.pfx`) |
 
 Packaging scripts live in `packaging/` and run locally too, e.g.
-`packaging/linux/package.sh 0.1.0 x86_64 target/release/frankmd dist`.
+`packaging/linux/package.sh 0.1.0 x86_64 target/release/frankmdfast dist`.
 
 ## How the rewrite is checked against the original
 
@@ -101,7 +105,7 @@ Packaging scripts live in `packaging/` and run locally too, e.g.
 | GPUI + gpui-kit `=0.9.0` (exact pin) | Chosen over GTK4. Weekly breaking 0.x releases, so only `frankmd-app` depends on it |
 | Config resolves `.fed` > ENV > default, exactly as the original | Drop-in compatibility |
 | Theme and language follow Omarchy live unless `.fed` (or the global config / ENV) pins them | Picking "Follow Omarchy" or "System" in the pickers removes the pin. Language order: explicit setting > `~/.config/omarchy/language` > `LC_*`/`LANG` > English |
-| Interface size (80–200%) is an app preference in `~/.local/state/frankmd/prefs.json`, not a `.fed` key | It belongs to the machine, and FrankMD's `.fed` schema stays unchanged |
+| Interface size (80–200%) is an app preference in `~/.local/state/frankmdfast/prefs.json`, not a `.fed` key | It belongs to the machine, and FrankMD's `.fed` schema stays unchanged |
 | Recent files stay in `.fed`; Hugo dates stay UTC | Same on-disk behavior, so switching between the two apps keeps your history |
 | Drafts keyed by stable note ID, not path | Fixes the path-as-identity bug class from the history. Browser drafts were never readable by a desktop app anyway |
 | Omarchy theme from `~/.local/state/omarchy/current/theme/colors.toml` | The original's path no longer exists, so its theme sync is broken today |

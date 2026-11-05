@@ -1,4 +1,4 @@
-//! The **global** settings layer: `~/.config/frankmd/config.toml`, a flat TOML
+//! The **global** settings layer: `~/.config/frankmdfast/config.toml`, a flat TOML
 //! table using the `.fed` key names. It sits between a vault's `.fed` and ENV
 //! (`.fed > global > ENV > default`). The `.fed` format itself is untouched.
 

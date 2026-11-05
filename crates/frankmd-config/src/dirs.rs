@@ -17,18 +17,18 @@ pub struct AppDirs {
 }
 
 impl AppDirs {
-    /// XDG strategy on every OS (also macOS, so `~/.config/frankmd` stays put).
+    /// XDG strategy on every OS (also macOS, so `~/.config/frankmdfast` stays put).
     pub fn discover() -> Option<Self> {
         use etcetera::BaseStrategy as _;
         let s = etcetera::choose_base_strategy().ok()?;
         Some(Self {
-            config: s.config_dir().join("frankmd"),
+            config: s.config_dir().join("frankmdfast"),
             // Windows has no state dir: keep state with the app data there.
             state: s
                 .state_dir()
                 .unwrap_or_else(|| s.data_dir())
-                .join("frankmd"),
-            cache: s.cache_dir().join("frankmd"),
+                .join("frankmdfast"),
+            cache: s.cache_dir().join("frankmdfast"),
         })
     }
 
