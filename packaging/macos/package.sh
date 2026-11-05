@@ -72,7 +72,13 @@ if [ -n "${MACOS_CERTIFICATE:-}" ]; then
   if [ -n "${APPLE_ID:-}" ]; then
     xcrun notarytool submit "$dmg" --apple-id "$APPLE_ID" --password "$APPLE_APP_PASSWORD" \
       --team-id "$APPLE_TEAM_ID" --wait
-    xcrun stapler staple "$dmg"
+    # Stapling fetches the ticket from Apple's CDN, which drops connections
+    # now and then; the notarization itself already succeeded.
+    for attempt in 1 2 3 4 5; do
+      xcrun stapler staple "$dmg" && break
+      [ "$attempt" = 5 ] && exit 1
+      sleep $((attempt * 10))
+    done
   fi
 fi
 
