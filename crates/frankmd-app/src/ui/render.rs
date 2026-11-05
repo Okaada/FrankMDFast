@@ -104,6 +104,12 @@ impl Render for Shell {
                     })
             });
         actions::on_commands(root, handler)
+            // The window opens with `TitleBar::window_options()` (transparent
+            // titlebar, traffic lights at (9,9)); the TitleBar row belongs to
+            // that setup: on macOS its 80 px inset clears the traffic lights
+            // (#2), elsewhere it draws the window controls and owns dragging
+            // under client-side decorations.
+            .child(gpui_kit::component::TitleBar::new())
             .child(main)
             .child(self.render_status_line(&arrangement, &theme, cx))
             .when(arrangement.sidebar == SidebarMode::Drawer, |el| {
