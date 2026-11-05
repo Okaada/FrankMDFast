@@ -8,6 +8,7 @@
 //! cancels. Right-click on a cell opens the cell menu (FE-386) with the same
 //! actions and their shortcuts.
 
+use crate::scale::px;
 use frankmd_workspace::table_editor::{Alignment, CellAction, TableEditorModel, TableMode};
 use gpui_kit::component::button::{Button, ButtonVariants as _};
 use gpui_kit::component::input::{Input, InputEvent, InputState};
@@ -299,7 +300,7 @@ impl TableDialog {
             )
             .child(
                 Button::new(SharedString::from(format!("{id}-dec")))
-                    .label("−")
+                    .icon(crate::ui::icons::ph("minus"))
                     .xsmall()
                     .ghost()
                     .disabled(count <= 1)
@@ -319,7 +320,7 @@ impl TableDialog {
             )
             .child(
                 Button::new(SharedString::from(format!("{id}-inc")))
-                    .label("+")
+                    .icon(crate::ui::icons::ph("plus"))
                     .xsmall()
                     .ghost()
                     .tooltip(i18n::t(cx, titles.1))

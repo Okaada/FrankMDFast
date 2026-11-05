@@ -4,12 +4,13 @@
 //! Esc or a click outside closes; focus returns to the image that opened it
 //! (or the pane when a re-render removed it).
 
+use crate::scale::px;
 use gpui_kit::base::TestSupportExt as _;
 use gpui_kit::base::TestTextExt as _;
 use gpui_kit::{
     AnyElement, Context, FocusHandle, InteractiveElement as _, IntoElement, KeyDownEvent,
     ObjectFit, ParentElement as _, SharedString, StatefulInteractiveElement as _, Styled as _,
-    StyledImage as _, Window, accesskit::Role, anchored, deferred, div, img, point, px,
+    StyledImage as _, Window, accesskit::Role, anchored, deferred, div, img, point,
 };
 
 use super::PreviewPane;

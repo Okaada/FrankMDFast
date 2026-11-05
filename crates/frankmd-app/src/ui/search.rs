@@ -3,6 +3,7 @@
 //! ±3 context lines; Enter opens at the line. The state machine is
 //! `frankmd_workspace::content_search::ContentSearchModel`.
 
+use crate::scale::px;
 use std::time::Instant;
 
 use frankmd_workspace::content_search::{
@@ -250,7 +251,7 @@ impl Shell {
                 .ghost()
                 .xsmall()
                 .selected(self.search.cheatsheet)
-                .label("?")
+                .icon(crate::ui::icons::ph("question"))
                 .on_click(move |_, _, cx| {
                     let _ = this.update(cx, |shell, cx| {
                         shell.search.cheatsheet = !shell.search.cheatsheet;

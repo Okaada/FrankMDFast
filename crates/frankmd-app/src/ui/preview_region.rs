@@ -1,6 +1,7 @@
 //! Preview pane header and the media library slot (ui-spec §3.5, §5.15).
 
 use super::prelude::*;
+use crate::scale::px;
 use gpui_kit::*;
 
 impl Shell {
@@ -24,9 +25,9 @@ impl Shell {
             .id("preview-region")
             .when(swapped, |el| el.flex_1())
             .when(!swapped, |el| {
-                el.w(px(preview_width))
+                el.w(gpui_kit::px(preview_width))
                     .flex_shrink_0()
-                    .min_w(px(frankmd_workspace::layout::PREVIEW_MIN_WIDTH))
+                    .min_w(gpui_kit::px(frankmd_workspace::layout::PREVIEW_MIN_WIDTH))
             })
             .h_full()
             .border_l_1()
@@ -50,7 +51,7 @@ impl Shell {
                         Button::new("preview-zoom-out")
                             .ghost()
                             .xsmall()
-                            .label("−")
+                            .icon(crate::ui::icons::ph("minus"))
                             .tooltip(i18n::t(cx, "preview.zoom_out"))
                             .on_click(move |_, _, cx| {
                                 let _ = zoom_out.update(cx, |shell, cx| {
@@ -74,7 +75,7 @@ impl Shell {
                         Button::new("preview-zoom-in")
                             .ghost()
                             .xsmall()
-                            .label("+")
+                            .icon(crate::ui::icons::ph("plus"))
                             .tooltip(i18n::t(cx, "preview.zoom_in"))
                             .on_click(move |_, _, cx| {
                                 let _ = zoom_in.update(cx, |shell, cx| {
@@ -87,7 +88,7 @@ impl Shell {
                             .ghost()
                             .xsmall()
                             .selected(sync_on)
-                            .label("⇅")
+                            .icon(crate::ui::icons::ph("link"))
                             .tooltip(i18n::t(cx, "shell.scroll_sync"))
                             .on_click(move |_, window, cx| {
                                 let _ = sync.update(cx, |shell, cx| {
@@ -99,7 +100,7 @@ impl Shell {
                         Button::new("preview-close")
                             .ghost()
                             .xsmall()
-                            .label("×")
+                            .icon(crate::ui::icons::ph("x"))
                             .tooltip(i18n::t(cx, "shell.close_preview"))
                             .on_click(move |_, window, cx| {
                                 let _ = this.update(cx, |shell, cx| {

@@ -3,6 +3,7 @@
 //! Forms and validation are `frankmd_workspace::dialogs`; this module owns
 //! the inputs, renders, and dispatches the commands the forms produce.
 
+use crate::scale::px;
 use frankmd_core::hugo::HugoPathStyle;
 use frankmd_core::new_note::NoteTemplate;
 use frankmd_workspace::command::UserError;
@@ -716,7 +717,7 @@ impl Shell {
                         Button::new(SharedString::from(format!("{id}-close")))
                             .ghost()
                             .xsmall()
-                            .label("×")
+                            .icon(crate::ui::icons::ph("x"))
                             .on_click(move |_, window, cx| close(window, cx)),
                     ),
             )

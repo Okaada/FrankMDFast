@@ -1,6 +1,7 @@
 //! Status line (ui-spec §3.6).
 
 use super::prelude::*;
+use crate::scale::px;
 use gpui_kit::*;
 
 impl Shell {

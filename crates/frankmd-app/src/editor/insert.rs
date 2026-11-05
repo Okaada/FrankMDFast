@@ -11,6 +11,7 @@
 //! link_completion}`, `frankmd_core::wikilink`, `frankmd_workspace::{slash_menu,
 //! table_editor, code_block}`); this module routes keys and renders.
 
+use crate::scale::px;
 use std::ops::Range;
 use std::rc::Rc;
 

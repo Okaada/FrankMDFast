@@ -9,6 +9,7 @@
 //! shown or echoed: a set secret reads "Set", and replacing one uses a
 //! masked input that starts empty.
 
+use crate::scale::px;
 use frankmd_config::{Key, Provenance, Value};
 use frankmd_workspace::Command;
 use gpui_kit::component::button::{Button, ButtonVariants as _};
@@ -78,8 +79,6 @@ enum Control {
     Picker(&'static str),
     /// Split / Single.
     ViewMode,
-    /// Read-only value.
-    Value(Key),
     /// The vault path.
     NotesFolder,
     /// Editable text, committed on Enter / blur.
@@ -88,6 +87,12 @@ enum Control {
     Secret(Key),
     /// One of a fixed set of values (`value`, label i18n key).
     Choice(Key, &'static [(&'static str, &'static str)]),
+    /// One of a few integers, as toggle buttons (`value`, label).
+    IntChoice(Key, &'static [(i64, ChoiceLabel)]),
+    /// − / + through an ascending list of integers, shown with `suffix`.
+    Steps(Key, &'static [i64], &'static str),
+    /// Interface size (app preference, not a `.fed` key).
+    UiScale,
     /// Hugo default folder (fixed by the backend, HP-014).
     HugoFolder,
     /// Opens `.hugo_template.md` as a note.
@@ -95,6 +100,98 @@ enum Control {
     /// "Storage for new media", bound to the media layer's storage model
     /// (saves immediately, disabled while saving, S3 only when configured).
     MediaStorage,
+}
+
+/// Label of an [`Control::IntChoice`] button.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum ChoiceLabel {
+    /// An i18n key.
+    Key(&'static str),
+    /// An i18n key taking `%{count}`.
+    Count(&'static str, &'static str),
+}
+
+/// FrankMD's option lists (`_settings_panel.html.erb`).
+const FONT_SIZES: &[i64] = &[12, 13, 14, 15, 16, 18, 20, 22, 24];
+const EDITOR_WIDTHS: &[i64] = &[
+    40, 48, 56, 64, 72, 80, 88, 96, 104, 112, 120, 128, 136, 144, 152, 160, 168, 176, 184, 192, 200,
+];
+const PREVIEW_ZOOMS: &[i64] = &[50, 75, 90, 100, 110, 125, 150, 175, 200];
+const INDENTS: &[(i64, ChoiceLabel)] = &[
+    (2, ChoiceLabel::Count("settings.indent_spaces", "2")),
+    (4, ChoiceLabel::Count("settings.indent_spaces", "4")),
+    (8, ChoiceLabel::Count("settings.indent_spaces", "8")),
+];
+/// Relative numbering is not implemented yet: `2` in `.fed` shows as On.
+const LINE_NUMBERS: &[(i64, ChoiceLabel)] = &[
+    (0, ChoiceLabel::Key("settings.line_numbers_off")),
+    (1, ChoiceLabel::Key("settings.line_numbers_absolute")),
+];
+
+/// Index of the largest option `<= current` (the first when none is).
+fn option_index(options: impl IntoIterator<Item = i64>, current: i64) -> usize {
+    options
+        .into_iter()
+        .enumerate()
+        .filter(|&(_, v)| v <= current)
+        .last()
+        .map_or(0, |(i, _)| i)
+}
+
+/// The values − and + move to from `current` (`None` = button disabled).
+/// A value between two options steps down to the lower one; an unset value
+/// can only step down from the end.
+fn step_targets(options: &[i64], current: Option<i64>) -> (Option<i64>, Option<i64>) {
+    let Some(current) = current else {
+        return (None, options.last().copied());
+    };
+    let i = option_index(options.iter().copied(), current);
+    let down = if current > options[i] {
+        Some(options[i])
+    } else {
+        i.checked_sub(1).map(|j| options[j])
+    };
+    let up = options.iter().copied().find(|&v| v > current);
+    (down, up)
+}
+
+/// − value + control over `options`; `on_step` gets the chosen value.
+fn stepper(
+    id_slug: &str,
+    options: &'static [i64],
+    suffix: &'static str,
+    current: Option<i64>,
+    theme: &gpui_kit::component::theme::Theme,
+    on_step: impl Fn(i64, &mut Window, &mut App) + Clone + 'static,
+) -> AnyElement {
+    let (down, up) = step_targets(options, current);
+    let shown = current.map_or_else(|| "—".to_owned(), |c| format!("{c}{suffix}"));
+    let step = |id: &str, icon: &'static str, target: Option<i64>| {
+        let on_step = on_step.clone();
+        Button::new(SharedString::from(format!("setting-{id_slug}-{id}")))
+            .small()
+            .outline()
+            .icon(crate::ui::icons::ph(icon))
+            .disabled(target.is_none())
+            .on_click(move |_, window, cx| {
+                if let Some(value) = target {
+                    on_step(value, window, cx);
+                }
+            })
+    };
+    h_flex()
+        .gap_1()
+        .items_center()
+        .child(step("decrease", "minus", down))
+        .child(
+            div()
+                .w(px(56.))
+                .text_center()
+                .font_family(theme.mono_font_family.clone())
+                .child(shown),
+        )
+        .child(step("increase", "plus", up))
+        .into_any_element()
 }
 
 /// Where Settings writes (ui-spec §5.16).
@@ -150,34 +247,40 @@ const ROWS: &[RowSpec] = &[
         control: Control::Picker("language.select"),
     },
     RowSpec {
+        category: Category::Appearance,
+        label: "settings_sheet.ui_scale",
+        description: Some("settings_sheet.ui_scale_description"),
+        control: Control::UiScale,
+    },
+    RowSpec {
         category: Category::Editor,
         label: "settings.font",
         description: None,
-        control: Control::Value(Key::EditorFont),
+        control: Control::Picker("font.select"),
     },
     RowSpec {
         category: Category::Editor,
         label: "settings.font_size",
         description: None,
-        control: Control::Value(Key::EditorFontSize),
+        control: Control::Steps(Key::EditorFontSize, FONT_SIZES, "px"),
     },
     RowSpec {
         category: Category::Editor,
         label: "settings.editor_width",
         description: Some("settings.editor_width_description"),
-        control: Control::Value(Key::EditorWidth),
+        control: Control::Steps(Key::EditorWidth, EDITOR_WIDTHS, "ch"),
     },
     RowSpec {
         category: Category::Editor,
         label: "settings.line_numbers",
         description: None,
-        control: Control::Value(Key::EditorLineNumbers),
+        control: Control::IntChoice(Key::EditorLineNumbers, LINE_NUMBERS),
     },
     RowSpec {
         category: Category::Editor,
         label: "settings.indent",
         description: Some("settings.indent_description"),
-        control: Control::Value(Key::EditorIndent),
+        control: Control::IntChoice(Key::EditorIndent, INDENTS),
     },
     RowSpec {
         category: Category::Editor,
@@ -213,7 +316,7 @@ const ROWS: &[RowSpec] = &[
         category: Category::Preview,
         label: "settings.preview_zoom",
         description: Some("settings.preview_zoom_description"),
-        control: Control::Value(Key::PreviewZoom),
+        control: Control::Steps(Key::PreviewZoom, PREVIEW_ZOOMS, "%"),
     },
     RowSpec {
         category: Category::Preview,
@@ -463,7 +566,9 @@ impl SettingsState {
     pub(crate) fn open(&mut self, window: &mut Window, cx: &mut Context<Shell>) {
         self.reset_inputs();
         self.errors.clear();
+        let placeholder = i18n::t(cx, "settings_sheet.search_placeholder");
         self.search.update(cx, |input, cx| {
+            input.set_placeholder(placeholder, window, cx);
             input.set_value("", window, cx);
             input.focus(window, cx);
         });
@@ -482,6 +587,12 @@ fn value_text(value: Option<&Value>) -> String {
 }
 
 impl Shell {
+    /// A row's source chip: only when something overrides the default
+    /// (a "default" label on every row is noise).
+    fn row_chip(&self, source: Provenance, cx: &App) -> Option<SharedString> {
+        (source != Provenance::Default).then(|| self.provenance_chip(source, cx))
+    }
+
     fn provenance_chip(&self, source: Provenance, cx: &App) -> SharedString {
         match source {
             Provenance::Fed => i18n::t(cx, "settings_sheet.source.fed"),
@@ -757,7 +868,7 @@ impl Shell {
                         Button::new("settings-close")
                             .ghost()
                             .small()
-                            .label("×")
+                            .icon(crate::ui::icons::ph("x"))
                             .on_click(move |_, window, cx| {
                                 let _ = close_this
                                     .update(cx, |shell, cx| shell.close_overlay(window, cx));
@@ -805,10 +916,12 @@ impl Shell {
         let this_reset = this.clone();
         let row_key = match row.control {
             Control::Switch(k)
-            | Control::Value(k)
             | Control::Text(k)
             | Control::Secret(k)
-            | Control::Choice(k, _) => Some(k),
+            | Control::Choice(k, _)
+            | Control::IntChoice(k, _)
+            | Control::Steps(k, _, _) => Some(k),
+            Control::Picker("font.select") => Some(Key::EditorFont),
             Control::ViewMode => Some(Key::ViewMode),
             Control::MediaStorage => Some(Key::MediaStorageProvider),
             _ => None,
@@ -825,7 +938,7 @@ impl Shell {
                     .and_then(|r| r.value.as_ref())
                     .and_then(Value::as_bool)
                     .unwrap_or(false);
-                chip = r.map(|r| self.provenance_chip(r.source, cx));
+                chip = r.and_then(|r| self.row_chip(r.source, cx));
                 Switch::new(SharedString::from(format!("setting-{id_slug}")))
                     .checked(on)
                     .on_click(move |checked, window, cx| {
@@ -842,6 +955,16 @@ impl Shell {
             }
             Control::Picker(command) => {
                 let text = match command {
+                    "font.select" => {
+                        let r = resolved(Key::EditorFont);
+                        chip = r.as_ref().and_then(|r| self.row_chip(r.source, cx));
+                        let id = r
+                            .as_ref()
+                            .and_then(|r| r.value.as_ref())
+                            .and_then(Value::as_str);
+                        let id = id.unwrap_or("cascadia-code");
+                        super::fonts::family_of(id).unwrap_or(id).to_owned()
+                    }
                     "theme.select" => match &self.theme.omarchy_name {
                         Some(name) => {
                             i18n::t_args(cx, "palette.follow_omarchy", &[("theme", name)])
@@ -849,11 +972,19 @@ impl Shell {
                         }
                         None => self.theme.id.clone(),
                     },
-                    _ => i18n::language_name(cx, i18n::current(cx).locale()).to_string(),
+                    _ => {
+                        let name = i18n::language_name(cx, i18n::current(cx).locale());
+                        let explicit = config
+                            .is_some_and(|c| c.get(Key::Locale).source != Provenance::Default);
+                        if explicit {
+                            name.to_string()
+                        } else {
+                            // Following Omarchy / LANG: say so, like the theme row.
+                            i18n::t_args(cx, "palette.system_language", &[("language", &name)])
+                                .to_string()
+                        }
+                    }
                 };
-                if command == "theme.select" && self.theme.omarchy_name.is_some() {
-                    chip = Some(i18n::t(cx, "settings_sheet.source.omarchy"));
-                }
                 Button::new(SharedString::from(format!("setting-{id_slug}")))
                     .small()
                     .outline()
@@ -861,14 +992,21 @@ impl Shell {
                     .on_click(move |_, window, cx| {
                         let _ = this.update(cx, |shell, cx| {
                             shell.overlays.close();
-                            shell.run_command(command, window, cx);
+                            if command == "font.select" {
+                                // Not a registry command: only reachable from here.
+                                use frankmd_workspace::overlay::{OverlayKind, PaletteMode};
+                                let palette = OverlayKind::Palette(PaletteMode::Font);
+                                shell.open_overlay(palette, window, cx);
+                            } else {
+                                shell.run_command(command, window, cx);
+                            }
                         });
                     })
                     .into_any_element()
             }
             Control::ViewMode => {
                 let single = self.layout.view_mode == frankmd_workspace::layout::ViewMode::Single;
-                chip = resolved(Key::ViewMode).map(|r| self.provenance_chip(r.source, cx));
+                chip = resolved(Key::ViewMode).and_then(|r| self.row_chip(r.source, cx));
                 let this2 = this.clone();
                 h_flex()
                     .gap_1()
@@ -904,20 +1042,13 @@ impl Shell {
                     )
                     .into_any_element()
             }
-            Control::Value(key) => {
-                let r = resolved(key);
-                chip = r.as_ref().map(|r| self.provenance_chip(r.source, cx));
-                div()
-                    .child(value_text(r.as_ref().and_then(|r| r.value.as_ref())))
-                    .into_any_element()
-            }
             Control::NotesFolder => div()
                 .text_xs()
                 .child(self.vault_root.display().to_string())
                 .into_any_element(),
             Control::Text(key) => {
                 let r = resolved(key);
-                chip = r.as_ref().map(|r| self.provenance_chip(r.source, cx));
+                chip = r.as_ref().and_then(|r| self.row_chip(r.source, cx));
                 let current = r
                     .as_ref()
                     .and_then(|r| r.value.as_ref())
@@ -938,7 +1069,7 @@ impl Shell {
             }
             Control::Secret(key) => {
                 let r = resolved(key);
-                chip = r.as_ref().map(|r| self.provenance_chip(r.source, cx));
+                chip = r.as_ref().and_then(|r| self.row_chip(r.source, cx));
                 let set = r.as_ref().is_some_and(|r| {
                     r.value
                         .as_ref()
@@ -1007,7 +1138,7 @@ impl Shell {
             }
             Control::Choice(key, choices) => {
                 let r = resolved(key);
-                chip = r.as_ref().map(|r| self.provenance_chip(r.source, cx));
+                chip = r.as_ref().and_then(|r| self.row_chip(r.source, cx));
                 let current = r
                     .as_ref()
                     .and_then(|r| r.value.as_ref())
@@ -1039,6 +1170,80 @@ impl Shell {
                     .flex_wrap()
                     .children(buttons)
                     .into_any_element()
+            }
+            Control::IntChoice(key, options) => {
+                let r = resolved(key);
+                chip = r.as_ref().and_then(|r| self.row_chip(r.source, cx));
+                let current = r
+                    .as_ref()
+                    .and_then(|r| r.value.as_ref())
+                    .and_then(Value::as_int)
+                    .unwrap_or(options[0].0);
+                let selected = option_index(options.iter().map(|o| o.0), current);
+                let buttons: Vec<_> = options
+                    .iter()
+                    .enumerate()
+                    .map(|(i, &(value, label))| {
+                        let this = this.clone();
+                        let text = match label {
+                            ChoiceLabel::Key(k) => i18n::t(cx, k),
+                            ChoiceLabel::Count(k, n) => i18n::t_args(cx, k, &[("count", n)]),
+                        };
+                        Button::new(SharedString::from(format!("setting-{id_slug}-{value}")))
+                            .small()
+                            .selected(i == selected)
+                            .label(text)
+                            .on_click(move |_, window, cx| {
+                                let _ = this.update(cx, |shell, cx| {
+                                    shell.write_settings(
+                                        vec![(key, Some(Value::Int(i128::from(value))))],
+                                        window,
+                                        cx,
+                                    )
+                                });
+                            })
+                    })
+                    .collect();
+                h_flex().gap_1().children(buttons).into_any_element()
+            }
+            Control::Steps(key, options, suffix) => {
+                let r = resolved(key);
+                chip = r.as_ref().and_then(|r| self.row_chip(r.source, cx));
+                let current = r
+                    .as_ref()
+                    .and_then(|r| r.value.as_ref())
+                    .and_then(Value::as_int);
+                stepper(
+                    &id_slug,
+                    options,
+                    suffix,
+                    current,
+                    theme,
+                    move |value, window, cx| {
+                        let _ = this.update(cx, |shell, cx| {
+                            shell.write_settings(
+                                vec![(key, Some(Value::Int(i128::from(value))))],
+                                window,
+                                cx,
+                            )
+                        });
+                    },
+                )
+            }
+            Control::UiScale => {
+                let current = i64::from(crate::scale::percent());
+                stepper(
+                    &id_slug,
+                    crate::scale::STEPS,
+                    "%",
+                    Some(current),
+                    theme,
+                    move |value, window, cx| {
+                        let _ = this.update(cx, |shell, cx| {
+                            shell.set_ui_scale(u16::try_from(value).unwrap_or(100), window, cx)
+                        });
+                    },
+                )
             }
             Control::MediaStorage => match self.storage_row(cx) {
                 Some((provider, disabled, s3_reason)) => {
@@ -1171,17 +1376,19 @@ impl Shell {
         let this = cx.entity().downgrade();
         let button = |id: &'static str, label: SharedString, target: Scope| {
             let this = this.clone();
-            Button::new(id)
-                .xsmall()
-                .selected(scope == target)
-                .label(label)
-                .on_click(move |_, _, cx| {
-                    let _ = this.update(cx, |shell, cx| {
-                        shell.settings.scope = target;
-                        shell.settings.reset_inputs();
-                        cx.notify();
-                    });
-                })
+            let button = Button::new(id).xsmall().label(label);
+            let button = if scope == target {
+                button.primary()
+            } else {
+                button.ghost()
+            };
+            button.on_click(move |_, _, cx| {
+                let _ = this.update(cx, |shell, cx| {
+                    shell.settings.scope = target;
+                    shell.settings.reset_inputs();
+                    cx.notify();
+                });
+            })
         };
         let global = button(
             "settings-scope-global",
@@ -1213,5 +1420,40 @@ impl Shell {
             )
             .child(global)
             .child(vault)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{EDITOR_WIDTHS, FONT_SIZES, option_index, step_targets};
+
+    #[test]
+    fn steps_move_to_the_neighbouring_option() {
+        assert_eq!(step_targets(FONT_SIZES, Some(14)), (Some(13), Some(15)));
+        assert_eq!(step_targets(FONT_SIZES, Some(12)), (None, Some(13)));
+        assert_eq!(step_targets(FONT_SIZES, Some(24)), (Some(22), None));
+    }
+
+    #[test]
+    fn a_value_between_options_steps_to_its_neighbours() {
+        // 17 (hand-edited .fed) is between 16 and 18.
+        assert_eq!(step_targets(FONT_SIZES, Some(17)), (Some(16), Some(18)));
+        // Off the ends: back into range.
+        assert_eq!(step_targets(FONT_SIZES, Some(40)), (Some(24), None));
+        assert_eq!(step_targets(FONT_SIZES, Some(8)), (None, Some(12)));
+        assert_eq!(step_targets(EDITOR_WIDTHS, Some(75)), (Some(72), Some(80)));
+    }
+
+    #[test]
+    fn unset_steps_down_from_the_end_only() {
+        assert_eq!(step_targets(FONT_SIZES, None), (None, Some(24)));
+    }
+
+    #[test]
+    fn choice_picks_the_largest_option_not_above_the_value() {
+        // Line numbers: 2 (relative, not implemented) shows as On (1).
+        assert_eq!(option_index([0, 1], 2), 1);
+        assert_eq!(option_index([2, 4, 8], 4), 1);
+        assert_eq!(option_index([2, 4, 8], 0), 0);
     }
 }

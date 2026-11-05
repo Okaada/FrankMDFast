@@ -1,6 +1,7 @@
 //! The overlay layer: scrim and the one open overlay (ui-spec §5).
 
 use super::prelude::*;
+use crate::scale::px;
 use gpui_kit::*;
 
 impl Shell {

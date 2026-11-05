@@ -20,6 +20,7 @@
 //! (`cw`, `o`), so `u` after `cwfoo<Esc>` needs two presses. Lifting this needs an
 //! upstream `EditorState::transact` (offered in docs/research/gpui-stack.md §6.2).
 
+use crate::scale::px;
 use std::borrow::Cow;
 use std::ops::Range;
 
@@ -27,7 +28,7 @@ use frankmd_vim::VimBuffer;
 use frankmd_vim::buffer::ScrollAnchor;
 use frankmd_vim::keymap::Key;
 use gpui_kit::component::input::{EditorState, Redo, RopeExt as _, Undo};
-use gpui_kit::{App, Entity, FocusHandle, Focusable as _, Keystroke, Window, point, px};
+use gpui_kit::{App, Entity, FocusHandle, Focusable as _, Keystroke, Window, point};
 
 /// Keys that only report a modifier going down.
 const MODIFIER_KEYS: [&str; 6] = ["shift", "control", "alt", "platform", "function", "fn"];

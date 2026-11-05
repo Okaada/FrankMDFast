@@ -1,5 +1,6 @@
 //! Element building for [`PreviewPane`]: one list row at a time.
 
+use crate::scale::px;
 use std::sync::Arc;
 
 use frankmd_markdown::embed::Embed;
@@ -13,7 +14,7 @@ use gpui_kit::{
     AnyElement, Context, ElementId, FontWeight, HighlightStyle, InteractiveElement as _,
     InteractiveText, IntoElement, KeyDownEvent, ObjectFit, ParentElement as _, Pixels, Render,
     SharedString, StatefulInteractiveElement as _, Styled as _, StyledImage as _, StyledText,
-    Window, div, img, list, px, svg,
+    Window, div, img, list, svg,
 };
 
 use super::PreviewPane;

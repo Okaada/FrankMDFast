@@ -3,6 +3,7 @@
 //! go to line. Rows come from the command registry; running a row runs the
 //! same command as its shortcut.
 
+use crate::scale::px;
 use frankmd_config::{Key, Value};
 use frankmd_i18n::Locale;
 use frankmd_workspace::commands::PaletteRow;
@@ -32,6 +33,11 @@ pub(crate) enum PaletteItem {
         locale: Option<Locale>,
         label: String,
     },
+    /// One of FrankMD's editor fonts (`.fed` `editor_font` id).
+    Font {
+        id: &'static str,
+        label: &'static str,
+    },
 }
 
 impl PaletteItem {
@@ -43,6 +49,7 @@ impl PaletteItem {
                 "palette-row-language-{}",
                 locale.map_or("system", Locale::code)
             ),
+            Self::Font { id, .. } => format!("palette-row-font-{id}"),
         }
     }
 }
@@ -99,6 +106,7 @@ impl PaletteState {
                 PaletteMode::GoToLine => "palette.go_to_line_placeholder",
                 PaletteMode::Theme => "palette.theme_placeholder",
                 PaletteMode::Language => "palette.language_placeholder",
+                PaletteMode::Font => "palette.font_placeholder",
                 PaletteMode::Vault => "palette.vault_placeholder",
             },
         );
@@ -188,6 +196,11 @@ impl Shell {
                 });
                 items
             }
+            PaletteMode::Font => super::fonts::EDITOR_FONTS
+                .iter()
+                .filter(|(id, family)| matches(family, &query) || matches(id, &query))
+                .map(|&(id, label)| PaletteItem::Font { id, label })
+                .collect(),
             PaletteMode::GoToLine | PaletteMode::Vault => Vec::new(),
         }
     }
@@ -279,6 +292,15 @@ impl Shell {
                 self.apply_locale(cx);
                 self.focus_region(self.last_region, window, cx);
             }
+            PaletteItem::Font { id, .. } => {
+                // Back to Settings, where the font row was clicked.
+                self.update_settings(
+                    vec![(Key::EditorFont, Some(Value::Str(id.to_owned())))],
+                    window,
+                    cx,
+                );
+                self.open_overlay(OverlayKind::Settings, window, cx);
+            }
         }
     }
 
@@ -291,11 +313,17 @@ impl Shell {
         let theme = cx.theme().clone();
         let items = self.palette_items(cx);
         let selected = self.palette.selected.min(items.len().saturating_sub(1));
+        let current_font = self
+            .core
+            .as_ref()
+            .and_then(|c| c.ws.snapshot().config.value(Key::EditorFont))
+            .and_then(|v| v.as_str().map(str::to_owned));
         let prompt = match self.palette.mode {
             PaletteMode::Commands => ">",
             PaletteMode::GoToLine => ":",
             PaletteMode::Theme => "",
             PaletteMode::Language => "",
+            PaletteMode::Font => "",
             PaletteMode::Vault => "",
         };
         let unavailable_tail = items
@@ -331,6 +359,12 @@ impl Shell {
                     )
                 }
                 PaletteItem::Language { label, .. } => (label.clone(), None, None, None),
+                PaletteItem::Font { id, label } => (
+                    (*label).to_owned(),
+                    None,
+                    Some(current_font.as_deref() == Some(*id)),
+                    None,
+                ),
             };
             let entity = entity.clone();
             div()

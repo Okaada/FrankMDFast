@@ -9,6 +9,7 @@
 //! "Use <suggestion>" / "Keep <typed>" instead of FrankMD's confirm prompt.
 //! Ctrl+Enter inserts (or updates the fence under the caret).
 
+use crate::scale::px;
 use frankmd_workspace::code_block::{CodeBlockForm, CodeBlockMode, CodeBlockOutcome};
 use gpui_kit::component::button::{Button, ButtonVariants as _};
 use gpui_kit::component::checkbox::Checkbox;

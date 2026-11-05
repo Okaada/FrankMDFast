@@ -1,6 +1,7 @@
 //! Editor pane (ui-spec §3.4, §5.2, §5.12): header, banners, text or the
 //! docked quick open of the empty state.
 
+use crate::scale::px;
 use gpui_kit::component::input::{MoveDown, MoveUp, Paste, ToggleCodeActions};
 
 use super::prelude::*;
@@ -156,7 +157,7 @@ impl Shell {
             .when(!narrow, |el| {
                 el.child(self.header_button(
                     "pane-insert-image",
-                    "▣",
+                    "image",
                     "shell.insert_image",
                     "insert.image",
                     false,
@@ -164,7 +165,7 @@ impl Shell {
                 ))
                 .child(self.header_button(
                     "pane-find",
-                    "⌕",
+                    "magnifying-glass",
                     "shell.find",
                     "find.find",
                     false,
@@ -173,7 +174,7 @@ impl Shell {
             })
             .child(self.header_button(
                 "pane-toggle-preview",
-                "◫",
+                "sidebar",
                 "shell.toggle_preview",
                 "view.toggle_preview",
                 preview_on,
@@ -181,7 +182,7 @@ impl Shell {
             ))
             .child(self.header_button(
                 "pane-menu",
-                "⋯",
+                "dots-three",
                 "shell.document_menu",
                 "app.command_palette",
                 false,
@@ -192,7 +193,7 @@ impl Shell {
     pub(super) fn header_button(
         &self,
         id: &'static str,
-        glyph: &'static str,
+        icon: &'static str,
         tooltip: &str,
         command: &'static str,
         pressed: bool,
@@ -203,7 +204,7 @@ impl Shell {
             .ghost()
             .xsmall()
             .selected(pressed)
-            .label(glyph)
+            .icon(crate::ui::icons::ph(icon))
             .tooltip(i18n::t(cx, tooltip))
             .on_click(move |_, window, cx| {
                 let _ = this.update(cx, |shell, cx| shell.run_command(command, window, cx));

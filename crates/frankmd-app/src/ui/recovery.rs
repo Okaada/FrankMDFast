@@ -6,6 +6,7 @@
 //! The same view serves the "changed on disk" banner's **Compare…**
 //! (§5.12): disk version vs the editor, with Reload / Keep mine.
 
+use crate::scale::px;
 use frankmd_core::text::diff::{DiffKind, DiffOp, compute_word_diff, tokenize};
 use frankmd_workspace::autosave::RecoveryRequest;
 
@@ -337,7 +338,7 @@ impl Shell {
             .test_support()
             .track_focus(&self.overlay_focus)
             .w(px(1100.))
-            .h(px(height))
+            .h(gpui_kit::px(height))
             .max_w(relative(1.))
             .p_4()
             .gap_3()

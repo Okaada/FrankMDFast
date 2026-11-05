@@ -6,10 +6,11 @@
 //! images). Raw inline HTML is shown as literal text (security: never
 //! interpreted).
 
+use crate::scale::px;
 use std::ops::Range;
 
 use frankmd_markdown::ir::Inline;
-use gpui_kit::{FontStyle, FontWeight, HighlightStyle, StrikethroughStyle, UnderlineStyle, px};
+use gpui_kit::{FontStyle, FontWeight, HighlightStyle, StrikethroughStyle, UnderlineStyle};
 
 use super::style::PreviewColors;
 

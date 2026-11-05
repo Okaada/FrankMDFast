@@ -2,6 +2,7 @@
 //! Cards with usage, Insert / Copy path / Rename (S3) / Delete, a filter,
 //! and a right-side detail sheet with the "Used in" list.
 
+use crate::scale::px;
 use std::sync::Arc;
 
 use frankmd_media::MediaKind;
@@ -476,7 +477,7 @@ impl Render for MediaLibraryPane {
                                 Button::new("library-close")
                                     .ghost()
                                     .xsmall()
-                                    .label("×")
+                                    .icon(crate::ui::icons::ph("x"))
                                     .on_click(cx.listener(|this, _, _, cx| this.close(cx))),
                             ),
                     )
@@ -759,7 +760,7 @@ impl MediaLibraryPane {
                         Button::new("library-detail-close")
                             .ghost()
                             .xsmall()
-                            .label("×")
+                            .icon(crate::ui::icons::ph("x"))
                             .on_click(cx.listener(|this, _, _, cx| {
                                 this.vm.close_detail();
                                 cx.notify();

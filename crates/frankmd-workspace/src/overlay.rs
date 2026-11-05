@@ -38,6 +38,8 @@ pub enum PaletteMode {
     Theme,
     /// Language picker.
     Language,
+    /// Editor font picker (Settings → Editor → Font).
+    Font,
     /// Vault switcher.
     Vault,
 }

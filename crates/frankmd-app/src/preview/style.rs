@@ -1,9 +1,10 @@
 //! Preview colours and typography (ui-spec §5.21, §7.2), from FrankMD's 38
 //! theme tokens.
 
+use crate::scale::px;
 use frankmd_markdown::ir::{AlertKind, TokenClass};
 use frankmd_theme::{Rgb, UiTokens};
-use gpui_kit::{Hsla, Pixels, Rgba, px};
+use gpui_kit::{Hsla, Pixels, Rgba};
 
 /// Default preview zoom (percent).
 pub const DEFAULT_ZOOM: u16 = 100;

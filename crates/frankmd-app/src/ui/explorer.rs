@@ -4,6 +4,7 @@
 //! `frankmd_workspace::dialogs::InlineRename`. This module only renders and
 //! routes input.
 
+use crate::scale::px;
 use std::time::{Duration, Instant};
 
 use frankmd_core::tree_view::{RowKind, TreeRow, TreeView, tree_rows};
@@ -749,8 +750,8 @@ impl Shell {
             .id("explorer-context-menu")
             .test_support()
             .absolute()
-            .left(px(x))
-            .top(px(y))
+            .left(gpui_kit::px(x))
+            .top(gpui_kit::px(y))
             .min_w(px(160.))
             .py_1()
             .bg(theme.popover)

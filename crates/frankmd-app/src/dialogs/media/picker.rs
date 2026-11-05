@@ -2,6 +2,7 @@
 //! footer with alt/link and the storage row. Renders
 //! [`frankmd_media::vm::picker::ImagePicker`] and runs its effects.
 
+use crate::scale::px;
 use std::collections::HashMap;
 use std::sync::Arc;
 

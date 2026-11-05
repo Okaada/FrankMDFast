@@ -1,6 +1,7 @@
 //! Rendering helpers shared by the media dialogs: text resolution, thumbnails
 //! (local files, in-memory bytes, egress-guarded remote URLs), dialog chrome.
 
+use crate::scale::px;
 use std::sync::Arc;
 
 use frankmd_media::vm::Text;
@@ -127,7 +128,7 @@ pub(crate) fn header(
         )
         .child(
             gpui_kit::component::button::Button::new(close_id)
-                .label("×")
+                .icon(crate::ui::icons::ph("x"))
                 .on_click(move |_, window, cx| on_close(window, cx)),
         )
 }

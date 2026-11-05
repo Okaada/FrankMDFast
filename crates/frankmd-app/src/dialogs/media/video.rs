@@ -1,6 +1,7 @@
 //! Insert video dialog (ui-spec §5.7): Upload / URL / YouTube tabs, the Hugo
 //! shortcode checkbox (kept for the session) and the storage row.
 
+use crate::scale::px;
 use std::sync::Arc;
 
 use frankmd_media::Param;

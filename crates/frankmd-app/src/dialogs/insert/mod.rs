@@ -16,6 +16,7 @@ pub mod code;
 pub mod emoji;
 pub mod table;
 
+use crate::scale::px;
 use std::ops::Range;
 
 use gpui_kit::component::ActiveTheme as _;

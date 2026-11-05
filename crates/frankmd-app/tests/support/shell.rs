@@ -113,6 +113,7 @@ pub fn open_shell(cx: &mut TestAppContext, size: Size<Pixels>, fixture: VaultFix
         // Deletes go to the Trash (ui-spec §5.13); never the user's real one in tests.
         trash_dir: Some(state_dir.path().join("trash")),
         global_config: Some(state_dir.path().join("global").join("config.toml")),
+        app_prefs: None,
     };
     let (window, view) = super::harness::open_window(cx, size, move |window, cx| {
         cx.new(|cx| AppShell::new(config, window, cx))

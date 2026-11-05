@@ -20,6 +20,7 @@ mod render;
 pub mod style;
 mod viewer;
 
+use crate::scale::px;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::Duration;
@@ -29,7 +30,7 @@ use frankmd_markdown::highlight::{BuiltinHighlighter, CodeHighlighter};
 use frankmd_markdown::{RenderDoc, RenderOptions};
 use gpui_kit::{
     App, ClipboardItem, Context, EventEmitter, FocusHandle, Focusable, KeyDownEvent, ListAlignment,
-    ListOffset, ListState, SharedString, Task, Window, px,
+    ListOffset, ListState, SharedString, Task, Window,
 };
 
 pub use links::{ImageSource, LinkTarget};

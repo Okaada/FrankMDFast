@@ -12,6 +12,11 @@ use gpui_kit::{App, Global, Hsla, SharedString, px, rgb};
 /// Hyprland's default rounding is 0; without Hyprland the spec uses 6 (§7.4).
 pub(crate) const DEFAULT_RADIUS: f32 = 6.0;
 
+/// gpui-kit's base text sizes; the UI scale multiplies them (the root view
+/// derives the rem size from `font_size`, so every `text_*` follows).
+const BASE_FONT_SIZE: f32 = 16.0;
+const BASE_MONO_FONT_SIZE: f32 = 13.0;
+
 fn hsla(c: Rgb) -> Hsla {
     rgb((u32::from(c.0) << 16) | (u32::from(c.1) << 8) | u32::from(c.2)).into()
 }
@@ -61,6 +66,8 @@ pub(crate) fn apply(tokens: &UiTokens, radius: f32, cx: &mut App) {
         if let Some(font) = fonts.mono {
             theme.mono_font_family = font;
         }
+        theme.font_size = crate::scale::px(BASE_FONT_SIZE);
+        theme.mono_font_size = crate::scale::px(BASE_MONO_FONT_SIZE);
         let c = &mut theme.colors;
         let base = token(tokens, "bg-primary");
         let recessed = token(tokens, "bg-secondary");

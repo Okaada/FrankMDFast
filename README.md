@@ -85,7 +85,9 @@ Packaging scripts live in `packaging/` and run locally too, e.g.
 | Decision | Why |
 |---|---|
 | GPUI + gpui-kit `=0.9.0` (exact pin) | Chosen over GTK4. Weekly breaking 0.x releases, so only `frankmd-app` depends on it |
-| Config resolves `.fed` > ENV > default, exactly as the original | Drop-in compatibility. Omarchy's language is only a fallback when neither is set |
+| Config resolves `.fed` > ENV > default, exactly as the original | Drop-in compatibility |
+| Theme and language follow Omarchy live unless `.fed` (or the global config / ENV) pins them | Picking "Follow Omarchy" or "System" in the pickers removes the pin. Language order: explicit setting > `~/.config/omarchy/language` > `LC_*`/`LANG` > English |
+| Interface size (80–200%) is an app preference in `~/.local/state/frankmd/prefs.json`, not a `.fed` key | It belongs to the machine, and FrankMD's `.fed` schema stays unchanged |
 | Recent files stay in `.fed`; Hugo dates stay UTC | Same on-disk behavior, so switching between the two apps keeps your history |
 | Drafts keyed by stable note ID, not path | Fixes the path-as-identity bug class from the history. Browser drafts were never readable by a desktop app anyway |
 | Omarchy theme from `~/.local/state/omarchy/current/theme/colors.toml` | The original's path no longer exists, so its theme sync is broken today |

@@ -1,6 +1,7 @@
 //! Sidebar (ui-spec §3.3): vault header, explorer slot, "Linked from"
 //! backlinks, dock footer, and the narrow-width drawer.
 
+use crate::scale::px;
 use frankmd_core::wikilink::Backlink;
 
 use super::prelude::*;
@@ -82,7 +83,7 @@ impl Shell {
             .id("sidebar")
             .test_support()
             .map(|el| match width {
-                Some(w) => el.w(px(w)).flex_shrink_0(),
+                Some(w) => el.w(gpui_kit::px(w)).flex_shrink_0(),
                 None => el.size_full(),
             })
             .h_full()
@@ -105,14 +106,14 @@ impl Shell {
                     )
                     .child(self.dock_button(
                         "sidebar-new-note",
-                        "+",
+                        "file-plus",
                         "shell.new_note",
                         "file.new_note",
                         cx,
                     ))
                     .child(self.dock_button(
                         "sidebar-new-folder",
-                        "⊞",
+                        "folder-plus",
                         "shell.new_folder",
                         "file.new_folder",
                         cx,
@@ -130,19 +131,25 @@ impl Shell {
                     .border_color(theme.sidebar_border)
                     .child(self.dock_button(
                         "dock-media-library",
-                        "▤",
+                        "images",
                         "shell.media_library",
                         "view.media_library",
                         cx,
                     ))
                     .child(self.dock_button(
                         "dock-settings",
-                        "⚙",
+                        "gear",
                         "shell.settings",
                         "app.settings",
                         cx,
                     ))
-                    .child(self.dock_button("dock-help", "?", "shell.help", "help.toggle", cx)),
+                    .child(self.dock_button(
+                        "dock-help",
+                        "question",
+                        "shell.help",
+                        "help.toggle",
+                        cx,
+                    )),
             )
     }
 
@@ -229,7 +236,7 @@ impl Shell {
     pub(super) fn dock_button(
         &self,
         id: &'static str,
-        glyph: &'static str,
+        icon: &'static str,
         tooltip: &str,
         command: &'static str,
         cx: &mut Context<Self>,
@@ -238,7 +245,7 @@ impl Shell {
         Button::new(id)
             .ghost()
             .xsmall()
-            .label(glyph)
+            .icon(crate::ui::icons::ph(icon))
             .tooltip(i18n::t(cx, tooltip))
             .on_click(move |_, window, cx| {
                 let _ = this.update(cx, |shell, cx| shell.run_command(command, window, cx));
@@ -258,7 +265,7 @@ impl Shell {
             .flex()
             .child(
                 div()
-                    .w(px(drawer_width))
+                    .w(gpui_kit::px(drawer_width))
                     .h_full()
                     .shadow_lg()
                     .on_mouse_down(MouseButton::Left, |_, _, cx| cx.stop_propagation())

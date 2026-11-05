@@ -11,6 +11,7 @@ pub mod cli;
 pub mod dialogs;
 pub mod editor;
 pub mod preview;
+pub mod scale;
 pub mod ui;
 
 /// App-owned files outside every vault (XDG state dir, IPC socket).
@@ -175,6 +176,11 @@ impl LaunchContext {
             locale: self.locale.clone(),
             trash_dir: None,
             global_config: Some(frankmd_config::global::global_config_path(&self.dirs)),
+            app_prefs: Some(
+                self.dirs
+                    .state
+                    .join(frankmd_workspace::app_prefs::APP_PREFS_FILE),
+            ),
         };
         let options = WindowOptions {
             app_id: Some(APP_ID.into()),

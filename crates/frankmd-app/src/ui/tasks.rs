@@ -55,6 +55,7 @@ impl Shell {
             .as_ref()
             .and_then(|c| c.ws.snapshot().config.value(Key::EditorFont))
             .and_then(|v| v.as_str().map(str::to_owned));
+        self.editor_font_id = Some(id.clone());
         let window = self.window;
         cx.spawn(async move |this, cx| {
             let font = cx

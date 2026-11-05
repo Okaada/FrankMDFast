@@ -3,6 +3,7 @@
 //! 6 px hit area, double-click resets, widths persisted per vault). Region
 //! views live in sibling modules.
 
+use crate::scale::px;
 use frankmd_workspace::layout::{EDITOR_MIN_WIDTH, PREVIEW_MIN_WIDTH, SIDEBAR_WIDTH};
 use frankmd_workspace::ui_state::{PREVIEW_RATIO_DEFAULT, SPLITTER_STEP, UiState};
 

@@ -19,6 +19,7 @@
 //! Nothing is intercepted while an IME composition is active (ui-spec §8.3).
 //! Handled keys stop propagation; everything else reaches the normal keymap.
 
+use crate::scale::px;
 use std::ops::Range;
 use std::rc::Rc;
 use std::time::{Duration, Instant};
@@ -1112,7 +1113,7 @@ impl EditorPane {
             )
             .child(
                 Button::new("find-prev")
-                    .label("↑")
+                    .icon(crate::ui::icons::ph("arrow-up"))
                     .xsmall()
                     .ghost()
                     .tooltip(i18n::t(cx, "dialogs.find_replace.previous"))
@@ -1120,7 +1121,7 @@ impl EditorPane {
             )
             .child(
                 Button::new("find-next")
-                    .label("↓")
+                    .icon(crate::ui::icons::ph("arrow-down"))
                     .xsmall()
                     .ghost()
                     .tooltip(i18n::t(cx, "dialogs.find_replace.next"))
@@ -1149,7 +1150,7 @@ impl EditorPane {
             ))
             .child(
                 Button::new("find-close")
-                    .label("×")
+                    .icon(crate::ui::icons::ph("x"))
                     .xsmall()
                     .ghost()
                     .tooltip(i18n::t(cx, "common.close"))

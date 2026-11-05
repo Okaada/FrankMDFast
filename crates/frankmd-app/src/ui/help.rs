@@ -1,6 +1,7 @@
 //! Help dialog (ui-spec §5.18).
 
 use super::prelude::*;
+use crate::scale::px;
 use gpui_kit::*;
 
 impl Shell {
@@ -123,7 +124,7 @@ impl Shell {
                         Button::new("help-close")
                             .ghost()
                             .small()
-                            .label("×")
+                            .icon(crate::ui::icons::ph("x"))
                             .on_click(move |_, window, cx| {
                                 let _ =
                                     close.update(cx, |shell, cx| shell.close_overlay(window, cx));

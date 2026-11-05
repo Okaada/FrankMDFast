@@ -7,6 +7,7 @@
 //! what FrankMD did: `:shortcode:`, `:ph-<name>:` or the raw kaomoji. The new
 //! "Frequently used" row is kept for the session (a GPUI global).
 
+use crate::scale::px;
 use frankmd_core::emoji::picker::{
     CellGlyph, EmojiPicker, GridMove, PickerCell, PickerTab, TabKey,
 };
@@ -18,11 +19,10 @@ use gpui_kit::*;
 use super::{InsertDialogEvent, key_text};
 use crate::ui::i18n;
 
-/// Popover size (ui-spec §5.5).
-pub const POPOVER_SIZE: Size<Pixels> = Size {
-    width: px(360.),
-    height: px(320.),
-};
+/// Popover size before the UI scale (ui-spec §5.5).
+pub const POPOVER_WIDTH: f32 = 360.;
+/// See [`POPOVER_WIDTH`].
+pub const POPOVER_HEIGHT: f32 = 320.;
 
 /// Emoji shortcodes used this session, most recent first.
 #[derive(Default)]
@@ -368,8 +368,8 @@ impl Render for EmojiPopover {
             .id("emoji-picker")
             .test_support()
             .track_focus(&self.focus)
-            .w(POPOVER_SIZE.width)
-            .h(POPOVER_SIZE.height)
+            .w(px(POPOVER_WIDTH))
+            .h(px(POPOVER_HEIGHT))
             .p_2()
             .gap_2()
             .bg(theme.popover)

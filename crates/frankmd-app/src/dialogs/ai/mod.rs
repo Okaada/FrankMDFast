@@ -8,6 +8,7 @@
 //! per-change accept/reject and an Edit toggle. Only markdown notes are ever
 //! sent (`.fed` and other files are refused before any network call).
 
+use crate::scale::px;
 use std::ops::Range;
 use std::sync::Arc;
 
@@ -451,7 +452,7 @@ impl Render for GrammarDialog {
                         Button::new("grammar-close")
                             .ghost()
                             .xsmall()
-                            .label("×")
+                            .icon(crate::ui::icons::ph("x"))
                             .on_click(cx.listener(|this, _, _, cx| this.close(cx))),
                     ),
             )
@@ -727,7 +728,7 @@ impl GrammarDialog {
                                     Button::new(SharedString::from(format!("grammar-accept-{i}")))
                                         .xsmall()
                                         .selected(hunk.accepted)
-                                        .label("✓")
+                                        .icon(crate::ui::icons::ph("check"))
                                         .on_click(cx.listener(move |this, _, _, cx| {
                                             this.state.set_accepted(i, true);
                                             cx.notify();
@@ -737,7 +738,7 @@ impl GrammarDialog {
                                     Button::new(SharedString::from(format!("grammar-reject-{i}")))
                                         .xsmall()
                                         .selected(!hunk.accepted)
-                                        .label("✕")
+                                        .icon(crate::ui::icons::ph("x"))
                                         .on_click(cx.listener(move |this, _, _, cx| {
                                             this.state.set_accepted(i, false);
                                             cx.notify();

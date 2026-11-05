@@ -11,6 +11,7 @@ mod file_dialogs;
 pub mod fonts;
 mod help;
 pub mod i18n;
+pub(crate) mod icons;
 mod media_host;
 mod navigation;
 mod overlay_view;

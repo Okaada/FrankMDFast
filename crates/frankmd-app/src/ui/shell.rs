@@ -62,6 +62,8 @@ pub struct ShellConfig {
     /// Global settings file (`~/.config/frankmd/config.toml`, Settings scope
     /// "All vaults"); `None` disables the layer.
     pub global_config: Option<PathBuf>,
+    /// App-wide preferences file (UI scale); `None` keeps them in memory.
+    pub app_prefs: Option<PathBuf>,
 }
 
 /// `Box<dyn Clock>` over a shared clock (the workspace takes ownership of its clock).
@@ -140,11 +142,14 @@ pub struct Shell {
     pub(crate) preview_focus: FocusHandle,
     pub(crate) preview: Entity<crate::preview::PreviewPane>,
     pub(crate) editor_font: Option<SharedString>,
+    /// The `editor_font` id the last font lookup was for (`None`: none yet).
+    pub(crate) editor_font_id: Option<Option<String>>,
     pub(crate) overlay_focus: FocusHandle,
     pub(crate) library_focus: FocusHandle,
     pub(crate) editor: EditorHost,
     pub(crate) explorer: frankmd_workspace::explorer::Explorer,
     pub(crate) ui_state: frankmd_workspace::ui_state::UiStateStore,
+    pub(crate) app_prefs: frankmd_workspace::app_prefs::AppPrefsStore,
     pub(crate) history: frankmd_workspace::navigation::History,
     pub(crate) switcher: frankmd_workspace::navigation::RecentSwitcher,
     pub(crate) search: super::search::SearchState,
@@ -219,6 +224,12 @@ impl Shell {
         } else {
             frankmd_workspace::ui_state::UiStateStore::in_memory()
         };
+        let app_prefs = match &config.app_prefs {
+            Some(file) => frankmd_workspace::app_prefs::AppPrefsStore::open(file),
+            None => frankmd_workspace::app_prefs::AppPrefsStore::in_memory(),
+        };
+        // Before the first theme apply, so the first frame is already scaled.
+        crate::scale::set(app_prefs.get().ui_scale);
         let media_ctx = core.as_ref().map(|_| crate::dialogs::media::MediaContext {
             vault_root: config.vault_root.clone(),
             state_dir: config.state_dir.clone(),
@@ -246,11 +257,13 @@ impl Shell {
             preview_focus: preview.read(cx).focus_handle(cx),
             preview,
             editor_font: None,
+            editor_font_id: None,
             overlay_focus: cx.focus_handle(),
             library_focus: cx.focus_handle(),
             editor,
             explorer: frankmd_workspace::explorer::Explorer::default(),
             ui_state,
+            app_prefs,
             history: Default::default(),
             switcher: Default::default(),
             search,
@@ -605,6 +618,14 @@ impl Shell {
             self.apply_tokens(&tokens, cx);
         }
         self.apply_locale(cx);
+        // A new `editor_font` (Settings or a hand edit of `.fed`) needs a new
+        // fontconfig lookup; it re-applies the settings when done.
+        let font_id = config
+            .value(Key::EditorFont)
+            .and_then(|v| v.as_str().map(str::to_owned));
+        if self.editor_font_id.as_ref() != Some(&font_id) {
+            self.load_editor_font(cx);
+        }
         self.editor
             .apply_config(&config, self.editor_font.clone(), read_only, window, cx);
         let int = |key: Key, default: i64| {
@@ -752,26 +773,55 @@ impl Shell {
 
     /// Locale from config, else the system's.
     pub(crate) fn configured_locale(&self) -> Locale {
+        // The schema default ("en") is not a choice: without an explicit
+        // `.fed` / global / ENV value, Omarchy or `LANG` decide.
         let configured = self.core.as_ref().and_then(|c| {
-            let config = c.ws.snapshot().config;
-            config
-                .value(Key::Locale)
+            let resolved = c.ws.snapshot().config.get(Key::Locale);
+            if resolved.source == frankmd_config::Provenance::Default {
+                return None;
+            }
+            resolved
+                .value
                 .and_then(|v| v.as_str().and_then(Locale::from_code))
         });
         configured.unwrap_or_else(|| self.system_locale())
     }
 
-    /// `LC_ALL` / `LC_MESSAGES` / `LANG`, else English.
+    /// Omarchy's language (`~/.config/omarchy/language`, live-watched), then
+    /// `LC_ALL` / `LC_MESSAGES` / `LANG`, else English (OM §4.3 steps 5–7).
+    ///
+    /// Omarchy comes first because it changes live; `LANG` only follows it
+    /// after a restart.
     pub(crate) fn system_locale(&self) -> Locale {
         let env = self
             .core
             .as_ref()
             .map(|c| c.ws.snapshot().config.env().clone())
             .unwrap_or_default();
-        ["LC_ALL", "LC_MESSAGES", "LANG"]
-            .iter()
-            .find_map(|name| env.present(name).and_then(Locale::from_system))
+        let omarchy = env
+            .present("HOME")
+            .and_then(|home| omarchy_language(std::path::Path::new(home)));
+        omarchy
+            .or_else(|| {
+                ["LC_ALL", "LC_MESSAGES", "LANG"]
+                    .iter()
+                    .find_map(|name| env.present(name).and_then(Locale::from_system))
+            })
             .unwrap_or(Locale::En)
+    }
+
+    /// Change the interface size (Settings → Appearance) and redraw everything.
+    pub(crate) fn set_ui_scale(
+        &mut self,
+        percent: u16,
+        window: &mut Window,
+        cx: &mut Context<Self>,
+    ) {
+        self.app_prefs.set_ui_scale(percent);
+        crate::scale::set(self.app_prefs.get().ui_scale);
+        // Text sizes live in the theme; preview metrics are derived on apply.
+        self.apply_settings(window, cx);
+        cx.refresh_windows();
     }
 
     /// Write `.fed` keys through the workspace.
@@ -975,3 +1025,49 @@ impl Shell {
 }
 
 impl Shell {}
+
+/// The FrankMD locale for Omarchy's language choice: the first line of
+/// `<home>/.config/omarchy/language`. `None` when the file is missing or the
+/// language has no FrankMD translation (then `LANG` decides).
+fn omarchy_language(home: &std::path::Path) -> Option<Locale> {
+    let text = std::fs::read_to_string(home.join(".config/omarchy/language")).ok()?;
+    Locale::from_system(text.lines().next()?.trim())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{Locale, omarchy_language};
+
+    #[allow(clippy::disallowed_methods)] // test fixture setup
+    fn home_with_language(code: Option<&str>) -> tempfile::TempDir {
+        let home = tempfile::tempdir().expect("tempdir");
+        if let Some(code) = code {
+            let dir = home.path().join(".config/omarchy");
+            std::fs::create_dir_all(&dir).expect("mkdir");
+            std::fs::write(dir.join("language"), format!("{code}\n")).expect("write");
+        }
+        home
+    }
+
+    #[test]
+    fn omarchy_language_maps_registry_codes() {
+        for (code, locale) in [
+            ("pt-BR", Locale::PtBr),
+            ("pt", Locale::PtPt),
+            ("es-MX", Locale::Es),
+            ("ja", Locale::Ja),
+        ] {
+            let home = home_with_language(Some(code));
+            assert_eq!(omarchy_language(home.path()), Some(locale), "{code}");
+        }
+    }
+
+    #[test]
+    fn missing_or_untranslated_omarchy_language_defers_to_lang() {
+        assert_eq!(omarchy_language(home_with_language(None).path()), None);
+        assert_eq!(
+            omarchy_language(home_with_language(Some("de")).path()),
+            None
+        );
+    }
+}

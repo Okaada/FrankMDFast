@@ -20,6 +20,7 @@
 //! [`focus`], [`overlay`], [`commands`] (the one registry the keymap and the
 //! palette come from), [`quick_open`], [`banners`] and [`status`].
 
+pub mod app_prefs;
 pub mod autosave;
 pub mod banners;
 pub mod clock;
