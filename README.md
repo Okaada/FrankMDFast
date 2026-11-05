@@ -10,11 +10,25 @@
   It aims to be a drop-in replacement: same <code>.fed</code> file, same environment variables, same notes on disk.
 </p>
 
+<p align="center">
+  <img src="docs/screenshots/main.png" alt="FrankMD with a note in the editor and its live preview, following the Omarchy Tokyo Night theme">
+</p>
+
+| Command palette | Settings | Light theme |
+|---|---|---|
+| ![Command palette](docs/screenshots/palette.png) | ![Settings](docs/screenshots/settings.png) | ![Catppuccin Latte theme](docs/screenshots/light.png) |
+
+## Install
+
+Download the package for your system from [Releases](https://github.com/akitaonrails/FrankMDFast/releases):
+the AppImage or tarball on Linux, the DMG on macOS, the installer or zip on Windows.
+On Arch Linux: `yay -S frankmd-bin`.
+
 ## Status
 
 Every domain crate is implemented and passes its ported FrankMD tests and golden cases. The GPUI
 app has the shell, the editor, the native preview and the dialogs (files, media/AI, insert).
-Development happens on the `implementation` branch.
+Development happens on `master`; CI builds every push.
 
 ```
 cargo test --workspace     # 2901 tests
