@@ -62,6 +62,10 @@ pub(crate) fn init(cx: &mut App) {
         KeyBinding::new("y", AcceptChange, Some("GrammarDiff")),
         KeyBinding::new("n", RejectChange, Some("GrammarDiff")),
     ]);
+    if cfg!(target_os = "macos") {
+        // `ctrl-` is the physical Ctrl key; macOS users expect ⌘ too.
+        cx.bind_keys([KeyBinding::new("cmd-enter", Apply, ctx)]);
+    }
 }
 
 /// What the grammar check asks of the shell.
@@ -475,8 +479,9 @@ impl Render for GrammarDialog {
                             .primary()
                             .disabled(!has_result)
                             .label(format!(
-                                "{}  Ctrl+↵",
-                                t(cx, "dialogs.ai_diff.accept_changes")
+                                "{}  {}↵",
+                                t(cx, "dialogs.ai_diff.accept_changes"),
+                                crate::ui::actions::ctrl_label()
                             ))
                             .on_click(cx.listener(|this, _, _, cx| this.apply(cx))),
                     ),

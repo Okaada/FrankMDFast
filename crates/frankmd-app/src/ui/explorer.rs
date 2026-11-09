@@ -616,7 +616,9 @@ impl Shell {
                 };
                 self.explorer.toggle_selected(item_of(&row));
             }
-            "a" if m.control && !m.shift && !m.alt => self.explorer.select_all(&items),
+            "a" if (m.control || m.platform) && !m.shift && !m.alt => {
+                self.explorer.select_all(&items)
+            }
             "f2" if plain && !m.shift => {
                 let target = self.single_target(current.as_ref());
                 let Some(item) = target else {

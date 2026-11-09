@@ -451,46 +451,45 @@ impl TableDialog {
     fn render_menu(&self, cx: &mut Context<Self>) -> Option<AnyElement> {
         let menu = self.menu?;
         let theme = cx.theme();
-        let rows = self
-            .model
-            .cell_menu(menu.row, menu.col)
-            .into_iter()
-            .map(|item| {
-                let action = item.action;
-                let color = if action.is_destructive() {
-                    theme.danger
-                } else {
-                    theme.popover_foreground
-                };
-                div()
-                    .id(SharedString::from(
-                        format!("table-menu-{action:?}").to_lowercase(),
-                    ))
-                    .test_support()
-                    .flex()
-                    .justify_between()
-                    .gap_4()
-                    .px_3()
-                    .py_1()
-                    .text_sm()
-                    .text_color(color)
-                    .when(!item.enabled, |el| el.opacity(0.5))
-                    .when(item.enabled, |el| {
-                        el.hover(|s| s.bg(theme.accent)).on_click(cx.listener(
-                            move |this, _, window, cx| {
-                                this.run_at(action, menu.row, menu.col, window, cx)
-                            },
+        let rows =
+            self.model
+                .cell_menu(menu.row, menu.col)
+                .into_iter()
+                .map(|item| {
+                    let action = item.action;
+                    let color = if action.is_destructive() {
+                        theme.danger
+                    } else {
+                        theme.popover_foreground
+                    };
+                    div()
+                        .id(SharedString::from(
+                            format!("table-menu-{action:?}").to_lowercase(),
                         ))
-                    })
-                    .child(i18n::t(cx, action.label_key()))
-                    .child(
-                        div()
-                            .text_xs()
-                            .text_color(theme.muted_foreground)
-                            .child(action.shortcut()),
-                    )
-                    .into_any_element()
-            });
+                        .test_support()
+                        .flex()
+                        .justify_between()
+                        .gap_4()
+                        .px_3()
+                        .py_1()
+                        .text_sm()
+                        .text_color(color)
+                        .when(!item.enabled, |el| el.opacity(0.5))
+                        .when(item.enabled, |el| {
+                            el.hover(|s| s.bg(theme.accent)).on_click(cx.listener(
+                                move |this, _, window, cx| {
+                                    this.run_at(action, menu.row, menu.col, window, cx)
+                                },
+                            ))
+                        })
+                        .child(i18n::t(cx, action.label_key()))
+                        .child(div().text_xs().text_color(theme.muted_foreground).child(
+                            action.shortcut(
+                                frankmd_workspace::shortcuts::Platform::current().is_macos(),
+                            ),
+                        ))
+                        .into_any_element()
+                });
         let mut items: Vec<AnyElement> = rows.collect();
         // Divider between the column and the row groups.
         if items.len() > 3 {
@@ -544,7 +543,7 @@ impl Render for TableDialog {
             )
             .child(
                 Button::new("table-insert")
-                    .label(format!("{primary}  Ctrl+↵"))
+                    .label(format!("{primary}  {}↵", crate::ui::actions::ctrl_label()))
                     .small()
                     .primary()
                     .on_click(cx.listener(|this, _, _, cx| this.confirm(cx))),

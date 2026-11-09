@@ -8,6 +8,8 @@
 
 use frankmd_core::text::utils::fuzzy_score;
 
+use crate::shortcuts::Platform;
+
 /// Key context a binding lives in (GPUI key-context names).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum KeyContext {
@@ -129,8 +131,8 @@ pub struct CommandSpec {
     pub aliases: &'static [&'static str],
     /// Default bindings (GPUI keystroke notation); the first is displayed.
     pub keys: &'static [&'static str],
-    /// Displayed shortcut when it differs from the first binding (or the
-    /// command shares a contextual key, like `Ctrl+.`).
+    /// Displayed shortcut (GPUI keystroke notation) when it differs from the
+    /// first binding (or the command shares a contextual key, like `ctrl-.`).
     pub shortcut_hint: Option<&'static str>,
     /// Key context of the bindings.
     pub context: KeyContext,
@@ -198,11 +200,11 @@ impl CommandSpec {
         format!("{}: {}", self.category, self.name)
     }
 
-    /// The shortcut as printed (`Ctrl+Shift+P`, `F11`).
+    /// The shortcut as printed for this build (`Ctrl+Shift+P`, `⌘⇧P`, `F11`).
     pub fn shortcut(&self) -> Option<String> {
         self.shortcut_hint
-            .map(str::to_owned)
-            .or_else(|| self.keys.first().map(|k| display_keystroke(k)))
+            .or_else(|| self.keys.first().copied())
+            .map(|k| display_keystroke(k, Platform::current().is_macos()))
     }
 }
 
@@ -340,7 +342,7 @@ pub const BUILTIN: &[CommandSpec] = &[
         .editor()
         .needs(Note),
     cmd("table.edit", "Table", "Edit", &[])
-        .hint("Ctrl+.")
+        .hint("ctrl-.")
         .needs(CaretInTable),
     cmd("edit.toggle_task", "Edit", "Toggle task", &["ctrl-enter"])
         .editor()
@@ -557,8 +559,9 @@ fn match_score(command: &CommandSpec, words: &[String]) -> Option<u32> {
     })
 }
 
-/// `ctrl-shift-p` → `Ctrl+Shift+P`, `f11` → `F11`, `ctrl-\` → `Ctrl+\`.
-pub fn display_keystroke(keystroke: &str) -> String {
+/// `ctrl-shift-p` → `Ctrl+Shift+P`, `f11` → `F11`, `ctrl-\` → `Ctrl+\`; with
+/// `mac`, `⌘⇧P` (the app also binds a `cmd-` twin of every `ctrl-` key there).
+pub fn display_keystroke(keystroke: &str, mac: bool) -> String {
     let (modifiers, key) = match keystroke.rsplit_once('-') {
         // `ctrl--` / `ctrl-shift--`: the key itself is `-`.
         Some((mods, "")) => (mods.trim_end_matches('-'), "-"),
@@ -568,11 +571,16 @@ pub fn display_keystroke(keystroke: &str) -> String {
     let mut parts: Vec<String> = modifiers
         .split('-')
         .filter(|m| !m.is_empty())
-        .map(|m| match m {
-            "ctrl" => "Ctrl".to_owned(),
-            "shift" => "Shift".to_owned(),
-            "alt" => "Alt".to_owned(),
-            other => other.to_owned(),
+        .map(|m| match (m, mac) {
+            // ⌘Tab is the macOS app switcher, so only Ctrl+Tab reaches the app.
+            ("ctrl", true) if key == "tab" => "⌃".to_owned(),
+            ("ctrl", true) => "⌘".to_owned(),
+            ("shift", true) => "⇧".to_owned(),
+            ("alt", true) => "⌥".to_owned(),
+            ("ctrl", false) => "Ctrl".to_owned(),
+            ("shift", false) => "Shift".to_owned(),
+            ("alt", false) => "Alt".to_owned(),
+            (other, _) => other.to_owned(),
         })
         .collect();
     let key = match key {
@@ -583,8 +591,9 @@ pub fn display_keystroke(keystroke: &str) -> String {
         "enter" => "Enter".to_owned(),
         "escape" => "Esc".to_owned(),
         "tab" => "Tab".to_owned(),
+        "backspace" => "Backspace".to_owned(),
         k => k.to_uppercase(),
     };
     parts.push(key);
-    parts.join("+")
+    parts.join(if mac { "" } else { "+" })
 }

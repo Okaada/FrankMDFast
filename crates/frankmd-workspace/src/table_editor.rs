@@ -73,16 +73,17 @@ impl CellAction {
         }
     }
 
-    /// The shortcut shown next to the label.
-    pub fn shortcut(self) -> &'static str {
-        match self {
-            Self::MoveLeft => "Alt+←",
-            Self::MoveRight => "Alt+→",
-            Self::DeleteColumn => "Ctrl+Alt+Backspace",
-            Self::MoveUp => "Alt+↑",
-            Self::MoveDown => "Alt+↓",
-            Self::DeleteRow => "Ctrl+Shift+Backspace",
-        }
+    /// The shortcut shown next to the label (`mac`: `⌘⇧Backspace`).
+    pub fn shortcut(self, mac: bool) -> String {
+        let keystroke = match self {
+            Self::MoveLeft => "alt-left",
+            Self::MoveRight => "alt-right",
+            Self::DeleteColumn => "ctrl-alt-backspace",
+            Self::MoveUp => "alt-up",
+            Self::MoveDown => "alt-down",
+            Self::DeleteRow => "ctrl-shift-backspace",
+        };
+        crate::commands::display_keystroke(keystroke, mac)
     }
 
     /// Destructive actions use the danger colour.

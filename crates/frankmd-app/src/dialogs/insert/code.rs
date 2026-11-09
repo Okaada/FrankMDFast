@@ -490,7 +490,7 @@ impl Render for CodeDialog {
             )
             .child(
                 Button::new("code-insert")
-                    .label(format!("{primary}  Ctrl+↵"))
+                    .label(format!("{primary}  {}↵", crate::ui::actions::ctrl_label()))
                     .small()
                     .primary()
                     .on_click(cx.listener(|this, _, window, cx| this.confirm(window, cx))),

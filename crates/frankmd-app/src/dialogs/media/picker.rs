@@ -1876,8 +1876,9 @@ impl ImagePickerDialog {
                             .primary()
                             .disabled(!can_insert)
                             .label(format!(
-                                "{}  Ctrl+↵",
-                                t(cx, "dialogs.image_picker.insert_image")
+                                "{}  {}↵",
+                                t(cx, "dialogs.image_picker.insert_image"),
+                                crate::ui::actions::ctrl_label()
                             ))
                             .on_click(cx.listener(|this, _, window, cx| this.insert(window, cx))),
                     ),
