@@ -127,7 +127,13 @@ impl Shell {
                         .rounded(theme.radius)
                         .bg(theme.secondary)
                         .hover(|s| s.bg(theme.list_hover))
-                        .child(format!("Ctrl+. {label}"))
+                        .child(format!(
+                            "{} {label}",
+                            frankmd_workspace::commands::display_keystroke(
+                                "ctrl-.",
+                                frankmd_workspace::shortcuts::Platform::current().is_macos(),
+                            )
+                        ))
                         .on_click(move |_, window, cx| {
                             let _ = this.update(cx, |shell, cx| {
                                 shell.run_command("edit.context_action", window, cx)

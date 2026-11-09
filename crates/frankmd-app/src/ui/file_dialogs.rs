@@ -586,7 +586,9 @@ impl Shell {
             "tab" | "left" | "right" => {
                 self.files.delete_on_confirm = !self.files.delete_on_confirm;
             }
-            "enter" if keystroke.modifiers.control => self.confirm_delete(window, cx),
+            "enter" if keystroke.modifiers.control || keystroke.modifiers.platform => {
+                self.confirm_delete(window, cx)
+            }
             "enter" | "space" => {
                 if self.files.delete_on_confirm {
                     self.confirm_delete(window, cx);
@@ -754,7 +756,7 @@ impl Shell {
                 let button = Button::new(SharedString::from(format!("{id}-confirm")))
                     .small()
                     .disabled(!enabled)
-                    .label(format!("{primary}  Ctrl+↵"))
+                    .label(format!("{primary}  {}↵", crate::ui::actions::ctrl_label()))
                     .on_click(move |_, window, cx| {
                         let _ = this.update(cx, |shell, cx| on_primary(shell, window, cx));
                     });

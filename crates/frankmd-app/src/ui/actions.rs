@@ -9,7 +9,8 @@
 use std::rc::Rc;
 
 use frankmd_workspace::commands::CommandRegistry;
-use gpui_kit::{Action, App, InteractiveElement, KeyBinding, Window};
+use frankmd_workspace::shortcuts::Platform;
+use gpui_kit::{Action, App, InteractiveElement, KeyBinding, KeyBindingContextPredicate, Window};
 
 /// Callback that runs a command by registry id.
 pub type CommandHandler = Rc<dyn Fn(&'static str, &mut Window, &mut App)>;
@@ -140,15 +141,57 @@ pub fn default_keymap() -> Vec<KeyBinding> {
         .collect()
 }
 
+/// The shortcut of command `id` as printed for this build (`Ctrl+N`, `⌘N`).
+pub(crate) fn shortcut_label(id: &str) -> String {
+    CommandRegistry::builtin()
+        .get(id)
+        .and_then(|c| c.shortcut())
+        .unwrap_or_default()
+}
+
+/// The Ctrl modifier as printed before a key for this build (`Ctrl+`, `⌘`).
+pub(crate) fn ctrl_label() -> &'static str {
+    if Platform::current().is_macos() {
+        "⌘"
+    } else {
+        "Ctrl+"
+    }
+}
+
+/// The `cmd-` twin of a `ctrl-` keystroke on macOS (`None` elsewhere).
+fn cmd_twin(keystroke: &str, mac: bool) -> Option<String> {
+    keystroke
+        .strip_prefix("ctrl-")
+        .filter(|_| mac)
+        .map(|rest| format!("cmd-{rest}"))
+}
+
 /// Bind the default keymap globally.
 pub fn install_keymap(cx: &mut App) {
     let mut bindings = default_keymap();
-    if cfg!(target_os = "macos") {
-        // The registry's `ctrl-q` maps the physical Ctrl key on every OS; on
-        // macOS Quit is ⌘Q. The app menu's key equivalent is derived from
-        // this binding.
-        bindings.push(KeyBinding::new("cmd-q", Quit, Some(CX_WORKSPACE)));
-    }
+    // The registry's `ctrl-` maps the physical Ctrl key on every OS; on macOS
+    // shortcuts use ⌘, so each one also gets a `cmd-` twin (Ctrl keeps
+    // working). The app menu's ⌘Q key equivalent is derived from `cmd-q`.
+    let mac = cfg!(target_os = "macos");
+    bindings.extend(
+        CommandRegistry::builtin()
+            .bindings()
+            .into_iter()
+            .filter_map(|b| {
+                let twin = cmd_twin(b.keystroke, mac)?;
+                let context = KeyBindingContextPredicate::parse(b.context.name()).ok()?;
+                KeyBinding::load(
+                    &twin,
+                    action_for(b.command)?,
+                    Some(context.into()),
+                    false,
+                    None,
+                    cx,
+                )
+                .ok()
+            })
+            .collect::<Vec<_>>(),
+    );
     cx.bind_keys(bindings);
 }
 
@@ -177,5 +220,17 @@ mod tests {
             default_keymap().len(),
             CommandRegistry::builtin().bindings().len()
         );
+    }
+
+    #[test]
+    fn ctrl_bindings_get_a_cmd_twin_on_macos_only() {
+        assert_eq!(
+            cmd_twin("ctrl-shift-p", true).as_deref(),
+            Some("cmd-shift-p")
+        );
+        assert_eq!(cmd_twin("ctrl--", true).as_deref(), Some("cmd--"));
+        assert_eq!(cmd_twin("f11", true), None);
+        assert_eq!(cmd_twin("alt-i", true), None);
+        assert_eq!(cmd_twin("ctrl-p", false), None);
     }
 }

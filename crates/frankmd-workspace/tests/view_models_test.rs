@@ -372,11 +372,21 @@ fn registry_covers_the_default_keymap_including_both_shifted_forms() {
 
 #[test]
 fn shortcuts_print_like_the_spec() {
-    assert_eq!(display_keystroke("ctrl-shift-p"), "Ctrl+Shift+P");
-    assert_eq!(display_keystroke("f11"), "F11");
-    assert_eq!(display_keystroke("ctrl--"), "Ctrl+-");
-    assert_eq!(display_keystroke("ctrl-\\"), "Ctrl+\\");
-    assert_eq!(display_keystroke("ctrl-alt-left"), "Ctrl+Alt+←");
+    assert_eq!(display_keystroke("ctrl-shift-p", false), "Ctrl+Shift+P");
+    assert_eq!(display_keystroke("f11", false), "F11");
+    assert_eq!(display_keystroke("ctrl--", false), "Ctrl+-");
+    assert_eq!(display_keystroke("ctrl-\\", false), "Ctrl+\\");
+    assert_eq!(display_keystroke("ctrl-alt-left", false), "Ctrl+Alt+←");
+}
+
+#[test]
+fn shortcuts_print_with_mac_symbols_on_macos() {
+    assert_eq!(display_keystroke("ctrl-shift-p", true), "⌘⇧P");
+    assert_eq!(display_keystroke("ctrl-alt-left", true), "⌘⌥←");
+    assert_eq!(display_keystroke("ctrl--", true), "⌘-");
+    assert_eq!(display_keystroke("shift-f3", true), "⇧F3");
+    // ⌘Tab belongs to the OS app switcher.
+    assert_eq!(display_keystroke("ctrl-shift-tab", true), "⌃⇧Tab");
 }
 
 // ---- quick open ----------------------------------------------------------------------

@@ -314,13 +314,19 @@ impl Shell {
                     .gap_3()
                     .text_xs()
                     .text_color(theme.muted_foreground)
-                    .child(format!("Ctrl+N {}", i18n::t(cx, "empty_state.new_note")))
                     .child(format!(
-                        "Ctrl+Shift+F {}",
+                        "{} {}",
+                        actions::shortcut_label("file.new_note"),
+                        i18n::t(cx, "empty_state.new_note")
+                    ))
+                    .child(format!(
+                        "{} {}",
+                        actions::shortcut_label("search.in_files"),
                         i18n::t(cx, "empty_state.search")
                     ))
                     .child(format!(
-                        "Ctrl+Shift+P {}",
+                        "{} {}",
+                        actions::shortcut_label("app.command_palette"),
                         i18n::t(cx, "empty_state.commands")
                     )),
             )

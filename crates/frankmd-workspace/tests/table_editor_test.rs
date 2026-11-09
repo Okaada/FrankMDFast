@@ -87,9 +87,13 @@ fn cell_menu_lists_actions_with_shortcuts() {
     let menu = m.cell_menu(0, 0);
     let actions: Vec<_> = menu.iter().map(|r| r.action).collect();
     assert_eq!(actions, CellAction::ALL.to_vec());
-    assert!(menu.iter().all(|r| !r.action.shortcut().is_empty()));
-    assert_eq!(CellAction::MoveDown.shortcut(), "Alt+↓");
-    assert_eq!(CellAction::DeleteRow.shortcut(), "Ctrl+Shift+Backspace");
+    assert!(menu.iter().all(|r| !r.action.shortcut(false).is_empty()));
+    assert_eq!(CellAction::MoveDown.shortcut(false), "Alt+↓");
+    assert_eq!(
+        CellAction::DeleteRow.shortcut(false),
+        "Ctrl+Shift+Backspace"
+    );
+    assert_eq!(CellAction::DeleteRow.shortcut(true), "⌘⇧Backspace");
 }
 
 #[test]

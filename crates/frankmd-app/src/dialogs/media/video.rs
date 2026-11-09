@@ -903,7 +903,11 @@ impl VideoDialogView {
                         Button::new("video-insert")
                             .primary()
                             .disabled(!can_insert)
-                            .label(format!("{}  Ctrl+↵", t(cx, "dialogs.video.insert_video")))
+                            .label(format!(
+                                "{}  {}↵",
+                                t(cx, "dialogs.video.insert_video"),
+                                crate::ui::actions::ctrl_label()
+                            ))
                             .on_click(cx.listener(|this, _, window, cx| this.confirm(window, cx))),
                     ),
             )

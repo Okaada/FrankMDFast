@@ -85,6 +85,20 @@ pub fn init(cx: &mut App) {
         KeyBinding::new("enter", Activate, Some("MediaActivate")),
         KeyBinding::new("space", Activate, Some("MediaActivate")),
     ]);
+    if cfg!(target_os = "macos") {
+        // `ctrl-` is the physical Ctrl key; macOS users expect ⌘ too. No
+        // ⌘Tab twins: the OS app switcher owns it.
+        cx.bind_keys([
+            KeyBinding::new("cmd-enter", Confirm, ctx),
+            KeyBinding::new("cmd-1", Source1, ctx),
+            KeyBinding::new("cmd-2", Source2, ctx),
+            KeyBinding::new("cmd-3", Source3, ctx),
+            KeyBinding::new("cmd-4", Source4, ctx),
+            KeyBinding::new("cmd-5", Source5, ctx),
+            KeyBinding::new("cmd-6", Source6, ctx),
+            KeyBinding::new("cmd-7", Source7, ctx),
+        ]);
+    }
     library::init(cx);
     crate::dialogs::ai::init(cx);
 }
