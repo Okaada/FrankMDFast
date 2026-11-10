@@ -168,30 +168,30 @@ fn cmd_twin(keystroke: &str, mac: bool) -> Option<String> {
 
 /// Bind the default keymap globally.
 pub fn install_keymap(cx: &mut App) {
-    let mut bindings = default_keymap();
     // The registry's `ctrl-` maps the physical Ctrl key on every OS; on macOS
     // shortcuts use ⌘, so each one also gets a `cmd-` twin (Ctrl keeps
-    // working). The app menu's ⌘Q key equivalent is derived from `cmd-q`.
+    // working). The twins are bound FIRST: the macOS app menu takes the
+    // earliest binding of an action as its key equivalent, so it shows ⌘Q
+    // rather than ⌃Q.
     let mac = cfg!(target_os = "macos");
-    bindings.extend(
-        CommandRegistry::builtin()
-            .bindings()
-            .into_iter()
-            .filter_map(|b| {
-                let twin = cmd_twin(b.keystroke, mac)?;
-                let context = KeyBindingContextPredicate::parse(b.context.name()).ok()?;
-                KeyBinding::load(
-                    &twin,
-                    action_for(b.command)?,
-                    Some(context.into()),
-                    false,
-                    None,
-                    cx,
-                )
-                .ok()
-            })
-            .collect::<Vec<_>>(),
-    );
+    let mut bindings: Vec<KeyBinding> = CommandRegistry::builtin()
+        .bindings()
+        .into_iter()
+        .filter_map(|b| {
+            let twin = cmd_twin(b.keystroke, mac)?;
+            let context = KeyBindingContextPredicate::parse(b.context.name()).ok()?;
+            KeyBinding::load(
+                &twin,
+                action_for(b.command)?,
+                Some(context.into()),
+                false,
+                None,
+                cx,
+            )
+            .ok()
+        })
+        .collect();
+    bindings.extend(default_keymap());
     cx.bind_keys(bindings);
 }
 
