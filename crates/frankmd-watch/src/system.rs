@@ -45,6 +45,8 @@ enum Armed {
 
 struct Active {
     armed: Armed,
+    /// `spec.target` with symlinks resolved, as FSEvents reports paths.
+    canonical_target: PathBuf,
     rx: Receiver<DebounceEventResult>,
     _debouncer: Debouncer<RecommendedWatcher, RecommendedCache>,
 }
@@ -126,11 +128,9 @@ impl Worker {
     }
 
     fn is_relevant(&self, path: &Path) -> bool {
-        match path.strip_prefix(&self.spec.target) {
-            Ok(rel) if rel.as_os_str().is_empty() => false,
-            Ok(rel) => (self.spec.relevant)(rel),
-            Err(_) => false,
-        }
+        let canonical = self.active.as_ref().map(|a| a.canonical_target.as_path());
+        relevant_rel(path, &self.spec.target, canonical)
+            .is_some_and(|rel| (self.spec.relevant)(rel))
     }
 
     /// Move the watch to where it should be; emit when the target appears or
@@ -184,10 +184,27 @@ impl Worker {
         debouncer.watch(path, mode).map_err(err)?;
         Ok(Active {
             armed: armed.clone(),
+            canonical_target: self
+                .spec
+                .target
+                .canonicalize()
+                .unwrap_or_else(|_| self.spec.target.clone()),
             rx,
             _debouncer: debouncer,
         })
     }
+}
+
+/// `path` relative to the watch target, matching the canonical spelling too:
+/// FSEvents reports real paths, so a target reached through a symlink
+/// (`/var/...` vs `/private/var/...` on macOS) never matches the literal one.
+/// `None` for the target itself (only its contents are relevant) or outside.
+fn relevant_rel<'a>(path: &'a Path, target: &Path, canonical: Option<&Path>) -> Option<&'a Path> {
+    let rel = [Some(target), canonical]
+        .into_iter()
+        .flatten()
+        .find_map(|root| path.strip_prefix(root).ok())?;
+    (!rel.as_os_str().is_empty()).then_some(rel)
 }
 
 #[cfg(test)]
@@ -201,5 +218,36 @@ mod tests {
         let target = tmp.join("frankmd-watch-missing-xyz/a/b");
         assert_eq!(desired(&target), Some(Armed::Ancestor(tmp.clone())));
         assert_eq!(desired(&tmp), Some(Armed::Target));
+    }
+
+    #[test]
+    fn relevant_rel_matches_both_spellings_of_the_target() {
+        let target = Path::new("/var/theme");
+        let canonical = Some(Path::new("/private/var/theme"));
+        // Linux inotify passes the literal spelling through.
+        assert_eq!(
+            relevant_rel(&target.join("colors.css"), target, canonical),
+            Some(Path::new("colors.css"))
+        );
+        // macOS FSEvents reports the real path.
+        assert_eq!(
+            relevant_rel(
+                Path::new("/private/var/theme/colors.css"),
+                target,
+                canonical
+            ),
+            Some(Path::new("colors.css"))
+        );
+        // The target directory itself is not content; other trees never match.
+        assert_eq!(relevant_rel(target, target, canonical), None);
+        assert_eq!(
+            relevant_rel(Path::new("/elsewhere/colors.css"), target, canonical),
+            None
+        );
+        // Without a canonical spelling only the literal matches.
+        assert_eq!(
+            relevant_rel(Path::new("/private/var/theme/colors.css"), target, None),
+            None
+        );
     }
 }
